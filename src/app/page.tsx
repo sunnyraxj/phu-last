@@ -356,14 +356,14 @@ export default function ProductPage() {
       </section>
       
       <div className="container mx-auto flex">
-        <aside className="w-80 bg-background p-8 border-r border-border min-h-screen">
-          <h2 className="text-2xl font-bold mb-8">Filter:</h2>
+        <aside className="w-80 bg-background p-6 border-r border-border min-h-screen">
+          <h2 className="text-xl font-bold mb-6">Filter:</h2>
 
           <Accordion type="multiple" defaultValue={["collection", "material", "availability", "price"]} className="w-full">
             <AccordionItem value="collection">
-              <AccordionTrigger className="text-lg font-semibold">Collection</AccordionTrigger>
+              <AccordionTrigger className="font-semibold py-3 text-base">Collection</AccordionTrigger>
               <AccordionContent>
-                <div className="space-y-3 pt-4">
+                <div className="space-y-2 pt-2">
                   {collections.map((col) => (
                     <label key={col.name} className="flex items-center gap-3 cursor-pointer">
                       <Checkbox 
@@ -381,9 +381,9 @@ export default function ProductPage() {
             </AccordionItem>
 
             <AccordionItem value="material">
-              <AccordionTrigger className="text-lg font-semibold">Material</AccordionTrigger>
+              <AccordionTrigger className="font-semibold py-3 text-base">Material</AccordionTrigger>
               <AccordionContent>
-                <div className="space-y-3 pt-4">
+                <div className="space-y-2 pt-2">
                     {materials.map((mat) => (
                       <label key={mat} className="flex items-center gap-3 cursor-pointer">
                         <Checkbox 
@@ -399,9 +399,9 @@ export default function ProductPage() {
             </AccordionItem>
 
             <AccordionItem value="availability">
-              <AccordionTrigger className="text-lg font-semibold">Availability</AccordionTrigger>
+              <AccordionTrigger className="font-semibold py-3 text-base">Availability</AccordionTrigger>
               <AccordionContent>
-                <div className="space-y-3 pt-4">
+                <div className="space-y-2 pt-2">
                   <label className="flex items-center gap-3 cursor-pointer">
                     <Checkbox id="in-stock" onCheckedChange={(checked) => setAvailability(checked ? 'in-stock' : 'all')} checked={availability === 'in-stock'} />
                     <span className="text-sm">In Stock</span>
@@ -415,9 +415,9 @@ export default function ProductPage() {
             </AccordionItem>
             
             <AccordionItem value="price">
-              <AccordionTrigger className="text-lg font-semibold">Price</AccordionTrigger>
+              <AccordionTrigger className="font-semibold py-3 text-base">Price</AccordionTrigger>
               <AccordionContent>
-                <div className="pt-4">
+                <div className="pt-2">
                   <Slider 
                     defaultValue={[0, 10000]} 
                     max={10000} 
