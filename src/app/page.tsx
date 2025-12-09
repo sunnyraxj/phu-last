@@ -35,7 +35,7 @@ function PotIcon(props: React.SVGProps<SVGSVGElement>) {
 export default function Home() {
   return (
     <>
-      <section className="relative w-full h-[60vh] md:h-[80vh] bg-[#3d2c1d] text-white">
+      <section className="relative w-full h-[60vh] md:h-[80vh] bg-[#3d2c1d] text-white -mx-6 sm:-mx-8 md:-mx-24">
         <Image
           src="https://images.unsplash.com/photo-1594966611394-b1a3372c918c?q=80&w=2070&auto=format&fit=crop"
           alt="Handcrafted terracotta sculpture"
