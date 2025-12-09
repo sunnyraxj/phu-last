@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ChevronDown, Heart, Menu, Search, ShoppingBag, User } from 'lucide-react';
-import { Logo } from '../shared/Logo';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
@@ -16,10 +15,8 @@ import {
 
 const navLinks = [
   { href: '/crafts', label: 'CRAFTS', dropdown: true },
-  { href: '/food', label: 'FOOD' },
   { href: '/books', label: 'BOOKS', dropdown: true },
   { href: '/lifestyle', label: 'LIFESTYLE', dropdown: true },
-  { href: '/textiles', label: 'TEXTILES', dropdown: true },
   { href: '/brands', label: 'BRANDS', dropdown: true },
   { href: '/our-store', label: 'OUR STORE' },
   { href: '/blog', label: 'BLOG' },
@@ -32,9 +29,6 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-primary/20 bg-primary text-primary-foreground">
       <div className="container flex h-16 items-center">
         <div className="mr-4 hidden lg:flex">
-          <Link href="/" className="mr-6 flex items-center space-x-2">
-            <Logo />
-          </Link>
           <nav className="flex items-center space-x-4 text-sm font-medium">
             {navLinks.map((link) =>
               link.dropdown ? (
@@ -78,7 +72,7 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="left" className="pr-0 bg-primary text-primary-foreground border-primary/20">
               <Link href="/" className="mb-6 flex items-center">
-                <Logo />
+                
               </Link>
               <div className="flex flex-col space-y-3">
                 {navLinks.map((link) => (
