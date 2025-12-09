@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown, Search, User, Heart, ShoppingCart, LayoutGrid, List } from "lucide-react"
+import { ChevronDown, Search, User, Heart, ShoppingCart, LayoutGrid } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
@@ -112,16 +112,7 @@ export default function ProductPage() {
               CRAFTS <ChevronDown size={16} />
             </button>
             <button className="flex items-center gap-1 hover:opacity-80">
-              BOOKS <ChevronDown size={16} />
-            </button>
-            <button className="flex items-center gap-1 hover:opacity-80">
               LIFESTYLE <ChevronDown size={16} />
-            </button>
-            <button className="flex items-center gap-1 hover:opacity-80">
-              TEXTILES <ChevronDown size={16} />
-            </button>
-            <button className="flex items-center gap-1 hover:opacity-80">
-              BRANDS <ChevronDown size={16} />
             </button>
             <button className="hover:opacity-80">OUR STORE</button>
             <button className="hover:opacity-80">BLOG</button>
