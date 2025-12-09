@@ -489,48 +489,21 @@ export default function ProductPage() {
             className={cn('grid gap-x-8 gap-y-12', getGridCols())}
           >
             {filteredProducts.map((product) => (
-              <div key={product.id} className="group relative">
-                <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted cursor-pointer">
+              <div key={product.id}>
+                <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
                   <Image
                     src={product.image}
                     alt={product.name}
                     fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="object-cover"
                     data-ai-hint={product['data-ai-hint']}
                   />
                 </div>
                 <div className="mt-4 text-left">
-                  <h3 className="font-semibold text-lg mb-1">{product.name}</h3>
-                  <p className="text-primary font-bold text-base mb-4">
+                  <h3 className="font-semibold text-lg">{product.name}</h3>
+                  <p className="text-muted-foreground text-base mt-1">
                     {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 }).format(product.price)}
                   </p>
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-between border-t border-dashed pt-4">
-                    <Button 
-                      variant="ghost"
-                      className="text-sm font-bold p-0 hover:bg-transparent"
-                      onClick={() => addToCart(product)}
-                    >
-                      <ShoppingCart size={20} className="mr-2"/>
-                      ADD TO CART
-                    </Button>
-                    <div className="flex items-center gap-2">
-                       <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        className="rounded-full h-8 w-8 hover:bg-secondary"
-                      >
-                        <Eye size={18} />
-                      </Button>
-                       <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        className="rounded-full h-8 w-8 hover:bg-secondary"
-                        onClick={() => toggleWishlist(product.id)}
-                      >
-                        <Heart size={18} className={cn("transition-colors", wishlist.includes(product.id) ? "text-red-500 fill-current" : "")} />
-                      </Button>
-                    </div>
-                  </div>
                 </div>
               </div>
             ))}
