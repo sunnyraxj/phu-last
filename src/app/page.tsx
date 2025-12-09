@@ -236,7 +236,7 @@ export default function ProductPage() {
                 <button className="relative hover:opacity-80">
                   <ShoppingCart size={20} />
                   {cartCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
                       {cartCount}
                     </span>
                   )}
@@ -336,7 +336,7 @@ export default function ProductPage() {
       </section>
       
       <div className="container mx-auto flex">
-        <aside className="w-80 bg-white p-8 border-r border-border min-h-screen">
+        <aside className="w-80 bg-background p-8 border-r border-border min-h-screen">
           <h2 className="text-2xl font-bold mb-8">Filter:</h2>
 
           <Accordion type="multiple" defaultValue={["collection", "material", "availability", "price"]} className="w-full">
