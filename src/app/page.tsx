@@ -56,7 +56,7 @@ export default function Home() {
       </section>
       
       <section className="py-16 md:py-24 bg-background">
-        <div className="container">
+        <div className="container flex flex-col items-center">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold">Featured Products</h2>
             <p className="text-muted-foreground mt-2">Discover unique creations from our talented artisans</p>
