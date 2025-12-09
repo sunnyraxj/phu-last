@@ -1,13 +1,17 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { ChevronDown, Search, User, Heart, ShoppingCart } from "lucide-react"
+import { ChevronDown, Search, User, Heart, ShoppingCart, Plus, Minus, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import Image from "next/image"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from "@/components/ui/sheet"
+import { Separator } from "@/components/ui/separator"
+import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 
 const allProducts = [
   {
@@ -102,13 +106,21 @@ const materials = ["Paper", "Ceramic", "Brass", "Sabai Grass", "Jute"];
 export default function ProductPage() {
   const [viewMode, setViewMode] = useState<"grid2" | "grid3" | "grid4">("grid4")
   const [sortBy, setSortBy] = useState("Featured")
-  const [cartCount, setCartCount] = useState(2)
+  
   const [wishlistCount, setWishlistCount] = useState(0)
 
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [availability, setAvailability] = useState<string>("all"); // all, in-stock, out-of-stock
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
+  
+  const [cartItems, setCartItems] = useState([
+    { ...allProducts[0], quantity: 1 },
+    { ...allProducts[3], quantity: 2 },
+  ]);
+
+  const cartCount = useMemo(() => cartItems.reduce((acc, item) => acc + item.quantity, 0), [cartItems]);
+  const cartSubtotal = useMemo(() => cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0), [cartItems]);
 
   const handleCollectionChange = (collectionName: string) => {
     setSelectedCollections(prev => 
@@ -125,6 +137,14 @@ export default function ProductPage() {
         : [...prev, materialName]
     )
   }
+  
+  const updateCartItemQuantity = (productId: number, newQuantity: number) => {
+    setCartItems(currentItems => 
+      newQuantity > 0
+        ? currentItems.map(item => item.id === productId ? { ...item, quantity: newQuantity } : item)
+        : currentItems.filter(item => item.id !== productId)
+    );
+  };
 
   const filteredProducts = useMemo(() => {
     return allProducts
@@ -211,14 +231,86 @@ export default function ProductPage() {
                 </span>
               )}
             </button>
-            <button className="relative hover:opacity-80">
-              <ShoppingCart size={20} />
-              {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </button>
+            <Sheet>
+              <SheetTrigger asChild>
+                <button className="relative hover:opacity-80">
+                  <ShoppingCart size={20} />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {cartCount}
+                    </span>
+                  )}
+                </button>
+              </SheetTrigger>
+              <SheetContent className="flex flex-col">
+                <SheetHeader>
+                  <SheetTitle>Your Cart ({cartCount})</SheetTitle>
+                </SheetHeader>
+                {cartItems.length > 0 ? (
+                  <>
+                  <div className="flex-1 overflow-y-auto -mx-6 px-6">
+                    <Separator className="my-4" />
+                    <div className="flex flex-col gap-6">
+                      {cartItems.map(item => (
+                        <div key={item.id} className="flex items-center gap-4">
+                           <div className="relative h-20 w-20 rounded-md overflow-hidden bg-muted">
+                            <Image
+                              src={item.image}
+                              alt={item.name}
+                              fill
+                              className="object-cover"
+                            />
+                           </div>
+                           <div className="flex-1">
+                             <p className="font-semibold text-sm">{item.name}</p>
+                             <p className="text-muted-foreground text-sm">
+                               {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.price)}
+                             </p>
+                             <div className="flex items-center gap-2 mt-2">
+                               <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartItemQuantity(item.id, item.quantity - 1)}>
+                                 <Minus size={14} />
+                               </Button>
+                               <Input
+                                  type="number"
+                                  value={item.quantity}
+                                  onChange={(e) => updateCartItemQuantity(item.id, parseInt(e.target.value) || 0)}
+                                  className="h-7 w-12 text-center"
+                                />
+                               <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartItemQuantity(item.id, item.quantity + 1)}>
+                                 <Plus size={14} />
+                               </Button>
+                             </div>
+                           </div>
+                           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => updateCartItemQuantity(item.id, 0)}>
+                             <X size={16}/>
+                           </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <SheetFooter className="mt-auto pt-6">
+                    <div className="w-full space-y-4">
+                      <div className="flex justify-between font-semibold">
+                        <span>Subtotal</span>
+                        <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(cartSubtotal)}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Shipping & taxes calculated at checkout.</p>
+                      <Button size="lg" className="w-full">Checkout</Button>
+                    </div>
+                  </SheetFooter>
+                </>
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center">
+                    <ShoppingCart size={48} className="text-muted-foreground" />
+                    <h3 className="text-xl font-semibold">Your cart is empty</h3>
+                    <p className="text-muted-foreground">Looks like you haven't added anything to your cart yet.</p>
+                    <SheetClose asChild>
+                      <Button>Continue Shopping</Button>
+                    </SheetClose>
+                  </div>
+                )}
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </header>
@@ -312,21 +404,21 @@ export default function ProductPage() {
                  <Button variant={viewMode === 'grid2' ? 'secondary' : 'ghost'} size="sm" className="w-9 h-9 p-0" onClick={() => setViewMode('grid2')}>
                   <span className="grid grid-cols-2 gap-0.5 p-1">
                     {Array.from({ length: 4 }).map((_, i) => (
-                      <span key={i} className="w-2 h-2 bg-current rounded-full"></span>
+                      <span key={i} className="w-2 h-2 bg-current rounded-sm"></span>
                     ))}
                   </span>
                 </Button>
                 <Button variant={viewMode === 'grid3' ? 'secondary' : 'ghost'} size="sm" className="w-9 h-9 p-0" onClick={() => setViewMode('grid3')}>
                   <span className="grid grid-cols-3 gap-0.5 p-1">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <span key={i} className="w-1.5 h-1.5 bg-current rounded-full"></span>
+                    {Array.from({ length: 9 }).map((_, i) => (
+                      <span key={i} className="w-1.5 h-1.5 bg-current rounded-sm"></span>
                     ))}
                   </span>
                 </Button>
                 <Button variant={viewMode === 'grid4' ? 'secondary' : 'ghost'} size="sm" className="w-9 h-9 p-0" onClick={() => setViewMode('grid4')}>
                    <span className="grid grid-cols-4 gap-0.5 p-1">
-                    {Array.from({ length: 8 }).map((_, i) => (
-                      <span key={i} className="w-1 h-1 bg-current rounded-full"></span>
+                    {Array.from({ length: 16 }).map((_, i) => (
+                      <span key={i} className="w-1 h-1 bg-current rounded-sm"></span>
                     ))}
                   </span>
                 </Button>
@@ -354,7 +446,7 @@ export default function ProductPage() {
           </div>
 
           <div
-            className={`grid gap-6 ${getGridCols()}`}
+            className={cn('grid gap-6', getGridCols())}
           >
             {filteredProducts.map((product) => (
               <div key={product.id} className="group">
@@ -379,3 +471,5 @@ export default function ProductPage() {
     </div>
   )
 }
+
+    
