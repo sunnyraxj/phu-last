@@ -12,49 +12,49 @@ const PRODUCTS = [
     id: 1,
     name: "Set Of 6 Jamini Roy Prints",
     price: 1200,
-    image: "/jamini-roy-prints-book-cover-blue.jpg",
+    image: "https://purbanchal.com/wp-content/uploads/2023/11/jamini-roy-prints-book-cover-blue.jpg",
   },
   {
     id: 2,
     name: "Ceramic Etched Bird Plate",
     price: 5000,
-    image: "/ceramic-etched-bird-plate-with-design.jpg",
+    image: "https://purbanchal.com/wp-content/uploads/2023/11/ceramic-etched-bird-plate-with-design.jpg",
   },
   {
     id: 3,
     name: "Dokra Bell",
     price: 1900,
-    image: "/brass-dokra-bell-hanging.jpg",
+    image: "https://purbanchal.com/wp-content/uploads/2023/10/brass-dokra-bell-hanging.jpg",
   },
   {
     id: 4,
     name: "Sabai Basket With Lid",
     price: 750,
-    image: "/woven-sabai-basket-with-lid.jpg",
+    image: "https://purbanchal.com/wp-content/uploads/2023/11/woven-sabai-basket-with-lid.jpg",
   },
   {
     id: 5,
     name: "Golden Peacock Sculpture",
     price: 3200,
-    image: "/bronze-golden-peacock-sculpture.jpg",
+    image: "https://purbanchal.com/wp-content/uploads/2023/11/bronze-golden-peacock-sculpture.jpg",
   },
   {
     id: 6,
     name: "Brass Giraffe Figurine",
     price: 2100,
-    image: "/brass-giraffe-figurine-standing.jpg",
+    image: "https://purbanchal.com/wp-content/uploads/2023/10/brass-giraffe-figurine-standing.jpg",
   },
   {
     id: 7,
     name: "Ceramic Serving Bowl",
     price: 1500,
-    image: "/black-ceramic-serving-bowl-with-lid.jpg",
+    image: "https://purbanchal.com/wp-content/uploads/2023/11/black-ceramic-serving-bowl-with-lid.jpg",
   },
   {
     id: 8,
     name: "Woven Jute Basket",
     price: 800,
-    image: "/natural-woven-jute-basket.jpg",
+    image: "https://purbanchal.com/wp-content/uploads/2023/11/natural-woven-jute-basket.jpg",
   },
 ]
 
@@ -64,7 +64,7 @@ export default function Home() {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10500])
 
   const gridClasses = {
-    grid2: "grid-cols-1 md:grid-cols-2 lg:grid-cols-2",
+    grid2: "grid-cols-1 md:grid-cols-2",
     grid3: "grid-cols-1 md:grid-cols-2 lg:grid-cols-4",
     list: "grid-cols-1",
   }
