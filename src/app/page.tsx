@@ -216,7 +216,7 @@ export default function ProductPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-black text-white">
+      <header className="bg-black text-white font-sans">
         <div className="container mx-auto flex items-center justify-between px-8 py-4">
           <div className="flex items-center gap-2">
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
@@ -344,7 +344,7 @@ export default function ProductPage() {
           data-ai-hint="handicrafts lifestyle"
         />
         <div className="absolute inset-0 bg-black/50" />
-        <div className="relative z-10 text-center px-4">
+        <div className="relative z-10 text-center px-4 font-sans">
           <h1 className="text-4xl md:text-6xl font-bold mb-4 tracking-tight">Artisans of the East</h1>
           <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
             Discover handcrafted treasures that tell a story.
@@ -513,5 +513,3 @@ export default function ProductPage() {
     </div>
   )
 }
-
-    

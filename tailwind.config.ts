@@ -19,6 +19,7 @@ export default {
       fontFamily: {
         sans: ['"Geist"', '"Geist Fallback"', 'sans-serif'],
         mono: ['"Geist Mono"', '"Geist Mono Fallback"', 'monospace'],
+        body: ['var(--font-body)', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
