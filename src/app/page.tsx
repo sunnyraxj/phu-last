@@ -68,12 +68,8 @@ const mockProducts = [
 ]
 
 const collections = [
-  { name: "Food", count: "(27)" },
-  { name: "Brands", count: "(17)" },
-  { name: "Books", count: "(45)" },
   { name: "Crafts", count: "(282)" },
   { name: "LifeStyle", count: "(52)" },
-  { name: "Textiles", count: "(120)" },
 ]
 
 export default function ProductPage() {
@@ -101,9 +97,9 @@ export default function ProductPage() {
           {/* Logo */}
           <div className="flex items-center gap-2">
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-              <span className="text-2xl font-bold">B</span>
+              <span className="text-2xl font-bold">P</span>
             </div>
-            <span className="text-lg font-semibold">The Bengal</span>
+            <span className="text-lg font-semibold">Purbanchal Hasta Udyog</span>
           </div>
 
           {/* Navigation */}
