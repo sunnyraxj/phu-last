@@ -311,22 +311,21 @@ export default function ProductPage() {
               <div className="flex gap-1 border border-border rounded-md p-1">
                  <Button variant={viewMode === 'grid2' ? 'secondary' : 'ghost'} size="sm" className="w-9 h-9 p-0" onClick={() => setViewMode('grid2')}>
                   <span className="grid grid-cols-2 gap-0.5 p-1">
-                    <span className="w-2 h-2 bg-current rounded-full"></span>
-                    <span className="w-2 h-2 bg-current rounded-full"></span>
-                    <span className="w-2 h-2 bg-current rounded-full"></span>
-                    <span className="w-2 h-2 bg-current rounded-full"></span>
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <span key={i} className="w-2 h-2 bg-current rounded-full"></span>
+                    ))}
                   </span>
                 </Button>
                 <Button variant={viewMode === 'grid3' ? 'secondary' : 'ghost'} size="sm" className="w-9 h-9 p-0" onClick={() => setViewMode('grid3')}>
                   <span className="grid grid-cols-3 gap-0.5 p-1">
-                    {Array.from({ length: 9 }).map((_, i) => (
+                    {Array.from({ length: 6 }).map((_, i) => (
                       <span key={i} className="w-1.5 h-1.5 bg-current rounded-full"></span>
                     ))}
                   </span>
                 </Button>
                 <Button variant={viewMode === 'grid4' ? 'secondary' : 'ghost'} size="sm" className="w-9 h-9 p-0" onClick={() => setViewMode('grid4')}>
                    <span className="grid grid-cols-4 gap-0.5 p-1">
-                    {Array.from({ length: 16 }).map((_, i) => (
+                    {Array.from({ length: 8 }).map((_, i) => (
                       <span key={i} className="w-1 h-1 bg-current rounded-full"></span>
                     ))}
                   </span>
