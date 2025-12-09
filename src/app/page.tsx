@@ -500,7 +500,7 @@ export default function ProductPage() {
                   />
                 </div>
                 <div className="mt-4 text-left">
-                  <h3 className="font-semibold text-lg">{product.name}</h3>
+                  <h3 className="font-semibold text-base truncate">{product.name}</h3>
                   <p className="text-muted-foreground text-base mt-1">
                     {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 }).format(product.price)}
                   </p>
