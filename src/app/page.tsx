@@ -486,7 +486,7 @@ export default function ProductPage() {
           </div>
 
           <div
-            className={cn('grid gap-8', getGridCols())}
+            className={cn('grid gap-x-8 gap-y-12', getGridCols())}
           >
             {filteredProducts.map((product) => (
               <div key={product.id} className="group relative">
@@ -498,33 +498,39 @@ export default function ProductPage() {
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                     data-ai-hint={product['data-ai-hint']}
                   />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
-                  <div className="absolute bottom-0 left-0 right-0 p-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <h3 className="font-semibold text-sm mb-2 line-clamp-2">{product.name}</h3>
-                    <div className="flex justify-between items-center">
-                      <Button 
-                        size="sm" 
-                        className="bg-white text-black hover:bg-white/90 rounded-full shadow-lg text-xs px-4"
-                        onClick={() => addToCart(product)}
-                      >
-                        Add to Cart
-                      </Button>
-                      <Button 
+                </div>
+                <div className="mt-4 text-left">
+                  <h3 className="font-semibold text-lg mb-1">{product.name}</h3>
+                  <p className="text-primary font-bold text-base mb-4">
+                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 }).format(product.price)}
+                  </p>
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-between border-t border-dashed pt-4">
+                    <Button 
+                      variant="ghost"
+                      className="text-sm font-bold p-0 hover:bg-transparent"
+                      onClick={() => addToCart(product)}
+                    >
+                      <ShoppingCart size={20} className="mr-2"/>
+                      ADD TO CART
+                    </Button>
+                    <div className="flex items-center gap-2">
+                       <Button 
                         size="icon" 
-                        variant="secondary" 
-                        className="bg-white/20 text-white hover:bg-white/30 rounded-full shadow-lg h-8 w-8"
+                        variant="ghost" 
+                        className="rounded-full h-8 w-8 hover:bg-secondary"
+                      >
+                        <Eye size={18} />
+                      </Button>
+                       <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="rounded-full h-8 w-8 hover:bg-secondary"
                         onClick={() => toggleWishlist(product.id)}
                       >
-                        <Heart size={16} className={cn("transition-colors", wishlist.includes(product.id) ? "text-red-500 fill-current" : "")} />
+                        <Heart size={18} className={cn("transition-colors", wishlist.includes(product.id) ? "text-red-500 fill-current" : "")} />
                       </Button>
                     </div>
                   </div>
-                </div>
-                <div className="mt-2 text-left">
-                  <p className="text-primary font-bold text-base">
-                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(product.price)}
-                  </p>
                 </div>
               </div>
             ))}
