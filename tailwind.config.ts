@@ -8,11 +8,17 @@ export default {
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
     extend: {
       fontFamily: {
         sans: ['"Geist"', '"Geist Fallback"', 'sans-serif'],
         mono: ['"Geist Mono"', '"Geist Mono Fallback"', 'monospace'],
-        serif: ['"Merriweather"', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",
