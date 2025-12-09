@@ -356,7 +356,7 @@ export default function ProductPage() {
       </section>
       
       <div className="container mx-auto flex">
-        <aside className="w-80 bg-background p-6 border-r border-border min-h-screen">
+        <aside className="w-72 bg-background p-6 border-r border-border min-h-screen">
           <h2 className="text-xl font-bold mb-6">Filter:</h2>
 
           <Accordion type="multiple" defaultValue={["collection", "material", "availability", "price"]} className="w-full">
