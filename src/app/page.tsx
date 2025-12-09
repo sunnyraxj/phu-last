@@ -1,82 +1,166 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { ChevronDown, Search, User, Heart, ShoppingCart, LayoutGrid } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import Image from "next/image"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
-const mockProducts = [
+const allProducts = [
   {
     id: 1,
     name: "Set Of 6 Jamini Roy Prints",
     price: 1200.00,
     image: "https://picsum.photos/seed/1/400/400",
-    "data-ai-hint": "art prints"
+    "data-ai-hint": "art prints",
+    collection: "Crafts",
+    material: "Paper",
+    inStock: true,
   },
   {
     id: 2,
     name: "Ceramic Etched Bird Plate",
     price: 5000.00,
     image: "https://picsum.photos/seed/2/400/400",
-    "data-ai-hint": "ceramic plate"
+    "data-ai-hint": "ceramic plate",
+    collection: "Crafts",
+    material: "Ceramic",
+    inStock: true,
   },
   {
     id: 3,
     name: "Dokra Bell",
     price: 1900.00,
     image: "https://picsum.photos/seed/3/400/400",
-    "data-ai-hint": "brass bell"
+    "data-ai-hint": "brass bell",
+    collection: "Crafts",
+    material: "Brass",
+    inStock: false,
   },
   {
     id: 4,
     name: "Sabai Basket With Lid",
     price: 750.00,
     image: "https://picsum.photos/seed/4/400/400",
-    "data-ai-hint": "woven basket"
+    "data-ai-hint": "woven basket",
+    collection: "LifeStyle",
+    material: "Sabai Grass",
+    inStock: true,
   },
   {
     id: 5,
     name: "Brass Ganesha Idol",
     price: 2500.00,
     image: "https://picsum.photos/seed/5/400/400",
-    "data-ai-hint": "brass idol"
+    "data-ai-hint": "brass idol",
+    collection: "Crafts",
+    material: "Brass",
+    inStock: true,
   },
   {
     id: 6,
     name: "Dhokra Bird Figurine",
     price: 1800.00,
     image: "https://picsum.photos/seed/6/400/400",
-    "data-ai-hint": "brass figurine"
+    "data-ai-hint": "brass figurine",
+    collection: "Crafts",
+    material: "Brass",
+    inStock: false,
   },
   {
     id: 7,
     name: "Green Leaf Ceramic Bowl",
     price: 3200.00,
     image: "https://picsum.photos/seed/7/400/400",
-    "data-ai-hint": "ceramic bowl"
+    "data-ai-hint": "ceramic bowl",
+    collection: "LifeStyle",
+    material: "Ceramic",
+    inStock: true,
   },
   {
     id: 8,
     name: "Woven Jute Basket",
     price: 1100.00,
     image: "https://picsum.photos/seed/8/400/400",
-    "data-ai-hint": "jute basket"
+    "data-ai-hint": "jute basket",
+    collection: "LifeStyle",
+    material: "Jute",
+    inStock: true,
   },
 ]
 
 const collections = [
-  { name: "Crafts", count: "(282)" },
-  { name: "LifeStyle", count: "(52)" },
+  { name: "Crafts", count: allProducts.filter(p => p.collection === "Crafts").length },
+  { name: "LifeStyle", count: allProducts.filter(p => p.collection === "LifeStyle").length },
 ]
 
+const materials = ["Paper", "Ceramic", "Brass", "Sabai Grass", "Jute"];
+
 export default function ProductPage() {
-  const [viewMode, setViewMode] = useState<"grid2" | "grid3" | "grid4">("grid4") // grid2, grid3, or grid4
+  const [viewMode, setViewMode] = useState<"grid2" | "grid3" | "grid4">("grid4")
   const [sortBy, setSortBy] = useState("Featured")
   const [cartCount, setCartCount] = useState(2)
   const [wishlistCount, setWishlistCount] = useState(0)
+
+  const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
+  const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
+  const [availability, setAvailability] = useState<string>("all"); // all, in-stock, out-of-stock
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
+
+  const handleCollectionChange = (collectionName: string) => {
+    setSelectedCollections(prev => 
+      prev.includes(collectionName) 
+        ? prev.filter(c => c !== collectionName)
+        : [...prev, collectionName]
+    )
+  }
+  
+  const handleMaterialChange = (materialName: string) => {
+    setSelectedMaterials(prev => 
+      prev.includes(materialName) 
+        ? prev.filter(m => m !== materialName)
+        : [...prev, materialName]
+    )
+  }
+
+  const filteredProducts = useMemo(() => {
+    return allProducts
+      .filter(product => {
+        if (selectedCollections.length > 0 && !selectedCollections.includes(product.collection)) {
+          return false;
+        }
+        if (selectedMaterials.length > 0 && !selectedMaterials.includes(product.material)) {
+          return false;
+        }
+        if (availability === 'in-stock' && !product.inStock) {
+          return false;
+        }
+        if (availability === 'out-of-stock' && product.inStock) {
+          return false;
+        }
+        if (product.price < priceRange[0] || product.price > priceRange[1]) {
+          return false;
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        switch (sortBy) {
+          case 'price-low-high':
+            return a.price - b.price;
+          case 'price-high-low':
+            return b.price - a.price;
+          case 'newest':
+            return b.id - a.id; // Assuming higher ID is newer
+          case 'Featured':
+          default:
+            return 0; // Or some other default logic
+        }
+      });
+  }, [selectedCollections, selectedMaterials, availability, priceRange, sortBy]);
+
 
   const getGridCols = () => {
     switch (viewMode) {
@@ -92,9 +176,8 @@ export default function ProductPage() {
 
   return (
     <div className="min-h-screen bg-background">
-       <header className="bg-primary text-primary-foreground">
-        <div className="flex items-center justify-between px-8 py-4">
-          {/* Logo */}
+      <header className="bg-primary text-primary-foreground">
+        <div className="container mx-auto flex items-center justify-between px-8 py-4">
           <div className="flex items-center gap-2">
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
               <span className="text-2xl font-bold">P</span>
@@ -102,7 +185,6 @@ export default function ProductPage() {
             <span className="text-lg font-semibold">Purbanchal Hasta Udyog</span>
           </div>
 
-          {/* Navigation */}
           <nav className="flex items-center gap-8 text-sm font-semibold">
             <button className="flex items-center gap-1 hover:opacity-80">
               CRAFTS <ChevronDown size={16} />
@@ -114,7 +196,6 @@ export default function ProductPage() {
             <button className="hover:opacity-80">BLOG</button>
           </nav>
 
-          {/* Icons */}
           <div className="flex items-center gap-6">
             <button className="hover:opacity-80">
               <Search size={20} />
@@ -141,69 +222,89 @@ export default function ProductPage() {
           </div>
         </div>
       </header>
-      {/* Main Content */}
-      <div className="flex">
-        {/* Sidebar Filter */}
+      
+      <div className="container mx-auto flex">
         <aside className="w-80 bg-white p-8 border-r border-border min-h-screen">
           <h2 className="text-2xl font-bold mb-8">Filter:</h2>
 
-          {/* Collection Filter */}
-          <div className="mb-8">
-            <button className="flex items-center justify-between w-full text-lg font-semibold mb-4">
-              <span>Collection</span>
-              <ChevronDown size={20} />
-            </button>
-            <div className="space-y-3">
-              {collections.map((col) => (
-                <label key={col.name} className="flex items-center gap-3 cursor-pointer">
-                  <Checkbox id={col.name} />
-                  <span className="text-sm">
-                    {col.name} <span className="text-muted-foreground">{col.count}</span>
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
+          <Accordion type="multiple" defaultValue={["collection", "material", "availability", "price"]} className="w-full">
+            <AccordionItem value="collection">
+              <AccordionTrigger className="text-lg font-semibold">Collection</AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-3 pt-4">
+                  {collections.map((col) => (
+                    <label key={col.name} className="flex items-center gap-3 cursor-pointer">
+                      <Checkbox 
+                        id={col.name} 
+                        onCheckedChange={() => handleCollectionChange(col.name)}
+                        checked={selectedCollections.includes(col.name)}
+                      />
+                      <span className="text-sm">
+                        {col.name} <span className="text-muted-foreground">({col.count})</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
 
-          <div className="border-b border-border my-8"></div>
+            <AccordionItem value="material">
+              <AccordionTrigger className="text-lg font-semibold">Material</AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-3 pt-4">
+                    {materials.map((mat) => (
+                      <label key={mat} className="flex items-center gap-3 cursor-pointer">
+                        <Checkbox 
+                          id={mat}
+                          onCheckedChange={() => handleMaterialChange(mat)}
+                          checked={selectedMaterials.includes(mat)}
+                        />
+                        <span className="text-sm">{mat}</span>
+                      </label>
+                    ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
 
-          {/* Material Filter */}
-          <div className="mb-8">
-            <button className="flex items-center justify-between w-full text-lg font-semibold">
-              <span>Material</span>
-              <ChevronDown size={20} />
-            </button>
-          </div>
-
-          <div className="border-b border-border my-8"></div>
-
-          {/* Availability Filter */}
-          <div className="mb-8">
-            <button className="flex items-center justify-between w-full text-lg font-semibold">
-              <span>Availability</span>
-              <ChevronDown size={20} />
-            </button>
-          </div>
-
-          <div className="border-b border-border my-8"></div>
-
-          {/* Price Filter */}
-          <div>
-            <button className="flex items-center justify-between w-full text-lg font-semibold mb-4">
-              <span>Price</span>
-              <ChevronDown size={20} />
-            </button>
-            <Slider defaultValue={[33]} max={100} step={1} />
-            <div className="flex justify-between text-sm text-muted-foreground mt-2">
-              <span>₹0</span>
-              <span>₹10,000</span>
-            </div>
-          </div>
+            <AccordionItem value="availability">
+              <AccordionTrigger className="text-lg font-semibold">Availability</AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-3 pt-4">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <Checkbox id="in-stock" onCheckedChange={(checked) => setAvailability(checked ? 'in-stock' : 'all')} checked={availability === 'in-stock'} />
+                    <span className="text-sm">In Stock</span>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <Checkbox id="out-of-stock" onCheckedChange={(checked) => setAvailability(checked ? 'out-of-stock' : 'all')} checked={availability === 'out-of-stock'} />
+                    <span className="text-sm">Out of Stock</span>
+                  </label>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="price">
+              <AccordionTrigger className="text-lg font-semibold">Price</AccordionTrigger>
+              <AccordionContent>
+                <div className="pt-4">
+                  <Slider 
+                    defaultValue={[0, 10000]} 
+                    max={10000} 
+                    step={100}
+                    min={0}
+                    value={priceRange}
+                    onValueChange={(value) => setPriceRange(value as [number, number])} 
+                  />
+                  <div className="flex justify-between text-sm text-muted-foreground mt-2">
+                    <span>₹{priceRange[0]}</span>
+                    <span>₹{priceRange[1]}</span>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </aside>
 
-        {/* Products Area */}
         <main className="flex-1 p-8">
-          {/* Controls */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
               <span className="text-muted-foreground">View:</span>
@@ -236,15 +337,14 @@ export default function ProductPage() {
                 </Select>
 
               </div>
-              <span className="text-foreground font-semibold">282 Products</span>
+              <span className="text-foreground font-semibold">{filteredProducts.length} Products</span>
             </div>
           </div>
 
-          {/* Product Grid */}
           <div
             className={`grid gap-6 ${getGridCols()}`}
           >
-            {mockProducts.map((product) => (
+            {filteredProducts.map((product) => (
               <div key={product.id} className="group">
                 <div className="bg-muted aspect-square rounded-lg overflow-hidden mb-4 cursor-pointer hover:opacity-80 transition relative">
                   <Image
