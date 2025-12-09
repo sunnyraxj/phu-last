@@ -196,7 +196,7 @@ export default function ProductPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-primary text-primary-foreground">
+      <header className="bg-black text-white">
         <div className="container mx-auto flex items-center justify-between px-8 py-4">
           <div className="flex items-center gap-2">
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
@@ -471,5 +471,3 @@ export default function ProductPage() {
     </div>
   )
 }
-
-    
