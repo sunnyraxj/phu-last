@@ -5,8 +5,8 @@ import { Toaster } from "@/components/ui/toaster"
 import { Header } from '@/components/shared/Header';
 
 export const metadata: Metadata = {
-  title: 'New App',
-  description: 'Built with Firebase Studio',
+  title: 'Purbanchal Hasta Udyog',
+  description: 'Handicrafts from the East',
 };
 
 export default function RootLayout({
@@ -18,7 +18,7 @@ export default function RootLayout({
     <html lang="en" className="scroll-smooth">
       <body className={cn('min-h-screen bg-background font-sans antialiased')}>
         <Header />
-        <main className="container py-8">{children}</main>
+        <main>{children}</main>
         <Toaster />
       </body>
     </html>
