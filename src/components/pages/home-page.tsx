@@ -71,11 +71,11 @@ function HeroSection() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
         <div className="relative container h-full flex flex-col items-start justify-end pb-12 md:pb-24 text-foreground">
-            <h1 className="font-headline text-4xl md:text-6xl font-bold max-w-2xl">
-                The Soul of Craft, <br /> Delivered to Your Home.
+            <h1 className="font-headline text-4xl md:text-6xl font-bold max-w-2xl text-primary-foreground">
+                Handcrafted by the<br /> artisans of Bengal
             </h1>
             <p className="mt-4 max-w-xl text-lg text-muted-foreground">
-                Discover unique, handcrafted treasures from the heart of Purbanchal. Each piece tells a story.
+                Discover unique, handcrafted treasures from the heart of Bengal. Each piece tells a story.
             </p>
             <Button size="lg" className="mt-6" asChild>
                 <Link href="#products">Explore Products</Link>

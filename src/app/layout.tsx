@@ -6,7 +6,7 @@ import { Footer } from '@/components/layout/Footer';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'Purbanchal Hasta Udyog',
+  title: 'The Bengali',
   description: 'A platform for artisans to showcase and sell their handcrafted goods.',
 };
 
