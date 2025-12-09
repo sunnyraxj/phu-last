@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { ChevronDown, Search, User, Heart, ShoppingCart, Plus, Minus, X } from "lucide-react"
+import { ChevronDown, Search, User, Heart, ShoppingCart, Plus, Minus, X, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
@@ -107,7 +107,7 @@ export default function ProductPage() {
   const [viewMode, setViewMode] = useState<"grid2" | "grid3" | "grid4">("grid4")
   const [sortBy, setSortBy] = useState("Featured")
   
-  const [wishlistCount, setWishlistCount] = useState(0)
+  const [wishlist, setWishlist] = useState<number[]>([])
 
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
@@ -145,6 +145,26 @@ export default function ProductPage() {
         : currentItems.filter(item => item.id !== productId)
     );
   };
+  
+  const addToCart = (product: typeof allProducts[0]) => {
+    setCartItems(currentItems => {
+      const existingItem = currentItems.find(item => item.id === product.id);
+      if (existingItem) {
+        return currentItems.map(item => 
+          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+      return [...currentItems, { ...product, quantity: 1 }];
+    });
+  };
+
+  const toggleWishlist = (productId: number) => {
+    setWishlist(prev => 
+      prev.includes(productId) 
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
+  }
 
   const filteredProducts = useMemo(() => {
     return allProducts
@@ -225,9 +245,9 @@ export default function ProductPage() {
             </button>
             <button className="relative hover:opacity-80">
               <Heart size={20} />
-              {wishlistCount > 0 && (
+              {wishlist.length > 0 && (
                 <span className="absolute -top-2 -right-2 bg-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {wishlistCount}
+                  {wishlist.length}
                 </span>
               )}
             </button>
@@ -466,23 +486,57 @@ export default function ProductPage() {
           </div>
 
           <div
-            className={cn('grid gap-6', getGridCols())}
+            className={cn('grid gap-8', getGridCols())}
           >
             {filteredProducts.map((product) => (
-              <div key={product.id} className="group">
-                <div className="bg-muted aspect-square rounded-lg overflow-hidden mb-4 cursor-pointer hover:opacity-80 transition relative">
+              <div key={product.id} className="group relative">
+                <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted cursor-pointer">
                   <Image
                     src={product.image}
                     alt={product.name}
                     fill
-                    className="object-cover"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
                     data-ai-hint={product['data-ai-hint']}
                   />
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="absolute top-3 left-3">
+                    <span className="inline-block bg-black/60 text-white text-xs font-semibold px-3 py-1.5 rounded-full">
+                      {product.collection}
+                    </span>
+                  </div>
+                  <div className="absolute top-3 right-3">
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="h-9 w-9 rounded-full bg-white/30 text-white backdrop-blur-sm hover:bg-white/40"
+                    >
+                      <Eye size={18} />
+                    </Button>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 p-4 flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <Button 
+                      size="sm" 
+                      className="bg-white text-black hover:bg-white/90 rounded-full shadow-lg"
+                      onClick={() => addToCart(product)}
+                    >
+                      Add to Cart
+                    </Button>
+                    <Button 
+                      size="icon" 
+                      variant="secondary" 
+                      className="bg-white text-black hover:bg-white/90 rounded-full shadow-lg"
+                      onClick={() => toggleWishlist(product.id)}
+                    >
+                      <Heart size={18} className={cn("transition-colors", wishlist.includes(product.id) ? "text-red-500 fill-current" : "")} />
+                    </Button>
+                  </div>
                 </div>
-                <h3 className="font-semibold text-foreground mb-2 text-sm line-clamp-2">{product.name}</h3>
-                <p className="text-primary font-bold text-lg">
-                   {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(product.price)}
-                </p>
+                <div className="mt-4 text-center">
+                  <h3 className="font-semibold text-foreground mb-1 text-sm line-clamp-2">{product.name}</h3>
+                  <p className="text-primary font-bold text-base">
+                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(product.price)}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
