@@ -498,41 +498,30 @@ export default function ProductPage() {
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                     data-ai-hint={product['data-ai-hint']}
                   />
-                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="absolute top-3 left-3">
-                    <span className="inline-block bg-black/60 text-white text-xs font-semibold px-3 py-1.5 rounded-full">
-                      {product.collection}
-                    </span>
-                  </div>
-                  <div className="absolute top-3 right-3">
-                    <Button
-                      variant="secondary"
-                      size="icon"
-                      className="h-9 w-9 rounded-full bg-white/30 text-white backdrop-blur-sm hover:bg-white/40"
-                    >
-                      <Eye size={18} />
-                    </Button>
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-4 flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <Button 
-                      size="sm" 
-                      className="bg-white text-black hover:bg-white/90 rounded-full shadow-lg"
-                      onClick={() => addToCart(product)}
-                    >
-                      Add to Cart
-                    </Button>
-                    <Button 
-                      size="icon" 
-                      variant="secondary" 
-                      className="bg-white text-black hover:bg-white/90 rounded-full shadow-lg"
-                      onClick={() => toggleWishlist(product.id)}
-                    >
-                      <Heart size={18} className={cn("transition-colors", wishlist.includes(product.id) ? "text-red-500 fill-current" : "")} />
-                    </Button>
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  
+                  <div className="absolute bottom-0 left-0 right-0 p-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <h3 className="font-semibold text-sm mb-2 line-clamp-2">{product.name}</h3>
+                    <div className="flex justify-between items-center">
+                      <Button 
+                        size="sm" 
+                        className="bg-white text-black hover:bg-white/90 rounded-full shadow-lg text-xs px-4"
+                        onClick={() => addToCart(product)}
+                      >
+                        Add to Cart
+                      </Button>
+                      <Button 
+                        size="icon" 
+                        variant="secondary" 
+                        className="bg-white/20 text-white hover:bg-white/30 rounded-full shadow-lg h-8 w-8"
+                        onClick={() => toggleWishlist(product.id)}
+                      >
+                        <Heart size={16} className={cn("transition-colors", wishlist.includes(product.id) ? "text-red-500 fill-current" : "")} />
+                      </Button>
+                    </div>
                   </div>
                 </div>
-                <div className="mt-4 text-center">
-                  <h3 className="font-semibold text-foreground mb-1 text-sm line-clamp-2">{product.name}</h3>
+                <div className="mt-2 text-left">
                   <p className="text-primary font-bold text-base">
                     {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(product.price)}
                   </p>
