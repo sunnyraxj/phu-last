@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { ChevronDown, Search, User, Heart, ShoppingCart, Plus, Minus, X, Eye, ShoppingBag } from "lucide-react"
+import { ChevronDown, Search, User, ShoppingCart, Plus, Minus, X, Eye, ShoppingBag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
@@ -129,8 +129,6 @@ export default function ProductPage() {
   const [viewMode, setViewMode] = useState<"grid2" | "grid3" | "grid4">("grid4")
   const [sortBy, setSortBy] = useState("Featured")
   
-  const [wishlist, setWishlist] = useState<number[]>([])
-
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [availability, setAvailability] = useState<string>("all"); // all, in-stock, out-of-stock
@@ -181,14 +179,6 @@ export default function ProductPage() {
       return [...currentItems, { ...product, quantity: 1 }];
     });
   };
-
-  const toggleWishlist = (productId: number) => {
-    setWishlist(prev => 
-      prev.includes(productId) 
-        ? prev.filter(id => id !== productId)
-        : [...prev, productId]
-    );
-  }
 
   const filteredProducts = useMemo(() => {
     return allProducts
@@ -263,17 +253,6 @@ export default function ProductPage() {
             </button>
             <button className="hover:opacity-80">
               <User size={20} />
-            </button>
-            <button className="relative hover:opacity-80" onClick={() => {
-              const currentWishlist = wishlist.length > 0 ? allProducts.filter(p => wishlist.includes(p.id)) : [];
-              alert(`Wishlist: \n${currentWishlist.map(p => p.name).join('\n')}`);
-            }}>
-              <Heart size={20} />
-              {wishlist.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {wishlist.length}
-                </span>
-              )}
             </button>
             <Sheet>
               <SheetTrigger asChild>
