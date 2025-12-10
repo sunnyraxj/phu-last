@@ -35,6 +35,10 @@ type Product = {
   artisanId: string;
 };
 
+type Order = {
+    status: 'pending' | 'shipped' | 'delivered';
+};
+
 type CartItem = Product & { quantity: number; cartItemId: string; };
 
 export default function OurStoresPage() {
@@ -49,6 +53,9 @@ export default function OurStoresPage() {
     const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
     const { data: allProducts } = useCollection<Product>(productsQuery);
 
+    const ordersQuery = useMemoFirebase(() => collection(firestore, 'orders'), [firestore]);
+    const { data: orders } = useCollection<Order>(ordersQuery);
+
     const cartItemsQuery = useMemoFirebase(() =>
       user ? collection(firestore, 'users', user.uid, 'cart') : null,
       [firestore, user]
@@ -62,6 +69,13 @@ export default function OurStoresPage() {
         return product ? { ...product, quantity: cartItem.quantity, cartItemId: cartItem.id } : null;
       }).filter((item): item is CartItem => item !== null);
     }, [cartData, allProducts]);
+    
+    const adminActionCount = useMemo(() => {
+        if (userData?.role !== 'admin' || !orders || !allProducts) return 0;
+        const pendingOrders = orders.filter(order => order.status === 'pending').length;
+        const outOfStock = allProducts.filter(p => !p.inStock).length;
+        return pendingOrders + outOfStock;
+    }, [orders, allProducts, userData]);
 
     const updateCartItemQuantity = (cartItemId: string, newQuantity: number) => {
       // Dummy function, as this is handled elsewhere.
@@ -74,6 +88,7 @@ export default function OurStoresPage() {
         cartItems={cartItems}
         updateCartItemQuantity={updateCartItemQuantity}
         stores={stores || []}
+        adminActionCount={adminActionCount}
       />
 
       <main className="container mx-auto py-16 px-4 sm:px-6 lg:px-8">

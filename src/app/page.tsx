@@ -37,6 +37,10 @@ type Product = {
   artisanId: string;
 };
 
+type Order = {
+    status: 'pending' | 'shipped' | 'delivered';
+};
+
 type CartItem = Product & { quantity: number; cartItemId: string; };
 
 type Store = {
@@ -82,6 +86,9 @@ export default function ProductPage() {
   );
   const { data: allProducts, isLoading: productsLoading } = useCollection<Product>(productsQuery);
 
+    const ordersQuery = useMemoFirebase(() => collection(firestore, 'orders'), [firestore]);
+    const { data: orders } = useCollection<Order>(ordersQuery);
+
   const cartItemsQuery = useMemoFirebase(() =>
     user ? collection(firestore, 'users', user.uid, 'cart') : null,
     [firestore, user]
@@ -101,6 +108,13 @@ export default function ProductPage() {
 
   const storesQuery = useMemoFirebase(() => collection(firestore, 'stores'), [firestore]);
   const { data: stores } = useCollection<Store>(storesQuery);
+
+  const adminActionCount = useMemo(() => {
+    if (userData?.role !== 'admin' || !orders || !allProducts) return 0;
+    const pendingOrders = orders.filter(order => order.status === 'pending').length;
+    const outOfStock = allProducts.filter(p => !p.inStock).length;
+    return pendingOrders + outOfStock;
+  }, [orders, allProducts, userData]);
 
   const handleCollectionChange = (collectionName: string) => {
     setSelectedCollections(prev => 
@@ -208,6 +222,7 @@ export default function ProductPage() {
         cartItems={cartItems}
         updateCartItemQuantity={updateCartItemQuantity}
         stores={stores || []}
+        adminActionCount={adminActionCount}
       />
 
       <section className="relative h-[60vh] w-full flex items-center justify-center text-white">

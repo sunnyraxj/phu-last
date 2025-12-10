@@ -13,6 +13,7 @@ import Image from "next/image";
 import { Separator } from "../ui/separator";
 import { Input } from "../ui/input";
 import { Plus, Minus, X, Sprout, Palette, Wind } from "lucide-react";
+import { Badge } from "../ui/badge";
 
 type Product = {
     id: string;
@@ -40,9 +41,10 @@ interface HeaderProps {
     cartItems: CartItem[];
     updateCartItemQuantity: (cartItemId: string, newQuantity: number) => void;
     stores?: Store[];
+    adminActionCount?: number;
 }
 
-export function Header({ userData, cartItems, updateCartItemQuantity, stores = [] }: HeaderProps) {
+export function Header({ userData, cartItems, updateCartItemQuantity, stores = [], adminActionCount = 0 }: HeaderProps) {
     const { user, isUserLoading } = useUser();
     const auth = useAuth();
     const [isCraftsPopoverOpen, setIsCraftsPopoverOpen] = useState(false);
@@ -173,13 +175,18 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                 <div 
                                     onMouseEnter={() => setIsAdminPopoverOpen(true)} 
                                     onMouseLeave={() => setIsAdminPopoverOpen(false)}
-                                    className="flex items-center"
+                                    className="flex items-center relative"
                                 >
                                     <Link href="/admin">
                                         <button className="flex items-center gap-1 hover:opacity-80">
                                             ADMIN <ChevronDown size={16} />
                                         </button>
                                     </Link>
+                                    {adminActionCount > 0 && (
+                                        <Badge variant="destructive" className="absolute -top-2 -right-3 z-10 px-1.5 py-0 h-4 leading-none text-xs">
+                                            {adminActionCount}
+                                        </Badge>
+                                    )}
                                 </div>
                             </PopoverTrigger>
                             <PopoverContent 
