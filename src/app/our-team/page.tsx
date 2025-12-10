@@ -9,6 +9,7 @@ import { collection, doc } from 'firebase/firestore';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Header } from "@/components/shared/Header";
 import { useMemo } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 
 type TeamMember = {
     id: string;
@@ -73,15 +74,12 @@ export default function OurTeamPage() {
       // Dummy function, as cart management is handled on the main page.
     };
 
-    const { founder, otherMembers } = useMemo(() => {
-      if (!teamMembers) return { founder: null, otherMembers: [] };
-      const founderMember = teamMembers.find(member => member.role === 'Founder');
-      const otherTeamMembers = teamMembers.filter(member => member.role !== 'Founder');
-      
-      const roleOrder = { 'Management': 1, 'Team Member': 2 };
-      otherTeamMembers.sort((a, b) => (roleOrder[a.role] || 3) - (roleOrder[b.role] || 3));
-
-      return { founder: founderMember, otherMembers: otherTeamMembers };
+    const { founder, managementMembers, teamMembers: otherTeamMembers } = useMemo(() => {
+        if (!teamMembers) return { founder: null, managementMembers: [], teamMembers: [] };
+        const founderMember = teamMembers.find(member => member.role === 'Founder');
+        const management = teamMembers.filter(member => member.role === 'Management');
+        const others = teamMembers.filter(member => member.role === 'Team Member');
+        return { founder: founderMember, managementMembers: management, teamMembers: others };
     }, [teamMembers]);
 
 
@@ -129,26 +127,62 @@ export default function OurTeamPage() {
               </div>
             )}
             
-            {otherMembers.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-              {otherMembers.map((member) => (
-                  <div key={member.id} className="text-center">
-                  <div className="relative h-64 w-64 mx-auto rounded-full overflow-hidden mb-4 shadow-lg">
-                      <Image
-                      src={member.image}
-                      alt={member.name}
-                      width={400}
-                      height={400}
-                      className="object-cover"
-                      data-ai-hint={member['data-ai-hint']}
-                      />
-                  </div>
-                  <h2 className="text-2xl font-semibold text-foreground">{member.name}</h2>
-                  <p className="text-primary font-medium">{member.role}</p>
-                  <p className="mt-2 text-muted-foreground max-w-xs mx-auto">{member.bio}</p>
-                  </div>
-              ))}
-              </div>
+            {managementMembers.length > 0 && (
+                <div className="mb-20">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Management</h2>
+                        <p className="mt-3 text-lg text-muted-foreground max-w-2xl mx-auto">
+                            The leaders guiding our vision and strategy.
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12">
+                        {managementMembers.map((member) => (
+                           <Card key={member.id} className="flex flex-col md:flex-row items-center gap-6 p-6">
+                               <div className="relative h-40 w-40 shrink-0 rounded-full overflow-hidden shadow-lg">
+                                   <Image
+                                       src={member.image}
+                                       alt={member.name}
+                                       fill
+                                       className="object-cover"
+                                       data-ai-hint={member['data-ai-hint']}
+                                   />
+                               </div>
+                               <div className="text-center md:text-left">
+                                   <h3 className="text-2xl font-semibold text-foreground">{member.name}</h3>
+                                   <p className="text-primary font-medium">{member.role}</p>
+                                   <p className="mt-2 text-muted-foreground text-sm max-w-xs mx-auto md:mx-0">{member.bio}</p>
+                               </div>
+                           </Card>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {otherTeamMembers.length > 0 && (
+                <div>
+                     <div className="text-center mb-12">
+                        <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Our Dedicated Team</h2>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+                    {otherTeamMembers.map((member) => (
+                        <div key={member.id} className="text-center">
+                        <div className="relative h-64 w-64 mx-auto rounded-full overflow-hidden mb-4 shadow-lg">
+                            <Image
+                            src={member.image}
+                            alt={member.name}
+                            width={400}
+                            height={400}
+                            className="object-cover"
+                            data-ai-hint={member['data-ai-hint']}
+                            />
+                        </div>
+                        <h2 className="text-2xl font-semibold text-foreground">{member.name}</h2>
+                        <p className="text-primary font-medium">{member.role}</p>
+                        <p className="mt-2 text-muted-foreground max-w-xs mx-auto">{member.bio}</p>
+                        </div>
+                    ))}
+                    </div>
+                </div>
             )}
           </>
         ) : (
@@ -158,7 +192,7 @@ export default function OurTeamPage() {
         )}
 
 
-        <div className="text-center mt-16">
+        <div className="text-center mt-20">
           <Link href="/">
             <Button size="lg">Back to Shopping</Button>
           </Link>
