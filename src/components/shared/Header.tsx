@@ -2,7 +2,7 @@
 'use client';
 
 import Link from "next/link";
-import { ChevronDown, ShoppingBag, User, LogOut, Settings, Store } from "lucide-react";
+import { ChevronDown, ShoppingBag, User, LogOut, Settings, Store, Package, Users, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -47,6 +47,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
     const auth = useAuth();
     const [isCraftsPopoverOpen, setIsCraftsPopoverOpen] = useState(false);
     const [isStoresPopoverOpen, setIsStoresPopoverOpen] = useState(false);
+    const [isAdminPopoverOpen, setIsAdminPopoverOpen] = useState(false);
 
 
     const handleSignOut = async () => {
@@ -166,10 +167,49 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                         <button className="hover:opacity-80">OUR TEAM</button>
                     </Link>
                     <button className="hover:opacity-80">BLOG</button>
-                    {userData?.role === 'admin' && (
-                        <Link href="/admin">
-                            <button className="hover:opacity-80">ADMIN</button>
-                        </Link>
+                     {userData?.role === 'admin' && (
+                        <Popover open={isAdminPopoverOpen} onOpenChange={setIsAdminPopoverOpen}>
+                            <PopoverTrigger asChild>
+                                <div 
+                                    onMouseEnter={() => setIsAdminPopoverOpen(true)} 
+                                    onMouseLeave={() => setIsAdminPopoverOpen(false)}
+                                    className="flex items-center"
+                                >
+                                    <Link href="/admin">
+                                        <button className="flex items-center gap-1 hover:opacity-80">
+                                            ADMIN <ChevronDown size={16} />
+                                        </button>
+                                    </Link>
+                                </div>
+                            </PopoverTrigger>
+                            <PopoverContent 
+                                className="w-64"
+                                onMouseEnter={() => setIsAdminPopoverOpen(true)} 
+                                onMouseLeave={() => setIsAdminPopoverOpen(false)}
+                            >
+                                <div className="grid gap-4">
+                                    <p className="font-semibold">Admin Panel</p>
+                                    <div className="grid gap-2">
+                                        <Link href="/admin" className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted -m-2">
+                                            <Package className="h-5 w-5 mt-0.5 text-primary"/>
+                                            <p className="font-semibold text-sm">Products</p>
+                                        </Link>
+                                        <Link href="/admin/orders" className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted -m-2">
+                                            <ShoppingCart className="h-5 w-5 mt-0.5 text-primary"/>
+                                            <p className="font-semibold text-sm">Orders</p>
+                                        </Link>
+                                        <Link href="/admin/team" className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted -m-2">
+                                            <Users className="h-5 w-5 mt-0.5 text-primary"/>
+                                            <p className="font-semibold text-sm">Our Team</p>
+                                        </Link>
+                                        <Link href="/admin/store" className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted -m-2">
+                                            <Store className="h-5 w-5 mt-0.5 text-primary"/>
+                                            <p className="font-semibold text-sm">Our Store</p>
+                                        </Link>
+                                    </div>
+                                </div>
+                            </PopoverContent>
+                        </Popover>
                     )}
                 </nav>
 
