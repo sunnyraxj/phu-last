@@ -37,7 +37,7 @@ type CartItem = Product & { quantity: number; cartItemId: string; };
 
 const collections = [
   { name: "Crafts", count: 5 },
-  { name: "LifeStyle", count: 3 },
+  { name: "LifeStyle", count: 5 },
 ]
 
 const materials = ["Paper", "Ceramic", "Brass", "Sabai Grass", "Jute"];
@@ -53,6 +53,7 @@ export default function ProductPage() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [productsSeeded, setProductsSeeded] = useState(false);
 
   const firestore = useFirestore();
   const auth = useAuth();
@@ -177,6 +178,39 @@ export default function ProductPage() {
         return 'grid-cols-4'
     }
   }
+
+  const addMockProducts = async () => {
+    if (!firestore) return;
+    const batch = writeBatch(firestore);
+    const productsCollection = collection(firestore, "products");
+  
+    const mockProducts: Omit<Product, 'id'>[] = [
+      { name: "Terracotta Vase", price: 1200, image: "https://picsum.photos/seed/product1/600/400", "data-ai-hint": "terracotta vase", collection: "Crafts", material: "Ceramic", inStock: true, description: "A beautiful handcrafted terracotta vase, perfect for adding a rustic touch to your home decor.", artisanId: "artisan1" },
+      { name: "Woven Jute Rug", price: 2500, image: "https://picsum.photos/seed/product2/600/400", "data-ai-hint": "jute rug", collection: "LifeStyle", material: "Jute", inStock: true, description: "Handwoven jute rug, durable and eco-friendly. Adds a natural and warm feel to any room.", artisanId: "artisan2" },
+      { name: "Brass Deity Statue", price: 3500, image: "https://picsum.photos/seed/product3/600/400", "data-ai-hint": "brass statue", collection: "Crafts", material: "Brass", inStock: false, description: "Intricately designed brass statue of a deity, a masterpiece of traditional metalwork.", artisanId: "artisan3" },
+      { name: "Sabai Grass Wall Hanging", price: 800, image: "https://picsum.photos/seed/product4/600/400", "data-ai-hint": "wall hanging", collection: "LifeStyle", material: "Sabai Grass", inStock: true, description: "A decorative wall hanging made from Sabai grass, showcasing tribal art forms.", artisanId: "artisan4" },
+      { name: "Handmade Paper Diary", price: 500, image: "https://picsum.photos/seed/product5/600/400", "data-ai-hint": "handmade diary", collection: "Crafts", material: "Paper", inStock: true, description: "Eco-friendly diary with a cover made from recycled handmade paper.", artisanId: "artisan5" },
+      { name: "Ceramic Coffee Mugs", price: 950, image: "https://picsum.photos/seed/product6/600/400", "data-ai-hint": "coffee mug", collection: "LifeStyle", material: "Ceramic", inStock: true, description: "Set of two handcrafted ceramic coffee mugs with a unique glaze.", artisanId: "artisan1" },
+      { name: "Jute Shopping Bag", price: 600, image: "https://picsum.photos/seed/product7/600/400", "data-ai-hint": "jute bag", collection: "LifeStyle", material: "Jute", inStock: true, description: "A strong and stylish jute bag for your everyday shopping needs.", artisanId: "artisan2" },
+      { name: "Brass Bell", price: 1500, image: "https://picsum.photos/seed/product8/600/400", "data-ai-hint": "brass bell", collection: "Crafts", material: "Brass", inStock: true, description: "A traditional brass bell with a clear and resonant sound.", artisanId: "artisan3" },
+      { name: "Sabai Grass Coasters", price: 400, image: "https://picsum.photos/seed/product9/600/400", "data-ai-hint": "grass coasters", collection: "LifeStyle", material: "Sabai Grass", inStock: false, description: "Set of six coasters made from woven Sabai grass.", artisanId: "artisan4" },
+      { name: "Paper Mache Box", price: 750, image: "https://picsum.photos/seed/product10/600/400", "data-ai-hint": "paper box", collection: "Crafts", material: "Paper", inStock: true, description: "A colorful paper mache box, perfect for storing jewelry or trinkets.", artisanId: "artisan5" },
+    ];
+  
+    mockProducts.forEach((product) => {
+      const docRef = doc(productsCollection); // Auto-generates ID
+      batch.set(docRef, {...product, id: docRef.id});
+    });
+  
+    try {
+      await batch.commit();
+      setProductsSeeded(true);
+      alert('10 mock products have been added to your database!');
+    } catch (e) {
+      console.error("Error adding mock products: ", e);
+      alert('There was an error adding the products.');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background font-sans">
@@ -310,7 +344,12 @@ export default function ProductPage() {
       
       <div className="container mx-auto flex">
         <aside className="w-72 bg-background p-6 border-r border-border min-h-screen">
-          <h2 className="text-xl font-bold mb-6">Filter:</h2>
+          <div className="flex justify-between items-center mb-6">
+             <h2 className="text-xl font-bold">Filter:</h2>
+             {!productsSeeded && (!allProducts || allProducts.length === 0) && (
+              <Button onClick={addMockProducts} variant="secondary" size="sm">Add Mock Products</Button>
+             )}
+          </div>
 
           <Accordion type="multiple" defaultValue={["collection", "material", "availability", "price"]} className="w-full">
             <AccordionItem value="collection">
@@ -473,7 +512,7 @@ export default function ProductPage() {
                   </div>
                   <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <Button variant="secondary" size="icon" className="h-9 w-9" onClick={() => addToCart(product)}>
-                      <ShoppingCart />
+                      <ShoppingBag />
                     </Button>
                     <Button variant="secondary" size="icon" className="h-9 w-9" onClick={() => setSelectedProduct(product)}>
                       <Eye />
