@@ -253,9 +253,6 @@ export default function ProductPage() {
             <button className="flex items-center gap-1 hover:opacity-80">
               CRAFTS <ChevronDown size={16} />
             </button>
-            <button className="flex items-center gap-1 hover:opacity-80">
-              LIFESTYLE <ChevronDown size={16} />
-            </button>
             <button className="hover:opacity-80">OUR STORE</button>
             <button className="hover:opacity-80">BLOG</button>
           </nav>
@@ -533,7 +530,7 @@ export default function ProductPage() {
                   </div>
                   <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <Button variant="secondary" size="icon" className="h-9 w-9" onClick={() => addToCart(product)}>
-                      <ShoppingCart />
+                      <ShoppingBag />
                     </Button>
                     <Button variant="secondary" size="icon" className="h-9 w-9" onClick={() => setSelectedProduct(product)}>
                       <Eye />
