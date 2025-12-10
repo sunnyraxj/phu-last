@@ -13,7 +13,7 @@ type TeamMember = {
     role: string;
     bio: string;
     image: string;
-    'data-ai-hint']?: string;
+    'data-ai-hint'?: string;
 };
 
 export default function OurTeamPage() {
