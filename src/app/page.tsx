@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { ChevronDown, Search, User, Heart, ShoppingCart, Plus, Minus, X, Eye } from "lucide-react"
+import { ChevronDown, Search, User, Heart, ShoppingCart, Plus, Minus, X, Eye, ShoppingBag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
@@ -9,11 +9,25 @@ import { Slider } from "@/components/ui/slider"
 import Image from "next/image"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from "@/components/ui/sheet"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
-const allProducts = [
+type Product = {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  "data-ai-hint": string;
+  collection: string;
+  material: string;
+  inStock: boolean;
+  description: string;
+};
+
+
+const allProducts: Product[] = [
   {
     id: 1,
     name: "Set Of 6 Jamini Roy Prints",
@@ -23,6 +37,7 @@ const allProducts = [
     collection: "Crafts",
     material: "Paper",
     inStock: true,
+    description: "A beautiful set of 6 prints by the famous artist Jamini Roy, perfect for decorating your home.",
   },
   {
     id: 2,
@@ -33,6 +48,7 @@ const allProducts = [
     collection: "Crafts",
     material: "Ceramic",
     inStock: true,
+    description: "A stunning ceramic plate with an etched bird design, handcrafted by skilled artisans.",
   },
   {
     id: 3,
@@ -43,6 +59,7 @@ const allProducts = [
     collection: "Crafts",
     material: "Brass",
     inStock: false,
+    description: "A traditional Dokra bell, made with the lost-wax casting technique. Adds a rustic charm.",
   },
   {
     id: 4,
@@ -53,6 +70,7 @@ const allProducts = [
     collection: "LifeStyle",
     material: "Sabai Grass",
     inStock: true,
+    description: "A handwoven Sabai grass basket with a lid, perfect for storage or as a decorative piece.",
   },
   {
     id: 5,
@@ -63,6 +81,7 @@ const allProducts = [
     collection: "Crafts",
     material: "Brass",
     inStock: true,
+    description: "An intricately detailed brass idol of Lord Ganesha, ideal for your home temple or as a gift.",
   },
   {
     id: 6,
@@ -73,6 +92,7 @@ const allProducts = [
     collection: "Crafts",
     material: "Brass",
     inStock: false,
+    description: "A charming bird figurine made using the Dhokra art form, perfect for any collector.",
   },
   {
     id: 7,
@@ -83,6 +103,7 @@ const allProducts = [
     collection: "LifeStyle",
     material: "Ceramic",
     inStock: true,
+    description: "A beautiful ceramic bowl shaped like a green leaf, bringing a touch of nature indoors.",
   },
   {
     id: 8,
@@ -93,6 +114,7 @@ const allProducts = [
     collection: "LifeStyle",
     material: "Jute",
     inStock: true,
+    description: "A sturdy and stylish woven jute basket, great for organizing your space with a natural touch.",
   },
 ]
 
@@ -118,6 +140,8 @@ export default function ProductPage() {
     { ...allProducts[0], quantity: 1 },
     { ...allProducts[3], quantity: 2 },
   ]);
+
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const cartCount = useMemo(() => cartItems.reduce((acc, item) => acc + item.quantity, 0), [cartItems]);
   const cartSubtotal = useMemo(() => cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0), [cartItems]);
@@ -146,7 +170,7 @@ export default function ProductPage() {
     );
   };
   
-  const addToCart = (product: typeof allProducts[0]) => {
+  const addToCart = (product: Product) => {
     setCartItems(currentItems => {
       const existingItem = currentItems.find(item => item.id === product.id);
       if (existingItem) {
@@ -215,7 +239,7 @@ export default function ProductPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background font-sans">
       <header className="bg-black text-white font-sans">
         <div className="container mx-auto flex items-center justify-between px-8 py-4">
           <div className="flex items-center gap-2">
@@ -243,7 +267,10 @@ export default function ProductPage() {
             <button className="hover:opacity-80">
               <User size={20} />
             </button>
-            <button className="relative hover:opacity-80">
+            <button className="relative hover:opacity-80" onClick={() => {
+              const currentWishlist = wishlist.length > 0 ? allProducts.filter(p => wishlist.includes(p.id)) : [];
+              alert(`Wishlist: \n${currentWishlist.map(p => p.name).join('\n')}`);
+            }}>
               <Heart size={20} />
               {wishlist.length > 0 && (
                 <span className="absolute -top-2 -right-2 bg-pink-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -485,29 +512,76 @@ export default function ProductPage() {
             </div>
           </div>
 
-          <div
-            className={cn('grid gap-x-8 gap-y-12', getGridCols())}
-          >
-            {filteredProducts.map((product) => (
-              <div key={product.id}>
-                <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    className="object-cover"
-                    data-ai-hint={product['data-ai-hint']}
-                  />
+          <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
+            <div className={cn('grid gap-x-8 gap-y-12', getGridCols())}>
+              {filteredProducts.map((product) => (
+                <div key={product.id} className="group relative">
+                  <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      data-ai-hint={product['data-ai-hint']}
+                    />
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4">
+                      <Button variant="secondary" size="icon" onClick={() => addToCart(product)}>
+                        <ShoppingBag size={20} />
+                        <span className="sr-only">Add to Cart</span>
+                      </Button>
+                      <Button variant="secondary" size="icon" onClick={() => setSelectedProduct(product)}>
+                        <Eye size={20} />
+                        <span className="sr-only">View Details</span>
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="mt-4 text-left">
+                    <h3 className="font-semibold text-sm truncate">{product.name}</h3>
+                    <p className="text-muted-foreground text-sm mt-1">
+                      {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 }).format(product.price)}
+                    </p>
+                  </div>
                 </div>
-                <div className="mt-4 text-left">
-                  <h3 className="font-semibold text-sm truncate">{product.name}</h3>
-                  <p className="text-muted-foreground text-sm mt-1">
-                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 }).format(product.price)}
-                  </p>
+              ))}
+            </div>
+
+            {selectedProduct && (
+              <DialogContent className="sm:max-w-[800px]">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-2">
+                  <div className="relative aspect-square bg-muted rounded-lg">
+                    <Image
+                      src={selectedProduct.image}
+                      alt={selectedProduct.name}
+                      fill
+                      className="object-cover rounded-lg"
+                    />
+                  </div>
+                  <div className="flex flex-col justify-center">
+                    <DialogHeader>
+                      <DialogTitle className="text-3xl font-bold">{selectedProduct.name}</DialogTitle>
+                      <DialogDescription className="text-base pt-4">
+                        {selectedProduct.description}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="mt-4">
+                      <p className="text-2xl font-bold">
+                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(selectedProduct.price)}
+                      </p>
+                      <p className={cn("mt-2 text-sm font-semibold", selectedProduct.inStock ? "text-green-600" : "text-red-600")}>
+                        {selectedProduct.inStock ? "In Stock" : "Out of Stock"}
+                      </p>
+                    </div>
+                    <DialogFooter className="mt-6">
+                      <Button size="lg" className="w-full" onClick={() => addToCart(selectedProduct)} disabled={!selectedProduct.inStock}>
+                        <ShoppingBag className="mr-2" />
+                        Add to Cart
+                      </Button>
+                    </DialogFooter>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              </DialogContent>
+            )}
+          </Dialog>
         </main>
       </div>
     </div>
