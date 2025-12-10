@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { signOut } from "firebase/auth";
 import { useAuth, useUser } from "@/firebase";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import Image from "next/image";
 import { Separator } from "../ui/separator";
 import { Input } from "../ui/input";
@@ -53,6 +53,39 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
     const [isCraftsPopoverOpen, setIsCraftsPopoverOpen] = useState(false);
     const [isStoresPopoverOpen, setIsStoresPopoverOpen] = useState(false);
     const [isAdminPopoverOpen, setIsAdminPopoverOpen] = useState(false);
+    
+    const craftsTimer = useRef<NodeJS.Timeout | null>(null);
+    const storesTimer = useRef<NodeJS.Timeout | null>(null);
+    const adminTimer = useRef<NodeJS.Timeout | null>(null);
+
+    const handleMouseEnter = (popover: 'crafts' | 'stores' | 'admin') => {
+        if (popover === 'crafts') {
+            if (craftsTimer.current) clearTimeout(craftsTimer.current);
+            setIsCraftsPopoverOpen(true);
+        } else if (popover === 'stores') {
+            if (storesTimer.current) clearTimeout(storesTimer.current);
+            setIsStoresPopoverOpen(true);
+        } else if (popover === 'admin') {
+            if (adminTimer.current) clearTimeout(adminTimer.current);
+            setIsAdminPopoverOpen(true);
+        }
+    };
+
+    const handleMouseLeave = (popover: 'crafts' | 'stores' | 'admin') => {
+        const timerSetter = (setter: React.Dispatch<React.SetStateAction<boolean>>) => {
+            return setTimeout(() => {
+                setter(false);
+            }, 1000);
+        };
+
+        if (popover === 'crafts') {
+            craftsTimer.current = timerSetter(setIsCraftsPopoverOpen);
+        } else if (popover === 'stores') {
+            storesTimer.current = timerSetter(setIsStoresPopoverOpen);
+        } else if (popover === 'admin') {
+            adminTimer.current = timerSetter(setIsAdminPopoverOpen);
+        }
+    };
 
 
     const handleSignOut = async () => {
@@ -80,8 +113,8 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                      <Popover open={isCraftsPopoverOpen} onOpenChange={setIsCraftsPopoverOpen}>
                         <PopoverTrigger asChild>
                             <div 
-                                onMouseEnter={() => setIsCraftsPopoverOpen(true)} 
-                                onMouseLeave={() => setIsCraftsPopoverOpen(false)}
+                                onMouseEnter={() => handleMouseEnter('crafts')} 
+                                onMouseLeave={() => handleMouseLeave('crafts')}
                                 className="flex items-center"
                             >
                                 <button className="flex items-center gap-1 hover:opacity-80">
@@ -91,8 +124,8 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                         </PopoverTrigger>
                         <PopoverContent 
                             className="w-80"
-                            onMouseEnter={() => setIsCraftsPopoverOpen(true)} 
-                            onMouseLeave={() => setIsCraftsPopoverOpen(false)}
+                            onMouseEnter={() => handleMouseEnter('crafts')} 
+                            onMouseLeave={() => handleMouseLeave('crafts')}
                         >
                             <div className="grid gap-4">
                                 <p className="font-semibold">Featured Crafts</p>
@@ -125,8 +158,8 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                     <Popover open={isStoresPopoverOpen} onOpenChange={setIsStoresPopoverOpen}>
                         <PopoverTrigger asChild>
                              <div 
-                                onMouseEnter={() => setIsStoresPopoverOpen(true)} 
-                                onMouseLeave={() => setIsStoresPopoverOpen(false)}
+                                onMouseEnter={() => handleMouseEnter('stores')} 
+                                onMouseLeave={() => handleMouseLeave('stores')}
                                 className="flex items-center"
                             >
                                 <Link href="/our-stores">
@@ -138,8 +171,8 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                         </PopoverTrigger>
                          <PopoverContent 
                             className="w-80"
-                            onMouseEnter={() => setIsStoresPopoverOpen(true)} 
-                            onMouseLeave={() => setIsStoresPopoverOpen(false)}
+                            onMouseEnter={() => handleMouseEnter('stores')} 
+                            onMouseLeave={() => handleMouseLeave('stores')}
                         >
                             <div className="grid gap-4">
                                 <p className="font-semibold">Store Locations</p>
@@ -180,8 +213,8 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                         <Popover open={isAdminPopoverOpen} onOpenChange={setIsAdminPopoverOpen}>
                             <PopoverTrigger asChild>
                                 <div 
-                                    onMouseEnter={() => setIsAdminPopoverOpen(true)} 
-                                    onMouseLeave={() => setIsAdminPopoverOpen(false)}
+                                    onMouseEnter={() => handleMouseEnter('admin')} 
+                                    onMouseLeave={() => handleMouseLeave('admin')}
                                     className="flex items-center relative"
                                 >
                                     <Link href="/admin">
@@ -198,8 +231,8 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                             </PopoverTrigger>
                             <PopoverContent 
                                 className="w-64"
-                                onMouseEnter={() => setIsAdminPopoverOpen(true)} 
-                                onMouseLeave={() => setIsAdminPopoverOpen(false)}
+                                onMouseEnter={() => handleMouseEnter('admin')} 
+                                onMouseLeave={() => handleMouseLeave('admin')}
                             >
                                 <div className="grid gap-4">
                                     <p className="font-semibold">Admin Panel</p>
@@ -351,3 +384,5 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
         </header>
     );
 }
+
+    
