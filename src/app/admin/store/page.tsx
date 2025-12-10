@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { PlusCircle, Edit, Trash2, MoreHorizontal, ExternalLink } from 'lucide-react';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { StoreForm } from '@/components/admin/StoreForm';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
@@ -79,78 +79,76 @@ export default function StorePage() {
                 store={selectedStore}
             />
             
-            <AlertDialog open={!!storeToDelete} onOpenChange={(isOpen) => !isOpen && setStoreToDelete(null)}>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>All Store Locations</CardTitle>
-                        <CardDescription>Manage your physical store locations.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="rounded-md border">
-                            <Table>
-                                <TableHeader>
+            <Card>
+                <CardHeader>
+                    <CardTitle>All Store Locations</CardTitle>
+                    <CardDescription>Manage your physical store locations.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="rounded-md border">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Address</TableHead>
+                                    <TableHead>Map Link</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {storesLoading ? (
                                     <TableRow>
-                                        <TableHead>Name</TableHead>
-                                        <TableHead>Address</TableHead>
-                                        <TableHead>Map Link</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
+                                        <TableCell colSpan={4} className="h-24 text-center">
+                                            <PottersWheelSpinner />
+                                        </TableCell>
                                     </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {storesLoading ? (
-                                        <TableRow>
-                                            <TableCell colSpan={4} className="h-24 text-center">
-                                                <PottersWheelSpinner />
+                                ) : stores && stores.length > 0 ? (
+                                    stores.map((store) => (
+                                        <TableRow key={store.id}>
+                                            <TableCell className="font-medium">{store.name}</TableCell>
+                                            <TableCell>{store.address}</TableCell>
+                                            <TableCell>
+                                                <Link href={store.googleMapsLink} target="_blank" rel="noopener noreferrer">
+                                                    <Button variant="ghost" size="sm">
+                                                        View on Map <ExternalLink className="ml-2 h-4 w-4" />
+                                                    </Button>
+                                                </Link>
                                             </TableCell>
-                                        </TableRow>
-                                    ) : stores && stores.length > 0 ? (
-                                        stores.map((store) => (
-                                            <TableRow key={store.id}>
-                                                <TableCell className="font-medium">{store.name}</TableCell>
-                                                <TableCell>{store.address}</TableCell>
-                                                <TableCell>
-                                                    <Link href={store.googleMapsLink} target="_blank" rel="noopener noreferrer">
-                                                        <Button variant="ghost" size="sm">
-                                                            View on Map <ExternalLink className="ml-2 h-4 w-4" />
+                                            <TableCell className="text-right">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon">
+                                                            <MoreHorizontal className="h-4 w-4" />
                                                         </Button>
-                                                    </Link>
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon">
-                                                                <MoreHorizontal className="h-4 w-4" />
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end">
-                                                            <DropdownMenuItem onClick={() => handleEditStore(store)}>
-                                                                <Edit className="mr-2 h-4 w-4" />
-                                                                Edit
-                                                            </DropdownMenuItem>
-                                                            <AlertDialogTrigger asChild>
-                                                                <DropdownMenuItem className="text-destructive" onClick={() => setStoreToDelete(store)}>
-                                                                    <Trash2 className="mr-2 h-4 w-4" />
-                                                                    Delete
-                                                                </DropdownMenuItem>
-                                                            </AlertDialogTrigger>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
-                                    ) : (
-                                        <TableRow>
-                                            <TableCell colSpan={4} className="h-24 text-center">
-                                                No stores found.
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={() => handleEditStore(store)}>
+                                                            <Edit className="mr-2 h-4 w-4" />
+                                                            Edit
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem className="text-destructive" onClick={() => setStoreToDelete(store)}>
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            Delete
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </TableCell>
                                         </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </CardContent>
-                </Card>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="h-24 text-center">
+                                            No stores found.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
 
+            <AlertDialog open={!!storeToDelete} onOpenChange={(isOpen) => !isOpen && setStoreToDelete(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
