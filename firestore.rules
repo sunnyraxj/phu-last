@@ -1,0 +1,265 @@
+/**
+ * This ruleset enforces a security model based on user ownership and a global
+ * admin role, designed for an artisan marketplace application.
+ *
+ * Core Philosophy:
+ * The primary security goal is to ensure users can only access and manage their
+ * own data (profiles, orders, etc.), while allowing public read access for
+ * marketplace data like products and reviews. A special 'admin' role grants
+ * comprehensive read and write access across the database for administrative
+ * purposes.
+ *
+ * Data Structure:
+ * The structure separates user-specific private data from public data. Private
+ * data like artisan profiles are nested under `/users/{userId}`, which provides
+ * a clear, path-based ownership model. Publicly-browsable data like `/products`
+ * and `/customer_reviews` are top-level collections. Admin roles are managed
+ * in a separate, dedicated `/roles_admin` collection for secure and efficient
+ * lookups.
+ *
+ * Key Security Decisions:
+ * - Admin Role: A user is considered an admin if a document with their UID
+ *   exists in the `/roles_admin` collection. This is the sole source of truth
+ *   for admin privileges, preventing users from elevating their own status by
+ *   modifying their user profile.
+ * - User Data Isolation: General listing of all users (`/users`) is disabled
+ *   for non-admins to protect user privacy.
+ * - Ownership Enforcement: All writes to top-level collections (like products,
+ *   orders, reviews) require an ownership field (e.g., `artisanId`, `customerId`)
+ *   that is validated against the authenticated user's ID.
+ *
+ * Denormalization for Authorization:
+ * To create simpler and more performant rules, authorization-critical data is
+ * denormalized. For example, a Product document contains an `artisanId`.
+ * Instead of performing a costly `get` to the artisan's profile to check for
+ * the owner's `userId`, the rules perform an efficient `exists()` check on the
+ * path `/users/{request.auth.uid}/artisans/{artisanId}`. This confirms the
+ * authenticated user is the owner of the artisan profile linked to the product.
+ *
+ * Structural Segregation:
+ * User profiles (`/users`) are separate from artisan profiles
+ * (`/users/{userId}/artisans/{artisanId}`), and both are separate from public
+ * product listings (`/products`). This segregation ensures that the security
+ * rules for each collection are simple, consistent, and easy to reason about,
+ * particularly for securing list operations.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper Functions for Reusable Logic
+
+    /**
+     * Checks if a user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the currently authenticated user is the owner of a document,
+     * based on a provided userId.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks if the currently authenticated user has admin privileges.
+     * Admin status is granted by the existence of a document in the
+     * `/roles_admin` collection with the user's UID as the document ID.
+     */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+    /**
+     * Checks if the authenticated user is the owner of a specific Artisan profile.
+     * This is used to authorize operations on products created by that artisan.
+     */
+    function isArtisanOwner(artisanId) {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)/artisans/$(artisanId));
+    }
+
+    /**
+     * Validates that the user ID in a document's data matches the document's path ID.
+     * - On create, checks the incoming data.
+     * - On update, ensures the field is immutable.
+     */
+    function hasConsistentOwnerId(userId) {
+      return request.resource.data.id == userId;
+    }
+
+    /**
+     * Validates that a user cannot make themselves an admin via their profile.
+     * The `isAdmin` field is treated as immutable for non-admins.
+     */
+    function isNotEscalatingPrivileges() {
+       let incomingData = request.resource.data;
+       return !('isAdmin' in incomingData) || incomingData.isAdmin == false;
+    }
+
+    /**
+     * @description
+     *   Manages user profile data. A user can create and manage their own
+     *   profile. Admins have full access. Listing all users is restricted
+     *   to admins to protect user privacy.
+     * @path
+     *   /users/{userId}
+     * @allow
+     *   (create) A new user `auth.uid: 'user123'` creates their own profile document at `/users/user123`.
+     * @deny
+     *   (list) A regular user tries to list all documents in the `/users` collection.
+     * @principle
+     *   Restricts access to a user's own data tree and enforces Self-Creation.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && hasConsistentOwnerId(userId) && isNotEscalatingPrivileges();
+      allow update: if (isOwner(userId) && hasConsistentOwnerId(userId) && isNotEscalatingPrivileges()) || isAdmin();
+      allow delete: if (isOwner(userId)) || isAdmin();
+    }
+
+    /**
+     * @description
+     *   A private collection that defines who is an admin. The existence of a
+     *   document grants admin rights. This collection should only be managed
+     *   by existing admins.
+     * @path
+     *   /roles_admin/{userId}
+     * @allow
+     *   (create) An admin `auth.uid: 'admin1'` creates a doc at `/roles_admin/newUser` to make them an admin.
+     * @deny
+     *   (get) A regular user `auth.uid: 'user123'` tries to read from this collection.
+     * @principle
+     *   Segregates authorization data into a secure, lookup-only collection.
+     */
+    match /roles_admin/{userId} {
+      allow get, list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description
+     *   Stores artisan profiles, which are nested under the user who owns them.
+     *   Only the owning user or an admin can manage these profiles.
+     * @path
+     *   /users/{userId}/artisans/{artisanId}
+     * @allow
+     *   (create) A user `auth.uid: 'user123'` creates an artisan profile at `/users/user123/artisans/artisan_abc`.
+     * @deny
+     *   (update) A different user `auth.uid: 'user456'` tries to update the profile at `/users/user123/artisans/artisan_abc`.
+     * @principle
+     *   Enforces strict ownership using a path-based security model.
+     */
+    match /users/{userId}/artisans/{artisanId} {
+      allow get, list: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if (isOwner(userId) && request.resource.data.userId == resource.data.userId) || isAdmin();
+      allow delete: if (isOwner(userId)) || isAdmin();
+    }
+
+    /**
+     * @description
+     *   Stores all product listings. Products are public and can be read by
+     *   anyone. Only the artisan who owns the product (via their artisan profile)
+     *   or an admin can create, update, or delete products.
+     * @path
+     *   /products/{productId}
+     * @allow
+     *   (get) Any user, signed in or not, can read a product document.
+     * @deny
+     *   (update) A user tries to update a product but is not the owner of the artisan profile linked in `artisanId`.
+     * @principle
+     *   Implements a Public Read with Owner-Only Writes pattern.
+     */
+    match /products/{productId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && isArtisanOwner(request.resource.data.artisanId);
+      allow update: if (isArtisanOwner(request.resource.data.artisanId)) || isAdmin();
+      allow delete: if (isArtisanOwner(request.resource.data.artisanId)) || isAdmin();
+    }
+
+    /**
+     * @description
+     *   Stores customer orders. An order can only be read or managed by the
+     *   customer who created it or by an admin. Listing all orders is restricted
+     *   to admins.
+     * @path
+     *   /orders/{orderId}
+     * @allow
+     *   (get) A user `auth.uid: 'user123'` reads an order where `resource.data.customerId == 'user123'`.
+     * @deny
+     *   (list) A regular user tries to list all documents in the `/orders` collection.
+     * @principle
+     *   Enforces document ownership for reads and writes, and secures list queries.
+     */
+    match /orders/{orderId} {
+      allow get: if (isOwner(request.resource.data.customerId)) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && isOwner(request.resource.data.customerId);
+      allow update: if (isOwner(request.resource.data.customerId)) || isAdmin();
+      allow delete: if (isOwner(request.resource.data.customerId)) || isAdmin();
+    }
+
+    /**
+     * @description
+     *   Stores items belonging to an order. For simplicity and security, only
+     *   admins are allowed to access this data directly. Client access would
+     *   be handled via Cloud Functions.
+     * @path
+     *   /order_items/{orderItemId}
+     * @allow
+     *   (get) An admin reads an order item document.
+     * @deny
+     *   (create) A regular user tries to create an order item document directly.
+     * @principle
+     *   Restricts access to backend processes or privileged admin users.
+     */
+    match /order_items/{orderItemId} {
+      allow get, list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description
+     *   Stores customer reviews for products or artisans. Reviews are public and
+     *   can be read by anyone. Only the customer who wrote the review or an
+     *   admin can create, update, or delete it.
+     * @path
+     *   /customer_reviews/{customerReviewId}
+     * @allow
+     *   (create) A user `auth.uid: 'user123'` creates a new review with `customerId: 'user123'`.
+     * @deny
+     *   (delete) A user tries to delete a review where `resource.data.customerId` does not match their UID.
+     * @principle
+     *   Implements a Public Read with Owner-Only Writes pattern.
+     */
+    match /customer_reviews/{customerReviewId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && isOwner(request.resource.data.customerId);
+      allow update: if (isOwner(request.resource.data.customerId)) || isAdmin();
+      allow delete: if (isOwner(request.resource.data.customerId)) || isAdmin();
+    }
+
+    /**
+     * @description
+     *   Stores sensitive payment information. For maximum security, this data
+     *   is only accessible to admins. Client interaction should be managed by
+     *   a secure backend service (e.g., Cloud Functions).
+     * @path
+     *   /payments/{paymentId}
+     * @allow
+     *   (get) An admin reads a payment document.
+     * @deny
+     *   (get) A regular user tries to read any payment document.
+     * @principle
+     *   Restricts access to backend processes or privileged admin users.
+     */
+    match /payments/{paymentId} {
+      allow get, list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+  }
+}

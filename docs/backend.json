@@ -1,0 +1,469 @@
+{
+  "entities": {
+    "Product": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Product",
+      "type": "object",
+      "description": "Represents a product listed by an artisan.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the product."
+        },
+        "artisanId": {
+          "type": "string",
+          "description": "Reference to the Artisan who created this product. (Relationship: Artisan 1:N Product)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the product."
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of the product."
+        },
+        "images": {
+          "type": "array",
+          "description": "Array of image URLs for the product.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "price": {
+          "type": "number",
+          "description": "Price of the product."
+        },
+        "category": {
+          "type": "string",
+          "description": "Category of the product (e.g., pottery, weaving)."
+        },
+        "tags": {
+          "type": "array",
+          "description": "Tags associated with the product for search and filtering.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "artisanId",
+        "name",
+        "description",
+        "images",
+        "price",
+        "category"
+      ]
+    },
+    "Artisan": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Artisan",
+      "type": "object",
+      "description": "Represents an artisan profile.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the artisan."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User associated with this artisan profile. (Relationship: User 1:1 Artisan)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the artisan."
+        },
+        "story": {
+          "type": "string",
+          "description": "Artisan's unique story and background."
+        },
+        "skills": {
+          "type": "array",
+          "description": "List of skills possessed by the artisan.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "profileImage": {
+          "type": "string",
+          "description": "URL of the artisan's profile image."
+        },
+        "contactEmail": {
+          "type": "string",
+          "description": "Contact email address of the artisan.",
+          "format": "email"
+        },
+        "contactPhone": {
+          "type": "string",
+          "description": "Contact phone number of the artisan."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "name",
+        "story",
+        "skills",
+        "profileImage",
+        "contactEmail",
+        "contactPhone"
+      ]
+    },
+    "Order": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Order",
+      "type": "object",
+      "description": "Represents a customer order.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the order."
+        },
+        "customerId": {
+          "type": "string",
+          "description": "Reference to the Customer who placed the order. (Relationship: Customer 1:N Order)"
+        },
+        "orderDate": {
+          "type": "string",
+          "description": "Date and time when the order was placed.",
+          "format": "date-time"
+        },
+        "totalAmount": {
+          "type": "number",
+          "description": "Total amount of the order."
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status of the order (e.g., pending, processing, shipped, delivered)."
+        },
+        "shippingAddress": {
+          "type": "string",
+          "description": "Shipping address for the order."
+        },
+        "orderItems": {
+          "type": "array",
+          "description": "List of order items id. (Relationship: Order 1:N OrderItem)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "customerId",
+        "orderDate",
+        "totalAmount",
+        "status",
+        "shippingAddress",
+        "orderItems"
+      ]
+    },
+    "OrderItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "OrderItem",
+      "type": "object",
+      "description": "Represents an item within an order.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the order item."
+        },
+        "orderId": {
+          "type": "string",
+          "description": "Reference to the Order this item belongs to. (Relationship: Order 1:N OrderItem)"
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to the Product being ordered. (Relationship: Product 1:N OrderItem)"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "Quantity of the product ordered."
+        },
+        "price": {
+          "type": "number",
+          "description": "Price of the item at the time of order."
+        }
+      },
+      "required": [
+        "id",
+        "orderId",
+        "productId",
+        "quantity",
+        "price"
+      ]
+    },
+    "CustomerReview": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CustomerReview",
+      "type": "object",
+      "description": "Represents a customer review for a product or artisan.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the review."
+        },
+        "customerId": {
+          "type": "string",
+          "description": "Reference to the Customer who wrote the review. (Relationship: Customer 1:N CustomerReview)"
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to the Product being reviewed. (Relationship: Product 1:N CustomerReview). Null if artisan review."
+        },
+        "artisanId": {
+          "type": "string",
+          "description": "Reference to the Artisan being reviewed. (Relationship: Artisan 1:N CustomerReview). Null if product review."
+        },
+        "rating": {
+          "type": "number",
+          "description": "Rating given by the customer (e.g., 1 to 5 stars)."
+        },
+        "comment": {
+          "type": "string",
+          "description": "Textual comment provided by the customer."
+        },
+        "reviewDate": {
+          "type": "string",
+          "description": "Date when the review was submitted.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "customerId",
+        "rating",
+        "comment",
+        "reviewDate"
+      ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the application (customer or artisan).",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the user.",
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "First name of the user."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "Last name of the user."
+        },
+        "profileImage": {
+          "type": "string",
+          "description": "URL of the user's profile image."
+        },
+        "isAdmin": {
+          "type": "boolean",
+          "description": "Whether the user is an admin or not."
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "firstName",
+        "lastName"
+      ]
+    },
+    "Payment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Payment",
+      "type": "object",
+      "description": "Represents a payment transaction.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the payment transaction."
+        },
+        "orderId": {
+          "type": "string",
+          "description": "Reference to the Order this payment is for. (Relationship: Order 1:N Payment)"
+        },
+        "paymentDate": {
+          "type": "string",
+          "description": "Date and time of the payment.",
+          "format": "date-time"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "Method of payment used (e.g., credit card, UPI, netbanking)."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Amount paid."
+        },
+        "transactionId": {
+          "type": "string",
+          "description": "Transaction ID provided by the payment gateway."
+        },
+        "status": {
+          "type": "string",
+          "description": "Status of the payment (e.g., pending, completed, failed)."
+        }
+      },
+      "required": [
+        "id",
+        "orderId",
+        "paymentDate",
+        "paymentMethod",
+        "amount",
+        "transactionId",
+        "status"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information. Accessible by the user themselves and admins.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "roles_admin/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Indicates admin privileges for a user. Document existence grants admin role.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user with admin privileges."
+            }
+          ]
+        }
+      },
+      {
+        "path": "users/{userId}/artisans/{artisanId}",
+        "definition": {
+          "entityName": "Artisan",
+          "schema": {
+            "$ref": "#/backend/entities/Artisan"
+          },
+          "description": "Stores artisan profile information. Accessible by the artisan and admins.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user who is an artisan."
+            },
+            {
+              "name": "artisanId",
+              "description": "The unique identifier for the artisan profile."
+            }
+          ]
+        }
+      },
+      {
+        "path": "products/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Stores product information.  Includes denormalized 'artisanId' for authorization independence.",
+          "params": [
+            {
+              "name": "productId",
+              "description": "The unique identifier for the product."
+            }
+          ]
+        }
+      },
+      {
+        "path": "orders/{orderId}",
+        "definition": {
+          "entityName": "Order",
+          "schema": {
+            "$ref": "#/backend/entities/Order"
+          },
+          "description": "Stores order information.  Accessible by the customer who placed the order and admins.",
+          "params": [
+            {
+              "name": "orderId",
+              "description": "The unique identifier for the order."
+            }
+          ]
+        }
+      },
+      {
+        "path": "order_items/{orderItemId}",
+        "definition": {
+          "entityName": "OrderItem",
+          "schema": {
+            "$ref": "#/backend/entities/OrderItem"
+          },
+          "description": "Stores order item information.  Accessible by admins.",
+          "params": [
+            {
+              "name": "orderItemId",
+              "description": "The unique identifier for the order item."
+            }
+          ]
+        }
+      },
+      {
+        "path": "customer_reviews/{customerReviewId}",
+        "definition": {
+          "entityName": "CustomerReview",
+          "schema": {
+            "$ref": "#/backend/entities/CustomerReview"
+          },
+          "description": "Stores customer review information. Accessible by the customer who wrote the review and admins.",
+          "params": [
+            {
+              "name": "customerReviewId",
+              "description": "The unique identifier for the customer review."
+            }
+          ]
+        }
+      },
+      {
+        "path": "payments/{paymentId}",
+        "definition": {
+          "entityName": "Payment",
+          "schema": {
+            "$ref": "#/backend/entities/Payment"
+          },
+          "description": "Stores payment information.  Accessible by admins.",
+          "params": [
+            {
+              "name": "paymentId",
+              "description": "The unique identifier for the payment."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to support the purbanchal hasta udyog application, focusing on security, scalability, and ease of maintenance.  It leverages path-based ownership for user-related data and membership maps for collaborative data, ensuring that security rules are simple and efficient.  Crucially, it avoids hierarchical authorization dependencies by denormalizing authorization information where needed.\n\n**Authorization Independence:**  Authorization Independence is achieved through denormalization.  For instance, the `products` collection denormalizes the `artisanId` to allow direct access control based on the artisan who owns the product.  If product access depended on the user's artisan profile data, we'd denormalize relevant user attributes into the product document. This prevents the need for `get()` calls in security rules, enabling atomic operations.\n\n**Structural Segregation:**  Data is structurally segregated based on its security requirements.  For example, `users/{userId}/artisans/{artisanId}` and `products` are separated to reflect their distinct ownership models. This ensures a homogeneous security posture within each collection.\n\n**Access Modeling:**  Access is modeled using path-based ownership for private user data (e.g., `users/{userId}/artisans/{artisanId}`) and membership maps for collaborative scenarios (if any). Global roles, such as admin, will be managed through the existence of documents in dedicated collections like `/roles_admin/{userId}`.\n\n**QAPs Support:** The structure directly supports QAPs (Rules are not Filters) by structuring collections in a way that enables secure list operations. For example, listing products is secured at the `products` collection level, preventing the need to filter based on data in the documents.  User-specific data, like the Artisan profile, is located under the `users/{userId}` path, enabling secure `list` operations for data owned by a specific user.\n\n**Admin Role:** Admin roles are managed by checking for the existence of a document in `/roles_admin/{userId}`, ensuring efficient and secure authorization for administrative tasks.\n\n**Denormalization Details:**\n*   The `Product` entity includes `artisanId` to facilitate direct authorization checks against the product's owner.\n*   If the application were to introduce collaborative features where multiple users could manage a single product, a `members` map would be included in the `products/{productId}` documents. This map would list user IDs and their respective roles, allowing security rules to directly verify user permissions without performing additional `get()` requests."
+  }
+}
