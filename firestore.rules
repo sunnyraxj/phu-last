@@ -169,15 +169,15 @@ service cloud.firestore {
     }
     
     /**
-     * @description Rules for the Store Details document.
-     * @path /storeDetails/main
-     * @allow (read) Anyone can view store details.
-     * @allow (write) Only admins can update the store details.
-     * @principle Public read, admin-only write for a singleton configuration document.
+     * @description Rules for the Stores collection.
+     * @path /stores/{storeId}
+     * @allow (read) Anyone can view store locations.
+     * @allow (write) Only admins can create, update, or delete stores.
+     * @principle Public read, admin-only write.
      */
-    match /storeDetails/main {
-        allow get: if true;
-        allow write: if isAdmin();
+    match /stores/{storeId} {
+        allow get, list: if true;
+        allow create, update, delete: if isAdmin();
     }
   }
 }

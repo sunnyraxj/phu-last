@@ -1,132 +1,170 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useForm, SubmitHandler } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { useState } from 'react';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { useToast } from '@/hooks/use-toast';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { PlusCircle, Edit, Trash2, MoreHorizontal, ExternalLink } from 'lucide-react';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
-import Image from 'next/image';
+import { StoreForm } from '@/components/admin/StoreForm';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import Link from 'next/link';
 
-const storeDetailsSchema = z.object({
-  name: z.string().min(1, 'Store name is required'),
-  address: z.string().min(1, 'Store address is required'),
-  phone: z.string().optional(),
-  about: z.string().optional(),
-  image: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
-});
-
-type StoreDetailsFormValues = z.infer<typeof storeDetailsSchema>;
+type Store = {
+    id: string;
+    name: string;
+    address: string;
+    phone?: string;
+    image?: string;
+    googleMapsLink: string;
+};
 
 export default function StorePage() {
     const firestore = useFirestore();
-    const { toast } = useToast();
-
-    const storeDetailsRef = useMemoFirebase(() => doc(firestore, 'storeDetails', 'main'), [firestore]);
-    const { data: storeDetails, isLoading: storeDetailsLoading } = useDoc<StoreDetailsFormValues>(storeDetailsRef);
     
-    const {
-        register,
-        handleSubmit,
-        reset,
-        watch,
-        formState: { errors, isSubmitting },
-    } = useForm<StoreDetailsFormValues>({
-        resolver: zodResolver(storeDetailsSchema),
-        defaultValues: { name: '', address: '', image: '' },
-    });
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [selectedStore, setSelectedStore] = useState<Store | null>(null);
+    const [storeToDelete, setStoreToDelete] = useState<Store | null>(null);
 
-    const imageUrl = watch('image');
+    const storesQuery = useMemoFirebase(() => collection(firestore, 'stores'), [firestore]);
+    const { data: stores, isLoading: storesLoading } = useCollection<Store>(storesQuery);
 
-    useEffect(() => {
-        if (storeDetails) {
-            reset(storeDetails);
+    const handleAddStore = () => {
+        setSelectedStore(null);
+        setIsFormOpen(true);
+    };
+
+    const handleEditStore = (store: Store) => {
+        setSelectedStore(store);
+        setIsFormOpen(true);
+    };
+
+    const handleDeleteStore = async () => {
+        if (storeToDelete) {
+            const storeRef = doc(firestore, 'stores', storeToDelete.id);
+            deleteDocumentNonBlocking(storeRef);
+            setStoreToDelete(null);
         }
-    }, [storeDetails, reset]);
-
-    const onSubmit: SubmitHandler<StoreDetailsFormValues> = (data) => {
-        setDocumentNonBlocking(storeDetailsRef, data, { merge: true });
-        toast({
-            title: 'Store Details Updated',
-            description: 'Your store information has been saved successfully.',
-        });
+    };
+    
+    const handleFormSubmit = (formData: Omit<Store, 'id'>) => {
+        if (selectedStore) {
+            const storeRef = doc(firestore, "stores", selectedStore.id);
+            setDocumentNonBlocking(storeRef, formData, { merge: true });
+        } else {
+            const storesCollection = collection(firestore, "stores");
+            addDocumentNonBlocking(storesCollection, formData);
+        }
+        setIsFormOpen(false);
+        setSelectedStore(null);
     };
 
     return (
         <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
             <div className="flex items-center justify-between space-y-2">
-                <h2 className="text-3xl font-bold tracking-tight">Our Store</h2>
+                <h2 className="text-3xl font-bold tracking-tight">Our Stores</h2>
+                <Button onClick={handleAddStore}>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Store Location
+                </Button>
             </div>
-            <Card>
-                <form onSubmit={handleSubmit(onSubmit)}>
+
+            <StoreForm
+                isOpen={isFormOpen}
+                onClose={() => setIsFormOpen(false)}
+                onSubmit={handleFormSubmit}
+                store={selectedStore}
+            />
+            
+            <AlertDialog open={!!storeToDelete} onOpenChange={(isOpen) => !isOpen && setStoreToDelete(null)}>
+                <Card>
                     <CardHeader>
-                        <CardTitle>Store Management</CardTitle>
-                        <CardDescription>
-                            Update your store's public information here.
-                        </CardDescription>
+                        <CardTitle>All Store Locations</CardTitle>
+                        <CardDescription>Manage your physical store locations.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {storeDetailsLoading ? (
-                           <div className="flex justify-center items-center h-48">
-                                <PottersWheelSpinner />
-                           </div>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-4">
-                                    <div className="space-y-1">
-                                        <Label htmlFor="name">Store Name</Label>
-                                        <Input id="name" {...register('name')} />
-                                        {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-                                    </div>
-                                    <div className="space-y-1">
-                                        <Label htmlFor="address">Address</Label>
-                                        <Input id="address" {...register('address')} />
-                                        {errors.address && <p className="text-sm text-destructive">{errors.address.message}</p>}
-                                    </div>
-                                    <div className="space-y-1">
-                                        <Label htmlFor="phone">Phone Number</Label>
-                                        <Input id="phone" {...register('phone')} />
-                                        {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
-                                    </div>
-                                    <div className="space-y-1">
-                                        <Label htmlFor="image">Store Image URL</Label>
-                                        <Input id="image" {...register('image')} placeholder="https://picsum.photos/seed/..."/>
-                                        {errors.image && <p className="text-sm text-destructive">{errors.image.message}</p>}
-                                    </div>
-                                </div>
-                                <div className="space-y-4">
-                                    <div className="space-y-1">
-                                        <Label htmlFor="about">About the Store</Label>
-                                        <Textarea id="about" {...register('about')} rows={8} />
-                                        {errors.about && <p className="text-sm text-destructive">{errors.about.message}</p>}
-                                    </div>
-                                     {imageUrl && (
-                                        <div className="space-y-2">
-                                            <Label>Image Preview</Label>
-                                            <div className="relative aspect-video w-full overflow-hidden rounded-md border">
-                                                <Image src={imageUrl} alt="Store Preview" fill className="object-cover" />
-                                            </div>
-                                        </div>
+                        <div className="rounded-md border">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Name</TableHead>
+                                        <TableHead>Address</TableHead>
+                                        <TableHead>Map Link</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {storesLoading ? (
+                                        <TableRow>
+                                            <TableCell colSpan={4} className="h-24 text-center">
+                                                <PottersWheelSpinner />
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : stores && stores.length > 0 ? (
+                                        stores.map((store) => (
+                                            <TableRow key={store.id}>
+                                                <TableCell className="font-medium">{store.name}</TableCell>
+                                                <TableCell>{store.address}</TableCell>
+                                                <TableCell>
+                                                    <Link href={store.googleMapsLink} target="_blank" rel="noopener noreferrer">
+                                                        <Button variant="ghost" size="sm">
+                                                            View on Map <ExternalLink className="ml-2 h-4 w-4" />
+                                                        </Button>
+                                                    </Link>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon">
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuItem onClick={() => handleEditStore(store)}>
+                                                                <Edit className="mr-2 h-4 w-4" />
+                                                                Edit
+                                                            </DropdownMenuItem>
+                                                            <AlertDialogTrigger asChild>
+                                                                <DropdownMenuItem className="text-destructive" onClick={() => setStoreToDelete(store)}>
+                                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                                    Delete
+                                                                </DropdownMenuItem>
+                                                            </AlertDialogTrigger>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={4} className="h-24 text-center">
+                                                No stores found.
+                                            </TableCell>
+                                        </TableRow>
                                     )}
-                                </div>
-                            </div>
-                        )}
+                                </TableBody>
+                            </Table>
+                        </div>
                     </CardContent>
-                    <CardFooter className="border-t px-6 py-4">
-                        <Button type="submit" disabled={isSubmitting || storeDetailsLoading}>
-                            {isSubmitting ? 'Saving...' : 'Save Changes'}
-                        </Button>
-                    </CardFooter>
-                </form>
-            </Card>
+                </Card>
+
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the store location
+                            from the database.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setStoreToDelete(null)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteStore} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

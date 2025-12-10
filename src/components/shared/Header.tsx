@@ -60,7 +60,9 @@ export function Header({ userData, cartItems, updateCartItemQuantity }: HeaderPr
                     <button className="flex items-center gap-1 hover:opacity-80">
                         CRAFTS <ChevronDown size={16} />
                     </button>
-                    <button className="hover:opacity-80">OUR STORE</button>
+                    <Link href="/our-stores">
+                        <button className="hover:opacity-80">OUR STORES</button>
+                    </Link>
                     <Link href="/our-team">
                         <button className="hover:opacity-80">OUR TEAM</button>
                     </Link>

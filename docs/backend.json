@@ -108,19 +108,20 @@
       },
       "required": ["id", "name", "role", "bio", "image"]
     },
-    "StoreDetails": {
+    "Store": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "StoreDetails",
+      "title": "Store",
       "type": "object",
-      "description": "A singleton document containing public details about the store.",
+      "description": "Represents a single physical store location.",
       "properties": {
+        "id": { "type": "string", "description": "The unique identifier for the store." },
         "name": { "type": "string", "description": "The public name of the store." },
         "address": { "type": "string", "description": "The physical address of the store." },
         "phone": { "type": "string", "description": "The contact phone number for the store." },
-        "about": { "type": "string", "description": "A description of the store." },
-        "image": { "type": "string", "description": "A URL to the store's primary image." }
+        "image": { "type": "string", "description": "A URL to an image of the store." },
+        "googleMapsLink": { "type": "string", "description": "A URL to the store's location on Google Maps.", "format": "uri" }
       },
-      "required": ["name", "address"]
+      "required": ["id", "name", "address", "googleMapsLink"]
     }
   },
   "auth": {
@@ -157,10 +158,10 @@
         "definition": { "entityName": "TeamMember", "schema": { "$ref": "#/backend/entities/TeamMember" }, "description": "Stores information about team members.", "params": [{ "name": "memberId", "description": "The unique identifier of the team member." }] }
       },
       {
-        "path": "/storeDetails/main",
-        "definition": { "entityName": "StoreDetails", "schema": { "$ref": "#/backend/entities/StoreDetails" }, "description": "A singleton document holding the main details of the store." }
+        "path": "/stores/{storeId}",
+        "definition": { "entityName": "Store", "schema": { "$ref": "#/backend/entities/Store" }, "description": "Stores details for each physical store location.", "params": [{ "name": "storeId", "description": "The unique identifier for the store." }] }
       }
     ],
-    "reasoning": "The Firestore structure is designed to manage users, artisans, products, orders, reviews, team members, and store details for the 'purbanchal hasta udyog' application. It prioritizes security, scalability, and ease of debugging.\n\n**Authorization Independence:** User roles are stored in the `/users` collection, allowing security rules to validate admin privileges with a single `get()` call.\n\n**Structural Segregation:** Each data model is in its own top-level collection. This isolates security concerns. User data is in `/users`, products in `/products`, and admin-managed content like `/teamMembers` and `/storeDetails` are also in top-level collections.\n\n**Access Modeling:** Path-based ownership secures user data. Role-based access control (RBAC) is used for the admin panel, with the `isAdmin()` function checking the `role` field in a user's document. The new `/teamMembers` and `/storeDetails` collections are publicly readable but writable only by admins, ensuring content integrity."
+    "reasoning": "The Firestore structure is designed to manage users, artisans, products, orders, reviews, team members, and store details for the 'purbanchal hasta udyog' application. It prioritizes security, scalability, and ease of debugging.\n\n**Authorization Independence:** User roles are stored in the `/users` collection, allowing security rules to validate admin privileges with a single `get()` call.\n\n**Structural Segregation:** Each data model is in its own top-level collection. This isolates security concerns. User data is in `/users`, products in `/products`, and admin-managed content like `/teamMembers` and `/stores` are also in top-level collections.\n\n**Access Modeling:** Path-based ownership secures user data. Role-based access control (RBAC) is used for the admin panel, with the `isAdmin()` function checking the `role` field in a user's document. The new `/teamMembers` and `/stores` collections are publicly readable but writable only by admins, ensuring content integrity."
   }
 }
