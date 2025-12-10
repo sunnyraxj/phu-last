@@ -1,33 +1,26 @@
+'use client';
 
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 
-const teamMembers = [
-  {
-    name: 'Anjali Sharma',
-    role: 'Lead Artisan',
-    image: 'https://picsum.photos/seed/team1/400/400',
-    'data-ai-hint': 'woman portrait',
-    bio: 'Anjali is the heart of our artisan team, with over 20 years of experience in traditional crafts. Her passion for preserving heritage techniques inspires everyone.'
-  },
-  {
-    name: 'Rohan Verma',
-    role: 'Product Designer',
-    image: 'https://picsum.photos/seed/team2/400/400',
-    'data-ai-hint': 'man portrait',
-    bio: 'Rohan bridges the gap between traditional art and modern aesthetics. He works closely with artisans to create products that are both beautiful and functional.'
-  },
-  {
-    name: 'Priya Singh',
-    role: 'Operations Head',
-    image: 'https://picsum.photos/seed/team3/400/400',
-    'data-ai-hint': 'woman smiling',
-    bio: 'Priya ensures that everything runs smoothly, from sourcing sustainable materials to delivering the final product to your doorstep with care.'
-  },
-];
+type TeamMember = {
+    id: string;
+    name: string;
+    role: string;
+    bio: string;
+    image: string;
+    'data-ai-hint']?: string;
+};
 
 export default function OurTeamPage() {
+    const firestore = useFirestore();
+    const teamMembersQuery = useMemoFirebase(() => collection(firestore, 'teamMembers'), [firestore]);
+    const { data: teamMembers, isLoading: teamMembersLoading } = useCollection<TeamMember>(teamMembersQuery);
+
   return (
     <div className="bg-background">
       <header className="bg-black text-white">
@@ -49,25 +42,36 @@ export default function OurTeamPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-          {teamMembers.map((member) => (
-            <div key={member.name} className="text-center">
-              <div className="relative h-64 w-64 mx-auto rounded-full overflow-hidden mb-4 shadow-lg">
-                <Image
-                  src={member.image}
-                  alt={member.name}
-                  width={400}
-                  height={400}
-                  className="object-cover"
-                  data-ai-hint={member['data-ai-hint']}
-                />
-              </div>
-              <h2 className="text-2xl font-semibold text-foreground">{member.name}</h2>
-              <p className="text-primary font-medium">{member.role}</p>
-              <p className="mt-2 text-muted-foreground max-w-xs mx-auto">{member.bio}</p>
+        {teamMembersLoading ? (
+            <div className="flex justify-center items-center h-64">
+                <PottersWheelSpinner />
             </div>
-          ))}
-        </div>
+        ) : teamMembers && teamMembers.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+            {teamMembers.map((member) => (
+                <div key={member.id} className="text-center">
+                <div className="relative h-64 w-64 mx-auto rounded-full overflow-hidden mb-4 shadow-lg">
+                    <Image
+                    src={member.image}
+                    alt={member.name}
+                    width={400}
+                    height={400}
+                    className="object-cover"
+                    data-ai-hint={member['data-ai-hint']}
+                    />
+                </div>
+                <h2 className="text-2xl font-semibold text-foreground">{member.name}</h2>
+                <p className="text-primary font-medium">{member.role}</p>
+                <p className="mt-2 text-muted-foreground max-w-xs mx-auto">{member.bio}</p>
+                </div>
+            ))}
+            </div>
+        ) : (
+            <div className="text-center h-64 flex flex-col items-center justify-center">
+                <p className="text-muted-foreground">No team members have been added yet.</p>
+            </div>
+        )}
+
 
         <div className="text-center mt-16">
           <Link href="/">
