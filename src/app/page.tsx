@@ -1,9 +1,10 @@
 
+
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
 import { collection, doc, query, where, getDocs, writeBatch } from "firebase/firestore";
-import { ChevronDown, Search, User, ShoppingBag, Plus, Minus, X, Eye } from "lucide-react"
+import { ChevronDown, Search, User, ShoppingBag, Plus, Minus, X, Eye, LogOut } from "lucide-react"
 import Link from "next/link";
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -21,6 +22,8 @@ import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login";
 import { setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { PottersWheelSpinner } from "@/components/shared/PottersWheelSpinner";
 import { useToast } from "@/hooks/use-toast";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { signOut } from "firebase/auth";
 
 type Product = {
   id: string;
@@ -219,16 +222,21 @@ export default function ProductPage() {
     }
   };
 
+  const handleSignOut = async () => {
+    await signOut(auth);
+    // This will trigger the onAuthStateChanged listener and update the user state
+  };
+
   return (
     <div className="min-h-screen bg-background font-sans">
       <header className="bg-black text-white">
         <div className="container mx-auto flex items-center justify-between px-8 py-4">
-          <div className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
               <span className="text-2xl font-bold">P</span>
             </div>
             <span className="text-lg font-semibold">Purbanchal Hasta Udyog</span>
-          </div>
+          </Link>
 
           <nav className="flex items-center gap-8 text-sm font-semibold">
             <button className="flex items-center gap-1 hover:opacity-80">
@@ -242,9 +250,30 @@ export default function ProductPage() {
           </nav>
 
           <div className="flex items-center gap-6">
-            <button className="hover:opacity-80">
-              <User size={20} />
-            </button>
+            {!isUserLoading && user?.isAnonymous && (
+              <Link href="/login">
+                <Button variant="secondary" size="sm">Login</Button>
+              </Link>
+            )}
+            {!isUserLoading && user && !user.isAnonymous && (
+               <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" className="hover:opacity-80 p-0 rounded-full">
+                    <User size={20} />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56">
+                  <div className="flex flex-col gap-2">
+                    <p className="font-semibold text-sm">{user.email}</p>
+                    <Button variant="ghost" onClick={handleSignOut} className="justify-start p-2 h-auto">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Logout
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
+
             <Sheet>
               <SheetTrigger asChild>
                 <button className="relative hover:opacity-80">
@@ -574,5 +603,3 @@ export default function ProductPage() {
     </div>
   )
 }
-
-    

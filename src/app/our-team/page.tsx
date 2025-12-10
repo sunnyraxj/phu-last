@@ -1,3 +1,4 @@
+
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -55,7 +56,8 @@ export default function OurTeamPage() {
                 <Image
                   src={member.image}
                   alt={member.name}
-                  fill
+                  width={400}
+                  height={400}
                   className="object-cover"
                   data-ai-hint={member['data-ai-hint']}
                 />
