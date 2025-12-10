@@ -70,11 +70,13 @@ export default function OurStoresPage() {
       }).filter((item): item is CartItem => item !== null);
     }, [cartData, allProducts]);
     
-    const adminActionCount = useMemo(() => {
-        if (userData?.role !== 'admin' || !orders || !allProducts) return 0;
+    const adminActionCounts = useMemo(() => {
+        if (userData?.role !== 'admin' || !orders || !allProducts) {
+            return { pendingOrders: 0, outOfStockProducts: 0 };
+        }
         const pendingOrders = orders.filter(order => order.status === 'pending').length;
-        const outOfStock = allProducts.filter(p => !p.inStock).length;
-        return pendingOrders + outOfStock;
+        const outOfStockProducts = allProducts.filter(p => !p.inStock).length;
+        return { pendingOrders, outOfStockProducts };
     }, [orders, allProducts, userData]);
 
     const updateCartItemQuantity = (cartItemId: string, newQuantity: number) => {
@@ -88,7 +90,7 @@ export default function OurStoresPage() {
         cartItems={cartItems}
         updateCartItemQuantity={updateCartItemQuantity}
         stores={stores || []}
-        adminActionCount={adminActionCount}
+        adminActionCounts={adminActionCounts}
       />
 
       <main className="container mx-auto py-16 px-4 sm:px-6 lg:px-8">

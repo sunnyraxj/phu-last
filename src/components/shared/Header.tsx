@@ -41,10 +41,13 @@ interface HeaderProps {
     cartItems: CartItem[];
     updateCartItemQuantity: (cartItemId: string, newQuantity: number) => void;
     stores?: Store[];
-    adminActionCount?: number;
+    adminActionCounts?: {
+        pendingOrders: number;
+        outOfStockProducts: number;
+    };
 }
 
-export function Header({ userData, cartItems, updateCartItemQuantity, stores = [], adminActionCount = 0 }: HeaderProps) {
+export function Header({ userData, cartItems, updateCartItemQuantity, stores = [], adminActionCounts = { pendingOrders: 0, outOfStockProducts: 0 } }: HeaderProps) {
     const { user, isUserLoading } = useUser();
     const auth = useAuth();
     const [isCraftsPopoverOpen, setIsCraftsPopoverOpen] = useState(false);
@@ -58,6 +61,10 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
 
     const cartCount = useMemo(() => cartItems.reduce((acc, item) => acc + item.quantity, 0), [cartItems]);
     const cartSubtotal = useMemo(() => cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0), [cartItems]);
+
+    const totalAdminActionCount = useMemo(() => {
+        return adminActionCounts.pendingOrders + adminActionCounts.outOfStockProducts;
+    }, [adminActionCounts]);
 
     return (
         <header className="bg-black text-white">
@@ -182,9 +189,9 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                             ADMIN <ChevronDown size={16} />
                                         </button>
                                     </Link>
-                                    {adminActionCount > 0 && (
+                                    {totalAdminActionCount > 0 && (
                                         <Badge variant="destructive" className="absolute -top-2 -right-3 z-10 px-1.5 py-0 h-4 leading-none text-xs">
-                                            {adminActionCount}
+                                            {totalAdminActionCount}
                                         </Badge>
                                     )}
                                 </div>
@@ -196,22 +203,32 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                             >
                                 <div className="grid gap-4">
                                     <p className="font-semibold">Admin Panel</p>
-                                    <div className="grid gap-2">
-                                        <Link href="/admin" className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted -m-2">
-                                            <Package className="h-5 w-5 mt-0.5 text-primary"/>
-                                            <p className="font-semibold text-sm">Products</p>
+                                    <div className="grid gap-1">
+                                        <Link href="/admin" className="flex items-center justify-between gap-4 p-2 rounded-lg hover:bg-muted -m-2">
+                                            <div className="flex items-center gap-4">
+                                                <Package className="h-5 w-5 mt-0.5 text-primary"/>
+                                                <p className="font-semibold text-sm">Products</p>
+                                            </div>
+                                            {adminActionCounts.outOfStockProducts > 0 && <Badge variant="destructive">{adminActionCounts.outOfStockProducts}</Badge>}
                                         </Link>
-                                        <Link href="/admin/orders" className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted -m-2">
-                                            <ShoppingCart className="h-5 w-5 mt-0.5 text-primary"/>
-                                            <p className="font-semibold text-sm">Orders</p>
+                                        <Link href="/admin/orders" className="flex items-center justify-between gap-4 p-2 rounded-lg hover:bg-muted -m-2">
+                                            <div className="flex items-center gap-4">
+                                                <ShoppingCart className="h-5 w-5 mt-0.5 text-primary"/>
+                                                <p className="font-semibold text-sm">Orders</p>
+                                            </div>
+                                            {adminActionCounts.pendingOrders > 0 && <Badge>{adminActionCounts.pendingOrders}</Badge>}
                                         </Link>
-                                        <Link href="/admin/team" className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted -m-2">
-                                            <Users className="h-5 w-5 mt-0.5 text-primary"/>
-                                            <p className="font-semibold text-sm">Our Team</p>
+                                        <Link href="/admin/team" className="flex items-center justify-between gap-4 p-2 rounded-lg hover:bg-muted -m-2">
+                                            <div className="flex items-center gap-4">
+                                                <Users className="h-5 w-5 mt-0.5 text-primary"/>
+                                                <p className="font-semibold text-sm">Our Team</p>
+                                            </div>
                                         </Link>
-                                        <Link href="/admin/store" className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted -m-2">
-                                            <Store className="h-5 w-5 mt-0.5 text-primary"/>
-                                            <p className="font-semibold text-sm">Our Store</p>
+                                        <Link href="/admin/store" className="flex items-center justify-between gap-4 p-2 rounded-lg hover:bg-muted -m-2">
+                                            <div className="flex items-center gap-4">
+                                                <Store className="h-5 w-5 mt-0.5 text-primary"/>
+                                                <p className="font-semibold text-sm">Our Store</p>
+                                            </div>
                                         </Link>
                                     </div>
                                 </div>

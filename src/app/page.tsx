@@ -109,11 +109,13 @@ export default function ProductPage() {
   const storesQuery = useMemoFirebase(() => collection(firestore, 'stores'), [firestore]);
   const { data: stores } = useCollection<Store>(storesQuery);
 
-  const adminActionCount = useMemo(() => {
-    if (userData?.role !== 'admin' || !orders || !allProducts) return 0;
+  const adminActionCounts = useMemo(() => {
+    if (userData?.role !== 'admin' || !orders || !allProducts) {
+        return { pendingOrders: 0, outOfStockProducts: 0 };
+    }
     const pendingOrders = orders.filter(order => order.status === 'pending').length;
-    const outOfStock = allProducts.filter(p => !p.inStock).length;
-    return pendingOrders + outOfStock;
+    const outOfStockProducts = allProducts.filter(p => !p.inStock).length;
+    return { pendingOrders, outOfStockProducts };
   }, [orders, allProducts, userData]);
 
   const handleCollectionChange = (collectionName: string) => {
@@ -222,7 +224,7 @@ export default function ProductPage() {
         cartItems={cartItems}
         updateCartItemQuantity={updateCartItemQuantity}
         stores={stores || []}
-        adminActionCount={adminActionCount}
+        adminActionCounts={adminActionCounts}
       />
 
       <section className="relative h-[60vh] w-full flex items-center justify-center text-white">
