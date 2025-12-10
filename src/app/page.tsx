@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
@@ -22,7 +21,7 @@ import { setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocki
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/shared/Header";
 import { ShoppingBag } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 
 
 type Product = {
@@ -406,9 +405,9 @@ export default function ProductPage() {
             </div>
           ) : (
           <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
-            <div className={cn('grid gap-x-4 sm:gap-x-8 gap-y-8 sm:gap-y-12 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4')}>
+            <div className={cn('grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-8 sm:gap-y-10')}>
               {filteredProducts.map((product) => (
-                <div key={product.id} className="group relative overflow-hidden rounded-lg">
+                <div key={product.id} className="group relative">
                   <div className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden">
                     <Image
                       src={product.image}
@@ -417,22 +416,27 @@ export default function ProductPage() {
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
                       data-ai-hint={product['data-ai-hint']}
                     />
-                     <div className="absolute inset-x-0 bottom-0 p-2 sm:p-4 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <h3 className="font-semibold text-sm text-white truncate">{product.name}</h3>
-                      <p className="text-white/80 text-sm mt-1">
-                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
-                      </p>
+                    <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <Button variant="secondary" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setSelectedProduct(product)}>
+                            <Eye className="h-4 w-4" />
+                        </Button>
                     </div>
+                     <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[calc(100%-1rem)] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        onClick={() => addToCart(product)}
+                        disabled={!product.inStock}
+                    >
+                        <ShoppingBag className="mr-2 h-4 w-4" />
+                        {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                    </Button>
                   </div>
-                  <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="flex gap-2">
-                      <Button variant="secondary" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => addToCart(product)}>
-                        <ShoppingBag className="h-4 w-4" />
-                      </Button>
-                      <Button variant="secondary" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setSelectedProduct(product)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </div>
+                  <div className="mt-2 text-center sm:text-left">
+                     <h3 className="font-semibold text-sm text-foreground truncate">{product.name}</h3>
+                     <p className="text-foreground/80 text-sm mt-1">
+                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
+                     </p>
                   </div>
                 </div>
               ))}
@@ -481,3 +485,5 @@ export default function ProductPage() {
     </div>
   )
 }
+
+    
