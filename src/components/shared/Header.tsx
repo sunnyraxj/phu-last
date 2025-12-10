@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from "next/link";
@@ -391,19 +392,20 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="left" className="w-full max-w-xs bg-black text-white p-0">
+                             <SheetHeader className="p-4 flex flex-row items-center justify-between border-b border-white/20">
+                                <Link href="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
+                                    <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                                        <span className="text-xl font-bold">P</span>
+                                    </div>
+                                </Link>
+                                <SheetTitle className="sr-only">Main Menu</SheetTitle>
+                                <SheetClose asChild>
+                                    <Button variant="ghost" size="icon">
+                                        <CloseIcon />
+                                    </Button>
+                                </SheetClose>
+                            </SheetHeader>
                             <div className="flex h-full flex-col">
-                                <div className="flex items-center justify-between border-b border-white/20 p-4">
-                                     <Link href="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
-                                        <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                                            <span className="text-xl font-bold">P</span>
-                                        </div>
-                                    </Link>
-                                    <SheetClose asChild>
-                                        <Button variant="ghost" size="icon">
-                                            <CloseIcon />
-                                        </Button>
-                                    </SheetClose>
-                                </div>
                                 <div className="flex-1 overflow-y-auto p-4">
                                     <Accordion type="multiple" className="w-full text-lg">
                                         <AccordionItem value="crafts">
