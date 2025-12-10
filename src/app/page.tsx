@@ -524,18 +524,18 @@ export default function ProductPage() {
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
                       data-ai-hint={product['data-ai-hint']}
                     />
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4">
-                      <Button variant="secondary" size="icon" onClick={() => addToCart(product)}>
-                        <ShoppingBag size={20} />
-                        <span className="sr-only">Add to Cart</span>
+                  </div>
+                  <div className="mt-4 text-left relative">
+                    <div className="absolute bottom-full left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center gap-2">
+                       <Button variant="secondary" className="h-9 flex-1" onClick={() => addToCart(product)}>
+                        <ShoppingBag size={18} className="mr-2"/>
+                        Add to Cart
                       </Button>
-                      <Button variant="secondary" size="icon" onClick={() => setSelectedProduct(product)}>
-                        <Eye size={20} />
+                      <Button variant="secondary" size="icon" className="h-9 w-9" onClick={() => setSelectedProduct(product)}>
+                        <Eye size={18} />
                         <span className="sr-only">View Details</span>
                       </Button>
                     </div>
-                  </div>
-                  <div className="mt-4 text-left">
                     <h3 className="font-semibold text-sm truncate">{product.name}</h3>
                     <p className="text-muted-foreground text-sm mt-1">
                       {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 }).format(product.price)}
