@@ -13,7 +13,7 @@ import { useMemo } from "react";
 type TeamMember = {
     id: string;
     name: string;
-    role: string;
+    role: 'Founder' | 'Management' | 'Team Member';
     bio: string;
     image: string;
     'data-ai-hint'?: string;
@@ -64,6 +64,13 @@ export default function OurTeamPage() {
       // Dummy function, as cart management is handled on the main page.
     };
 
+    const sortedTeamMembers = useMemo(() => {
+      if (!teamMembers) return null;
+      const roleOrder = { 'Founder': 1, 'Management': 2, 'Team Member': 3 };
+      return [...teamMembers].sort((a, b) => (roleOrder[a.role] || 4) - (roleOrder[b.role] || 4));
+    }, [teamMembers]);
+
+
   return (
     <div className="bg-background">
       <Header 
@@ -84,9 +91,9 @@ export default function OurTeamPage() {
             <div className="flex justify-center items-center h-64">
                 <PottersWheelSpinner />
             </div>
-        ) : teamMembers && teamMembers.length > 0 ? (
+        ) : sortedTeamMembers && sortedTeamMembers.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-            {teamMembers.map((member) => (
+            {sortedTeamMembers.map((member) => (
                 <div key={member.id} className="text-center">
                 <div className="relative h-64 w-64 mx-auto rounded-full overflow-hidden mb-4 shadow-lg">
                     <Image

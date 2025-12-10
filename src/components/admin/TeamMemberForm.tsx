@@ -18,10 +18,14 @@ import { Label } from '@/components/ui/label';
 import { useEffect } from 'react';
 import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Controller } from 'react-hook-form';
 
 const teamMemberSchema = z.object({
   name: z.string().min(1, { message: 'Member name is required' }),
-  role: z.string().min(1, { message: 'Role is required' }),
+  role: z.enum(['Founder', 'Management', 'Team Member'], {
+    required_error: "Role is required",
+  }),
   bio: z.string().min(1, { message: 'Bio is required' }),
   image: z.string().url({ message: 'Please enter a valid image URL' }),
 });
@@ -40,12 +44,13 @@ export function TeamMemberForm({ isOpen, onClose, onSubmit, member }: TeamMember
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<TeamMemberFormValues>({
     resolver: zodResolver(teamMemberSchema),
     defaultValues: {
       name: '',
-      role: '',
+      role: 'Team Member',
       bio: '',
       image: '',
     },
@@ -58,7 +63,7 @@ export function TeamMemberForm({ isOpen, onClose, onSubmit, member }: TeamMember
         } else {
           reset({
             name: '',
-            role: '',
+            role: 'Team Member',
             bio: '',
             image: '',
           });
@@ -89,7 +94,22 @@ export function TeamMemberForm({ isOpen, onClose, onSubmit, member }: TeamMember
                     </div>
                     <div className="space-y-1">
                         <Label htmlFor="role">Role</Label>
-                        <Input id="role" {...register('role')} />
+                        <Controller
+                          control={control}
+                          name="role"
+                          render={({ field }) => (
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <SelectTrigger id="role">
+                                <SelectValue placeholder="Select a role" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Founder">Founder</SelectItem>
+                                <SelectItem value="Management">Management</SelectItem>
+                                <SelectItem value="Team Member">Team Member</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
                         {errors.role && <p className="text-xs text-destructive">{errors.role.message}</p>}
                     </div>
                     <div className="space-y-1">
