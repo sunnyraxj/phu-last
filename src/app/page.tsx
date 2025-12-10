@@ -240,7 +240,7 @@ export default function ProductPage() {
 
   return (
     <div className="min-h-screen bg-background font-sans">
-      <header className="bg-black text-white font-sans">
+      <header className="bg-black text-white">
         <div className="container mx-auto flex items-center justify-between px-8 py-4">
           <div className="flex items-center gap-2">
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
@@ -371,7 +371,7 @@ export default function ProductPage() {
           data-ai-hint="handicrafts lifestyle"
         />
         <div className="absolute inset-0 bg-black/50" />
-        <div className="relative z-10 text-center px-4 font-sans">
+        <div className="relative z-10 text-center px-4">
           <h1 className="text-4xl md:text-6xl font-bold mb-4 tracking-tight">Artisans of the East</h1>
           <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
             Discover handcrafted treasures that tell a story.
@@ -469,24 +469,24 @@ export default function ProductPage() {
               <span className="text-muted-foreground">View:</span>
               <div className="flex gap-1 border border-border rounded-md p-1">
                  <Button variant={viewMode === 'grid2' ? 'secondary' : 'ghost'} size="sm" className="w-9 h-9 p-0" onClick={() => setViewMode('grid2')}>
-                  <span className="grid grid-cols-2 gap-0.5 p-1">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                      <span key={i} className="w-2 h-2 bg-current rounded-sm"></span>
-                    ))}
+                  <span className="flex items-center justify-center h-full w-full gap-0.5 p-1">
+                    <span className="w-1.5 h-4 bg-current rounded-sm"></span>
+                    <span className="w-1.5 h-4 bg-current rounded-sm"></span>
                   </span>
                 </Button>
                 <Button variant={viewMode === 'grid3' ? 'secondary' : 'ghost'} size="sm" className="w-9 h-9 p-0" onClick={() => setViewMode('grid3')}>
-                  <span className="grid grid-cols-3 gap-0.5 p-1">
-                    {Array.from({ length: 9 }).map((_, i) => (
-                      <span key={i} className="w-1.5 h-1.5 bg-current rounded-sm"></span>
-                    ))}
+                  <span className="flex items-center justify-center h-full w-full gap-0.5 p-1">
+                    <span className="w-1.5 h-4 bg-current rounded-sm"></span>
+                    <span className="w-1.5 h-4 bg-current rounded-sm"></span>
+                    <span className="w-1.5 h-4 bg-current rounded-sm"></span>
                   </span>
                 </Button>
                 <Button variant={viewMode === 'grid4' ? 'secondary' : 'ghost'} size="sm" className="w-9 h-9 p-0" onClick={() => setViewMode('grid4')}>
-                   <span className="grid grid-cols-4 gap-0.5 p-1">
-                    {Array.from({ length: 16 }).map((_, i) => (
-                      <span key={i} className="w-1 h-1 bg-current rounded-sm"></span>
-                    ))}
+                   <span className="flex items-center justify-center h-full w-full gap-0.5 p-1">
+                    <span className="w-1.5 h-4 bg-current rounded-sm"></span>
+                    <span className="w-1.5 h-4 bg-current rounded-sm"></span>
+                    <span className="w-1.5 h-4 bg-current rounded-sm"></span>
+                    <span className="w-1.5 h-4 bg-current rounded-sm"></span>
                   </span>
                 </Button>
               </div>
@@ -526,18 +526,21 @@ export default function ProductPage() {
                     />
                   </div>
                   <div className="mt-4 text-left relative">
-                    <div className="absolute bottom-full left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center gap-2">
-                       <Button variant="secondary" className="h-9 flex-1" onClick={() => addToCart(product)}>
-                        <ShoppingBag size={18} className="mr-2"/>
-                        Add to Cart
-                      </Button>
-                      <Button variant="secondary" size="icon" className="h-9 w-9" onClick={() => setSelectedProduct(product)}>
-                        <Eye size={18} />
-                        <span className="sr-only">View Details</span>
-                      </Button>
+                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-background/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col gap-2">
+                       <h3 className="font-semibold text-sm truncate">{product.name}</h3>
+                       <div className="flex justify-center gap-2">
+                          <Button variant="secondary" className="h-9 flex-1" onClick={() => addToCart(product)}>
+                            <ShoppingBag size={18} className="mr-2"/>
+                            Add to Cart
+                          </Button>
+                          <Button variant="secondary" size="icon" className="h-9 w-9" onClick={() => setSelectedProduct(product)}>
+                            <Eye size={18} />
+                            <span className="sr-only">View Details</span>
+                          </Button>
+                       </div>
                     </div>
-                    <h3 className="font-semibold text-sm truncate">{product.name}</h3>
-                    <p className="text-muted-foreground text-sm mt-1">
+                    <h3 className="font-semibold text-sm truncate group-hover:opacity-0">{product.name}</h3>
+                    <p className="text-muted-foreground text-sm mt-1 group-hover:opacity-0">
                       {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 }).format(product.price)}
                     </p>
                   </div>
