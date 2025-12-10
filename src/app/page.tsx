@@ -133,6 +133,7 @@ export default function ProductPage() {
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [availability, setAvailability] = useState<string>("all"); // all, in-stock, out-of-stock
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
+  const [searchTerm, setSearchTerm] = useState("");
   
   const [cartItems, setCartItems] = useState([
     { ...allProducts[0], quantity: 1 },
@@ -198,6 +199,9 @@ export default function ProductPage() {
         if (product.price < priceRange[0] || product.price > priceRange[1]) {
           return false;
         }
+        if (searchTerm && !product.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+          return false;
+        }
         return true;
       })
       .sort((a, b) => {
@@ -213,7 +217,7 @@ export default function ProductPage() {
             return 0; // Or some other default logic
         }
       });
-  }, [selectedCollections, selectedMaterials, availability, priceRange, sortBy]);
+  }, [selectedCollections, selectedMaterials, availability, priceRange, sortBy, searchTerm]);
 
 
   const getGridCols = () => {
@@ -444,7 +448,7 @@ export default function ProductPage() {
 
         <main className="flex-1 p-8">
           <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
+            <div className="flex flex-1 items-center gap-4">
               <span className="text-muted-foreground">View:</span>
               <div className="flex gap-1 border border-border rounded-md p-1">
                  <Button variant={viewMode === 'grid2' ? 'secondary' : 'ghost'} size="sm" className="w-9 h-9 p-0" onClick={() => setViewMode('grid2')}>
@@ -468,6 +472,15 @@ export default function ProductPage() {
                     <span className="w-1.5 h-full bg-current rounded-sm"></span>
                   </span>
                 </Button>
+              </div>
+              <div className="relative w-full max-w-xs ml-4">
+                <Input 
+                  placeholder="Search products..."
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               </div>
             </div>
 
