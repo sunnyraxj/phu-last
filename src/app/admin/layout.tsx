@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { doc } from 'firebase/firestore';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Button } from '@/components/ui/button';
-import { Home, Package, ShoppingCart, Users } from 'lucide-react';
+import { Home, Package, ShoppingCart, Users, Store } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function AdminLayout({
@@ -68,6 +68,8 @@ export default function AdminLayout({
     const navItems = [
         { href: '/admin', label: 'Products', icon: Package },
         { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
+        { href: '/admin/team', label: 'Our Team', icon: Users },
+        { href: '/admin/store', label: 'Our Store', icon: Store },
     ];
 
     return (
