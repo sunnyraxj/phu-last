@@ -90,7 +90,7 @@ export function ProductForm({ isOpen, onClose, onSubmit, product }: ProductFormP
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="sm:max-w-2xl w-full flex flex-col">
+      <SheetContent className="sm:max-w-md w-full flex flex-col">
         <SheetHeader>
           <SheetTitle>{product ? 'Edit Product' : 'Add New Product'}</SheetTitle>
           <SheetDescription>
@@ -99,56 +99,52 @@ export function ProductForm({ isOpen, onClose, onSubmit, product }: ProductFormP
         </SheetHeader>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="flex-1 flex flex-col">
             <ScrollArea className="flex-1 pr-6 -mr-6">
-                <div className="space-y-6 my-6">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="name">Product Name</Label>
-                            <Input id="name" {...register('name')} />
-                            {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="price">Price (INR)</Label>
-                            <Input id="price" type="number" step="0.01" {...register('price')} />
-                            {errors.price && <p className="text-sm text-destructive">{errors.price.message}</p>}
-                        </div>
+                <div className="space-y-4 my-4">
+                    <div className="space-y-1">
+                        <Label htmlFor="name">Product Name</Label>
+                        <Input id="name" {...register('name')} />
+                        {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
+                        <Label htmlFor="price">Price (INR)</Label>
+                        <Input id="price" type="number" step="0.01" {...register('price')} />
+                        {errors.price && <p className="text-xs text-destructive">{errors.price.message}</p>}
+                    </div>
+                    <div className="space-y-1">
                         <Label htmlFor="description">Description</Label>
-                        <Textarea id="description" {...register('description')} rows={5} />
-                        {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
+                        <Textarea id="description" {...register('description')} rows={4} />
+                        {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="category">Category</Label>
-                            <Input id="category" {...register('category')} />
-                            {errors.category && <p className="text-sm text-destructive">{errors.category.message}</p>}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="material">Material</Label>
-                            <Input id="material" {...register('material')} />
-                            {errors.material && <p className="text-sm text-destructive">{errors.material.message}</p>}
-                        </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="category">Category</Label>
+                        <Input id="category" {...register('category')} />
+                        {errors.category && <p className="text-xs text-destructive">{errors.category.message}</p>}
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
+                        <Label htmlFor="material">Material</Label>
+                        <Input id="material" {...register('material')} />
+                        {errors.material && <p className="text-xs text-destructive">{errors.material.message}</p>}
+                    </div>
+                    <div className="space-y-1">
                         <Label htmlFor="collection">Collection</Label>
                         <Input id="collection" {...register('collection')} />
-                        {errors.collection && <p className="text-sm text-destructive">{errors.collection.message}</p>}
+                        {errors.collection && <p className="text-xs text-destructive">{errors.collection.message}</p>}
                     </div>
-                     <div className="space-y-2">
+                     <div className="space-y-1">
                         <Label htmlFor="image">Image URL</Label>
                         <Input id="image" {...register('image')} placeholder="https://picsum.photos/seed/..." />
-                        {errors.image && <p className="text-sm text-destructive">{errors.image.message}</p>}
+                        {errors.image && <p className="text-xs text-destructive">{errors.image.message}</p>}
                     </div>
                     <div className="flex items-center space-x-2 pt-2">
                         <Checkbox id="inStock" {...register('inStock')} checked={control._getWatch('inStock')} onCheckedChange={(checked) => control.setValue('inStock', !!checked)} />
-                        <Label htmlFor="inStock" className="cursor-pointer">
+                        <Label htmlFor="inStock" className="cursor-pointer text-sm">
                            Product is in stock and available for purchase
                         </Label>
                     </div>
                 </div>
             </ScrollArea>
 
-            <SheetFooter className="mt-auto pt-4">
+            <SheetFooter className="mt-auto pt-2">
                 <SheetClose asChild>
                     <Button type="button" variant="outline">
                     Cancel
