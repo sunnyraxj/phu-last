@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { ChevronDown, Search, User, ShoppingCart, Plus, Minus, X, Eye, ShoppingBag } from "lucide-react"
+import Link from "next/link";
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
@@ -120,7 +121,6 @@ const allProducts: Product[] = [
 
 const collections = [
   { name: "Crafts", count: allProducts.filter(p => p.collection === "Crafts").length },
-  { name: "LifeStyle", count: allProducts.filter(p => p.collection === "LifeStyle").length },
 ]
 
 const materials = ["Paper", "Ceramic", "Brass", "Sabai Grass", "Jute"];
@@ -244,6 +244,9 @@ export default function ProductPage() {
               CRAFTS <ChevronDown size={16} />
             </button>
             <button className="hover:opacity-80">OUR STORE</button>
+            <Link href="/our-team">
+              <button className="hover:opacity-80">OUR TEAM</button>
+            </Link>
             <button className="hover:opacity-80">BLOG</button>
           </nav>
 
