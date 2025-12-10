@@ -19,6 +19,7 @@ import { useAuth, useCollection, useDoc, useFirestore, useMemoFirebase, useUser 
 import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login";
 import { setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { PottersWheelSpinner } from "@/components/shared/PottersWheelSpinner";
+import { useToast } from "@/hooks/use-toast";
 
 type Product = {
   id: string;
@@ -58,6 +59,7 @@ export default function ProductPage() {
   const firestore = useFirestore();
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -123,6 +125,10 @@ export default function ProductPage() {
       const cartCollectionRef = collection(firestore, 'users', user.uid, 'cart');
       addDocumentNonBlocking(cartCollectionRef, { productId: product.id, quantity: 1 });
     }
+    toast({
+      title: "Item Added to Cart",
+      description: `${product.name} has been added to your cart.`,
+    });
   };
 
 
@@ -512,7 +518,7 @@ export default function ProductPage() {
                   </div>
                   <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <Button variant="secondary" size="icon" className="h-9 w-9" onClick={() => addToCart(product)}>
-                      <ShoppingBag />
+                      <ShoppingCart />
                     </Button>
                     <Button variant="secondary" size="icon" className="h-9 w-9" onClick={() => setSelectedProduct(product)}>
                       <Eye />
@@ -565,3 +571,5 @@ export default function ProductPage() {
     </div>
   )
 }
+
+    
