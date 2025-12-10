@@ -73,10 +73,15 @@ export default function OurTeamPage() {
       // Dummy function, as cart management is handled on the main page.
     };
 
-    const sortedTeamMembers = useMemo(() => {
-      if (!teamMembers) return null;
-      const roleOrder = { 'Founder': 1, 'Management': 2, 'Team Member': 3 };
-      return [...teamMembers].sort((a, b) => (roleOrder[a.role] || 4) - (roleOrder[b.role] || 4));
+    const { founder, otherMembers } = useMemo(() => {
+      if (!teamMembers) return { founder: null, otherMembers: [] };
+      const founderMember = teamMembers.find(member => member.role === 'Founder');
+      const otherTeamMembers = teamMembers.filter(member => member.role !== 'Founder');
+      
+      const roleOrder = { 'Management': 1, 'Team Member': 2 };
+      otherTeamMembers.sort((a, b) => (roleOrder[a.role] || 3) - (roleOrder[b.role] || 3));
+
+      return { founder: founderMember, otherMembers: otherTeamMembers };
     }, [teamMembers]);
 
 
@@ -101,26 +106,51 @@ export default function OurTeamPage() {
             <div className="flex justify-center items-center h-64">
                 <PottersWheelSpinner />
             </div>
-        ) : sortedTeamMembers && sortedTeamMembers.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-            {sortedTeamMembers.map((member) => (
-                <div key={member.id} className="text-center">
-                <div className="relative h-64 w-64 mx-auto rounded-full overflow-hidden mb-4 shadow-lg">
-                    <Image
-                    src={member.image}
-                    alt={member.name}
-                    width={400}
-                    height={400}
-                    className="object-cover"
-                    data-ai-hint={member['data-ai-hint']}
-                    />
+        ) : teamMembers && teamMembers.length > 0 ? (
+          <>
+            {founder && (
+              <div className="mb-20">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                  <div className="relative h-96 w-96 mx-auto rounded-lg overflow-hidden shadow-2xl">
+                     <Image
+                        src={founder.image}
+                        alt={founder.name}
+                        fill
+                        className="object-cover"
+                        data-ai-hint={founder['data-ai-hint']}
+                      />
+                  </div>
+                  <div className="text-center md:text-left">
+                    <p className="text-lg font-semibold text-primary">{founder.role}</p>
+                    <h2 className="text-5xl font-bold text-foreground mt-2">{founder.name}</h2>
+                    <p className="mt-4 text-lg text-muted-foreground max-w-lg mx-auto md:mx-0">{founder.bio}</p>
+                  </div>
                 </div>
-                <h2 className="text-2xl font-semibold text-foreground">{member.name}</h2>
-                <p className="text-primary font-medium">{member.role}</p>
-                <p className="mt-2 text-muted-foreground max-w-xs mx-auto">{member.bio}</p>
-                </div>
-            ))}
-            </div>
+              </div>
+            )}
+            
+            {otherMembers.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+              {otherMembers.map((member) => (
+                  <div key={member.id} className="text-center">
+                  <div className="relative h-64 w-64 mx-auto rounded-full overflow-hidden mb-4 shadow-lg">
+                      <Image
+                      src={member.image}
+                      alt={member.name}
+                      width={400}
+                      height={400}
+                      className="object-cover"
+                      data-ai-hint={member['data-ai-hint']}
+                      />
+                  </div>
+                  <h2 className="text-2xl font-semibold text-foreground">{member.name}</h2>
+                  <p className="text-primary font-medium">{member.role}</p>
+                  <p className="mt-2 text-muted-foreground max-w-xs mx-auto">{member.bio}</p>
+                  </div>
+              ))}
+              </div>
+            )}
+          </>
         ) : (
             <div className="text-center h-64 flex flex-col items-center justify-center">
                 <p className="text-muted-foreground">No team members have been added yet.</p>
