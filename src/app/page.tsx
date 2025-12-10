@@ -171,9 +171,15 @@ export default function ProductPage() {
     [firestore]
   );
   const { data: allProducts, isLoading: productsLoading } = useCollection<Product>(productsQuery);
-
-    const ordersQuery = useMemoFirebase(() => collection(firestore, 'orders'), [firestore]);
-    const { data: orders } = useCollection<Order>(ordersQuery);
+  
+  const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
+  const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
+  
+  const ordersQuery = useMemoFirebase(() => 
+    (userData?.role === 'admin') ? collection(firestore, 'orders') : null, 
+    [firestore, userData]
+  );
+  const { data: orders } = useCollection<Order>(ordersQuery);
 
   const cartItemsQuery = useMemoFirebase(() =>
     user ? collection(firestore, 'users', user.uid, 'cart') : null,
@@ -188,9 +194,6 @@ export default function ProductPage() {
       return product ? { ...product, quantity: cartItem.quantity, cartItemId: cartItem.id } : null;
     }).filter((item): item is CartItem => item !== null);
   }, [cartData, allProducts]);
-
-  const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
-  const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
 
   const storesQuery = useMemoFirebase(() => collection(firestore, 'stores'), [firestore]);
   const { data: stores } = useCollection<Store>(storesQuery);

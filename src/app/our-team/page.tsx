@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Image from "next/image";
@@ -56,8 +57,11 @@ export default function OurTeamPage() {
 
     const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
     const { data: allProducts } = useCollection<Product>(productsQuery);
-
-    const ordersQuery = useMemoFirebase(() => collection(firestore, 'orders'), [firestore]);
+    
+    const ordersQuery = useMemoFirebase(() => 
+      (userData?.role === 'admin') ? collection(firestore, 'orders') : null,
+      [firestore, userData]
+    );
     const { data: orders } = useCollection<Order>(ordersQuery);
 
     const cartItemsQuery = useMemoFirebase(() =>
