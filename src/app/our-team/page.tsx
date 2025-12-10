@@ -1,11 +1,14 @@
+
 'use client';
 
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
+import { Header } from "@/components/shared/Header";
+import { useMemo } from "react";
 
 type TeamMember = {
     id: string;
@@ -16,23 +19,58 @@ type TeamMember = {
     'data-ai-hint'?: string;
 };
 
+type Product = {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  "data-ai-hint": string;
+  collection: string;
+  material: string;
+  inStock: boolean;
+  description: string;
+  artisanId: string;
+};
+
+type CartItem = Product & { quantity: number; cartItemId: string; };
+
 export default function OurTeamPage() {
     const firestore = useFirestore();
     const teamMembersQuery = useMemoFirebase(() => collection(firestore, 'teamMembers'), [firestore]);
     const { data: teamMembers, isLoading: teamMembersLoading } = useCollection<TeamMember>(teamMembersQuery);
 
+    const { user } = useUser();
+    const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
+    const { data: userData } = useDoc<{ role: string }>(userDocRef);
+
+    const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
+    const { data: allProducts } = useCollection<Product>(productsQuery);
+
+    const cartItemsQuery = useMemoFirebase(() =>
+      user ? collection(firestore, 'users', user.uid, 'cart') : null,
+      [firestore, user]
+    );
+    const { data: cartData } = useCollection<{ productId: string; quantity: number }>(cartItemsQuery);
+
+    const cartItems = useMemo(() => {
+      if (!cartData || !allProducts) return [];
+      return cartData.map(cartItem => {
+        const product = allProducts.find(p => p.id === cartItem.productId);
+        return product ? { ...product, quantity: cartItem.quantity, cartItemId: cartItem.id } : null;
+      }).filter((item): item is CartItem => item !== null);
+    }, [cartData, allProducts]);
+
+    const updateCartItemQuantity = (cartItemId: string, newQuantity: number) => {
+      // Dummy function, as cart management is handled on the main page.
+    };
+
   return (
     <div className="bg-background">
-      <header className="bg-black text-white">
-        <div className="container mx-auto flex items-center justify-between px-8 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-              <span className="text-2xl font-bold">P</span>
-            </div>
-            <span className="text-lg font-semibold">Purbanchal Hasta Udyog</span>
-          </Link>
-        </div>
-      </header>
+      <Header 
+        userData={userData}
+        cartItems={cartItems}
+        updateCartItemQuantity={updateCartItemQuantity}
+      />
 
       <main className="container mx-auto py-16 px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
