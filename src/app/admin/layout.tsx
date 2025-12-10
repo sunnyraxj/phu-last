@@ -15,6 +15,10 @@ type Order = {
     status: 'pending' | 'shipped' | 'delivered';
 };
 
+type Product = {
+    inStock: boolean;
+};
+
 export default function AdminLayout({
     children,
 }: {
@@ -32,11 +36,19 @@ export default function AdminLayout({
 
     const ordersQuery = useMemoFirebase(() => collection(firestore, 'orders'), [firestore]);
     const { data: orders } = useCollection<Order>(ordersQuery);
+    
+    const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
+    const { data: products } = useCollection<Product>(productsQuery);
 
     const pendingOrdersCount = useMemo(() => {
         if (!orders) return 0;
         return orders.filter(order => order.status === 'pending').length;
     }, [orders]);
+
+    const outOfStockCount = useMemo(() => {
+        if (!products) return 0;
+        return products.filter(product => !product.inStock).length;
+    }, [products]);
 
 
     useEffect(() => {
@@ -80,8 +92,8 @@ export default function AdminLayout({
     }
     
     const navItems = [
-        { href: '/admin', label: 'Products', icon: Package },
-        { href: '/admin/orders', label: 'Orders', icon: ShoppingCart, badge: pendingOrdersCount > 0 ? pendingOrdersCount : null },
+        { href: '/admin', label: 'Products', icon: Package, badge: outOfStockCount > 0 ? outOfStockCount : null, badgeVariant: 'destructive' as const },
+        { href: '/admin/orders', label: 'Orders', icon: ShoppingCart, badge: pendingOrdersCount > 0 ? pendingOrdersCount : null, badgeVariant: 'default' as const },
         { href: '/admin/team', label: 'Our Team', icon: Users },
         { href: '/admin/store', label: 'Our Store', icon: Store },
     ];
@@ -110,7 +122,7 @@ export default function AdminLayout({
                                             <item.icon className="h-4 w-4" />
                                             {item.label}
                                         </div>
-                                        {item.badge && <Badge className="bg-primary text-primary-foreground">{item.badge}</Badge>}
+                                        {item.badge && <Badge variant={item.badgeVariant}>{item.badge}</Badge>}
                                     </span>
                                 </Link>
                             </li>
