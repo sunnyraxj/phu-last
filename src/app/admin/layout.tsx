@@ -1,14 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useState, useEffect, useMemo } from 'react';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { doc } from 'firebase/firestore';
+import { collection, doc } from 'firebase/firestore';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Button } from '@/components/ui/button';
 import { Home, Package, ShoppingCart, Users, Store } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+
+type Order = {
+    status: 'pending' | 'shipped' | 'delivered';
+};
 
 export default function AdminLayout({
     children,
@@ -24,6 +29,15 @@ export default function AdminLayout({
 
     const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
     const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
+
+    const ordersQuery = useMemoFirebase(() => collection(firestore, 'orders'), [firestore]);
+    const { data: orders } = useCollection<Order>(ordersQuery);
+
+    const pendingOrdersCount = useMemo(() => {
+        if (!orders) return 0;
+        return orders.filter(order => order.status === 'pending').length;
+    }, [orders]);
+
 
     useEffect(() => {
         const checkAuth = () => {
@@ -67,7 +81,7 @@ export default function AdminLayout({
     
     const navItems = [
         { href: '/admin', label: 'Products', icon: Package },
-        { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
+        { href: '/admin/orders', label: 'Orders', icon: ShoppingCart, badge: pendingOrdersCount > 0 ? pendingOrdersCount : null },
         { href: '/admin/team', label: 'Our Team', icon: Users },
         { href: '/admin/store', label: 'Our Store', icon: Store },
     ];
@@ -89,11 +103,14 @@ export default function AdminLayout({
                             <li key={item.href}>
                                 <Link href={item.href}>
                                     <span className={cn(
-                                        "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                                        "flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
                                         pathname === item.href && "bg-muted text-primary"
                                     )}>
-                                        <item.icon className="h-4 w-4" />
-                                        {item.label}
+                                        <div className="flex items-center gap-3">
+                                            <item.icon className="h-4 w-4" />
+                                            {item.label}
+                                        </div>
+                                        {item.badge && <Badge className="bg-primary text-primary-foreground">{item.badge}</Badge>}
                                     </span>
                                 </Link>
                             </li>
