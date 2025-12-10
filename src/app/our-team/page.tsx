@@ -34,6 +34,11 @@ type Product = {
 
 type CartItem = Product & { quantity: number; cartItemId: string; };
 
+type Store = {
+    id: string;
+    name: string;
+};
+
 export default function OurTeamPage() {
     const firestore = useFirestore();
     const teamMembersQuery = useMemoFirebase(() => collection(firestore, 'teamMembers'), [firestore]);
@@ -60,6 +65,9 @@ export default function OurTeamPage() {
       }).filter((item): item is CartItem => item !== null);
     }, [cartData, allProducts]);
 
+    const storesQuery = useMemoFirebase(() => collection(firestore, 'stores'), [firestore]);
+    const { data: stores } = useCollection<Store>(storesQuery);
+
     const updateCartItemQuantity = (cartItemId: string, newQuantity: number) => {
       // Dummy function, as cart management is handled on the main page.
     };
@@ -77,6 +85,7 @@ export default function OurTeamPage() {
         userData={userData}
         cartItems={cartItems}
         updateCartItemQuantity={updateCartItemQuantity}
+        stores={stores || []}
       />
 
       <main className="container mx-auto py-16 px-4 sm:px-6 lg:px-8">

@@ -2,7 +2,7 @@
 'use client';
 
 import Link from "next/link";
-import { ChevronDown, ShoppingBag, User, LogOut, Settings } from "lucide-react";
+import { ChevronDown, ShoppingBag, User, LogOut, Settings, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -29,16 +29,23 @@ type Product = {
 
 type CartItem = Product & { quantity: number; cartItemId: string; };
 
+type Store = {
+    id: string;
+    name: string;
+};
+
 interface HeaderProps {
     userData: { role: string } | null | undefined;
     cartItems: CartItem[];
     updateCartItemQuantity: (cartItemId: string, newQuantity: number) => void;
+    stores?: Store[];
 }
 
-export function Header({ userData, cartItems, updateCartItemQuantity }: HeaderProps) {
+export function Header({ userData, cartItems, updateCartItemQuantity, stores = [] }: HeaderProps) {
     const { user, isUserLoading } = useUser();
     const auth = useAuth();
     const [isCraftsPopoverOpen, setIsCraftsPopoverOpen] = useState(false);
+    const [isStoresPopoverOpen, setIsStoresPopoverOpen] = useState(false);
 
 
     const handleSignOut = async () => {
@@ -104,9 +111,45 @@ export function Header({ userData, cartItems, updateCartItemQuantity }: HeaderPr
                             </div>
                         </PopoverContent>
                     </Popover>
-                    <Link href="/our-stores">
-                        <button className="hover:opacity-80">OUR STORES</button>
-                    </Link>
+                    <Popover open={isStoresPopoverOpen} onOpenChange={setIsStoresPopoverOpen}>
+                        <PopoverTrigger asChild>
+                             <div 
+                                onMouseEnter={() => setIsStoresPopoverOpen(true)} 
+                                onMouseLeave={() => setIsStoresPopoverOpen(false)}
+                                className="flex items-center"
+                            >
+                                <Link href="/our-stores">
+                                    <button className="flex items-center gap-1 hover:opacity-80">
+                                        OUR STORES <ChevronDown size={16} />
+                                    </button>
+                                </Link>
+                            </div>
+                        </PopoverTrigger>
+                         <PopoverContent 
+                            className="w-80"
+                            onMouseEnter={() => setIsStoresPopoverOpen(true)} 
+                            onMouseLeave={() => setIsStoresPopoverOpen(false)}
+                        >
+                            <div className="grid gap-4">
+                                <p className="font-semibold">Store Locations</p>
+                                <div className="grid gap-2">
+                                    {stores.slice(0, 3).map((store) => (
+                                        <Link href="/our-stores" key={store.id} className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted -m-2">
+                                            <Store className="h-6 w-6 mt-1 text-primary"/>
+                                            <div>
+                                                <p className="font-semibold text-sm">{store.name}</p>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                    {stores.length > 3 && (
+                                         <Link href="/our-stores">
+                                            <Button variant="link" className="p-0 h-auto text-primary">View all stores</Button>
+                                        </Link>
+                                    )}
+                                </div>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
                     <Link href="/our-team">
                         <button className="hover:opacity-80">OUR TEAM</button>
                     </Link>

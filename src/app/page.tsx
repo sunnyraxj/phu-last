@@ -39,6 +39,11 @@ type Product = {
 
 type CartItem = Product & { quantity: number; cartItemId: string; };
 
+type Store = {
+    id: string;
+    name: string;
+};
+
 const collections = [
   { name: "Crafts", count: 5 },
   { name: "LifeStyle", count: 5 },
@@ -92,6 +97,9 @@ export default function ProductPage() {
 
   const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
   const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
+
+  const storesQuery = useMemoFirebase(() => collection(firestore, 'stores'), [firestore]);
+  const { data: stores } = useCollection<Store>(storesQuery);
 
   const handleCollectionChange = (collectionName: string) => {
     setSelectedCollections(prev => 
@@ -198,6 +206,7 @@ export default function ProductPage() {
         userData={userData}
         cartItems={cartItems}
         updateCartItemQuantity={updateCartItemQuantity}
+        stores={stores || []}
       />
 
       <section className="relative h-[60vh] w-full flex items-center justify-center text-white">
