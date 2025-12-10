@@ -526,16 +526,15 @@ export default function ProductPage() {
                     />
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out">
-                    <div className="flex flex-col gap-2">
-                       <Button variant="secondary" size="sm" onClick={() => addToCart(product)}>
-                         <ShoppingBag className="mr-2" />
-                         Add to Cart
-                       </Button>
-                       <Button variant="outline" size="sm" onClick={() => setSelectedProduct(product)}>
-                         <Eye className="mr-2" />
-                         View Details
-                       </Button>
-                     </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="secondary" size="sm" className="flex-1" onClick={() => addToCart(product)}>
+                        <ShoppingBag className="mr-2" />
+                        Add to Cart
+                      </Button>
+                      <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setSelectedProduct(product)}>
+                        <Eye />
+                      </Button>
+                    </div>
                   </div>
                   <div className="mt-4 text-left transition-transform duration-300 ease-in-out group-hover:-translate-y-24">
                     <h3 className="font-semibold text-sm truncate">{product.name}</h3>
