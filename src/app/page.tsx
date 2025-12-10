@@ -3,8 +3,8 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
-import { collection, doc, query, where, getDocs, writeBatch } from "firebase/firestore";
-import { ChevronDown, Search, User, ShoppingBag, Plus, Minus, X, Eye, LogOut, Settings } from "lucide-react"
+import { collection, doc, query, where, getDocs, writeBatch, setDoc, deleteDoc, addDoc } from "firebase/firestore";
+import { ChevronDown, Search, User, ShoppingBag, Plus, Minus, X, Eye, LogOut } from "lucide-react"
 import Link from "next/link";
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -18,12 +18,10 @@ import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { useAuth, useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login";
-import { setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { PottersWheelSpinner } from "@/components/shared/PottersWheelSpinner";
-import { useToast } from "@/hooks/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { signOut } from "firebase/auth";
+import { signOut, signInAnonymously } from "firebase/auth";
+import { useToast } from "@/hooks/use-toast";
 
 type Product = {
   id: string;
@@ -58,7 +56,6 @@ export default function ProductPage() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [productsSeeded, setProductsSeeded] = useState(false);
 
   const firestore = useFirestore();
   const auth = useAuth();
@@ -67,7 +64,7 @@ export default function ProductPage() {
 
   useEffect(() => {
     if (!isUserLoading && !user) {
-      initiateAnonymousSignIn(auth);
+      signInAnonymously(auth);
     }
   }, [user, isUserLoading, auth]);
 
@@ -114,9 +111,9 @@ export default function ProductPage() {
     if (!user) return;
     const itemRef = doc(firestore, 'users', user.uid, 'cart', cartItemId);
     if (newQuantity > 0) {
-      setDocumentNonBlocking(itemRef, { quantity: newQuantity }, { merge: true });
+      setDoc(itemRef, { quantity: newQuantity }, { merge: true });
     } else {
-      deleteDocumentNonBlocking(itemRef);
+      deleteDoc(itemRef);
     }
   };
   
@@ -126,11 +123,13 @@ export default function ProductPage() {
     if (existingItem) {
       updateCartItemQuantity(existingItem.cartItemId, existingItem.quantity + 1);
     } else {
-      const cartCollectionRef = collection(firestore, 'users', user.uid, 'cart');
-      addDocumentNonBlocking(cartCollectionRef, { productId: product.id, quantity: 1 });
+      addDoc(collection(firestore, 'users', user.uid, 'cart'), {
+        productId: product.id,
+        quantity: 1,
+      });
     }
     toast({
-      title: "Item Added to Cart",
+      title: "Item Added",
       description: `${product.name} has been added to your cart.`,
     });
   };
@@ -189,42 +188,10 @@ export default function ProductPage() {
     }
   }
 
-  const addMockProducts = async () => {
-    if (!firestore) return;
-    const batch = writeBatch(firestore);
-    const productsCollection = collection(firestore, "products");
-  
-    const mockProducts: Omit<Product, 'id'>[] = [
-      { name: "Terracotta Vase", price: 1200, image: "https://picsum.photos/seed/product1/600/400", "data-ai-hint": "terracotta vase", collection: "Crafts", material: "Ceramic", inStock: true, description: "A beautiful handcrafted terracotta vase, perfect for adding a rustic touch to your home decor.", artisanId: "artisan1" },
-      { name: "Woven Jute Rug", price: 2500, image: "https://picsum.photos/seed/product2/600/400", "data-ai-hint": "jute rug", collection: "LifeStyle", material: "Jute", inStock: true, description: "Handwoven jute rug, durable and eco-friendly. Adds a natural and warm feel to any room.", artisanId: "artisan2" },
-      { name: "Brass Deity Statue", price: 3500, image: "https://picsum.photos/seed/product3/600/400", "data-ai-hint": "brass statue", collection: "Crafts", material: "Brass", inStock: false, description: "Intricately designed brass statue of a deity, a masterpiece of traditional metalwork.", artisanId: "artisan3" },
-      { name: "Sabai Grass Wall Hanging", price: 800, image: "https://picsum.photos/seed/product4/600/400", "data-ai-hint": "wall hanging", collection: "LifeStyle", material: "Sabai Grass", inStock: true, description: "A decorative wall hanging made from Sabai grass, showcasing tribal art forms.", artisanId: "artisan4" },
-      { name: "Handmade Paper Diary", price: 500, image: "https://picsum.photos/seed/product5/600/400", "data-ai-hint": "handmade diary", collection: "Crafts", material: "Paper", inStock: true, description: "Eco-friendly diary with a cover made from recycled handmade paper.", artisanId: "artisan5" },
-      { name: "Ceramic Coffee Mugs", price: 950, image: "https://picsum.photos/seed/product6/600/400", "data-ai-hint": "coffee mug", collection: "LifeStyle", material: "Ceramic", inStock: true, description: "Set of two handcrafted ceramic coffee mugs with a unique glaze.", artisanId: "artisan1" },
-      { name: "Jute Shopping Bag", price: 600, image: "https://picsum.photos/seed/product7/600/400", "data-ai-hint": "jute bag", collection: "LifeStyle", material: "Jute", inStock: true, description: "A strong and stylish jute bag for your everyday shopping needs.", artisanId: "artisan2" },
-      { name: "Brass Bell", price: 1500, image: "https://picsum.photos/seed/product8/600/400", "data-ai-hint": "brass bell", collection: "Crafts", material: "Brass", inStock: true, description: "A traditional brass bell with a clear and resonant sound.", artisanId: "artisan3" },
-      { name: "Sabai Grass Coasters", price: 400, image: "https://picsum.photos/seed/product9/600/400", "data-ai-hint": "grass coasters", collection: "LifeStyle", material: "Sabai Grass", inStock: false, description: "Set of six coasters made from woven Sabai grass.", artisanId: "artisan4" },
-      { name: "Paper Mache Box", price: 750, image: "https://picsum.photos/seed/product10/600/400", "data-ai-hint": "paper box", collection: "Crafts", material: "Paper", inStock: true, description: "A colorful paper mache box, perfect for storing jewelry or trinkets.", artisanId: "artisan5" },
-    ];
-  
-    mockProducts.forEach((product) => {
-      const docRef = doc(productsCollection); // Auto-generates ID
-      batch.set(docRef, {...product, id: docRef.id});
-    });
-  
-    try {
-      await batch.commit();
-      setProductsSeeded(true);
-      alert('10 mock products have been added to your database!');
-    } catch (e) {
-      console.error("Error adding mock products: ", e);
-      alert('There was an error adding the products.');
-    }
-  };
-
   const handleSignOut = async () => {
     await signOut(auth);
-    // This will trigger the onAuthStateChanged listener and update the user state
+    // This will trigger the onAuthStateChanged listener and update the user state,
+    // which in turn will trigger the anonymous sign-in effect.
   };
 
   return (
@@ -262,13 +229,9 @@ export default function ProductPage() {
                     <User size={20} />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-56">
-                  <div className="flex flex-col gap-2">
-                    <p className="font-semibold text-sm">{user.email}</p>
-                    <Button variant="ghost" className="justify-start p-2 h-auto">
-                      <Settings className="mr-2 h-4 w-4" />
-                      Settings
-                    </Button>
+                <PopoverContent className="w-48">
+                  <div className="flex flex-col gap-1">
+                    <p className="font-semibold text-sm p-2">{user.email}</p>
                     <Button variant="ghost" onClick={handleSignOut} className="justify-start p-2 h-auto">
                       <LogOut className="mr-2 h-4 w-4" />
                       Logout
@@ -386,9 +349,6 @@ export default function ProductPage() {
         <aside className="w-72 bg-background p-6 border-r border-border h-screen sticky top-0 overflow-y-auto">
           <div className="flex justify-between items-center mb-6">
              <h2 className="text-xl font-bold">Filter:</h2>
-             {!productsSeeded && (!allProducts || allProducts.length === 0) && (
-              <Button onClick={addMockProducts} variant="secondary" size="sm">Add Mock Products</Button>
-             )}
           </div>
 
           <Accordion type="multiple" defaultValue={["collection", "material", "availability", "price"]} className="w-full">
