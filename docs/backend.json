@@ -22,12 +22,9 @@
           "type": "string",
           "description": "Detailed description of the product."
         },
-        "images": {
-          "type": "array",
-          "description": "Array of image URLs for the product.",
-          "items": {
-            "type": "string"
-          }
+        "image": {
+          "type": "string",
+          "description": "Image URL for the product."
         },
         "price": {
           "type": "number",
@@ -37,12 +34,14 @@
           "type": "string",
           "description": "Category of the product (e.g., pottery, weaving)."
         },
-        "tags": {
-          "type": "array",
-          "description": "Tags associated with the product for search and filtering.",
-          "items": {
-            "type": "string"
-          }
+        "material": {
+          "type": "string"
+        },
+        "inStock": {
+          "type": "boolean"
+        },
+        "collection": {
+          "type": "string"
         }
       },
       "required": [
@@ -50,7 +49,7 @@
         "artisanId",
         "name",
         "description",
-        "images",
+        "image",
         "price",
         "category"
       ]
@@ -343,6 +342,34 @@
             {
               "name": "userId",
               "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "users/{userId}/cart/{cartItemId}",
+        "definition": {
+          "entityName": "CartItem",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "productId": {
+                "type": "string"
+              },
+              "quantity": {
+                "type": "number"
+              }
+            }
+          },
+          "description": "Stores shopping cart items for a user.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The user's ID."
+            },
+            {
+              "name": "cartItemId",
+              "description": "The cart item's ID."
             }
           ]
         }

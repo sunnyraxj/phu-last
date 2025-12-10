@@ -11,7 +11,7 @@
  *
  * Data Structure:
  * The structure separates user-specific private data from public data. Private
- * data like artisan profiles are nested under `/users/{userId}`, which provides
+ * data like artisan profiles and carts are nested under `/users/{userId}`, which provides
  * a clear, path-based ownership model. Publicly-browsable data like `/products`
  * and `/customer_reviews` are top-level collections. Admin roles are managed
  * in a separate, dedicated `/roles_admin` collection for secure and efficient
@@ -119,6 +119,22 @@ service cloud.firestore {
       allow create: if isOwner(userId) && hasConsistentOwnerId(userId) && isNotEscalatingPrivileges();
       allow update: if (isOwner(userId) && hasConsistentOwnerId(userId) && isNotEscalatingPrivileges()) || isAdmin();
       allow delete: if (isOwner(userId)) || isAdmin();
+
+      /**
+       * @description
+       *   Stores shopping cart items for a user. A user can only access their own cart.
+       * @path
+       *   /users/{userId}/cart/{cartItemId}
+       * @allow
+       *   A user `auth.uid: 'user123'` can manage items in `/users/user123/cart`.
+       * @deny
+       *   Another user tries to access `/users/user123/cart`.
+       * @principle
+       *   Enforces strict ownership using a path-based security model.
+       */
+      match /cart/{cartItemId} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
     /**
@@ -176,9 +192,9 @@ service cloud.firestore {
      */
     match /products/{productId} {
       allow get, list: if true;
-      allow create: if isSignedIn() && isArtisanOwner(request.resource.data.artisanId);
-      allow update: if (isArtisanOwner(request.resource.data.artisanId)) || isAdmin();
-      allow delete: if (isArtisanOwner(request.resource.data.artisanId)) || isAdmin();
+      allow create: if isSignedIn() && isArtisanOwner(request.resource.data.artisanId) || isAdmin();
+      allow update: if (isSignedIn() && isArtisanOwner(request.resource.data.artisanId)) || isAdmin();
+      allow delete: if (isSignedIn() && isArtisanOwner(resource.data.artisanId)) || isAdmin();
     }
 
     /**

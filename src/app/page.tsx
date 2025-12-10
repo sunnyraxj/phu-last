@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
+import { collection, doc, query, where, getDocs, writeBatch } from "firebase/firestore";
 import { ChevronDown, Search, User, ShoppingCart, Plus, Minus, X, Eye, ShoppingBag } from "lucide-react"
 import Link from "next/link";
 import { Button } from "@/components/ui/button"
@@ -14,9 +15,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { useAuth, useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
+import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login";
+import { setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { PottersWheelSpinner } from "@/components/shared/PottersWheelSpinner";
 
 type Product = {
-  id: number;
+  id: string;
   name: string;
   price: number;
   image: string;
@@ -25,102 +30,14 @@ type Product = {
   material: string;
   inStock: boolean;
   description: string;
+  artisanId: string;
 };
 
-
-const allProducts: Product[] = [
-  {
-    id: 1,
-    name: "Set Of 6 Jamini Roy Prints",
-    price: 1200.00,
-    image: "https://picsum.photos/seed/1/400/400",
-    "data-ai-hint": "art prints",
-    collection: "Crafts",
-    material: "Paper",
-    inStock: true,
-    description: "A beautiful set of 6 prints by the famous artist Jamini Roy, perfect for decorating your home.",
-  },
-  {
-    id: 2,
-    name: "Ceramic Etched Bird Plate",
-    price: 5000.00,
-    image: "https://picsum.photos/seed/2/400/400",
-    "data-ai-hint": "ceramic plate",
-    collection: "Crafts",
-    material: "Ceramic",
-    inStock: true,
-    description: "A stunning ceramic plate with an etched bird design, handcrafted by skilled artisans.",
-  },
-  {
-    id: 3,
-    name: "Dokra Bell",
-    price: 1900.00,
-    image: "https://picsum.photos/seed/3/400/400",
-    "data-ai-hint": "brass bell",
-    collection: "Crafts",
-    material: "Brass",
-    inStock: false,
-    description: "A traditional Dokra bell, made with the lost-wax casting technique. Adds a rustic charm.",
-  },
-  {
-    id: 4,
-    name: "Sabai Basket With Lid",
-    price: 750.00,
-    image: "https://picsum.photos/seed/4/400/400",
-    "data-ai-hint": "woven basket",
-    collection: "LifeStyle",
-    material: "Sabai Grass",
-    inStock: true,
-    description: "A handwoven Sabai grass basket with a lid, perfect for storage or as a decorative piece.",
-  },
-  {
-    id: 5,
-    name: "Brass Ganesha Idol",
-    price: 2500.00,
-    image: "https://picsum.photos/seed/5/400/400",
-    "data-ai-hint": "brass idol",
-    collection: "Crafts",
-    material: "Brass",
-    inStock: true,
-    description: "An intricately detailed brass idol of Lord Ganesha, ideal for your home temple or as a gift.",
-  },
-  {
-    id: 6,
-    name: "Dhokra Bird Figurine",
-    price: 1800.00,
-    image: "https://picsum.photos/seed/6/400/400",
-    "data-ai-hint": "brass figurine",
-    collection: "Crafts",
-    material: "Brass",
-    inStock: false,
-    description: "A charming bird figurine made using the Dhokra art form, perfect for any collector.",
-  },
-  {
-    id: 7,
-    name: "Green Leaf Ceramic Bowl",
-    price: 3200.00,
-    image: "https://picsum.photos/seed/7/400/400",
-    "data-ai-hint": "ceramic bowl",
-    collection: "LifeStyle",
-    material: "Ceramic",
-    inStock: true,
-    description: "A beautiful ceramic bowl shaped like a green leaf, bringing a touch of nature indoors.",
-  },
-  {
-    id: 8,
-    name: "Woven Jute Basket",
-    price: 1100.00,
-    image: "https://picsum.photos/seed/8/400/400",
-    "data-ai-hint": "jute basket",
-    collection: "LifeStyle",
-    material: "Jute",
-    inStock: true,
-    description: "A sturdy and stylish woven jute basket, great for organizing your space with a natural touch.",
-  },
-]
+type CartItem = Product & { quantity: number; cartItemId: string; };
 
 const collections = [
-  { name: "Crafts", count: allProducts.filter(p => p.collection === "Crafts").length },
+  { name: "Crafts", count: 5 },
+  { name: "LifeStyle", count: 3 },
 ]
 
 const materials = ["Paper", "Ceramic", "Brass", "Sabai Grass", "Jute"];
@@ -134,13 +51,38 @@ export default function ProductPage() {
   const [availability, setAvailability] = useState<string>("all"); // all, in-stock, out-of-stock
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [searchTerm, setSearchTerm] = useState("");
-  
-  const [cartItems, setCartItems] = useState([
-    { ...allProducts[0], quantity: 1 },
-    { ...allProducts[3], quantity: 2 },
-  ]);
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  const firestore = useFirestore();
+  const auth = useAuth();
+  const { user, isUserLoading } = useUser();
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      initiateAnonymousSignIn(auth);
+    }
+  }, [user, isUserLoading, auth]);
+
+  const productsQuery = useMemoFirebase(() =>
+    query(collection(firestore, 'products')),
+    [firestore]
+  );
+  const { data: allProducts, isLoading: productsLoading } = useCollection<Product>(productsQuery);
+
+  const cartItemsQuery = useMemoFirebase(() =>
+    user ? collection(firestore, 'users', user.uid, 'cart') : null,
+    [firestore, user]
+  );
+  const { data: cartData, isLoading: cartLoading } = useCollection<{ productId: string; quantity: number }>(cartItemsQuery);
+
+  const cartItems = useMemo(() => {
+    if (!cartData || !allProducts) return [];
+    return cartData.map(cartItem => {
+      const product = allProducts.find(p => p.id === cartItem.productId);
+      return product ? { ...product, quantity: cartItem.quantity, cartItemId: cartItem.id } : null;
+    }).filter((item): item is CartItem => item !== null);
+  }, [cartData, allProducts]);
 
   const cartCount = useMemo(() => cartItems.reduce((acc, item) => acc + item.quantity, 0), [cartItems]);
   const cartSubtotal = useMemo(() => cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0), [cartItems]);
@@ -161,27 +103,30 @@ export default function ProductPage() {
     )
   }
   
-  const updateCartItemQuantity = (productId: number, newQuantity: number) => {
-    setCartItems(currentItems => 
-      newQuantity > 0
-        ? currentItems.map(item => item.id === productId ? { ...item, quantity: newQuantity } : item)
-        : currentItems.filter(item => item.id !== productId)
-    );
+  const updateCartItemQuantity = (cartItemId: string, newQuantity: number) => {
+    if (!user) return;
+    const itemRef = doc(firestore, 'users', user.uid, 'cart', cartItemId);
+    if (newQuantity > 0) {
+      setDocumentNonBlocking(itemRef, { quantity: newQuantity }, { merge: true });
+    } else {
+      deleteDocumentNonBlocking(itemRef);
+    }
   };
   
   const addToCart = (product: Product) => {
-    setCartItems(currentItems => {
-      const existingItem = currentItems.find(item => item.id === product.id);
-      if (existingItem) {
-        return currentItems.map(item => 
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-        );
-      }
-      return [...currentItems, { ...product, quantity: 1 }];
-    });
+    if (!user) return;
+    const existingItem = cartItems.find(item => item.id === product.id);
+    if (existingItem) {
+      updateCartItemQuantity(existingItem.cartItemId, existingItem.quantity + 1);
+    } else {
+      const cartCollectionRef = collection(firestore, 'users', user.uid, 'cart');
+      addDocumentNonBlocking(cartCollectionRef, { productId: product.id, quantity: 1 });
+    }
   };
 
+
   const filteredProducts = useMemo(() => {
+    if (!allProducts) return [];
     return allProducts
       .filter(product => {
         if (selectedCollections.length > 0 && !selectedCollections.includes(product.collection)) {
@@ -211,13 +156,14 @@ export default function ProductPage() {
           case 'price-high-low':
             return b.price - a.price;
           case 'newest':
-            return b.id - a.id; // Assuming higher ID is newer
+            // Assuming higher firestore doc id is not newer. We need a timestamp
+            return 0;
           case 'Featured':
           default:
-            return 0; // Or some other default logic
+            return 0; 
         }
       });
-  }, [selectedCollections, selectedMaterials, availability, priceRange, sortBy, searchTerm]);
+  }, [allProducts, selectedCollections, selectedMaterials, availability, priceRange, sortBy, searchTerm]);
 
 
   const getGridCols = () => {
@@ -255,9 +201,6 @@ export default function ProductPage() {
           </nav>
 
           <div className="flex items-center gap-6">
-            <button className="hover:opacity-80">
-              <Search size={20} />
-            </button>
             <button className="hover:opacity-80">
               <User size={20} />
             </button>
@@ -297,21 +240,21 @@ export default function ProductPage() {
                                {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.price)}
                              </p>
                              <div className="flex items-center gap-2 mt-2">
-                               <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartItemQuantity(item.id, item.quantity - 1)}>
+                               <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartItemQuantity(item.cartItemId, item.quantity - 1)}>
                                  <Minus size={14} />
                                </Button>
                                <Input
                                   type="number"
                                   value={item.quantity}
-                                  onChange={(e) => updateCartItemQuantity(item.id, parseInt(e.target.value) || 0)}
+                                  onChange={(e) => updateCartItemQuantity(item.cartItemId, parseInt(e.target.value) || 0)}
                                   className="h-7 w-12 text-center"
                                 />
-                               <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartItemQuantity(item.id, item.quantity + 1)}>
+                               <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartItemQuantity(item.cartItemId, item.quantity + 1)}>
                                  <Plus size={14} />
                                </Button>
                              </div>
                            </div>
-                           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => updateCartItemQuantity(item.id, 0)}>
+                           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => updateCartItemQuantity(item.cartItemId, 0)}>
                              <X size={16}/>
                            </Button>
                         </div>
@@ -503,7 +446,12 @@ export default function ProductPage() {
               <span className="text-foreground font-semibold">{filteredProducts.length} Products</span>
             </div>
           </div>
-
+            
+          {productsLoading ? (
+            <div className="flex justify-center items-center h-96">
+                <PottersWheelSpinner />
+            </div>
+          ) : (
           <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
             <div className={cn('grid gap-x-8 gap-y-12', getGridCols())}>
               {filteredProducts.map((product) => (
@@ -525,7 +473,7 @@ export default function ProductPage() {
                   </div>
                   <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <Button variant="secondary" size="icon" className="h-9 w-9" onClick={() => addToCart(product)}>
-                      <ShoppingBag />
+                      <ShoppingCart />
                     </Button>
                     <Button variant="secondary" size="icon" className="h-9 w-9" onClick={() => setSelectedProduct(product)}>
                       <Eye />
@@ -572,6 +520,7 @@ export default function ProductPage() {
               </DialogContent>
             )}
           </Dialog>
+          )}
         </main>
       </div>
     </div>
