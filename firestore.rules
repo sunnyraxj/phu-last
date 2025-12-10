@@ -179,8 +179,7 @@ service cloud.firestore {
     /**
      * @description
      *   Stores all product listings. Products are public and can be read by
-     *   anyone. Only the artisan who owns the product (via their artisan profile)
-     *   or an admin can create, update, or delete products.
+     *   anyone. For now, any signed-in user can add products.
      * @path
      *   /products/{productId}
      * @allow
@@ -192,7 +191,7 @@ service cloud.firestore {
      */
     match /products/{productId} {
       allow get, list: if true;
-      allow create: if isSignedIn() && isArtisanOwner(request.resource.data.artisanId) || isAdmin();
+      allow create: if isSignedIn();
       allow update: if (isSignedIn() && isArtisanOwner(request.resource.data.artisanId)) || isAdmin();
       allow delete: if (isSignedIn() && isArtisanOwner(resource.data.artisanId)) || isAdmin();
     }
