@@ -515,8 +515,8 @@ export default function ProductPage() {
           <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
             <div className={cn('grid gap-x-8 gap-y-12', getGridCols())}>
               {filteredProducts.map((product) => (
-                <div key={product.id} className="group relative">
-                  <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
+                <div key={product.id} className="group relative overflow-hidden rounded-lg">
+                  <div className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden">
                     <Image
                       src={product.image}
                       alt={product.name}
@@ -524,20 +524,20 @@ export default function ProductPage() {
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
                       data-ai-hint={product['data-ai-hint']}
                     />
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <div className="flex flex-col gap-2">
-                        <Button variant="secondary" onClick={() => addToCart(product)}>
-                          <ShoppingBag className="mr-2" />
-                          Add to Cart
-                        </Button>
-                        <Button variant="outline" onClick={() => setSelectedProduct(product)}>
-                          <Eye className="mr-2" />
-                          View Details
-                        </Button>
-                      </div>
-                    </div>
                   </div>
-                  <div className="mt-4 text-left">
+                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out">
+                    <div className="flex flex-col gap-2">
+                       <Button variant="secondary" size="sm" onClick={() => addToCart(product)}>
+                         <ShoppingBag className="mr-2" />
+                         Add to Cart
+                       </Button>
+                       <Button variant="outline" size="sm" onClick={() => setSelectedProduct(product)}>
+                         <Eye className="mr-2" />
+                         View Details
+                       </Button>
+                     </div>
+                  </div>
+                  <div className="mt-4 text-left transition-transform duration-300 ease-in-out group-hover:-translate-y-24">
                     <h3 className="font-semibold text-sm truncate">{product.name}</h3>
                     <p className="text-muted-foreground text-sm mt-1">
                       {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 }).format(product.price)}
