@@ -5,14 +5,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-  SheetDescription,
-  SheetClose,
-} from '@/components/ui/sheet';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+  DialogClose,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -89,17 +89,17 @@ export function ProductForm({ isOpen, onClose, onSubmit, product }: ProductFormP
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="w-full flex flex-col">
-        <SheetHeader>
-          <SheetTitle>{product ? 'Edit Product' : 'Add New Product'}</SheetTitle>
-          <SheetDescription>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>{product ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+          <DialogDescription>
             {product ? "Update the details of this product." : "Fill out the form to add a new product to the store."}
-          </SheetDescription>
-        </SheetHeader>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="flex-1 flex flex-col">
-            <ScrollArea className="flex-1 pr-6 -mr-6">
-                <div className="space-y-2 my-4">
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit(handleFormSubmit)}>
+            <ScrollArea className="h-96 pr-6 -mr-6">
+                <div className="space-y-4 my-4">
                     <div className="space-y-1">
                         <Label htmlFor="name">Product Name</Label>
                         <Input id="name" {...register('name')} />
@@ -144,18 +144,18 @@ export function ProductForm({ isOpen, onClose, onSubmit, product }: ProductFormP
                 </div>
             </ScrollArea>
 
-            <SheetFooter className="mt-auto pt-2">
-                <SheetClose asChild>
+            <DialogFooter className="mt-4">
+                <DialogClose asChild>
                     <Button type="button" variant="outline">
                     Cancel
                     </Button>
-                </SheetClose>
+                </DialogClose>
                 <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? 'Saving...' : 'Save Product'}
                 </Button>
-            </SheetFooter>
+            </DialogFooter>
         </form>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }
