@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm, SubmitHandler } from 'react-hook-form';
+import { useForm, SubmitHandler, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useEffect } from 'react';
 import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
+import { CreatableSelect } from './CreatableSelect';
 
 const productSchema = z.object({
   name: z.string().min(1, { message: 'Product name is required' }),
@@ -40,15 +41,18 @@ interface ProductFormProps {
   onClose: () => void;
   onSubmit: (data: ProductFormValues) => void;
   product: ProductFormValues & { id?: string } | null;
+  existingMaterials: string[];
+  existingCollections: string[];
 }
 
-export function ProductForm({ isOpen, onClose, onSubmit, product }: ProductFormProps) {
+export function ProductForm({ isOpen, onClose, onSubmit, product, existingMaterials, existingCollections }: ProductFormProps) {
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
     control,
+    setValue,
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -120,23 +124,55 @@ export function ProductForm({ isOpen, onClose, onSubmit, product }: ProductFormP
                         <Input id="category" {...register('category')} />
                         {errors.category && <p className="text-xs text-destructive">{errors.category.message}</p>}
                     </div>
-                    <div className="space-y-1">
-                        <Label htmlFor="material">Material</Label>
-                        <Input id="material" {...register('material')} />
-                        {errors.material && <p className="text-xs text-destructive">{errors.material.message}</p>}
-                    </div>
-                    <div className="space-y-1">
-                        <Label htmlFor="collection">Collection</Label>
-                        <Input id="collection" {...register('collection')} />
-                        {errors.collection && <p className="text-xs text-destructive">{errors.collection.message}</p>}
-                    </div>
+                    <Controller
+                        control={control}
+                        name="material"
+                        render={({ field }) => (
+                            <div className="space-y-1">
+                                <Label>Material</Label>
+                                <CreatableSelect
+                                    options={existingMaterials}
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    placeholder="Select or create a material..."
+                                />
+                                {errors.material && <p className="text-xs text-destructive">{errors.material.message}</p>}
+                            </div>
+                        )}
+                    />
+                     <Controller
+                        control={control}
+                        name="collection"
+                        render={({ field }) => (
+                            <div className="space-y-1">
+                                <Label>Collection</Label>
+                                <CreatableSelect
+                                    options={existingCollections}
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    placeholder="Select or create a collection..."
+                                />
+                                {errors.collection && <p className="text-xs text-destructive">{errors.collection.message}</p>}
+                            </div>
+                        )}
+                    />
                      <div className="space-y-1">
                         <Label htmlFor="image">Image URL</Label>
                         <Input id="image" {...register('image')} placeholder="https://picsum.photos/seed/..." />
                         {errors.image && <p className="text-xs text-destructive">{errors.image.message}</p>}
                     </div>
                     <div className="flex items-center space-x-2 pt-2">
-                        <Checkbox id="inStock" {...register('inStock')} checked={control._getWatch('inStock')} onCheckedChange={(checked) => control.setValue('inStock', !!checked)} />
+                        <Controller
+                          control={control}
+                          name="inStock"
+                          render={({ field }) => (
+                            <Checkbox 
+                              id="inStock" 
+                              checked={field.value} 
+                              onCheckedChange={field.onChange} 
+                            />
+                          )}
+                        />
                         <Label htmlFor="inStock" className="cursor-pointer text-sm">
                            Product is in stock and available for purchase
                         </Label>

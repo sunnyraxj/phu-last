@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
@@ -36,6 +36,16 @@ export default function AdminProductsPage() {
 
     const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
     const { data: products, isLoading: productsLoading } = useCollection<Product>(productsQuery);
+
+    const existingMaterials = useMemo(() => {
+        if (!products) return [];
+        return [...new Set(products.map(p => p.material).filter(Boolean))];
+    }, [products]);
+
+    const existingCollections = useMemo(() => {
+        if (!products) return [];
+        return [...new Set(products.map(p => p.collection).filter(Boolean))];
+    }, [products]);
 
     const handleAddProduct = () => {
         setSelectedProduct(null);
@@ -83,6 +93,8 @@ export default function AdminProductsPage() {
                 onClose={() => setIsFormOpen(false)}
                 onSubmit={handleFormSubmit}
                 product={selectedProduct}
+                existingMaterials={existingMaterials}
+                existingCollections={existingCollections}
             />
             
             <Card>
