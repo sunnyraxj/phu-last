@@ -90,7 +90,7 @@ export function ProductForm({ isOpen, onClose, onSubmit, product }: ProductFormP
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="sm:max-w-md w-full flex flex-col">
+      <SheetContent className="w-full flex flex-col">
         <SheetHeader>
           <SheetTitle>{product ? 'Edit Product' : 'Add New Product'}</SheetTitle>
           <SheetDescription>
@@ -99,7 +99,7 @@ export function ProductForm({ isOpen, onClose, onSubmit, product }: ProductFormP
         </SheetHeader>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="flex-1 flex flex-col">
             <ScrollArea className="flex-1 pr-6 -mr-6">
-                <div className="space-y-4 my-4">
+                <div className="space-y-2 my-4">
                     <div className="space-y-1">
                         <Label htmlFor="name">Product Name</Label>
                         <Input id="name" {...register('name')} />
