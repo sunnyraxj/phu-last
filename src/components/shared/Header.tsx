@@ -17,6 +17,7 @@ import { Plus, Minus, X, Sprout, Palette, Wind } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 
 type Product = {
@@ -54,6 +55,7 @@ interface HeaderProps {
 export function Header({ userData, cartItems, updateCartItemQuantity, stores = [], adminActionCounts = { pendingOrders: 0, outOfStockProducts: 0 } }: HeaderProps) {
     const { user, isUserLoading } = useUser();
     const auth = useAuth();
+    const router = useRouter();
     const [isCraftsPopoverOpen, setIsCraftsPopoverOpen] = useState(false);
     const [isStoresPopoverOpen, setIsStoresPopoverOpen] = useState(false);
     const [isAdminPopoverOpen, setIsAdminPopoverOpen] = useState(false);
@@ -95,6 +97,14 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
 
     const handleSignOut = async () => {
         await signOut(auth);
+    };
+
+    const handleCheckout = () => {
+        if (user?.isAnonymous) {
+            router.push('/login');
+        } else {
+            // Proceed to checkout page
+        }
     };
 
     const cartCount = useMemo(() => cartItems.reduce((acc, item) => acc + item.quantity, 0), [cartItems]);
@@ -368,7 +378,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                                 <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(cartSubtotal)}</span>
                                             </div>
                                             <p className="text-xs text-muted-foreground">Shipping & taxes calculated at checkout.</p>
-                                            <Button size="lg" className="w-full">Checkout</Button>
+                                            <Button size="lg" className="w-full" onClick={handleCheckout}>Checkout</Button>
                                         </div>
                                     </SheetFooter>
                                 </>

@@ -1,7 +1,7 @@
 /**
  * Core Philosophy: This ruleset enforces a dual security model based on user ownership and role-based access control (RBAC).
  * A user always has full control over their own data (e.g., their user profile, their orders).
- * A special 'admin' role grants comprehensive read and write privileges across the entire database for moderation and management purposes.
+ * A special 'admin' role grants comprehensive read and write privileges across the entire database for moderation and management.
  * Publicly visible data, such as artisan profiles, products, and reviews, can be read by anyone but only modified by their original author or an admin.
  *
  * Data Structure: The database uses a flat, collection-based structure. Key collections include /users, /artisanProfiles, /products, /orders, and /reviews.
@@ -28,6 +28,13 @@ service cloud.firestore {
      */
     function isSignedIn() {
       return request.auth != null;
+    }
+    
+    /**
+     * Checks if the user is not anonymous.
+     */
+    function isNotAnonymous() {
+      return isSignedIn() && request.auth.token.firebase.sign_in_provider != 'anonymous';
     }
 
     /**
@@ -95,9 +102,9 @@ service cloud.firestore {
      */
     match /artisanProfiles/{artisanProfileId} {
       allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.userId) || isAdmin();
-      allow delete: if isExistingOwner(resource.data.userId) || isAdmin();
+      allow create: if isNotAnonymous() && request.resource.data.userId == request.auth.uid;
+      allow update: if (isExistingOwner(resource.data.userId) && isNotAnonymous()) || isAdmin();
+      allow delete: if (isExistingOwner(resource.data.userId) && isNotAnonymous()) || isAdmin();
     }
 
     /**
@@ -120,10 +127,10 @@ service cloud.firestore {
      * @principle Order data is private and accessible only to the customer who created it or an admin. Listing requires a query filter.
      */
     match /orders/{orderId} {
-      allow get: if isOwner(resource.data.customerId) || isAdmin();
-      allow list: if (request.query.get('customerId') == request.auth.uid) || isAdmin();
-      allow create: if isSignedIn() && request.resource.data.customerId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.customerId) || isAdmin();
+      allow get: if (isOwner(resource.data.customerId) && isNotAnonymous()) || isAdmin();
+      allow list: if ((request.query.get('customerId') == request.auth.uid) && isNotAnonymous()) || isAdmin();
+      allow create: if (isSignedIn() && request.resource.data.customerId == request.auth.uid && isNotAnonymous());
+      allow update: if (isExistingOwner(resource.data.customerId) && isNotAnonymous()) || isAdmin();
       allow delete: if false; // Orders should generally not be deletable by users.
     }
 
@@ -135,10 +142,10 @@ service cloud.firestore {
      * @principle Access is granted by looking up the parent order document and verifying its owner. This pattern secures child documents based on the parent's ownership.
      */
     match /orderItems/{orderItemId} {
-      allow get: if get(/databases/$(database)/documents/orders/$(resource.data.orderId)).data.customerId == request.auth.uid || isAdmin();
-      allow list: if (request.query.get('orderId') != null && get(/databases/$(database)/documents/orders/$(request.query.get('orderId'))).data.customerId == request.auth.uid) || isAdmin();
-      allow create: if get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.customerId == request.auth.uid || isAdmin();
-      allow update: if (isExistingDoc() && get(/databases/$(database)/documents/orders/$(resource.data.orderId)).data.customerId == request.auth.uid) || isAdmin();
+      allow get: if (get(/databases/$(database)/documents/orders/$(resource.data.orderId)).data.customerId == request.auth.uid && isNotAnonymous()) || isAdmin();
+      allow list: if (request.query.get('orderId') != null && get(/databases/$(database)/documents/orders/$(request.query.get('orderId'))).data.customerId == request.auth.uid && isNotAnonymous()) || isAdmin();
+      allow create: if (get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.customerId == request.auth.uid && isNotAnonymous()) || isAdmin();
+      allow update: if (isExistingDoc() && get(/databases/$(database)/documents/orders/$(resource.data.orderId)).data.customerId == request.auth.uid && isNotAnonymous()) || isAdmin();
       allow delete: if false; // Order items should not be deletable by users.
     }
 
@@ -151,9 +158,9 @@ service cloud.firestore {
      */
     match /reviews/{reviewId} {
       allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.customerId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.customerId) || isAdmin();
-      allow delete: if isExistingOwner(resource.data.customerId) || isAdmin();
+      allow create: if isSignedIn() && request.resource.data.customerId == request.auth.uid && isNotAnonymous();
+      allow update: if (isExistingOwner(resource.data.customerId) && isNotAnonymous()) || isAdmin();
+      allow delete: if (isExistingOwner(resource.data.customerId) && isNotAnonymous()) || isAdmin();
     }
     
     /**
