@@ -336,7 +336,7 @@ export default function ProductPage() {
           />
         </aside>
 
-        <main className="flex-1 p-4 sm:p-8">
+        <main className="flex-1 p-2 sm:p-8">
           <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
             <div className="flex w-full sm:w-auto items-center gap-4">
                <Sheet>
@@ -406,7 +406,7 @@ export default function ProductPage() {
             </div>
           ) : (
           <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
-            <div className={cn('grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 sm:gap-x-6 gap-y-8 sm:gap-y-10')}>
+            <div className={cn('grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-2 sm:gap-x-6 gap-y-6 sm:gap-y-10')}>
               {filteredProducts.map((product) => (
                 <div key={product.id} className="group relative text-left">
                   <div 
@@ -421,7 +421,7 @@ export default function ProductPage() {
                       data-ai-hint={product['data-ai-hint']}
                     />
                   </div>
-                  <div className="mt-4">
+                  <div className="mt-2">
                      <h3 className="font-semibold text-sm text-foreground truncate">{product.name}</h3>
                      <p className="text-foreground/80 text-sm mt-1">
                         {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
@@ -484,5 +484,3 @@ export default function ProductPage() {
     </div>
   )
 }
-
-    

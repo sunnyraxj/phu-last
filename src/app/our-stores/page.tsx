@@ -97,10 +97,10 @@ export default function OurStoresPage() {
         adminActionCounts={adminActionCounts}
       />
 
-      <main className="container mx-auto py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
+      <main className="container mx-auto py-8 sm:py-16 px-4">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">Our Store Locations</h1>
-          <p className="mt-4 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">Our Store Locations</h1>
+          <p className="mt-4 text-base text-muted-foreground max-w-2xl mx-auto sm:text-xl">
             Find a Purbanchal Hasta Udyog store near you.
           </p>
         </div>
@@ -110,7 +110,7 @@ export default function OurStoresPage() {
                 <PottersWheelSpinner />
             </div>
         ) : stores && stores.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {stores.map((store) => (
                     <Card key={store.id} className="overflow-hidden flex flex-col">
                         {store.image && (

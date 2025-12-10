@@ -113,10 +113,10 @@ export default function OurTeamPage() {
         adminActionCounts={adminActionCounts}
       />
 
-      <main className="container mx-auto py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
+      <main className="container mx-auto py-8 sm:py-16 px-4">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">Meet Our Team</h1>
-          <p className="mt-4 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">Meet Our Team</h1>
+          <p className="mt-4 text-base text-muted-foreground max-w-2xl mx-auto sm:text-xl">
             The passionate individuals dedicated to bringing you the finest handcrafted goods.
           </p>
         </div>
@@ -128,7 +128,7 @@ export default function OurTeamPage() {
         ) : teamMembers && teamMembers.length > 0 ? (
           <>
             {founder && (
-              <div className="mb-16 md:mb-20">
+              <div className="mb-12 md:mb-20">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
                   <div className="relative h-80 w-80 sm:h-96 sm:w-96 mx-auto rounded-lg overflow-hidden shadow-2xl">
                      <Image
@@ -149,14 +149,14 @@ export default function OurTeamPage() {
             )}
             
             {managementMembers.length > 0 && (
-                <div className="mb-16 md:mb-20">
+                <div className="mb-12 md:mb-20">
                     <div className="text-center mb-12">
                         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Management</h2>
                         <p className="mt-3 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
                             The leaders guiding our vision and strategy.
                         </p>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
                         {managementMembers.map((member) => (
                            <Card key={member.id} className="flex flex-col sm:flex-row items-center gap-6 p-6">
                                <div className="relative h-32 w-32 sm:h-40 sm:w-40 shrink-0 rounded-full overflow-hidden shadow-lg">
@@ -184,7 +184,7 @@ export default function OurTeamPage() {
                      <div className="text-center mb-12">
                         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Our Dedicated Team</h2>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10">
                     {otherTeamMembers.map((member) => (
                         <div key={member.id} className="text-center">
                         <div className="relative h-56 w-56 sm:h-64 sm:w-64 mx-auto rounded-full overflow-hidden mb-4 shadow-lg">
@@ -196,9 +196,9 @@ export default function OurTeamPage() {
                             data-ai-hint={member['data-ai-hint']}
                             />
                         </div>
-                        <h2 className="text-2xl font-semibold text-foreground">{member.name}</h2>
+                        <h2 className="text-xl font-semibold text-foreground">{member.name}</h2>
                         <p className="text-primary font-medium">{member.role}</p>
-                        <p className="mt-2 text-muted-foreground max-w-xs mx-auto">{member.bio}</p>
+                        <p className="mt-2 text-muted-foreground text-sm max-w-xs mx-auto">{member.bio}</p>
                         </div>
                     ))}
                     </div>
@@ -212,7 +212,7 @@ export default function OurTeamPage() {
         )}
 
 
-        <div className="text-center mt-20">
+        <div className="text-center mt-16">
           <Link href="/">
             <Button size="lg">Back to Shopping</Button>
           </Link>
