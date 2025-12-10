@@ -42,6 +42,7 @@ type CartItem = Product & { quantity: number; cartItemId: string; };
 type Store = {
     id: string;
     name: string;
+    image?: string;
 };
 
 const collections = [

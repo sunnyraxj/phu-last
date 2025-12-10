@@ -32,6 +32,7 @@ type CartItem = Product & { quantity: number; cartItemId: string; };
 type Store = {
     id: string;
     name: string;
+    image?: string;
 };
 
 interface HeaderProps {
@@ -135,7 +136,15 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                 <div className="grid gap-2">
                                     {stores.slice(0, 3).map((store) => (
                                         <Link href="/our-stores" key={store.id} className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted -m-2">
-                                            <Store className="h-6 w-6 mt-1 text-primary"/>
+                                            {store.image ? (
+                                                <div className="relative h-12 w-12 rounded-md overflow-hidden">
+                                                    <Image src={store.image} alt={store.name} fill className="object-cover" />
+                                                </div>
+                                            ) : (
+                                                <div className="h-12 w-12 rounded-md bg-muted flex items-center justify-center">
+                                                    <Store className="h-6 w-6 text-primary"/>
+                                                </div>
+                                            )}
                                             <div>
                                                 <p className="font-semibold text-sm">{store.name}</p>
                                             </div>
@@ -145,6 +154,9 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                          <Link href="/our-stores">
                                             <Button variant="link" className="p-0 h-auto text-primary">View all stores</Button>
                                         </Link>
+                                    )}
+                                     {stores.length === 0 && (
+                                        <p className="text-sm text-muted-foreground">No store locations added yet.</p>
                                     )}
                                 </div>
                             </div>

@@ -37,6 +37,7 @@ type CartItem = Product & { quantity: number; cartItemId: string; };
 type Store = {
     id: string;
     name: string;
+    image?: string;
 };
 
 export default function OurTeamPage() {
