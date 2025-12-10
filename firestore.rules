@@ -109,12 +109,7 @@ service cloud.firestore {
      */
     match /products/{productId} {
       allow get, list: if true;
-      // CRITICAL: Cannot implement owner-only writes. The 'Product' entity is missing a direct 'userId' or 'ownerId' field.
-      // The current `artisanId` refers to an ArtisanProfile, which would require an insecure and slow extra `get()` call inside the rule to check for ownership.
-      // To fix this, denormalize the owner's `userId` directly onto the product document.
-      allow create: if isAdmin(); // TODO: Add owner validation once the schema is updated with an ownership field (e.g., request.resource.data.userId == request.auth.uid).
-      allow update: if isAdmin(); // TODO: Add owner validation (e.g., isExistingOwner(resource.data.userId)).
-      allow delete: if isAdmin(); // TODO: Add owner validation (e.g., isExistingOwner(resource.data.userId)).
+      allow create, update, delete: if isAdmin();
     }
 
     /**
@@ -159,6 +154,30 @@ service cloud.firestore {
       allow create: if isSignedIn() && request.resource.data.customerId == request.auth.uid;
       allow update: if isExistingOwner(resource.data.customerId) || isAdmin();
       allow delete: if isExistingOwner(resource.data.customerId) || isAdmin();
+    }
+    
+    /**
+     * @description Rules for the Team Members collection.
+     * @path /teamMembers/{memberId}
+     * @allow (read) Anyone can view team members.
+     * @allow (write) Only admins can create, update, or delete team members.
+     * @principle Public read, admin-only write.
+     */
+    match /teamMembers/{memberId} {
+        allow get, list: if true;
+        allow create, update, delete: if isAdmin();
+    }
+    
+    /**
+     * @description Rules for the Store Details document.
+     * @path /storeDetails/main
+     * @allow (read) Anyone can view store details.
+     * @allow (write) Only admins can update the store details.
+     * @principle Public read, admin-only write for a singleton configuration document.
+     */
+    match /storeDetails/main {
+        allow get: if true;
+        allow write: if isAdmin();
     }
   }
 }
