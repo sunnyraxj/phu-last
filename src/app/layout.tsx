@@ -4,6 +4,7 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from "@/components/ui/toaster"
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { ScrollProgress } from '@/components/shared/ScrollProgress';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-body' });
 
@@ -21,6 +22,7 @@ export default function RootLayout({
     <html lang="en" className="scroll-smooth">
       <body className={cn('min-h-screen bg-background font-body antialiased', inter.variable)}>
         <FirebaseClientProvider>
+          <ScrollProgress />
           <main>{children}</main>
           <Toaster />
         </FirebaseClientProvider>
