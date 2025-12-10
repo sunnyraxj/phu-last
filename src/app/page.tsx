@@ -22,7 +22,7 @@ import { setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocki
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/shared/Header";
 import { ShoppingBag } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetFooter } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 
 type Product = {
@@ -344,6 +344,9 @@ export default function ProductPage() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[300px]">
+                   <SheetHeader>
+                        <SheetTitle className="sr-only">Filters</SheetTitle>
+                   </SheetHeader>
                    <div className="p-6 overflow-y-auto">
                       <Filters 
                         selectedCollections={selectedCollections}
