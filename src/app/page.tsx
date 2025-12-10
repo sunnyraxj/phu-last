@@ -4,7 +4,7 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { collection, doc, query, where, getDocs, writeBatch } from "firebase/firestore";
-import { ChevronDown, Search, User, ShoppingBag, Plus, Minus, X, Eye, LogOut } from "lucide-react"
+import { ChevronDown, Search, User, ShoppingBag, Plus, Minus, X, Eye, LogOut, Settings } from "lucide-react"
 import Link from "next/link";
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -265,6 +265,10 @@ export default function ProductPage() {
                 <PopoverContent className="w-56">
                   <div className="flex flex-col gap-2">
                     <p className="font-semibold text-sm">{user.email}</p>
+                    <Button variant="ghost" className="justify-start p-2 h-auto">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Settings
+                    </Button>
                     <Button variant="ghost" onClick={handleSignOut} className="justify-start p-2 h-auto">
                       <LogOut className="mr-2 h-4 w-4" />
                       Logout
