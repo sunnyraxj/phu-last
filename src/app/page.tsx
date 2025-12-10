@@ -1,8 +1,9 @@
+
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
 import { collection, doc, query, where, getDocs, writeBatch } from "firebase/firestore";
-import { ChevronDown, Search, User, ShoppingCart, Plus, Minus, X, Eye, ShoppingBag } from "lucide-react"
+import { ChevronDown, Search, User, ShoppingBag, Plus, Minus, X, Eye } from "lucide-react"
 import Link from "next/link";
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -247,7 +248,7 @@ export default function ProductPage() {
             <Sheet>
               <SheetTrigger asChild>
                 <button className="relative hover:opacity-80">
-                  <ShoppingCart size={20} />
+                  <ShoppingBag size={20} />
                   {cartCount > 0 && (
                     <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
                       {cartCount}
@@ -314,7 +315,7 @@ export default function ProductPage() {
                 </>
                 ) : (
                   <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center">
-                    <ShoppingCart size={48} className="text-muted-foreground" />
+                    <ShoppingBag size={48} className="text-muted-foreground" />
                     <h3 className="text-xl font-semibold">Your cart is empty</h3>
                     <p className="text-muted-foreground">Looks like you haven't added anything to your cart yet.</p>
                     <SheetClose asChild>
@@ -348,8 +349,8 @@ export default function ProductPage() {
         </div>
       </section>
       
-      <div className="container mx-auto flex">
-        <aside className="w-72 bg-background p-6 border-r border-border min-h-screen">
+      <div className="container mx-auto flex items-start">
+        <aside className="w-72 bg-background p-6 border-r border-border h-screen sticky top-0 overflow-y-auto">
           <div className="flex justify-between items-center mb-6">
              <h2 className="text-xl font-bold">Filter:</h2>
              {!productsSeeded && (!allProducts || allProducts.length === 0) && (
@@ -517,12 +518,14 @@ export default function ProductPage() {
                     </div>
                   </div>
                   <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <Button variant="secondary" size="icon" className="h-9 w-9" onClick={() => addToCart(product)}>
-                      <ShoppingCart />
-                    </Button>
-                    <Button variant="secondary" size="icon" className="h-9 w-9" onClick={() => setSelectedProduct(product)}>
-                      <Eye />
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="secondary" size="icon" className="h-9 w-9" onClick={() => addToCart(product)}>
+                        <ShoppingBag />
+                      </Button>
+                      <Button variant="secondary" size="icon" className="h-9 w-9" onClick={() => setSelectedProduct(product)}>
+                        <Eye />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -556,7 +559,7 @@ export default function ProductPage() {
                     </div>
                     <DialogFooter className="mt-6">
                       <Button size="lg" className="w-full" onClick={() => addToCart(selectedProduct)} disabled={!selectedProduct.inStock}>
-                        <ShoppingCart className="mr-2" />
+                        <ShoppingBag className="mr-2" />
                         Add to Cart
                       </Button>
                     </DialogFooter>
