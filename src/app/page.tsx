@@ -4,7 +4,7 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { collection, doc, query, where, getDocs, writeBatch, setDoc, deleteDoc, addDoc } from "firebase/firestore";
-import { ChevronDown, Search, User, ShoppingBag, Plus, Minus, X, Eye, LogOut } from "lucide-react"
+import { ChevronDown, Search, User, ShoppingBag, Plus, Minus, X, Eye, LogOut, Settings } from "lucide-react"
 import Link from "next/link";
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -22,6 +22,9 @@ import { PottersWheelSpinner } from "@/components/shared/PottersWheelSpinner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { signOut, signInAnonymously } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
+import { setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { useRouter } from "next/navigation";
+
 
 type Product = {
   id: string;
@@ -61,6 +64,7 @@ export default function ProductPage() {
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -88,6 +92,9 @@ export default function ProductPage() {
     }).filter((item): item is CartItem => item !== null);
   }, [cartData, allProducts]);
 
+  const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
+  const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
+
   const cartCount = useMemo(() => cartItems.reduce((acc, item) => acc + item.quantity, 0), [cartItems]);
   const cartSubtotal = useMemo(() => cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0), [cartItems]);
 
@@ -111,9 +118,9 @@ export default function ProductPage() {
     if (!user) return;
     const itemRef = doc(firestore, 'users', user.uid, 'cart', cartItemId);
     if (newQuantity > 0) {
-      setDoc(itemRef, { quantity: newQuantity }, { merge: true });
+      setDocumentNonBlocking(itemRef, { quantity: newQuantity }, { merge: true });
     } else {
-      deleteDoc(itemRef);
+      deleteDocumentNonBlocking(itemRef);
     }
   };
   
@@ -123,7 +130,8 @@ export default function ProductPage() {
     if (existingItem) {
       updateCartItemQuantity(existingItem.cartItemId, existingItem.quantity + 1);
     } else {
-      addDoc(collection(firestore, 'users', user.uid, 'cart'), {
+      const cartCollection = collection(firestore, 'users', user.uid, 'cart');
+      addDocumentNonBlocking(cartCollection, {
         productId: product.id,
         quantity: 1,
       });
@@ -214,6 +222,11 @@ export default function ProductPage() {
               <button className="hover:opacity-80">OUR TEAM</button>
             </Link>
             <button className="hover:opacity-80">BLOG</button>
+            {userData?.role === 'admin' && (
+              <Link href="/admin">
+                <button className="hover:opacity-80">ADMIN</button>
+              </Link>
+            )}
           </nav>
 
           <div className="flex items-center gap-6">
@@ -232,6 +245,10 @@ export default function ProductPage() {
                 <PopoverContent className="w-48">
                   <div className="flex flex-col gap-1">
                     <p className="font-semibold text-sm p-2">{user.email}</p>
+                     <Button variant="ghost" className="justify-start p-2 h-auto" onClick={() => { /* Navigate to settings */ }}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      Settings
+                    </Button>
                     <Button variant="ghost" onClick={handleSignOut} className="justify-start p-2 h-auto">
                       <LogOut className="mr-2 h-4 w-4" />
                       Logout
