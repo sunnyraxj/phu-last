@@ -1,15 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, MoreHorizontal } from 'lucide-react';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { ProductForm } from '@/components/admin/ProductForm';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
 
 type Product = {
     id: string;
@@ -17,6 +20,11 @@ type Product = {
     price: number;
     category: string;
     inStock: boolean;
+    description: string;
+    material: string;
+    collection: string;
+    image: string;
+    'data-ai-hint'?: string;
 };
 
 export default function AdminProductsPage() {
@@ -62,7 +70,7 @@ export default function AdminProductsPage() {
     };
 
     return (
-        <div className="flex-1 space-y-4 p-8 pt-6">
+        <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
             <div className="flex items-center justify-between space-y-2">
                 <h2 className="text-3xl font-bold tracking-tight">Products</h2>
                 <Button onClick={handleAddProduct}>
@@ -76,71 +84,94 @@ export default function AdminProductsPage() {
                 onSubmit={handleFormSubmit}
                 product={selectedProduct}
             />
-
-            <div className="rounded-md border">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Category</TableHead>
-                            <TableHead>Price</TableHead>
-                            <TableHead>In Stock</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {productsLoading ? (
-                            <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center">
-                                    <PottersWheelSpinner />
-                                </TableCell>
-                            </TableRow>
-                        ) : products && products.length > 0 ? (
-                            products.map((product) => (
-                                <TableRow key={product.id}>
-                                    <TableCell className="font-medium">{product.name}</TableCell>
-                                    <TableCell>{product.category}</TableCell>
-                                    <TableCell>
-                                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(product.price)}
-                                    </TableCell>
-                                    <TableCell>{product.inStock ? 'Yes' : 'No'}</TableCell>
-                                    <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon" onClick={() => handleEditProduct(product)}>
-                                            <Edit className="h-4 w-4" />
-                                        </Button>
-                                        <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                <Button variant="ghost" size="icon" onClick={() => setProductToDelete(product)}>
-                                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                                </Button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                    This action cannot be undone. This will permanently delete the product
-                                                    from the database.
-                                                </AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                <AlertDialogCancel onClick={() => setProductToDelete(null)}>Cancel</AlertDialogCancel>
-                                                <AlertDialogAction onClick={handleDeleteProduct} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                    </TableCell>
+            
+            <Card>
+                <CardHeader>
+                    <CardTitle>All Products</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="rounded-md border">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Category</TableHead>
+                                    <TableHead className="hidden md:table-cell">Price</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center">
-                                    No products found.
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+                            </TableHeader>
+                            <TableBody>
+                                {productsLoading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center">
+                                            <PottersWheelSpinner />
+                                        </TableCell>
+                                    </TableRow>
+                                ) : products && products.length > 0 ? (
+                                    products.map((product) => (
+                                        <TableRow key={product.id}>
+                                            <TableCell className="font-medium">{product.name}</TableCell>
+                                            <TableCell>{product.category}</TableCell>
+                                            <TableCell className="hidden md:table-cell">
+                                                {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(product.price)}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant={product.inStock ? 'default' : 'destructive'}>
+                                                    {product.inStock ? 'In Stock' : 'Out of Stock'}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon">
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={() => handleEditProduct(product)}>
+                                                            <Edit className="mr-2 h-4 w-4" />
+                                                            Edit
+                                                        </DropdownMenuItem>
+                                                        <AlertDialogTrigger asChild>
+                                                            <DropdownMenuItem className="text-destructive" onClick={() => setProductToDelete(product)}>
+                                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                                Delete
+                                                            </DropdownMenuItem>
+                                                        </AlertDialogTrigger>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center">
+                                            No products found.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <AlertDialog open={!!productToDelete} onOpenChange={(isOpen) => !isOpen && setProductToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the product
+                        from the database.
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setProductToDelete(null)}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteProduct} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

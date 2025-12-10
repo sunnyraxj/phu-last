@@ -5,17 +5,20 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+  SheetDescription,
+  SheetClose,
+} from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useEffect } from 'react';
 import { Textarea } from '../ui/textarea';
+import { ScrollArea } from '../ui/scroll-area';
 
 const productSchema = z.object({
   name: z.string().min(1, { message: 'Product name is required' }),
@@ -45,6 +48,7 @@ export function ProductForm({ isOpen, onClose, onSubmit, product }: ProductFormP
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
+    control,
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -61,83 +65,101 @@ export function ProductForm({ isOpen, onClose, onSubmit, product }: ProductFormP
   });
 
   useEffect(() => {
-    if (product) {
-      reset(product);
-    } else {
-      reset({
-        name: '',
-        description: '',
-        price: 0,
-        category: '',
-        material: '',
-        collection: '',
-        image: '',
-        'data-ai-hint': '',
-        inStock: true,
-      });
+    if (isOpen) {
+        if (product) {
+          reset(product);
+        } else {
+          reset({
+            name: '',
+            description: '',
+            price: 0,
+            category: '',
+            material: '',
+            collection: '',
+            image: '',
+            'data-ai-hint': '',
+            inStock: true,
+          });
+        }
     }
-  }, [product, reset]);
+  }, [product, reset, isOpen]);
 
   const handleFormSubmit: SubmitHandler<ProductFormValues> = (data) => {
     onSubmit(data);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>{product ? 'Edit Product' : 'Add New Product'}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Product Name</Label>
-            <Input id="name" {...register('name')} />
-            {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea id="description" {...register('description')} />
-            {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="price">Price</Label>
-            <Input id="price" type="number" step="0.01" {...register('price')} />
-            {errors.price && <p className="text-sm text-destructive">{errors.price.message}</p>}
-          </div>
-           <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
-            <Input id="category" {...register('category')} />
-            {errors.category && <p className="text-sm text-destructive">{errors.category.message}</p>}
-          </div>
-           <div className="space-y-2">
-            <Label htmlFor="material">Material</Label>
-            <Input id="material" {...register('material')} />
-            {errors.material && <p className="text-sm text-destructive">{errors.material.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="collection">Collection</Label>
-            <Input id="collection" {...register('collection')} />
-            {errors.collection && <p className="text-sm text-destructive">{errors.collection.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="image">Image URL</Label>
-            <Input id="image" {...register('image')} />
-            {errors.image && <p className="text-sm text-destructive">{errors.image.message}</p>}
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox id="inStock" {...register('inStock')} defaultChecked={true}/>
-            <Label htmlFor="inStock">In Stock</Label>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : 'Save Product'}
-            </Button>
-          </DialogFooter>
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent className="sm:max-w-2xl w-full flex flex-col">
+        <SheetHeader>
+          <SheetTitle>{product ? 'Edit Product' : 'Add New Product'}</SheetTitle>
+          <SheetDescription>
+            {product ? "Update the details of this product." : "Fill out the form to add a new product to the store."}
+          </SheetDescription>
+        </SheetHeader>
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="flex-1 flex flex-col">
+            <ScrollArea className="flex-1 pr-6 -mr-6">
+                <div className="space-y-6 my-6">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">Product Name</Label>
+                            <Input id="name" {...register('name')} />
+                            {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="price">Price (INR)</Label>
+                            <Input id="price" type="number" step="0.01" {...register('price')} />
+                            {errors.price && <p className="text-sm text-destructive">{errors.price.message}</p>}
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea id="description" {...register('description')} rows={5} />
+                        {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="category">Category</Label>
+                            <Input id="category" {...register('category')} />
+                            {errors.category && <p className="text-sm text-destructive">{errors.category.message}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="material">Material</Label>
+                            <Input id="material" {...register('material')} />
+                            {errors.material && <p className="text-sm text-destructive">{errors.material.message}</p>}
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="collection">Collection</Label>
+                        <Input id="collection" {...register('collection')} />
+                        {errors.collection && <p className="text-sm text-destructive">{errors.collection.message}</p>}
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="image">Image URL</Label>
+                        <Input id="image" {...register('image')} placeholder="https://picsum.photos/seed/..." />
+                        {errors.image && <p className="text-sm text-destructive">{errors.image.message}</p>}
+                    </div>
+                    <div className="flex items-center space-x-2 pt-2">
+                        <Checkbox id="inStock" {...register('inStock')} checked={control._getWatch('inStock')} onCheckedChange={(checked) => control.setValue('inStock', !!checked)} />
+                        <Label htmlFor="inStock" className="cursor-pointer">
+                           Product is in stock and available for purchase
+                        </Label>
+                    </div>
+                </div>
+            </ScrollArea>
+
+            <SheetFooter className="mt-auto pt-4">
+                <SheetClose asChild>
+                    <Button type="button" variant="outline">
+                    Cancel
+                    </Button>
+                </SheetClose>
+                <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : 'Save Product'}
+                </Button>
+            </SheetFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }
