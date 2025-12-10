@@ -74,6 +74,16 @@ service cloud.firestore {
       allow create: if isOwner(userId);
       allow update: if (isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin();
       allow delete: if isOwner(userId) || isAdmin();
+
+      /**
+       * @description Rules for the user's cart subcollection.
+       * @path /users/{userId}/cart/{cartItemId}
+       * @allow (read, write) A user can manage their own cart items.
+       * @principle A user has full control over the contents of their own cart.
+       */
+      match /cart/{cartItemId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
     }
 
     /**
