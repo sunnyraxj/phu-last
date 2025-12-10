@@ -470,23 +470,23 @@ export default function ProductPage() {
               <div className="flex gap-1 border border-border rounded-md p-1">
                  <Button variant={viewMode === 'grid2' ? 'secondary' : 'ghost'} size="sm" className="w-9 h-9 p-0" onClick={() => setViewMode('grid2')}>
                   <span className="flex items-center justify-center h-full w-full gap-0.5 p-1">
-                    <span className="w-1.5 h-4 bg-current rounded-sm"></span>
-                    <span className="w-1.5 h-4 bg-current rounded-sm"></span>
+                    <span className="w-1.5 h-full bg-current rounded-sm"></span>
+                    <span className="w-1.5 h-full bg-current rounded-sm"></span>
                   </span>
                 </Button>
                 <Button variant={viewMode === 'grid3' ? 'secondary' : 'ghost'} size="sm" className="w-9 h-9 p-0" onClick={() => setViewMode('grid3')}>
                   <span className="flex items-center justify-center h-full w-full gap-0.5 p-1">
-                    <span className="w-1.5 h-4 bg-current rounded-sm"></span>
-                    <span className="w-1.5 h-4 bg-current rounded-sm"></span>
-                    <span className="w-1.5 h-4 bg-current rounded-sm"></span>
+                    <span className="w-1.5 h-full bg-current rounded-sm"></span>
+                    <span className="w-1.5 h-full bg-current rounded-sm"></span>
+                    <span className="w-1.5 h-full bg-current rounded-sm"></span>
                   </span>
                 </Button>
                 <Button variant={viewMode === 'grid4' ? 'secondary' : 'ghost'} size="sm" className="w-9 h-9 p-0" onClick={() => setViewMode('grid4')}>
                    <span className="flex items-center justify-center h-full w-full gap-0.5 p-1">
-                    <span className="w-1.5 h-4 bg-current rounded-sm"></span>
-                    <span className="w-1.5 h-4 bg-current rounded-sm"></span>
-                    <span className="w-1.5 h-4 bg-current rounded-sm"></span>
-                    <span className="w-1.5 h-4 bg-current rounded-sm"></span>
+                    <span className="w-1.5 h-full bg-current rounded-sm"></span>
+                    <span className="w-1.5 h-full bg-current rounded-sm"></span>
+                    <span className="w-1.5 h-full bg-current rounded-sm"></span>
+                    <span className="w-1.5 h-full bg-current rounded-sm"></span>
                   </span>
                 </Button>
               </div>
@@ -524,23 +524,20 @@ export default function ProductPage() {
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
                       data-ai-hint={product['data-ai-hint']}
                     />
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out">
-                    <div className="flex items-center gap-2">
-                      <Button variant="secondary" size="sm" className="flex-1" onClick={() => addToCart(product)}>
-                        <ShoppingBag className="mr-2" />
-                        Add to Cart
-                      </Button>
-                      <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setSelectedProduct(product)}>
-                        <Eye />
-                      </Button>
+                     <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <h3 className="font-semibold text-sm text-white truncate">{product.name}</h3>
+                      <p className="text-white/80 text-sm mt-1">
+                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 }).format(product.price)}
+                      </p>
                     </div>
                   </div>
-                  <div className="mt-4 text-left transition-transform duration-300 ease-in-out group-hover:-translate-y-24">
-                    <h3 className="font-semibold text-sm truncate">{product.name}</h3>
-                    <p className="text-muted-foreground text-sm mt-1">
-                      {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 }).format(product.price)}
-                    </p>
+                  <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <Button variant="secondary" size="icon" className="h-9 w-9" onClick={() => addToCart(product)}>
+                      <ShoppingBag />
+                    </Button>
+                    <Button variant="secondary" size="icon" className="h-9 w-9" onClick={() => setSelectedProduct(product)}>
+                      <Eye />
+                    </Button>
                   </div>
                 </div>
               ))}
