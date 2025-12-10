@@ -8,11 +8,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { signOut } from "firebase/auth";
 import { useAuth, useUser } from "@/firebase";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import { Separator } from "../ui/separator";
 import { Input } from "../ui/input";
-import { Plus, Minus, X } from "lucide-react";
+import { Plus, Minus, X, Sprout, Palette, Wind } from "lucide-react";
 
 type Product = {
     id: string;
@@ -38,6 +38,8 @@ interface HeaderProps {
 export function Header({ userData, cartItems, updateCartItemQuantity }: HeaderProps) {
     const { user, isUserLoading } = useUser();
     const auth = useAuth();
+    const [isCraftsPopoverOpen, setIsCraftsPopoverOpen] = useState(false);
+
 
     const handleSignOut = async () => {
         await signOut(auth);
@@ -57,9 +59,51 @@ export function Header({ userData, cartItems, updateCartItemQuantity }: HeaderPr
                 </Link>
 
                 <nav className="flex items-center gap-8 text-sm font-semibold">
-                    <button className="flex items-center gap-1 hover:opacity-80">
-                        CRAFTS <ChevronDown size={16} />
-                    </button>
+                     <Popover open={isCraftsPopoverOpen} onOpenChange={setIsCraftsPopoverOpen}>
+                        <PopoverTrigger asChild>
+                            <div 
+                                onMouseEnter={() => setIsCraftsPopoverOpen(true)} 
+                                onMouseLeave={() => setIsCraftsPopoverOpen(false)}
+                                className="flex items-center"
+                            >
+                                <button className="flex items-center gap-1 hover:opacity-80">
+                                    CRAFTS <ChevronDown size={16} />
+                                </button>
+                            </div>
+                        </PopoverTrigger>
+                        <PopoverContent 
+                            className="w-80"
+                            onMouseEnter={() => setIsCraftsPopoverOpen(true)} 
+                            onMouseLeave={() => setIsCraftsPopoverOpen(false)}
+                        >
+                            <div className="grid gap-4">
+                                <p className="font-semibold">Featured Crafts</p>
+                                <div className="grid gap-2">
+                                    <Link href="#" className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted -m-2">
+                                        <Sprout className="h-6 w-6 mt-1 text-primary"/>
+                                        <div>
+                                            <p className="font-semibold text-sm">Pottery & Ceramics</p>
+                                            <p className="text-xs text-muted-foreground">Earthenware from the heart of the land.</p>
+                                        </div>
+                                    </Link>
+                                     <Link href="#" className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted -m-2">
+                                        <Palette className="h-6 w-6 mt-1 text-primary"/>
+                                        <div>
+                                            <p className="font-semibold text-sm">Handwoven Textiles</p>
+                                            <p className="text-xs text-muted-foreground">Stories woven into every thread.</p>
+                                        </div>
+                                    </Link>
+                                     <Link href="#" className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted -m-2">
+                                        <Wind className="h-6 w-6 mt-1 text-primary"/>
+                                        <div>
+                                            <p className="font-semibold text-sm">Wooden Decor</p>
+                                            <p className="text-xs text-muted-foreground">Timeless pieces crafted from natural wood.</p>
+                                        </div>
+                                    </Link>
+                                </div>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
                     <Link href="/our-stores">
                         <button className="hover:opacity-80">OUR STORES</button>
                     </Link>
