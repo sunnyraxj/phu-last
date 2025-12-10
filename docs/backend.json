@@ -113,7 +113,8 @@
         "name": { "type": "string", "description": "The public name of the store." },
         "address": { "type": "string", "description": "The physical address of the store." },
         "phone": { "type": "string", "description": "The contact phone number for the store." },
-        "about": { "type": "string", "description": "A description of the store." }
+        "about": { "type": "string", "description": "A description of the store." },
+        "image": { "type": "string", "description": "A URL to the store's primary image." }
       },
       "required": ["name", "address"]
     }

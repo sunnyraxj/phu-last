@@ -14,12 +14,14 @@ import { doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
+import Image from 'next/image';
 
 const storeDetailsSchema = z.object({
   name: z.string().min(1, 'Store name is required'),
   address: z.string().min(1, 'Store address is required'),
   phone: z.string().optional(),
   about: z.string().optional(),
+  image: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
 });
 
 type StoreDetailsFormValues = z.infer<typeof storeDetailsSchema>;
@@ -35,11 +37,14 @@ export default function StorePage() {
         register,
         handleSubmit,
         reset,
+        watch,
         formState: { errors, isSubmitting },
     } = useForm<StoreDetailsFormValues>({
         resolver: zodResolver(storeDetailsSchema),
-        defaultValues: { name: '', address: '' },
+        defaultValues: { name: '', address: '', image: '' },
     });
+
+    const imageUrl = watch('image');
 
     useEffect(() => {
         if (storeDetails) {
@@ -74,26 +79,43 @@ export default function StorePage() {
                                 <PottersWheelSpinner />
                            </div>
                         ) : (
-                            <div className="space-y-4">
-                                <div className="space-y-1">
-                                    <Label htmlFor="name">Store Name</Label>
-                                    <Input id="name" {...register('name')} />
-                                    {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-4">
+                                    <div className="space-y-1">
+                                        <Label htmlFor="name">Store Name</Label>
+                                        <Input id="name" {...register('name')} />
+                                        {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="address">Address</Label>
+                                        <Input id="address" {...register('address')} />
+                                        {errors.address && <p className="text-sm text-destructive">{errors.address.message}</p>}
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="phone">Phone Number</Label>
+                                        <Input id="phone" {...register('phone')} />
+                                        {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="image">Store Image URL</Label>
+                                        <Input id="image" {...register('image')} placeholder="https://picsum.photos/seed/..."/>
+                                        {errors.image && <p className="text-sm text-destructive">{errors.image.message}</p>}
+                                    </div>
                                 </div>
-                                <div className="space-y-1">
-                                    <Label htmlFor="address">Address</Label>
-                                    <Input id="address" {...register('address')} />
-                                    {errors.address && <p className="text-sm text-destructive">{errors.address.message}</p>}
-                                </div>
-                                <div className="space-y-1">
-                                    <Label htmlFor="phone">Phone Number</Label>
-                                    <Input id="phone" {...register('phone')} />
-                                    {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
-                                </div>
-                                 <div className="space-y-1">
-                                    <Label htmlFor="about">About the Store</Label>
-                                    <Textarea id="about" {...register('about')} rows={5} />
-                                    {errors.about && <p className="text-sm text-destructive">{errors.about.message}</p>}
+                                <div className="space-y-4">
+                                    <div className="space-y-1">
+                                        <Label htmlFor="about">About the Store</Label>
+                                        <Textarea id="about" {...register('about')} rows={8} />
+                                        {errors.about && <p className="text-sm text-destructive">{errors.about.message}</p>}
+                                    </div>
+                                     {imageUrl && (
+                                        <div className="space-y-2">
+                                            <Label>Image Preview</Label>
+                                            <div className="relative aspect-video w-full overflow-hidden rounded-md border">
+                                                <Image src={imageUrl} alt="Store Preview" fill className="object-cover" />
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
