@@ -2,7 +2,7 @@
 'use client';
 
 import Link from "next/link";
-import { ChevronDown, ShoppingBag, User, LogOut, Settings, Store, Package, Users, ShoppingCart } from "lucide-react";
+import { ChevronDown, ShoppingBag, User, LogOut, Settings, Store, Package, Users, ShoppingCart, Menu, X as CloseIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -14,6 +14,9 @@ import { Separator } from "../ui/separator";
 import { Input } from "../ui/input";
 import { Plus, Minus, X, Sprout, Palette, Wind } from "lucide-react";
 import { Badge } from "../ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
+import { cn } from "@/lib/utils";
+
 
 type Product = {
     id: string;
@@ -53,6 +56,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
     const [isCraftsPopoverOpen, setIsCraftsPopoverOpen] = useState(false);
     const [isStoresPopoverOpen, setIsStoresPopoverOpen] = useState(false);
     const [isAdminPopoverOpen, setIsAdminPopoverOpen] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
     const craftsTimer = useRef<NodeJS.Timeout | null>(null);
     const storesTimer = useRef<NodeJS.Timeout | null>(null);
@@ -100,16 +104,16 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
     }, [adminActionCounts]);
 
     return (
-        <header className="bg-black text-white">
-            <div className="container mx-auto flex items-center justify-between px-8 py-4">
+        <header className="bg-black text-white sticky top-0 z-40">
+            <div className="container mx-auto flex items-center justify-between px-4 sm:px-8 py-4">
                 <Link href="/" className="flex items-center gap-2">
-                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                        <span className="text-2xl font-bold">P</span>
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-full flex items-center justify-center">
+                        <span className="text-xl sm:text-2xl font-bold">P</span>
                     </div>
-                    <span className="text-lg font-semibold">Purbanchal Hasta Udyog</span>
+                    <span className="text-base sm:text-lg font-semibold">Purbanchal Hasta Udyog</span>
                 </Link>
 
-                <nav className="flex items-center gap-8 text-sm font-semibold">
+                <nav className="hidden lg:flex items-center gap-8 text-sm font-semibold">
                      <Popover open={isCraftsPopoverOpen} onOpenChange={setIsCraftsPopoverOpen}>
                         <PopoverTrigger asChild>
                             <div 
@@ -270,9 +274,9 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                     )}
                 </nav>
 
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-4 sm:gap-6">
                     {!isUserLoading && user?.isAnonymous && (
-                        <Link href="/login">
+                        <Link href="/login" className="hidden sm:block">
                             <Button variant="secondary" size="sm">Login</Button>
                         </Link>
                     )}
@@ -310,7 +314,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                 )}
                             </button>
                         </SheetTrigger>
-                        <SheetContent className="flex flex-col">
+                        <SheetContent className="flex flex-col w-full sm:max-w-sm">
                             <SheetHeader>
                                 <SheetTitle>Your Cart ({cartCount})</SheetTitle>
                             </SheetHeader>
@@ -379,10 +383,97 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                             )}
                         </SheetContent>
                     </Sheet>
+                     <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                        <SheetTrigger asChild>
+                            <Button variant="ghost" size="icon" className="lg:hidden">
+                                <Menu />
+                                <span className="sr-only">Open menu</span>
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="left" className="w-full max-w-xs bg-black text-white p-0">
+                            <div className="flex h-full flex-col">
+                                <div className="flex items-center justify-between border-b border-white/20 p-4">
+                                     <Link href="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
+                                        <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                                            <span className="text-xl font-bold">P</span>
+                                        </div>
+                                    </Link>
+                                    <SheetClose asChild>
+                                        <Button variant="ghost" size="icon">
+                                            <CloseIcon />
+                                        </Button>
+                                    </SheetClose>
+                                </div>
+                                <div className="flex-1 overflow-y-auto p-4">
+                                    <Accordion type="multiple" className="w-full text-lg">
+                                        <AccordionItem value="crafts">
+                                            <AccordionTrigger className="py-4">CRAFTS</AccordionTrigger>
+                                            <AccordionContent className="pl-4">
+                                                <div className="grid gap-4 mt-2">
+                                                    <Link href="#" onClick={() => setIsMobileMenuOpen(false)} className="flex items-start gap-4 p-2 rounded-lg hover:bg-white/10 -m-2">
+                                                        <Sprout className="h-6 w-6 mt-1 text-white"/>
+                                                        <div>
+                                                            <p className="font-semibold text-base">Pottery & Ceramics</p>
+                                                        </div>
+                                                    </Link>
+                                                     <Link href="#" onClick={() => setIsMobileMenuOpen(false)} className="flex items-start gap-4 p-2 rounded-lg hover:bg-white/10 -m-2">
+                                                        <Palette className="h-6 w-6 mt-1 text-white"/>
+                                                        <div>
+                                                            <p className="font-semibold text-base">Handwoven Textiles</p>
+                                                        </div>
+                                                    </Link>
+                                                     <Link href="#" onClick={() => setIsMobileMenuOpen(false)} className="flex items-start gap-4 p-2 rounded-lg hover:bg-white/10 -m-2">
+                                                        <Wind className="h-6 w-6 mt-1 text-white"/>
+                                                        <div>
+                                                            <p className="font-semibold text-base">Wooden Decor</p>
+                                                        </div>
+                                                    </Link>
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                        <Link href="/our-stores" className="block py-4 border-b border-white/20 text-lg" onClick={() => setIsMobileMenuOpen(false)}>
+                                            OUR STORES
+                                        </Link>
+                                        <Link href="/our-team" className="block py-4 border-b border-white/20 text-lg" onClick={() => setIsMobileMenuOpen(false)}>
+                                            OUR TEAM
+                                        </Link>
+                                        <Link href="#" className="block py-4 border-b border-white/20 text-lg" onClick={() => setIsMobileMenuOpen(false)}>
+                                            BLOG
+                                        </Link>
+
+                                        {userData?.role === 'admin' && (
+                                            <AccordionItem value="admin">
+                                                <AccordionTrigger className="py-4">ADMIN</AccordionTrigger>
+                                                <AccordionContent className="pl-4">
+                                                    <div className="grid gap-2 mt-2">
+                                                        <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-2 rounded-lg hover:bg-white/10 -m-2">
+                                                            <p>Products</p>
+                                                            {adminActionCounts.outOfStockProducts > 0 && <Badge variant="destructive">{adminActionCounts.outOfStockProducts}</Badge>}
+                                                        </Link>
+                                                        <Link href="/admin/orders" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-2 rounded-lg hover:bg-white/10 -m-2">
+                                                            <p>Orders</p>
+                                                            {adminActionCounts.pendingOrders > 0 && <Badge>{adminActionCounts.pendingOrders}</Badge>}
+                                                        </Link>
+                                                        <Link href="/admin/team" onClick={() => setIsMobileMenuOpen(false)} className="block p-2 rounded-lg hover:bg-white/10 -m-2">Our Team</Link>
+                                                        <Link href="/admin/store" onClick={() => setIsMobileMenuOpen(false)} className="block p-2 rounded-lg hover:bg-white/10 -m-2">Our Store</Link>
+                                                    </div>
+                                                </AccordionContent>
+                                            </AccordionItem>
+                                        )}
+                                    </Accordion>
+                                </div>
+                                {!isUserLoading && user?.isAnonymous && (
+                                    <div className="p-4 border-t border-white/20">
+                                        <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                                            <Button variant="secondary" className="w-full">Login</Button>
+                                        </Link>
+                                    </div>
+                                )}
+                            </div>
+                        </SheetContent>
+                    </Sheet>
                 </div>
             </div>
         </header>
     );
 }
-
-    

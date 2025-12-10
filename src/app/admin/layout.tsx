@@ -7,9 +7,10 @@ import Link from 'next/link';
 import { collection, doc } from 'firebase/firestore';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Button } from '@/components/ui/button';
-import { Home, Package, ShoppingCart, Users, Store } from 'lucide-react';
+import { Home, Package, ShoppingCart, Users, Store, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 
 type Order = {
     status: 'pending' | 'shipped' | 'delivered';
@@ -30,6 +31,7 @@ export default function AdminLayout({
     const pathname = usePathname();
     const [isAuthorized, setIsAuthorized] = useState(false);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
     const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
@@ -72,6 +74,10 @@ export default function AdminLayout({
 
         checkAuth();
     }, [user, userData, isUserLoading, isUserDocLoading, router]);
+    
+    useEffect(() => {
+        setIsMobileMenuOpen(false);
+    }, [pathname])
 
     if (isCheckingAuth) {
         return (
@@ -83,9 +89,9 @@ export default function AdminLayout({
 
     if (!isAuthorized) {
         return (
-            <div className="flex h-screen flex-col items-center justify-center bg-background text-center">
-                <h1 className="text-4xl font-bold text-destructive">Access Denied</h1>
-                <p className="mt-4 text-lg text-muted-foreground">You do not have permission to view this page.</p>
+            <div className="flex h-screen flex-col items-center justify-center bg-background text-center p-4">
+                <h1 className="text-3xl sm:text-4xl font-bold text-destructive">Access Denied</h1>
+                <p className="mt-4 text-base sm:text-lg text-muted-foreground">You do not have permission to view this page.</p>
                 <Button onClick={() => router.push('/')} className="mt-8">Go to Homepage</Button>
             </div>
         );
@@ -97,6 +103,27 @@ export default function AdminLayout({
         { href: '/admin/team', label: 'Our Team', icon: Users },
         { href: '/admin/store', label: 'Our Store', icon: Store },
     ];
+
+    const navContent = (
+         <ul className="space-y-1">
+            {navItems.map((item) => (
+                <li key={item.href}>
+                    <Link href={item.href}>
+                        <span className={cn(
+                            "flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                            pathname === item.href && "bg-muted text-primary"
+                        )}>
+                            <div className="flex items-center gap-3">
+                                <item.icon className="h-4 w-4" />
+                                {item.label}
+                            </div>
+                            {item.badge && <Badge variant={item.badgeVariant}>{item.badge}</Badge>}
+                        </span>
+                    </Link>
+                </li>
+            ))}
+        </ul>
+    );
 
     return (
         <div className="flex min-h-screen w-full">
@@ -110,24 +137,7 @@ export default function AdminLayout({
                     </Link>
                 </div>
                 <nav className="flex-1 p-4">
-                    <ul className="space-y-1">
-                        {navItems.map((item) => (
-                            <li key={item.href}>
-                                <Link href={item.href}>
-                                    <span className={cn(
-                                        "flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                                        pathname === item.href && "bg-muted text-primary"
-                                    )}>
-                                        <div className="flex items-center gap-3">
-                                            <item.icon className="h-4 w-4" />
-                                            {item.label}
-                                        </div>
-                                        {item.badge && <Badge variant={item.badgeVariant}>{item.badge}</Badge>}
-                                    </span>
-                                </Link>
-                            </li>
-                        ))}
-                    </ul>
+                    {navContent}
                 </nav>
                  <div className="mt-auto p-4">
                     <Link href="/">
@@ -139,8 +149,39 @@ export default function AdminLayout({
                 </div>
             </aside>
             <div className="flex flex-col flex-1">
-                <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-6 lg:h-[60px]">
-                    {/* Header content for mobile, e.g., menu button */}
+                <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 sm:px-6 lg:h-[60px]">
+                     <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                        <SheetTrigger asChild>
+                            <Button variant="outline" size="icon" className="md:hidden">
+                                <Menu className="h-5 w-5" />
+                                <span className="sr-only">Toggle navigation menu</span>
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="left" className="flex flex-col w-full max-w-xs p-0">
+                           <div className="flex h-[60px] items-center border-b px-6">
+                                <Link href="/" className="flex items-center gap-2 font-semibold">
+                                    <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
+                                        <span className="text-lg font-bold">P</span>
+                                    </div>
+                                    <span className="">Admin</span>
+                                </Link>
+                            </div>
+                             <nav className="flex-1 p-4">
+                                {navContent}
+                            </nav>
+                             <div className="mt-auto p-4 border-t">
+                                <Link href="/">
+                                    <Button variant="ghost" className="w-full justify-start">
+                                        <Home className="mr-2 h-4 w-4" />
+                                        Back to Store
+                                    </Button>
+                                </Link>
+                            </div>
+                        </SheetContent>
+                    </Sheet>
+                    <div className="w-full flex-1">
+                        {/* Can add a search bar here if needed */}
+                    </div>
                 </header>
                 <main className="flex-1 overflow-auto">
                     {children}

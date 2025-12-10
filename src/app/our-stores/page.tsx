@@ -93,10 +93,10 @@ export default function OurStoresPage() {
         adminActionCounts={adminActionCounts}
       />
 
-      <main className="container mx-auto py-16 px-4 sm:px-6 lg:px-8">
+      <main className="container mx-auto py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">Our Store Locations</h1>
-          <p className="mt-4 text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="mt-4 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
             Find a Purbanchal Hasta Udyog store near you.
           </p>
         </div>

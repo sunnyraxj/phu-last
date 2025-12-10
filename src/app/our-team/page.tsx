@@ -87,7 +87,7 @@ export default function OurTeamPage() {
     }, [orders, allProducts, userData]);
 
     const updateCartItemQuantity = (cartItemId: string, newQuantity: number) => {
-      // Dummy function, as cart management is handled on the main page.
+      // Dummy function, as cart management is handled elsewhere.
     };
 
     const { founder, managementMembers, teamMembers: otherTeamMembers } = useMemo(() => {
@@ -109,10 +109,10 @@ export default function OurTeamPage() {
         adminActionCounts={adminActionCounts}
       />
 
-      <main className="container mx-auto py-16 px-4 sm:px-6 lg:px-8">
+      <main className="container mx-auto py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">Meet Our Team</h1>
-          <p className="mt-4 text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="mt-4 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
             The passionate individuals dedicated to bringing you the finest handcrafted goods.
           </p>
         </div>
@@ -124,9 +124,9 @@ export default function OurTeamPage() {
         ) : teamMembers && teamMembers.length > 0 ? (
           <>
             {founder && (
-              <div className="mb-20">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                  <div className="relative h-96 w-96 mx-auto rounded-lg overflow-hidden shadow-2xl">
+              <div className="mb-16 md:mb-20">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+                  <div className="relative h-80 w-80 sm:h-96 sm:w-96 mx-auto rounded-lg overflow-hidden shadow-2xl">
                      <Image
                         src={founder.image}
                         alt={founder.name}
@@ -137,25 +137,25 @@ export default function OurTeamPage() {
                   </div>
                   <div className="text-center md:text-left">
                     <p className="text-lg font-semibold text-primary">{founder.role}</p>
-                    <h2 className="text-5xl font-bold text-foreground mt-2">{founder.name}</h2>
-                    <p className="mt-4 text-lg text-muted-foreground max-w-lg mx-auto md:mx-0">{founder.bio}</p>
+                    <h2 className="text-4xl sm:text-5xl font-bold text-foreground mt-2">{founder.name}</h2>
+                    <p className="mt-4 text-base sm:text-lg text-muted-foreground max-w-lg mx-auto md:mx-0">{founder.bio}</p>
                   </div>
                 </div>
               </div>
             )}
             
             {managementMembers.length > 0 && (
-                <div className="mb-20">
+                <div className="mb-16 md:mb-20">
                     <div className="text-center mb-12">
                         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Management</h2>
-                        <p className="mt-3 text-lg text-muted-foreground max-w-2xl mx-auto">
+                        <p className="mt-3 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
                             The leaders guiding our vision and strategy.
                         </p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12">
                         {managementMembers.map((member) => (
-                           <Card key={member.id} className="flex flex-col md:flex-row items-center gap-6 p-6">
-                               <div className="relative h-40 w-40 shrink-0 rounded-full overflow-hidden shadow-lg">
+                           <Card key={member.id} className="flex flex-col sm:flex-row items-center gap-6 p-6">
+                               <div className="relative h-32 w-32 sm:h-40 sm:w-40 shrink-0 rounded-full overflow-hidden shadow-lg">
                                    <Image
                                        src={member.image}
                                        alt={member.name}
@@ -164,10 +164,10 @@ export default function OurTeamPage() {
                                        data-ai-hint={member['data-ai-hint']}
                                    />
                                </div>
-                               <div className="text-center md:text-left">
+                               <div className="text-center sm:text-left">
                                    <h3 className="text-2xl font-semibold text-foreground">{member.name}</h3>
                                    <p className="text-primary font-medium">{member.role}</p>
-                                   <p className="mt-2 text-muted-foreground text-sm max-w-xs mx-auto md:mx-0">{member.bio}</p>
+                                   <p className="mt-2 text-muted-foreground text-sm max-w-xs mx-auto sm:mx-0">{member.bio}</p>
                                </div>
                            </Card>
                         ))}
@@ -180,15 +180,14 @@ export default function OurTeamPage() {
                      <div className="text-center mb-12">
                         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Our Dedicated Team</h2>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
                     {otherTeamMembers.map((member) => (
                         <div key={member.id} className="text-center">
-                        <div className="relative h-64 w-64 mx-auto rounded-full overflow-hidden mb-4 shadow-lg">
+                        <div className="relative h-56 w-56 sm:h-64 sm:w-64 mx-auto rounded-full overflow-hidden mb-4 shadow-lg">
                             <Image
                             src={member.image}
                             alt={member.name}
-                            width={400}
-                            height={400}
+                            fill
                             className="object-cover"
                             data-ai-hint={member['data-ai-hint']}
                             />

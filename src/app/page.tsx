@@ -4,7 +4,7 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { collection, doc, query, where, getDocs, writeBatch, setDoc, deleteDoc, addDoc } from "firebase/firestore";
-import { Search, Eye } from "lucide-react"
+import { Search, Eye, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
@@ -22,6 +22,7 @@ import { setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocki
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/shared/Header";
 import { ShoppingBag } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetFooter } from "@/components/ui/sheet";
 
 
 type Product = {
@@ -56,8 +57,93 @@ const collections = [
 
 const materials = ["Paper", "Ceramic", "Brass", "Sabai Grass", "Jute"];
 
+function Filters({ selectedCollections, handleCollectionChange, selectedMaterials, handleMaterialChange, availability, setAvailability, priceRange, setPriceRange }: any) {
+  return (
+    <>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold">Filter:</h2>
+      </div>
+
+      <Accordion type="multiple" defaultValue={["collection", "material", "availability", "price"]} className="w-full">
+        <AccordionItem value="collection">
+          <AccordionTrigger className="font-semibold py-3 text-base">Collection</AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-2 pt-2">
+              {collections.map((col) => (
+                <label key={col.name} className="flex items-center gap-3 cursor-pointer">
+                  <Checkbox
+                    id={col.name}
+                    onCheckedChange={() => handleCollectionChange(col.name)}
+                    checked={selectedCollections.includes(col.name)}
+                  />
+                  <span className="text-sm">
+                    {col.name} <span className="text-muted-foreground">({col.count})</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="material">
+          <AccordionTrigger className="font-semibold py-3 text-base">Material</AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-2 pt-2">
+              {materials.map((mat) => (
+                <label key={mat} className="flex items-center gap-3 cursor-pointer">
+                  <Checkbox
+                    id={mat}
+                    onCheckedChange={() => handleMaterialChange(mat)}
+                    checked={selectedMaterials.includes(mat)}
+                  />
+                  <span className="text-sm">{mat}</span>
+                </label>
+              ))}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="availability">
+          <AccordionTrigger className="font-semibold py-3 text-base">Availability</AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-2 pt-2">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <Checkbox id="in-stock" onCheckedChange={(checked) => setAvailability(checked ? 'in-stock' : 'all')} checked={availability === 'in-stock'} />
+                <span className="text-sm">In Stock</span>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <Checkbox id="out-of-stock" onCheckedChange={(checked) => setAvailability(checked ? 'out-of-stock' : 'all')} checked={availability === 'out-of-stock'} />
+                <span className="text-sm">Out of Stock</span>
+              </label>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="price">
+          <AccordionTrigger className="font-semibold py-3 text-base">Price</AccordionTrigger>
+          <AccordionContent>
+            <div className="pt-2">
+              <Slider
+                defaultValue={[0, 10000]}
+                max={10000}
+                step={100}
+                min={0}
+                value={priceRange}
+                onValueChange={(value) => setPriceRange(value as [number, number])}
+              />
+              <div className="flex justify-between text-sm text-muted-foreground mt-2">
+                <span>₹{priceRange[0]}</span>
+                <span>₹{priceRange[1]}</span>
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    </>
+  )
+}
+
 export default function ProductPage() {
-  const [viewMode, setViewMode] = useState<"grid2" | "grid3" | "grid4">("grid4")
   const [sortBy, setSortBy] = useState("Featured")
   
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
@@ -203,20 +289,6 @@ export default function ProductPage() {
       });
   }, [allProducts, selectedCollections, selectedMaterials, availability, priceRange, sortBy, searchTerm]);
 
-
-  const getGridCols = () => {
-    switch (viewMode) {
-      case 'grid2':
-        return 'grid-cols-2'
-      case 'grid3':
-        return 'grid-cols-3'
-      case 'grid4':
-      default:
-        return 'grid-cols-4'
-    }
-  }
-
-
   return (
     <div className="min-h-screen bg-background font-sans">
       <Header 
@@ -248,116 +320,50 @@ export default function ProductPage() {
       </section>
       
       <div className="container mx-auto flex items-start">
-        <aside className="w-72 bg-background p-6 border-r border-border h-screen sticky top-0 overflow-y-auto">
-          <div className="flex justify-between items-center mb-6">
-             <h2 className="text-xl font-bold">Filter:</h2>
-          </div>
-
-          <Accordion type="multiple" defaultValue={["collection", "material", "availability", "price"]} className="w-full">
-            <AccordionItem value="collection">
-              <AccordionTrigger className="font-semibold py-3 text-base">Collection</AccordionTrigger>
-              <AccordionContent>
-                <div className="space-y-2 pt-2">
-                  {collections.map((col) => (
-                    <label key={col.name} className="flex items-center gap-3 cursor-pointer">
-                      <Checkbox 
-                        id={col.name} 
-                        onCheckedChange={() => handleCollectionChange(col.name)}
-                        checked={selectedCollections.includes(col.name)}
-                      />
-                      <span className="text-sm">
-                        {col.name} <span className="text-muted-foreground">({col.count})</span>
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem value="material">
-              <AccordionTrigger className="font-semibold py-3 text-base">Material</AccordionTrigger>
-              <AccordionContent>
-                <div className="space-y-2 pt-2">
-                    {materials.map((mat) => (
-                      <label key={mat} className="flex items-center gap-3 cursor-pointer">
-                        <Checkbox 
-                          id={mat}
-                          onCheckedChange={() => handleMaterialChange(mat)}
-                          checked={selectedMaterials.includes(mat)}
-                        />
-                        <span className="text-sm">{mat}</span>
-                      </label>
-                    ))}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem value="availability">
-              <AccordionTrigger className="font-semibold py-3 text-base">Availability</AccordionTrigger>
-              <AccordionContent>
-                <div className="space-y-2 pt-2">
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <Checkbox id="in-stock" onCheckedChange={(checked) => setAvailability(checked ? 'in-stock' : 'all')} checked={availability === 'in-stock'} />
-                    <span className="text-sm">In Stock</span>
-                  </label>
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <Checkbox id="out-of-stock" onCheckedChange={(checked) => setAvailability(checked ? 'out-of-stock' : 'all')} checked={availability === 'out-of-stock'} />
-                    <span className="text-sm">Out of Stock</span>
-                  </label>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-            
-            <AccordionItem value="price">
-              <AccordionTrigger className="font-semibold py-3 text-base">Price</AccordionTrigger>
-              <AccordionContent>
-                <div className="pt-2">
-                  <Slider 
-                    defaultValue={[0, 10000]} 
-                    max={10000} 
-                    step={100}
-                    min={0}
-                    value={priceRange}
-                    onValueChange={(value) => setPriceRange(value as [number, number])} 
-                  />
-                  <div className="flex justify-between text-sm text-muted-foreground mt-2">
-                    <span>₹{priceRange[0]}</span>
-                    <span>₹{priceRange[1]}</span>
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+        <aside className="w-72 bg-background p-6 border-r border-border h-screen sticky top-0 overflow-y-auto hidden lg:block">
+          <Filters 
+            selectedCollections={selectedCollections}
+            handleCollectionChange={handleCollectionChange}
+            selectedMaterials={selectedMaterials}
+            handleMaterialChange={handleMaterialChange}
+            availability={availability}
+            setAvailability={setAvailability}
+            priceRange={priceRange}
+            setPriceRange={setPriceRange}
+          />
         </aside>
 
-        <main className="flex-1 p-8">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex flex-1 items-center gap-4">
-              <span className="text-muted-foreground">View:</span>
-              <div className="flex gap-1 border border-border rounded-md p-1">
-                 <Button variant={viewMode === 'grid2' ? 'secondary' : 'ghost'} size="sm" className="w-9 h-9 p-0" onClick={() => setViewMode('grid2')}>
-                  <span className="flex items-center justify-center h-full w-full gap-0.5 p-1">
-                    <span className="w-1.5 h-full bg-current rounded-sm"></span>
-                    <span className="w-1.5 h-full bg-current rounded-sm"></span>
-                  </span>
-                </Button>
-                <Button variant={viewMode === 'grid3' ? 'secondary' : 'ghost'} size="sm" className="w-9 h-9 p-0" onClick={() => setViewMode('grid3')}>
-                  <span className="flex items-center justify-center h-full w-full gap-0.5 p-1">
-                    <span className="w-1.5 h-full bg-current rounded-sm"></span>
-                    <span className="w-1.5 h-full bg-current rounded-sm"></span>
-                    <span className="w-1.5 h-full bg-current rounded-sm"></span>
-                  </span>
-                </Button>
-                <Button variant={viewMode === 'grid4' ? 'secondary' : 'ghost'} size="sm" className="w-9 h-9 p-0" onClick={() => setViewMode('grid4')}>
-                   <span className="flex items-center justify-center h-full w-full gap-0.5 p-1">
-                    <span className="w-1.5 h-full bg-current rounded-sm"></span>
-                    <span className="w-1.5 h-full bg-current rounded-sm"></span>
-                    <span className="w-1.5 h-full bg-current rounded-sm"></span>
-                    <span className="w-1.5 h-full bg-current rounded-sm"></span>
-                  </span>
-                </Button>
-              </div>
-              <div className="relative w-full max-w-xs ml-4">
+        <main className="flex-1 p-4 sm:p-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
+            <div className="flex w-full sm:w-auto items-center gap-4">
+               <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="lg:hidden">
+                    <Filter className="mr-2 h-4 w-4" />
+                    Filters
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[300px]">
+                   <div className="p-6 overflow-y-auto">
+                      <Filters 
+                        selectedCollections={selectedCollections}
+                        handleCollectionChange={handleCollectionChange}
+                        selectedMaterials={selectedMaterials}
+                        handleMaterialChange={handleMaterialChange}
+                        availability={availability}
+                        setAvailability={setAvailability}
+                        priceRange={priceRange}
+                        setPriceRange={setPriceRange}
+                      />
+                   </div>
+                   <SheetFooter>
+                      <SheetClose asChild>
+                        <Button className="w-full">Apply Filters</Button>
+                      </SheetClose>
+                   </SheetFooter>
+                </SheetContent>
+              </Sheet>
+              <div className="relative w-full sm:max-w-xs">
                 <Input 
                   placeholder="Search products..."
                   className="pl-10"
@@ -368,11 +374,11 @@ export default function ProductPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-8">
+            <div className="flex w-full sm:w-auto items-center gap-4 sm:gap-8">
               <div className="flex items-center gap-3">
-                <label className="text-foreground font-semibold">Sort By:</label>
+                <label className="text-foreground font-semibold text-sm sm:text-base">Sort By:</label>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger className="w-full sm:w-48">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
@@ -384,7 +390,7 @@ export default function ProductPage() {
                 </Select>
 
               </div>
-              <span className="text-foreground font-semibold">{filteredProducts.length} Products</span>
+              <span className="text-foreground font-semibold hidden sm:inline-block">{filteredProducts.length} Products</span>
             </div>
           </div>
             
@@ -394,7 +400,7 @@ export default function ProductPage() {
             </div>
           ) : (
           <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
-            <div className={cn('grid gap-x-8 gap-y-12', getGridCols())}>
+            <div className={cn('grid gap-x-4 sm:gap-x-8 gap-y-8 sm:gap-y-12 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4')}>
               {filteredProducts.map((product) => (
                 <div key={product.id} className="group relative overflow-hidden rounded-lg">
                   <div className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden">
@@ -405,20 +411,20 @@ export default function ProductPage() {
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
                       data-ai-hint={product['data-ai-hint']}
                     />
-                     <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                     <div className="absolute inset-x-0 bottom-0 p-2 sm:p-4 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <h3 className="font-semibold text-sm text-white truncate">{product.name}</h3>
                       <p className="text-white/80 text-sm mt-1">
-                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 }).format(product.price)}
+                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
                       </p>
                     </div>
                   </div>
                   <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div className="flex gap-2">
-                      <Button variant="secondary" size="icon" className="h-9 w-9" onClick={() => addToCart(product)}>
-                        <ShoppingBag />
+                      <Button variant="secondary" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => addToCart(product)}>
+                        <ShoppingBag className="h-4 w-4" />
                       </Button>
-                      <Button variant="secondary" size="icon" className="h-9 w-9" onClick={() => setSelectedProduct(product)}>
-                        <Eye />
+                      <Button variant="secondary" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setSelectedProduct(product)}>
+                        <Eye className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
