@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -20,44 +19,15 @@ type Product = {
     inStock: boolean;
 };
 
-export default function AdminPage() {
-    const { user, isUserLoading } = useUser();
+export default function AdminProductsPage() {
     const firestore = useFirestore();
-    const router = useRouter();
-    const [isAuthorized, setIsAuthorized] = useState(false);
-    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
-    const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
-    const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
-
     const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
     const { data: products, isLoading: productsLoading } = useCollection<Product>(productsQuery);
-
-    useEffect(() => {
-        const checkAuth = () => {
-            if (isUserLoading || isUserDocLoading) {
-                return;
-            }
-
-            if (!user) {
-                router.push('/login');
-                return;
-            }
-
-            if (userData?.role === 'admin') {
-                setIsAuthorized(true);
-            } else {
-                setIsAuthorized(false);
-            }
-            setIsCheckingAuth(false);
-        };
-
-        checkAuth();
-    }, [user, userData, isUserLoading, isUserDocLoading, router]);
 
     const handleAddProduct = () => {
         setSelectedProduct(null);
@@ -91,31 +61,12 @@ export default function AdminPage() {
         setSelectedProduct(null);
     };
 
-    if (isCheckingAuth) {
-        return (
-            <div className="flex h-screen items-center justify-center">
-                <PottersWheelSpinner />
-            </div>
-        );
-    }
-
-    if (!isAuthorized) {
-        return (
-            <div className="flex h-screen flex-col items-center justify-center bg-background text-center">
-                <h1 className="text-4xl font-bold text-destructive">Access Denied</h1>
-                <p className="mt-4 text-lg text-muted-foreground">You do not have permission to view this page.</p>
-                <Button onClick={() => router.push('/')} className="mt-8">Go to Homepage</Button>
-            </div>
-        );
-    }
-
     return (
-        <div className="container mx-auto py-10">
-            <div className="flex items-center justify-between mb-8">
-                <h1 className="text-3xl font-bold">Admin Panel</h1>
+        <div className="flex-1 space-y-4 p-8 pt-6">
+            <div className="flex items-center justify-between space-y-2">
+                <h2 className="text-3xl font-bold tracking-tight">Products</h2>
                 <Button onClick={handleAddProduct}>
-                    <PlusCircle className="mr-2 h-5 w-5" />
-                    Add Product
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Product
                 </Button>
             </div>
 
@@ -126,7 +77,7 @@ export default function AdminPage() {
                 product={selectedProduct}
             />
 
-            <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+            <div className="rounded-md border">
                 <Table>
                     <TableHeader>
                         <TableRow>
