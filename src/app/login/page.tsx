@@ -22,6 +22,7 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'fire
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
+import { Eye, EyeOff } from 'lucide-react';
 
 const signUpSchema = z
   .object({
@@ -44,6 +45,9 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -135,7 +139,12 @@ export default function LoginPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="login-password">Password</Label>
-                  <Input id="login-password" type="password" {...registerLogin('password')} />
+                  <div className="relative">
+                    <Input id="login-password" type={showLoginPassword ? 'text' : 'password'} {...registerLogin('password')} />
+                    <button type="button" onClick={() => setShowLoginPassword(!showLoginPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3">
+                      {showLoginPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
+                    </button>
+                  </div>
                   {loginErrors.password && <p className="text-sm text-destructive">{loginErrors.password.message}</p>}
                 </div>
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -162,12 +171,22 @@ export default function LoginPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
-                  <Input id="signup-password" type="password" {...registerSignUp('password')} />
+                   <div className="relative">
+                    <Input id="signup-password" type={showSignUpPassword ? 'text' : 'password'} {...registerSignUp('password')} />
+                    <button type="button" onClick={() => setShowSignUpPassword(!showSignUpPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3">
+                      {showSignUpPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
+                    </button>
+                  </div>
                   {signUpErrors.password && <p className="text-sm text-destructive">{signUpErrors.password.message}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="confirm-password">Confirm Password</Label>
-                  <Input id="confirm-password" type="password" {...registerSignUp('confirmPassword')} />
+                  <div className="relative">
+                    <Input id="confirm-password" type={showConfirmPassword ? 'text' : 'password'} {...registerSignUp('confirmPassword')} />
+                     <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3">
+                      {showConfirmPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
+                    </button>
+                  </div>
                   {signUpErrors.confirmPassword && <p className="text-sm text-destructive">{signUpErrors.confirmPassword.message}</p>}
                 </div>
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
