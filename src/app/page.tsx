@@ -336,7 +336,7 @@ export default function ProductPage() {
           />
         </aside>
 
-        <main className="flex-1 p-2 sm:p-8">
+        <main className="flex-1 p-2 sm:p-4">
           <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4 px-2 sm:px-0">
             <div className="flex w-full sm:w-auto items-center gap-4">
                <Sheet>
@@ -348,7 +348,7 @@ export default function ProductPage() {
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[300px]">
                   <SheetHeader>
-                      <SheetTitle className="sr-only">Filters</SheetTitle>
+                    <SheetTitle className="sr-only">Filters</SheetTitle>
                   </SheetHeader>
                    <div className="p-6 overflow-y-auto">
                       <Filters 
@@ -362,11 +362,6 @@ export default function ProductPage() {
                         setPriceRange={setPriceRange}
                       />
                    </div>
-                   <SheetFooter>
-                      <SheetClose asChild>
-                        <Button className="w-full">Apply Filters</Button>
-                      </SheetClose>
-                   </SheetFooter>
                 </SheetContent>
               </Sheet>
               <div className="relative w-full sm:max-w-xs">
@@ -422,22 +417,22 @@ export default function ProductPage() {
                     />
                   </div>
                   
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <h3 className="font-semibold text-sm text-foreground truncate">{product.name}</h3>
-                      <p className="text-foreground/80 text-sm mt-1 sm:mt-0">
-                          {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
+                  <div>
+                    <h3 className="font-semibold text-sm text-foreground truncate">{product.name}</h3>
+                    <div className="flex items-center justify-between mt-1">
+                      <p className="text-foreground/80 text-sm">
+                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
                       </p>
-                    </div>
-                    <Button 
-                        variant="ghost" 
-                        className="w-full sm:w-auto justify-start sm:justify-center p-0 h-auto text-sm text-primary hover:text-primary/80 disabled:text-muted-foreground mt-2 sm:mt-0"
+                      <Button
+                        variant="ghost"
+                        className="p-0 h-auto text-primary hover:text-primary/80 disabled:text-muted-foreground"
                         onClick={() => addToCart(product)}
                         disabled={!product.inStock}
-                    >
+                      >
                         <ShoppingBag className="mr-2 h-4 w-4" />
                         {product.inStock ? 'Add' : 'Out'}
-                    </Button>
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -486,4 +481,5 @@ export default function ProductPage() {
     </div>
   )
 }
+
 
