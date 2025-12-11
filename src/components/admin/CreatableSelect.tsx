@@ -29,15 +29,21 @@ interface CreatableSelectProps {
 export function CreatableSelect({ options, value, onChange, placeholder }: CreatableSelectProps) {
   const [open, setOpen] = React.useState(false)
   const [inputValue, setInputValue] = React.useState("")
+  
+  const filteredOptions = React.useMemo(() => 
+    options.filter(option => option.toLowerCase().includes(inputValue.toLowerCase()))
+  , [options, inputValue]);
 
   const handleSelect = (currentValue: string) => {
-    onChange(currentValue)
+    onChange(currentValue === value ? "" : currentValue);
+    setInputValue("");
     setOpen(false)
   }
 
   const handleCreate = () => {
     if (inputValue) {
         onChange(inputValue);
+        setInputValue("");
         setOpen(false);
     }
   }
@@ -57,7 +63,7 @@ export function CreatableSelect({ options, value, onChange, placeholder }: Creat
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[375px] p-0">
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" style={{ width: 'var(--radix-popover-trigger-width)' }}>
         <Command>
           <CommandInput 
             placeholder="Search or create new..."
@@ -72,7 +78,7 @@ export function CreatableSelect({ options, value, onChange, placeholder }: Creat
                 </Button>
             </CommandEmpty>
             <CommandGroup>
-              {options.map((option) => (
+              {filteredOptions.map((option) => (
                 <CommandItem
                   key={option}
                   value={option}
