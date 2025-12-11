@@ -344,7 +344,7 @@ export default function ProductPage() {
           />
         </aside>
 
-        <main className="flex-1 p-2 sm:p-8">
+        <main className="flex-1 p-2 sm:p-4 md:p-8">
           <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4 px-2 sm:px-0 pt-4 sm:pt-0">
             <div className="flex w-full sm:w-auto items-center gap-4">
                <Sheet>
@@ -411,7 +411,7 @@ export default function ProductPage() {
           <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
             <div className={cn('grid grid-cols-2 gap-x-2 gap-y-8 sm:gap-4')}>
               {productsToShow.map((product) => (
-                <div key={product.id} className="group relative text-left p-2 sm:p-4">
+                <div key={product.id} className="group relative text-left p-2 sm:p-0">
                   <div 
                     className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer"
                     onClick={() => setSelectedProduct(product)}
@@ -551,13 +551,6 @@ export default function ProductPage() {
             ) : (
                 <div className="text-center h-64 flex flex-col items-center justify-center">
                     <p className="text-muted-foreground">No store locations have been added yet.</p>
-                </div>
-            )}
-            {stores && stores.length > 0 && (
-                <div className="text-center mt-12">
-                <Link href="/our-stores">
-                    <Button variant="outline">View All Stores</Button>
-                </Link>
                 </div>
             )}
         </div>
