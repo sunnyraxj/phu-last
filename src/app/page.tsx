@@ -579,7 +579,7 @@ export default function ProductPage() {
 
       <section className="py-16">
         <div className="container mx-auto px-4">
-            <div className="text-center mb-10">
+            <div className="text-center mb-12">
                 <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Meet Our Team</h2>
             </div>
             {teamMembersLoading ? (
@@ -588,25 +588,29 @@ export default function ProductPage() {
                 </div>
             ) : (
                 <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 items-start">
+                <div className="grid grid-cols-1 gap-10 items-center">
                     {founder && (
-                        <div className="text-center col-span-1 sm:col-span-2 lg:col-span-1 lg:row-span-2 flex flex-col items-center">
-                             <div className="relative h-40 w-40 rounded-full overflow-hidden mb-4 shadow-lg">
+                        <div className="flex flex-col items-center text-center group">
+                            <div className="relative h-48 w-48 rounded-full overflow-hidden mb-4 shadow-lg transition-transform duration-300 group-hover:scale-105 border-4 border-primary/20">
                                 <Image src={founder.image} alt={founder.name} fill className="object-cover" data-ai-hint={founder['data-ai-hint']} />
                             </div>
-                            <h3 className="text-xl font-semibold text-foreground">{founder.name}</h3>
-                            <p className="text-primary font-medium">{founder.role}</p>
+                            <h3 className="text-2xl font-bold text-foreground">{founder.name}</h3>
+                            <p className="text-primary font-semibold text-lg">{founder.role}</p>
                         </div>
                     )}
-                    {managementMembers.map((member) => (
-                        <div key={member.id} className="text-center flex flex-col items-center">
-                            <div className="relative h-32 w-32 rounded-full overflow-hidden mb-4 shadow-lg">
-                                <Image src={member.image} alt={member.name} fill className="object-cover" data-ai-hint={member['data-ai-hint']} />
-                            </div>
-                            <h3 className="text-lg font-semibold text-foreground">{member.name}</h3>
-                            <p className="text-primary font-medium text-sm">{member.role}</p>
+                     {managementMembers.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mt-8">
+                            {managementMembers.map((member) => (
+                                <div key={member.id} className="text-center flex flex-col items-center group">
+                                    <div className="relative h-40 w-40 rounded-full overflow-hidden mb-4 shadow-lg transition-transform duration-300 group-hover:scale-105 border-4 border-muted">
+                                        <Image src={member.image} alt={member.name} fill className="object-cover" data-ai-hint={member['data-ai-hint']} />
+                                    </div>
+                                    <h3 className="text-xl font-semibold text-foreground">{member.name}</h3>
+                                    <p className="text-muted-foreground font-medium text-base">{member.role}</p>
+                                </div>
+                            ))}
                         </div>
-                    ))}
+                    )}
                 </div>
                 <div className="text-center mt-12">
                     <Link href="/our-team">
@@ -621,6 +625,8 @@ export default function ProductPage() {
     </div>
   )
 }
+    
+
     
 
     
