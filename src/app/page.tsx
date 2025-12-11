@@ -334,7 +334,7 @@ export default function ProductPage() {
           />
         </aside>
 
-        <main className="flex-1 p-0 sm:p-8">
+        <main className="flex-1 p-2 sm:p-8">
           <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4 px-2 sm:px-0 pt-4 sm:pt-0">
             <div className="flex w-full sm:w-auto items-center gap-4">
                <Sheet>
@@ -399,11 +399,11 @@ export default function ProductPage() {
             </div>
           ) : (
           <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
-            <div className={cn('grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4')}>
+            <div className={cn('grid grid-cols-2 gap-y-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4')}>
               {filteredProducts.map((product) => (
                 <div key={product.id} className="group relative text-left p-2 sm:p-4">
                   <div 
-                    className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer mb-2 sm:mb-4"
+                    className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer"
                     onClick={() => setSelectedProduct(product)}
                   >
                     <Image
@@ -413,26 +413,26 @@ export default function ProductPage() {
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
                       data-ai-hint={product['data-ai-hint']}
                     />
-                     <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <p className="text-white font-bold">Quick View</p>
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Eye className="text-white h-8 w-8" />
                     </div>
                   </div>
                   
-                  <h3 className="sm:font-semibold text-sm text-foreground truncate mb-1 sm:mb-2 font-bold">{product.name}</h3>
-                  
-                  <div className="flex flex-col sm:flex-row sm:justify-between items-start mt-2">
-                      <p className="font-bold text-foreground mb-2 sm:mb-0">
-                          {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
-                      </p>
-                      <Button
-                          variant="ghost"
-                          className="w-full sm:w-auto h-auto text-sm bg-black text-white hover:bg-black/80 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold sm:font-normal"
-                          onClick={() => addToCart(product)}
-                          disabled={!product.inStock}
-                      >
-                        <ShoppingBagIcon className="mr-2 h-4 w-4 sm:hidden" />
-                        {product.inStock ? 'Add to Cart' : 'Out of Stock'}
-                      </Button>
+                  <div className="mt-2 sm:mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex-grow">
+                        <h3 className="text-sm text-black sm:text-base font-bold sm:font-bold truncate">{product.name}</h3>
+                        <p className="font-bold text-black text-sm sm:text-base">
+                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
+                        </p>
+                    </div>
+                    <Button
+                        variant="ghost"
+                        className="w-full sm:w-auto mt-2 sm:mt-0 text-white bg-black hover:bg-black/80 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold text-sm"
+                        onClick={() => addToCart(product)}
+                        disabled={!product.inStock}
+                    >
+                      {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                    </Button>
                   </div>
                 </div>
               ))}
