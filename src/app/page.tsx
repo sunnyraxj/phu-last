@@ -22,7 +22,7 @@ import { setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocki
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/shared/Header";
 import { ShoppingBag } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 
 
 type Product = {
@@ -175,9 +175,9 @@ export default function ProductPage() {
   const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
   const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
   
-  const ordersQuery = useMemoFirebase(() =>
-    (userData?.role === 'admin') ? collection(firestore, 'orders') : null,
-    [firestore, userData]
+ const ordersQuery = useMemoFirebase(() => 
+    (userData?.role === 'admin' && user && !user.isAnonymous) ? collection(firestore, 'orders') : null,
+    [firestore, userData, user]
   );
   const { data: orders } = useCollection<Order>(ordersQuery);
 
@@ -347,9 +347,9 @@ export default function ProductPage() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[300px]">
-                  <SheetHeader>
-                    <SheetTitle className="sr-only">Filters</SheetTitle>
-                  </SheetHeader>
+                    <SheetHeader>
+                        <SheetTitle className="sr-only">Filters</SheetTitle>
+                    </SheetHeader>
                    <div className="p-6 overflow-y-auto">
                       <Filters 
                         selectedCollections={selectedCollections}
@@ -401,7 +401,7 @@ export default function ProductPage() {
             </div>
           ) : (
           <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
-            <div className={cn('grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 border-t border-l')}>
+            <div className={cn('grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 border-t border-l')}>
               {filteredProducts.map((product) => (
                 <div key={product.id} className="group relative text-left p-4 border-b border-r">
                   <div 
@@ -417,24 +417,20 @@ export default function ProductPage() {
                     />
                   </div>
                   
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-sm text-foreground truncate">{product.name}</h3>
-                      <p className="text-foreground/80 text-sm mt-1 sm:mt-0">
+                  <div className="flex flex-col">
+                    <h3 className="font-semibold text-sm text-foreground truncate mb-1 sm:mb-0">{product.name}</h3>
+                    <p className="text-foreground/80 text-sm mb-2 sm:mb-0 font-bold sm:font-normal">
                         {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
-                      </p>
-                    </div>
-                    <div className="mt-2 sm:mt-0">
-                      <Button
+                    </p>
+                    <Button
                         variant="ghost"
-                        className="w-full justify-start p-0 h-auto text-sm text-primary hover:text-primary/80 disabled:text-muted-foreground"
+                        className="w-full justify-start p-0 h-auto text-sm text-primary hover:text-primary/80 disabled:text-muted-foreground font-bold sm:font-normal"
                         onClick={() => addToCart(product)}
                         disabled={!product.inStock}
-                      >
+                    >
                         <ShoppingBag className="mr-2 h-4 w-4" />
                         {product.inStock ? 'Add to Cart' : 'Out of Stock'}
-                      </Button>
-                    </div>
+                    </Button>
                   </div>
                 </div>
               ))}
