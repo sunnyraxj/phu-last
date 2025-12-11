@@ -22,7 +22,7 @@ import { setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocki
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/shared/Header";
 import { ShoppingBag } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 
 type Product = {
@@ -175,7 +175,7 @@ export default function ProductPage() {
   const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
   const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
   
-  const ordersQuery = useMemoFirebase(() => 
+  const ordersQuery = useMemoFirebase(() =>
     (userData?.role === 'admin') ? collection(firestore, 'orders') : null,
     [firestore, userData]
   );
@@ -199,12 +199,12 @@ export default function ProductPage() {
   const { data: stores } = useCollection<Store>(storesQuery);
 
   const adminActionCounts = useMemo(() => {
-    if (userData?.role !== 'admin' || !orders || !allProducts) {
-        return { pendingOrders: 0, outOfStockProducts: 0 };
-    }
-    const pendingOrders = orders.filter(order => order.status === 'pending').length;
-    const outOfStockProducts = allProducts.filter(p => !p.inStock).length;
-    return { pendingOrders, outOfStockProducts };
+      if (userData?.role !== 'admin' || !orders || !allProducts) {
+          return { pendingOrders: 0, outOfStockProducts: 0 };
+      }
+      const pendingOrders = orders.filter(order => order.status === 'pending').length;
+      const outOfStockProducts = allProducts.filter(p => !p.inStock).length;
+      return { pendingOrders, outOfStockProducts };
   }, [orders, allProducts, userData]);
 
   const handleCollectionChange = (collectionName: string) => {
@@ -336,7 +336,7 @@ export default function ProductPage() {
           />
         </aside>
 
-        <main className="flex-1 p-2 sm:p-4">
+        <main className="flex-1 p-2 sm:p-8">
           <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4 px-2 sm:px-0">
             <div className="flex w-full sm:w-auto items-center gap-4">
                <Sheet>
@@ -417,20 +417,22 @@ export default function ProductPage() {
                     />
                   </div>
                   
-                  <div>
-                    <h3 className="font-semibold text-sm text-foreground truncate">{product.name}</h3>
-                    <div className="flex items-center justify-between mt-1">
-                      <p className="text-foreground/80 text-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-sm text-foreground truncate">{product.name}</h3>
+                      <p className="text-foreground/80 text-sm mt-1 sm:mt-0">
                         {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
                       </p>
+                    </div>
+                    <div className="mt-2 sm:mt-0">
                       <Button
                         variant="ghost"
-                        className="p-0 h-auto text-primary hover:text-primary/80 disabled:text-muted-foreground"
+                        className="w-full justify-start p-0 h-auto text-sm text-primary hover:text-primary/80 disabled:text-muted-foreground"
                         onClick={() => addToCart(product)}
                         disabled={!product.inStock}
                       >
                         <ShoppingBag className="mr-2 h-4 w-4" />
-                        {product.inStock ? 'Add' : 'Out'}
+                        {product.inStock ? 'Add to Cart' : 'Out of Stock'}
                       </Button>
                     </div>
                   </div>
@@ -481,5 +483,3 @@ export default function ProductPage() {
     </div>
   )
 }
-
-
