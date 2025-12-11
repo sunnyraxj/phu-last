@@ -430,7 +430,7 @@ export default function ProductPage() {
             </div>
           ) : (
           <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
-            <div className={cn('grid grid-cols-2 lg:grid-cols-3 gap-y-8')}>
+            <div className={cn('grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-y-8')}>
               {productsToShow.map((product) => (
                 <div key={product.id} className="group relative text-left p-2 sm:p-4">
                   <div 
@@ -590,26 +590,26 @@ export default function ProductPage() {
                 <>
                 <div className="flex flex-col items-center">
                     {founder && (
-                        <div className="relative flex flex-col md:flex-row items-center gap-6 md:gap-10 p-6 rounded-2xl bg-muted/50 mb-12 shadow-[0_0px_30px_-15px_rgba(0,0,0,0.3)] ring-1 ring-black/5 hover:shadow-primary/20 transition-shadow duration-300">
-                            <div className="md:order-2 relative h-32 w-32 md:h-40 md:w-40 rounded-full overflow-hidden shadow-lg border-4 border-white">
-                                <Image src={founder.image} alt={founder.name} fill className="object-cover" data-ai-hint={founder['data-ai-hint']} />
-                            </div>
-                            <div className="md:order-1 text-center md:text-left">
+                        <div className="relative flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10 p-6 rounded-2xl bg-muted/50 mb-12 shadow-lg ring-1 ring-black/5 hover:shadow-primary/10 transition-shadow duration-300 w-full max-w-2xl">
+                            <div className="text-center md:text-left">
                                 <h3 className="text-3xl md:text-4xl font-bold text-foreground">{founder.name}</h3>
                                 <p className="text-primary font-semibold text-lg">{founder.role}</p>
+                            </div>
+                             <div className="relative h-28 w-28 md:h-32 md:w-32 rounded-full overflow-hidden shadow-lg border-4 border-white flex-shrink-0">
+                                <Image src={founder.image} alt={founder.name} fill className="object-cover" data-ai-hint={founder['data-ai-hint']} />
                             </div>
                         </div>
                     )}
                     {managementMembers.length > 0 && (
                          <div className="w-full max-w-5xl">
-                            <div className="flex justify-center sm:grid sm:grid-cols-3 gap-8">
+                             <div className="flex flex-wrap justify-center gap-4 sm:gap-8">
                                 {managementMembers.map((member) => (
-                                    <div key={member.id} className="text-center flex flex-col items-center group">
-                                        <div className="relative h-28 w-28 md:h-32 md:w-32 rounded-full overflow-hidden mb-3 shadow-lg transition-transform duration-300 group-hover:scale-105 border-4 border-background">
+                                    <div key={member.id} className="text-center flex flex-col items-center group w-[calc(100%/3-1rem)] sm:w-auto">
+                                        <div className="relative h-24 w-24 md:h-32 md:w-32 rounded-full overflow-hidden mb-3 shadow-lg transition-transform duration-300 group-hover:scale-105 border-4 border-background">
                                             <Image src={member.image} alt={member.name} fill className="object-cover" data-ai-hint={member['data-ai-hint']} />
                                         </div>
-                                        <h3 className="text-base font-semibold text-foreground md:text-lg">{member.name}</h3>
-                                        <p className="text-muted-foreground font-medium text-sm md:text-base">{member.role}</p>
+                                        <h3 className="text-sm font-semibold text-foreground md:text-lg truncate w-full">{member.name}</h3>
+                                        <p className="text-muted-foreground font-medium text-xs md:text-base">{member.role}</p>
                                     </div>
                                 ))}
                             </div>
@@ -634,6 +634,7 @@ export default function ProductPage() {
     
 
     
+
 
 
 
