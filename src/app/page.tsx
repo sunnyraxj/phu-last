@@ -543,7 +543,7 @@ export default function ProductPage() {
                                         </div>
                                     )}
                                     <CardHeader className="p-3">
-                                        <CardTitle className="text-base font-bold truncate">{store.name}</CardTitle>
+                                        <CardTitle className="text-sm font-bold truncate">{store.name}</CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-3 pt-0 flex-grow space-y-2">
                                         <div className="flex items-start gap-2 text-muted-foreground">
@@ -600,14 +600,14 @@ export default function ProductPage() {
                     )}
                     {managementMembers.length > 0 && (
                          <div className="w-full max-w-4xl">
-                            <div className="flex justify-center sm:grid sm:grid-cols-3 gap-2 sm:gap-12">
+                            <div className="flex justify-center sm:grid sm:grid-cols-3 gap-4 sm:gap-8">
                                 {managementMembers.map((member) => (
-                                    <div key={member.id} className="text-center flex flex-col items-center group w-[calc(100%/3-0.5rem)] sm:w-auto">
-                                        <div className="relative h-32 w-32 md:h-40 md:w-40 rounded-full overflow-hidden mb-4 shadow-lg transition-transform duration-300 group-hover:scale-105 border-4 border-muted">
+                                    <div key={member.id} className="text-center flex flex-col items-center group w-[calc(100%/3-1rem)] sm:w-auto">
+                                        <div className="relative h-24 w-24 md:h-40 md:w-40 rounded-full overflow-hidden mb-2 shadow-lg transition-transform duration-300 group-hover:scale-105 border-4 border-muted">
                                             <Image src={member.image} alt={member.name} fill className="object-cover" data-ai-hint={member['data-ai-hint']} />
                                         </div>
-                                        <h3 className="text-xl font-semibold text-foreground">{member.name}</h3>
-                                        <p className="text-muted-foreground font-medium text-base">{member.role}</p>
+                                        <h3 className="text-sm font-semibold text-foreground md:text-xl">{member.name}</h3>
+                                        <p className="text-muted-foreground font-medium text-xs md:text-base">{member.role}</p>
                                     </div>
                                 ))}
                             </div>
@@ -632,3 +632,4 @@ export default function ProductPage() {
     
 
     
+
