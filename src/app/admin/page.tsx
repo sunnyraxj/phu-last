@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
@@ -43,15 +43,23 @@ export default function AdminProductsPage() {
     const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
     const { data: products, isLoading: productsLoading } = useCollection<Product>(productsQuery);
 
-    const existingMaterials = useMemo(() => {
-        if (!products) return [];
-        return [...new Set(products.map(p => p.material).filter(Boolean))];
+    const [materials, setMaterials] = useState<string[]>([]);
+    const [categories, setCategories] = useState<string[]>([]);
+
+    useMemo(() => {
+        if (products) {
+            setMaterials(prev => [...new Set([...prev, ...products.map(p => p.material).filter(Boolean)])]);
+            setCategories(prev => [...new Set([...prev, ...products.map(p => p.category).filter(Boolean)])]);
+        }
     }, [products]);
 
-    const existingCategories = useMemo(() => {
-        if (!products) return [];
-        return [...new Set(products.map(p => p.category).filter(Boolean))];
-    }, [products]);
+    const handleNewCategory = useCallback((category: string) => {
+        setCategories(prev => [...new Set([...prev, category])]);
+    }, []);
+
+    const handleNewMaterial = useCallback((material: string) => {
+        setMaterials(prev => [...new Set([...prev, material])]);
+    }, []);
 
     const handleAddProduct = () => {
         setSelectedProduct(null);
@@ -99,8 +107,10 @@ export default function AdminProductsPage() {
                 onClose={() => setIsFormOpen(false)}
                 onSubmit={handleFormSubmit}
                 product={selectedProduct}
-                existingMaterials={existingMaterials}
-                existingCategories={existingCategories}
+                existingMaterials={materials}
+                existingCategories={categories}
+                onNewCategory={handleNewCategory}
+                onNewMaterial={handleNewMaterial}
             />
             
             <Card>

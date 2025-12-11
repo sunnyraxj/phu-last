@@ -16,10 +16,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
-import { CreatableSelect } from './CreatableSelect';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { PlusCircle } from 'lucide-react';
+import { AddOptionDialog } from './AddOptionDialog';
 
 const productSchema = z.object({
   name: z.string().min(1, { message: 'Product name is required' }),
@@ -50,9 +52,23 @@ interface ProductFormProps {
   product: ProductFormValues & { id?: string } | null;
   existingMaterials: string[];
   existingCategories: string[];
+  onNewCategory: (category: string) => void;
+  onNewMaterial: (material: string) => void;
 }
 
-export function ProductForm({ isOpen, onClose, onSubmit, product, existingMaterials, existingCategories }: ProductFormProps) {
+export function ProductForm({ 
+  isOpen, 
+  onClose, 
+  onSubmit, 
+  product, 
+  existingMaterials, 
+  existingCategories,
+  onNewCategory,
+  onNewMaterial
+}: ProductFormProps) {
+  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [isMaterialDialogOpen, setIsMaterialDialogOpen] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -103,131 +119,173 @@ export function ProductForm({ isOpen, onClose, onSubmit, product, existingMateri
     onSubmit(data);
   };
 
+  const handleAddCategory = (newCategory: string) => {
+    onNewCategory(newCategory);
+    setValue('category', newCategory, { shouldValidate: true });
+    setIsCategoryDialogOpen(false);
+  }
+
+  const handleAddMaterial = (newMaterial: string) => {
+    onNewMaterial(newMaterial);
+    setValue('material', newMaterial, { shouldValidate: true });
+    setIsMaterialDialogOpen(false);
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-xl">
-        <DialogHeader>
-          <DialogTitle>{product ? 'Edit Product' : 'Add New Product'}</DialogTitle>
-          <DialogDescription>
-            {product ? "Update the details of this product." : "Fill out the form to add a new product to the store."}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit(handleFormSubmit)}>
-            <ScrollArea className="h-[60vh] pr-6 -mr-6">
-                <div className="space-y-4 my-4">
-                    <div className="space-y-1">
-                        <Label htmlFor="name">Product Name</Label>
-                        <Input id="name" {...register('name')} />
-                        {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <Label htmlFor="mrp">MRP (INR)</Label>
-                            <Input id="mrp" type="number" step="0.01" {...register('mrp')} />
-                            {errors.mrp && <p className="text-xs text-destructive">{errors.mrp.message}</p>}
-                        </div>
-                         <div className="space-y-1">
-                            <Label htmlFor="gst">GST %</Label>
-                            <Input id="gst" type="number" step="0.01" {...register('gst')} />
-                            {errors.gst && <p className="text-xs text-destructive">{errors.gst.message}</p>}
-                        </div>
-                    </div>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>{product ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+            <DialogDescription>
+              {product ? "Update the details of this product." : "Fill out the form to add a new product to the store."}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(handleFormSubmit)}>
+              <ScrollArea className="h-[60vh] pr-6 -mr-6">
+                  <div className="space-y-4 my-4">
+                      <div className="space-y-1">
+                          <Label htmlFor="name">Product Name</Label>
+                          <Input id="name" {...register('name')} />
+                          {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                              <Label htmlFor="mrp">MRP (INR)</Label>
+                              <Input id="mrp" type="number" step="0.01" {...register('mrp')} />
+                              {errors.mrp && <p className="text-xs text-destructive">{errors.mrp.message}</p>}
+                          </div>
+                          <div className="space-y-1">
+                              <Label htmlFor="gst">GST %</Label>
+                              <Input id="gst" type="number" step="0.01" {...register('gst')} />
+                              {errors.gst && <p className="text-xs text-destructive">{errors.gst.message}</p>}
+                          </div>
+                      </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                       <Controller
-                            control={control}
-                            name="category"
-                            render={({ field }) => (
-                                <div className="space-y-1">
-                                    <Label>Category</Label>
-                                    <CreatableSelect
-                                        options={existingCategories}
-                                        value={field.value}
-                                        onChange={field.onChange}
-                                        placeholder="Select or create a category..."
-                                    />
-                                    {errors.category && <p className="text-xs text-destructive">{errors.category.message}</p>}
-                                </div>
-                            )}
-                        />
-                        <Controller
-                            control={control}
-                            name="material"
-                            render={({ field }) => (
-                                <div className="space-y-1">
-                                    <Label>Material</Label>
-                                    <CreatableSelect
-                                        options={existingMaterials}
-                                        value={field.value}
-                                        onChange={field.onChange}
-                                        placeholder="Select or create a material..."
-                                    />
-                                    {errors.material && <p className="text-xs text-destructive">{errors.material.message}</p>}
-                                </div>
-                            )}
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <Label htmlFor="hsn">HSN Code (Optional)</Label>
-                            <Input id="hsn" {...register('hsn')} />
-                            {errors.hsn && <p className="text-xs text-destructive">{errors.hsn.message}</p>}
-                        </div>
-                         <div className="space-y-1">
-                            <Label>Size (H x L x W) (Optional)</Label>
+                            <Label>Category</Label>
                             <div className="flex gap-2">
-                                <Input placeholder="H" {...register('size.height')} />
-                                <Input placeholder="L" {...register('size.length')} />
-                                <Input placeholder="W" {...register('size.width')} />
+                                <Controller
+                                    control={control}
+                                    name="category"
+                                    render={({ field }) => (
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select a category" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {existingCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
+                                <Button type="button" variant="outline" size="icon" onClick={() => setIsCategoryDialogOpen(true)}>
+                                    <PlusCircle className="h-4 w-4" />
+                                </Button>
                             </div>
-                         </div>
-                    </div>
+                            {errors.category && <p className="text-xs text-destructive">{errors.category.message}</p>}
+                        </div>
+                        <div className="space-y-1">
+                            <Label>Material</Label>
+                             <div className="flex gap-2">
+                                <Controller
+                                    control={control}
+                                    name="material"
+                                    render={({ field }) => (
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select a material" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {existingMaterials.map(mat => <SelectItem key={mat} value={mat}>{mat}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
+                                <Button type="button" variant="outline" size="icon" onClick={() => setIsMaterialDialogOpen(true)}>
+                                    <PlusCircle className="h-4 w-4" />
+                                </Button>
+                            </div>
+                            {errors.material && <p className="text-xs text-destructive">{errors.material.message}</p>}
+                        </div>
+                      </div>
 
-                    <div className="space-y-1">
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea id="description" {...register('description')} rows={4} />
-                        {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
-                    </div>
+                      <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                              <Label htmlFor="hsn">HSN Code (Optional)</Label>
+                              <Input id="hsn" {...register('hsn')} />
+                              {errors.hsn && <p className="text-xs text-destructive">{errors.hsn.message}</p>}
+                          </div>
+                          <div className="space-y-1">
+                              <Label>Size (H x L x W) (Optional)</Label>
+                              <div className="flex gap-2">
+                                  <Input placeholder="H" {...register('size.height')} />
+                                  <Input placeholder="L" {...register('size.length')} />
+                                  <Input placeholder="W" {...register('size.width')} />
+                              </div>
+                          </div>
+                      </div>
 
-                     <div className="space-y-1">
-                        <Label htmlFor="image">Image URL</Label>
-                        <Input id="image" {...register('image')} placeholder="https://picsum.photos/seed/..." />
-                        {errors.image && <p className="text-xs text-destructive">{errors.image.message}</p>}
-                    </div>
+                      <div className="space-y-1">
+                          <Label htmlFor="description">Description</Label>
+                          <Textarea id="description" {...register('description')} rows={4} />
+                          {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
+                      </div>
 
-                    <div className="flex items-center space-x-2 pt-2">
-                        <Controller
-                          control={control}
-                          name="inStock"
-                          render={({ field }) => (
-                            <Checkbox 
-                              id="inStock" 
-                              checked={field.value} 
-                              onCheckedChange={field.onChange} 
-                            />
-                          )}
-                        />
-                        <Label htmlFor="inStock" className="cursor-pointer text-sm">
-                           Product is in stock and available for purchase
-                        </Label>
-                    </div>
-                </div>
-            </ScrollArea>
+                      <div className="space-y-1">
+                          <Label htmlFor="image">Image URL</Label>
+                          <Input id="image" {...register('image')} placeholder="https://picsum.photos/seed/..." />
+                          {errors.image && <p className="text-xs text-destructive">{errors.image.message}</p>}
+                      </div>
 
-            <DialogFooter className="mt-4 pt-4 border-t">
-                <DialogClose asChild>
-                    <Button type="button" variant="outline">
-                    Cancel
-                    </Button>
-                </DialogClose>
-                <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Saving...' : 'Save Product'}
-                </Button>
-            </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+                      <div className="flex items-center space-x-2 pt-2">
+                          <Controller
+                            control={control}
+                            name="inStock"
+                            render={({ field }) => (
+                              <Checkbox 
+                                id="inStock" 
+                                checked={field.value} 
+                                onCheckedChange={field.onChange} 
+                              />
+                            )}
+                          />
+                          <Label htmlFor="inStock" className="cursor-pointer text-sm">
+                            Product is in stock and available for purchase
+                          </Label>
+                      </div>
+                  </div>
+              </ScrollArea>
+
+              <DialogFooter className="mt-4 pt-4 border-t">
+                  <DialogClose asChild>
+                      <Button type="button" variant="outline">
+                      Cancel
+                      </Button>
+                  </DialogClose>
+                  <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Saving...' : 'Save Product'}
+                  </Button>
+              </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <AddOptionDialog
+        isOpen={isCategoryDialogOpen}
+        onClose={() => setIsCategoryDialogOpen(false)}
+        onAdd={handleAddCategory}
+        title="Add New Category"
+        label="Category Name"
+      />
+      <AddOptionDialog
+        isOpen={isMaterialDialogOpen}
+        onClose={() => setIsMaterialDialogOpen(false)}
+        onAdd={handleAddMaterial}
+        title="Add New Material"
+        label="Material Name"
+      />
+    </>
   );
 }
