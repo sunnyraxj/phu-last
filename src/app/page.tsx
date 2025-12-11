@@ -543,7 +543,7 @@ export default function ProductPage() {
                                         </div>
                                     )}
                                     <CardHeader className="p-3">
-                                      <CardTitle className="text-base font-bold truncate">{store.name}</CardTitle>
+                                        <CardTitle className="text-base font-bold truncate">{store.name}</CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-3 pt-0 flex-grow space-y-2">
                                         <div className="flex items-start gap-2 text-muted-foreground">
@@ -602,7 +602,7 @@ export default function ProductPage() {
                          <div className="w-full max-w-4xl">
                             <div className="flex sm:grid sm:grid-cols-3 sm:gap-12 gap-8 overflow-x-auto sm:overflow-visible pb-4 -ml-4 pl-4 sm:ml-0 sm:pl-0 snap-x sm:snap-none">
                                 {managementMembers.map((member) => (
-                                    <div key={member.id} className="text-center flex flex-col items-center group snap-center shrink-0 w-3/4 sm:w-auto">
+                                    <div key={member.id} className="text-center flex flex-col items-center group snap-center shrink-0 w-[calc(100%/1.2)] sm:w-auto">
                                         <div className="relative h-32 w-32 md:h-40 md:w-40 rounded-full overflow-hidden mb-4 shadow-lg transition-transform duration-300 group-hover:scale-105 border-4 border-muted">
                                             <Image src={member.image} alt={member.name} fill className="object-cover" data-ai-hint={member['data-ai-hint']} />
                                         </div>
