@@ -61,7 +61,14 @@ const generateProductDetailsFlow = ai.defineFlow(
     outputSchema: GenerateProductDetailsOutputSchema,
   },
   async input => {
-    const {output} = await generateDetailsPrompt(input);
-    return output!;
+    try {
+      const {output} = await generateDetailsPrompt(input);
+      return output!;
+    } catch (error: any) {
+      if (error.message?.includes('503')) {
+        throw new Error('The AI model is currently overloaded. Please try again in a few moments.');
+      }
+      throw error;
+    }
   }
 );

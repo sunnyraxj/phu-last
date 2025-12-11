@@ -184,19 +184,11 @@ export function ProductForm({
         });
     } catch (error: any) {
       console.error(error);
-      if (error.message?.includes('overloaded')) {
-        toast({
-            variant: 'destructive',
-            title: 'AI Model Busy',
-            description: 'The AI model is currently busy. Please try again in a few moments.',
-        });
-      } else {
-         toast({
-            variant: 'destructive',
-            title: 'Generation Failed',
-            description: 'Could not generate details. Please check the image and try again.',
-        });
-      }
+      toast({
+          variant: 'destructive',
+          title: 'Generation Failed',
+          description: error.message || 'Could not generate details. Please check the image and try again.',
+      });
     } finally {
       setIsGenerating(false);
     }
