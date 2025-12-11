@@ -5,7 +5,7 @@ import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, writeBatch } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, Edit, Trash2, MoreHorizontal, ChevronDown } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, MoreHorizontal, ChevronDown, FilePenLine } from 'lucide-react';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { ProductForm } from '@/components/admin/ProductForm';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -14,6 +14,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { BulkEditForm, type BulkEditFormValues } from '@/components/admin/BulkEditForm';
 
 type Product = {
     id: string;
@@ -38,6 +39,7 @@ export default function AdminProductsPage() {
     const firestore = useFirestore();
     
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [isBulkEditFormOpen, setIsBulkEditFormOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [productToDelete, setProductToDelete] = useState<Product | null>(null);
     const [isBulkDeleteAlertOpen, setIsBulkDeleteAlertOpen] = useState(false);
@@ -110,6 +112,33 @@ export default function AdminProductsPage() {
         setSelectedProduct(null);
     };
 
+    const handleBulkEditSubmit = (formData: BulkEditFormValues) => {
+        if (!firestore || selectedProductIds.length === 0) return;
+
+        const batch = writeBatch(firestore);
+        const updates: Partial<Product> = {};
+
+        // Build the update object only with the fields that were actually changed
+        if (formData.category) updates.category = formData.category;
+        if (formData.material) updates.material = formData.material;
+        if (formData.inStock !== undefined) updates.inStock = formData.inStock;
+        if (formData.gst !== undefined && !isNaN(formData.gst)) updates.gst = formData.gst;
+
+        if (Object.keys(updates).length > 0) {
+             selectedProductIds.forEach(id => {
+                const productRef = doc(firestore, 'products', id);
+                batch.update(productRef, updates);
+            });
+            batch.commit().then(() => {
+                setIsBulkEditFormOpen(false);
+                setSelectedProductIds([]);
+            });
+        } else {
+            setIsBulkEditFormOpen(false);
+        }
+    };
+
+
     const handleSelectAll = (checked: boolean) => {
         if (checked && products) {
             setSelectedProductIds(products.map(p => p.id));
@@ -142,6 +171,11 @@ export default function AdminProductsPage() {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="start">
+                                 <DropdownMenuItem onClick={() => setIsBulkEditFormOpen(true)}>
+                                    <FilePenLine className="mr-2 h-4 w-4" />
+                                    Bulk Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
                                 <DropdownMenuItem 
                                     className="text-destructive" 
                                     onClick={() => setIsBulkDeleteAlertOpen(true)}
@@ -170,6 +204,17 @@ export default function AdminProductsPage() {
                 existingCategories={categories}
                 onNewCategory={handleNewCategory}
                 onNewMaterial={handleNewMaterial}
+            />
+
+            <BulkEditForm
+                isOpen={isBulkEditFormOpen}
+                onClose={() => setIsBulkEditFormOpen(false)}
+                onSubmit={handleBulkEditSubmit}
+                existingCategories={categories}
+                existingMaterials={materials}
+                onNewCategory={handleNewCategory}
+                onNewMaterial={handleNewMaterial}
+                selectedCount={numSelected}
             />
             
             <Card>
