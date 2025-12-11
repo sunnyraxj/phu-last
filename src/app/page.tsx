@@ -334,8 +334,8 @@ export default function ProductPage() {
           />
         </aside>
 
-        <main className="flex-1 p-2 sm:p-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4 px-2 sm:px-0">
+        <main className="flex-1 p-0 sm:p-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4 px-2 sm:px-0 pt-4 sm:pt-0">
             <div className="flex w-full sm:w-auto items-center gap-4">
                <Sheet>
                 <SheetTrigger asChild>
@@ -401,7 +401,7 @@ export default function ProductPage() {
           <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
             <div className={cn('grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4')}>
               {filteredProducts.map((product) => (
-                <div key={product.id} className="group relative text-left p-4">
+                <div key={product.id} className="group relative text-left p-2 sm:p-4">
                   <div 
                     className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer mb-2 sm:mb-4"
                     onClick={() => setSelectedProduct(product)}
@@ -418,25 +418,22 @@ export default function ProductPage() {
                     </div>
                   </div>
                   
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                        <div className="flex flex-col flex-grow">
-                             <h3 className="sm:font-bold text-sm text-foreground truncate mb-1 sm:mb-0 font-bold">{product.name}</h3>
-                            <div className="flex sm:flex-col items-baseline sm:items-start justify-between">
-                                 <p className="text-foreground font-bold text-sm mb-2 sm:mb-0">
-                                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
-                                </p>
-                                <Button
-                                    variant="ghost"
-                                    className="w-auto p-0 h-auto text-sm text-primary hover:text-primary/80 disabled:text-muted-foreground font-bold"
-                                    onClick={() => addToCart(product)}
-                                    disabled={!product.inStock}
-                                >
-                                  <ShoppingBagIcon className="mr-2 h-4 w-4 sm:hidden" />
-                                  {product.inStock ? 'Add to Cart' : 'Out of Stock'}
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
+                  <h3 className="sm:font-semibold text-sm text-foreground truncate mb-1 sm:mb-2 font-bold">{product.name}</h3>
+                  
+                  <div className="flex flex-col sm:flex-row sm:justify-between items-start mt-2">
+                      <p className="font-bold text-foreground mb-2 sm:mb-0">
+                          {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
+                      </p>
+                      <Button
+                          variant="ghost"
+                          className="w-full sm:w-auto h-auto text-sm bg-black text-white hover:bg-black/80 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold sm:font-normal"
+                          onClick={() => addToCart(product)}
+                          disabled={!product.inStock}
+                      >
+                        <ShoppingBagIcon className="mr-2 h-4 w-4 sm:hidden" />
+                        {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                      </Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -484,4 +481,6 @@ export default function ProductPage() {
     </div>
   )
 }
+    
+
     
