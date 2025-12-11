@@ -182,13 +182,21 @@ export function ProductForm({
             title: 'Details Generated!',
             description: 'The product name and description have been populated.',
         });
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast({
-        variant: 'destructive',
-        title: 'Generation Failed',
-        description: 'Could not generate details. Please check the image and try again.',
-      });
+      if (error.message?.includes('overloaded')) {
+        toast({
+            variant: 'destructive',
+            title: 'AI Model Busy',
+            description: 'The AI model is currently busy. Please try again in a few moments.',
+        });
+      } else {
+         toast({
+            variant: 'destructive',
+            title: 'Generation Failed',
+            description: 'Could not generate details. Please check the image and try again.',
+        });
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -210,7 +218,7 @@ export function ProductForm({
                        <div className="p-4 rounded-lg bg-muted/50 border border-dashed space-y-4">
                             <Label className="flex items-center gap-2 font-semibold">
                                 <Sparkles className="h-5 w-5 text-primary" />
-                                Image & AI Content Generation
+                                AI Content Generation & Image
                             </Label>
                             <div className="space-y-1">
                                 <Label htmlFor="image">Image</Label>
@@ -318,7 +326,7 @@ export function ProductForm({
                                         <Select onValueChange={field.onChange} value={field.value}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select a material" />
-                                            </SelectTrigger>
+                                            </Trigger>
                                             <SelectContent>
                                                 {existingMaterials.map(mat => <SelectItem key={mat} value={mat}>{mat}</SelectItem>)}
                                             </SelectContent>
@@ -404,5 +412,3 @@ export function ProductForm({
     </>
   );
 }
-
-    
