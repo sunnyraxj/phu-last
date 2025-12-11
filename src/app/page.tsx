@@ -409,9 +409,9 @@ export default function ProductPage() {
             </div>
           ) : (
           <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
-            <div className={cn('grid grid-cols-2 gap-y-8 sm:gap-y-0')}>
+            <div className={cn('grid grid-cols-2 gap-y-8 sm:gap-y-0 sm:gap-4')}>
               {productsToShow.map((product) => (
-                <div key={product.id} className="group relative text-left p-2 sm:p-4">
+                <div key={product.id} className="group relative text-left p-2">
                   <div 
                     className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer"
                     onClick={() => setSelectedProduct(product)}
@@ -428,22 +428,22 @@ export default function ProductPage() {
                     </div>
                   </div>
                   
-                    <div className="mt-2 sm:mt-4 flex flex-col sm:flex-row items-start sm:items-center sm:justify-between">
-                        <div className="flex flex-col items-start w-full">
-                            <h3 className="text-sm sm:text-base text-black truncate w-full font-bold">{product.name}</h3>
-                            <p className="font-bold text-sm sm:text-base text-black">
-                                {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
-                            </p>
-                            <Button
-                                variant="ghost"
-                                className="w-full mt-2 text-white bg-black hover:bg-black/80 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold text-sm h-auto justify-center"
-                                onClick={() => addToCart(product)}
-                                disabled={!product.inStock}
-                            >
-                              {product.inStock ? 'Add to Cart' : 'Out of Stock'}
-                            </Button>
-                        </div>
-                    </div>
+                  <div className="mt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                      <div className="flex flex-col items-start w-full">
+                          <h3 className="text-sm sm:text-base text-black truncate w-full font-bold">{product.name}</h3>
+                          <p className="font-bold text-sm sm:text-base text-black">
+                              {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
+                          </p>
+                      </div>
+                      <Button
+                          variant="ghost"
+                          className="w-full sm:w-auto mt-2 sm:mt-0 text-white bg-black hover:bg-black/80 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold text-sm h-auto justify-center"
+                          onClick={() => addToCart(product)}
+                          disabled={!product.inStock}
+                      >
+                        {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                      </Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -497,7 +497,7 @@ export default function ProductPage() {
         </main>
       </div>
       
-      <section className="bg-muted py-16 mt-16">
+      <section className="bg-muted py-16 mt-16 overflow-hidden">
         <div className="container mx-auto px-4">
             <div className="text-center mb-10">
                 <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Our Store Locations</h2>
@@ -507,55 +507,61 @@ export default function ProductPage() {
                     <PottersWheelSpinner />
                 </div>
             ) : stores && stores.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {stores.map((store) => (
-                        <Card key={store.id} className="overflow-hidden flex flex-col bg-background shadow-lg hover:shadow-xl transition-shadow duration-300">
-                            {store.image && (
-                                <div className="relative h-48 w-full">
-                                    <Image
-                                        src={store.image}
-                                        alt={store.name}
-                                        fill
-                                        className="object-cover"
-                                        data-ai-hint={store['data-ai-hint']}
-                                    />
-                                </div>
-                            )}
-                            <CardHeader>
-                                <CardTitle>{store.name}</CardTitle>
-                            </CardHeader>
-                            <CardContent className="flex-grow space-y-3">
-                                <div className="flex items-start gap-3 text-muted-foreground">
-                                    <MapPin className="h-5 w-5 mt-1 shrink-0 text-primary" />
-                                    <p>{store.address}</p>
-                                </div>
-                                {store.phone && (
-                                    <div className="flex items-center gap-3 text-muted-foreground">
-                                        <Phone className="h-5 w-5 shrink-0 text-primary" />
-                                        <p>{store.phone}</p>
+                <div className="md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6">
+                    <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 md:contents pb-4 -ml-4 pl-4">
+                        {stores.map((store) => (
+                             <div key={store.id} className="snap-start shrink-0 w-3/4 sm:w-2/3 md:w-auto">
+                                <Card className="overflow-hidden h-full flex flex-col bg-background shadow-lg hover:shadow-xl transition-shadow duration-300">
+                                    {store.image && (
+                                        <div className="relative h-48 w-full">
+                                            <Image
+                                                src={store.image}
+                                                alt={store.name}
+                                                fill
+                                                className="object-cover"
+                                                data-ai-hint={store['data-ai-hint']}
+                                            />
+                                        </div>
+                                    )}
+                                    <CardHeader>
+                                        <CardTitle>{store.name}</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="flex-grow space-y-3">
+                                        <div className="flex items-start gap-3 text-muted-foreground">
+                                            <MapPin className="h-5 w-5 mt-1 shrink-0 text-primary" />
+                                            <p>{store.address}</p>
+                                        </div>
+                                        {store.phone && (
+                                            <div className="flex items-center gap-3 text-muted-foreground">
+                                                <Phone className="h-5 w-5 shrink-0 text-primary" />
+                                                <p>{store.phone}</p>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                    <div className="p-6 pt-0 mt-auto">
+                                        <Link href={store.googleMapsLink} target="_blank" rel="noopener noreferrer">
+                                            <Button className="w-full">
+                                                View on Google Maps <ExternalLink className="ml-2 h-4 w-4" />
+                                            </Button>
+                                        </Link>
                                     </div>
-                                )}
-                            </CardContent>
-                            <div className="p-6 pt-0 mt-auto">
-                                <Link href={store.googleMapsLink} target="_blank" rel="noopener noreferrer">
-                                    <Button className="w-full">
-                                        View on Google Maps <ExternalLink className="ml-2 h-4 w-4" />
-                                    </Button>
-                                </Link>
+                                </Card>
                             </div>
-                        </Card>
-                    ))}
+                        ))}
+                    </div>
                 </div>
             ) : (
                 <div className="text-center h-64 flex flex-col items-center justify-center">
                     <p className="text-muted-foreground">No store locations have been added yet.</p>
                 </div>
             )}
-            <div className="text-center mt-12">
-              <Link href="/our-stores">
-                <Button variant="outline">View All Stores</Button>
-              </Link>
-            </div>
+            {stores && stores.length > 0 && (
+                <div className="text-center mt-12">
+                <Link href="/our-stores">
+                    <Button variant="outline">View All Stores</Button>
+                </Link>
+                </div>
+            )}
         </div>
       </section>
     </div>
