@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -25,6 +25,7 @@ import { AddOptionDialog } from './AddOptionDialog';
 import { generateProductDetails, GenerateProductDetailsInput } from '@/ai/flows/generate-product-details';
 import { useToast } from '@/hooks/use-toast';
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
+import Image from 'next/image';
 
 const productSchema = z.object({
   name: z.string().min(1, { message: 'Product name is required' }),
@@ -33,7 +34,7 @@ const productSchema = z.object({
     z.number().positive({ message: 'MRP must be a positive number' })),
   category: z.string().min(1, { message: 'Category is required' }),
   material: z.string().min(1, { message: 'Material is required' }),
-  image: z.string().url({ message: 'Please enter a valid image URL' }),
+  image: z.string().min(1, { message: 'Please provide an image URL or upload an image.' }),
   'data-ai-hint': z.string().optional(),
   inStock: z.boolean(),
   hsn: z.string().optional(),
@@ -74,6 +75,7 @@ export function ProductForm({
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiNotes, setAiNotes] = useState('');
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -83,6 +85,7 @@ export function ProductForm({
     control,
     setValue,
     getValues,
+    watch
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -99,6 +102,8 @@ export function ProductForm({
       size: { height: undefined, length: undefined, width: undefined },
     },
   });
+
+  const imageValue = watch('image');
 
   useEffect(() => {
     if (isOpen) {
@@ -139,30 +144,32 @@ export function ProductForm({
     setIsMaterialDialogOpen(false);
   }
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setValue('image', reader.result as string, { shouldValidate: true });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleGenerateDetails = async () => {
-    const imageUrl = getValues('image');
-    if (!imageUrl) {
+    const imageDataUri = getValues('image');
+    if (!imageDataUri) {
       toast({
         variant: 'destructive',
-        title: 'Image URL required',
-        description: 'Please provide an image URL to generate details.',
+        title: 'Image required',
+        description: 'Please provide an image URL or upload an image to generate details.',
       });
       return;
     }
 
     setIsGenerating(true);
     try {
-      // Basic client-side fetch and conversion to Data URI
-      const response = await fetch(imageUrl);
-      if (!response.ok) throw new Error('Failed to fetch image.');
-      const blob = await response.blob();
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
-      reader.onloadend = async () => {
-        const base64data = reader.result as string;
-        
         const input: GenerateProductDetailsInput = {
-            imageDataUri: base64data,
+            imageDataUri: imageDataUri,
             productInfo: aiNotes,
         };
 
@@ -175,19 +182,14 @@ export function ProductForm({
             title: 'Details Generated!',
             description: 'The product name and description have been populated.',
         });
-        setIsGenerating(false);
-      };
-      reader.onerror = () => {
-          throw new Error("Failed to read image data.");
-      }
-
     } catch (error) {
       console.error(error);
       toast({
         variant: 'destructive',
         title: 'Generation Failed',
-        description: 'Could not generate details. Please check the image URL and try again.',
+        description: 'Could not generate details. Please check the image and try again.',
       });
+    } finally {
       setIsGenerating(false);
     }
   };
@@ -317,10 +319,34 @@ export function ProductForm({
                       </div>
 
                       <div className="space-y-1">
-                          <Label htmlFor="image">Image URL</Label>
-                          <Input id="image" {...register('image')} placeholder="https://picsum.photos/seed/..." />
-                          {errors.image && <p className="text-xs text-destructive">{errors.image.message}</p>}
-                      </div>
+                        <Label>Image</Label>
+                        <div className="flex items-center gap-2">
+                            <Input 
+                                {...register('image')} 
+                                placeholder="https://... or upload a file"
+                            />
+                            <Button 
+                                type="button" 
+                                variant="outline" 
+                                onClick={() => fileInputRef.current?.click()}>
+                                Upload
+                            </Button>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                className="hidden"
+                                accept="image/*"
+                            />
+                        </div>
+                         {imageValue && (
+                            <div className="relative h-32 w-32 mt-2 rounded-md overflow-hidden border">
+                                <Image src={imageValue} alt="Image preview" fill className="object-cover" />
+                            </div>
+                        )}
+                        {errors.image && <p className="text-xs text-destructive">{errors.image.message}</p>}
+                    </div>
+
                       
                       <div className="space-y-1">
                           <Label htmlFor="data-ai-hint">AI Hint (Optional)</Label>
