@@ -1,18 +1,19 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, doc, writeBatch } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, Edit, Trash2, MoreHorizontal } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, MoreHorizontal, ChevronDown } from 'lucide-react';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { ProductForm } from '@/components/admin/ProductForm';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 
 type Product = {
     id: string;
@@ -39,6 +40,8 @@ export default function AdminProductsPage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+    const [isBulkDeleteAlertOpen, setIsBulkDeleteAlertOpen] = useState(false);
+    const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
 
     const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
     const { data: products, isLoading: productsLoading } = useCollection<Product>(productsQuery);
@@ -76,7 +79,21 @@ export default function AdminProductsPage() {
             const productRef = doc(firestore, 'products', productToDelete.id);
             deleteDocumentNonBlocking(productRef);
             setProductToDelete(null);
+            setSelectedProductIds(prev => prev.filter(id => id !== productToDelete.id));
         }
+    };
+
+    const handleBulkDelete = () => {
+        if (!firestore) return;
+        const batch = writeBatch(firestore);
+        selectedProductIds.forEach(id => {
+            const productRef = doc(firestore, 'products', id);
+            batch.delete(productRef);
+        });
+        batch.commit().then(() => {
+            setSelectedProductIds([]);
+            setIsBulkDeleteAlertOpen(false);
+        });
     };
     
     const handleFormSubmit = (formData: Omit<Product, 'id'>) => {
@@ -93,10 +110,52 @@ export default function AdminProductsPage() {
         setSelectedProduct(null);
     };
 
+    const handleSelectAll = (checked: boolean) => {
+        if (checked && products) {
+            setSelectedProductIds(products.map(p => p.id));
+        } else {
+            setSelectedProductIds([]);
+        }
+    };
+
+    const handleSelectProduct = (productId: string, checked: boolean) => {
+        if (checked) {
+            setSelectedProductIds(prev => [...prev, productId]);
+        } else {
+            setSelectedProductIds(prev => prev.filter(id => id !== productId));
+        }
+    };
+
+    const numSelected = selectedProductIds.length;
+    const allProductsCount = products?.length || 0;
+
     return (
         <div className="flex-1 space-y-4 p-2 sm:p-4 md:p-8 pt-6">
             <div className="flex items-center justify-between space-y-2">
-                <h2 className="text-3xl font-bold tracking-tight">Products</h2>
+                <div className="flex items-center gap-4">
+                    {numSelected > 0 ? (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline">
+                                    Actions ({numSelected})
+                                    <ChevronDown className="ml-2 h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start">
+                                <DropdownMenuItem 
+                                    className="text-destructive" 
+                                    onClick={() => setIsBulkDeleteAlertOpen(true)}
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete Selected
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    ) : (
+                         <h2 className="text-3xl font-bold tracking-tight">Products</h2>
+                    )}
+                </div>
+
                 <Button onClick={handleAddProduct}>
                     <PlusCircle className="mr-2 h-4 w-4" /> Add Product
                 </Button>
@@ -122,6 +181,13 @@ export default function AdminProductsPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead className="w-12">
+                                        <Checkbox
+                                            checked={numSelected > 0 && numSelected === allProductsCount}
+                                            onCheckedChange={(checked) => handleSelectAll(Boolean(checked))}
+                                            aria-label="Select all"
+                                        />
+                                    </TableHead>
                                     <TableHead>Name</TableHead>
                                     <TableHead>Category</TableHead>
                                     <TableHead className="hidden md:table-cell">MRP</TableHead>
@@ -132,13 +198,20 @@ export default function AdminProductsPage() {
                             <TableBody>
                                 {productsLoading ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center">
+                                        <TableCell colSpan={6} className="h-24 text-center">
                                             <PottersWheelSpinner />
                                         </TableCell>
                                     </TableRow>
                                 ) : products && products.length > 0 ? (
                                     products.map((product) => (
-                                        <TableRow key={product.id}>
+                                        <TableRow key={product.id} data-state={selectedProductIds.includes(product.id) && "selected"}>
+                                            <TableCell>
+                                                <Checkbox
+                                                    checked={selectedProductIds.includes(product.id)}
+                                                    onCheckedChange={(checked) => handleSelectProduct(product.id, Boolean(checked))}
+                                                    aria-label={`Select ${product.name}`}
+                                                />
+                                            </TableCell>
                                             <TableCell className="font-medium">{product.name}</TableCell>
                                             <TableCell>{product.category}</TableCell>
                                             <TableCell className="hidden md:table-cell">
@@ -161,6 +234,7 @@ export default function AdminProductsPage() {
                                                             <Edit className="mr-2 h-4 w-4" />
                                                             Edit
                                                         </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
                                                         <DropdownMenuItem className="text-destructive" onClick={() => setProductToDelete(product)}>
                                                             <Trash2 className="mr-2 h-4 w-4" />
                                                             Delete
@@ -172,7 +246,7 @@ export default function AdminProductsPage() {
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center">
+                                        <TableCell colSpan={6} className="h-24 text-center">
                                             No products found.
                                         </TableCell>
                                     </TableRow>
@@ -183,6 +257,7 @@ export default function AdminProductsPage() {
                 </CardContent>
             </Card>
 
+            {/* Single Delete Alert */}
             <AlertDialog open={!!productToDelete} onOpenChange={(isOpen) => !isOpen && setProductToDelete(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -195,6 +270,22 @@ export default function AdminProductsPage() {
                     <AlertDialogFooter>
                     <AlertDialogCancel onClick={() => setProductToDelete(null)}>Cancel</AlertDialogCancel>
                     <AlertDialogAction onClick={handleDeleteProduct} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Bulk Delete Alert */}
+            <AlertDialog open={isBulkDeleteAlertOpen} onOpenChange={setIsBulkDeleteAlertOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the {numSelected} selected products from the database.
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleBulkDelete} className="bg-destructive hover:bg-destructive/90">Delete Products</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
