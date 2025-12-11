@@ -239,6 +239,12 @@ export function ProductForm({
                           <Input id="image" {...register('image')} placeholder="https://picsum.photos/seed/..." />
                           {errors.image && <p className="text-xs text-destructive">{errors.image.message}</p>}
                       </div>
+                      
+                      <div className="space-y-1">
+                          <Label htmlFor="data-ai-hint">AI Hint (Optional)</Label>
+                          <Input id="data-ai-hint" {...register('data-ai-hint')} placeholder="e.g. clay pot" />
+                          {errors['data-ai-hint'] && <p className="text-xs text-destructive">{errors['data-ai-hint'].message}</p>}
+                      </div>
 
                       <div className="flex items-center space-x-2 pt-2">
                           <Controller
