@@ -279,6 +279,14 @@ export default function PurchasePage() {
     });
   };
 
+  const handleCheckout = () => {
+    if (user?.isAnonymous) {
+        router.push('/login?redirect=/checkout');
+    } else {
+        router.push('/checkout');
+    }
+  };
+
 
   const filteredProducts = useMemo(() => {
     if (!allProducts) return [];
@@ -342,6 +350,11 @@ export default function PurchasePage() {
             priceRange={priceRange}
             setPriceRange={setPriceRange}
           />
+           {cartItems.length > 0 && (
+                <div className="mt-8">
+                    <Button onClick={handleCheckout} className="w-full" size="lg">Checkout</Button>
+                </div>
+            )}
         </aside>
 
         <main className="flex-1 p-2 sm:p-4 md:p-8">
@@ -369,6 +382,13 @@ export default function PurchasePage() {
                         priceRange={priceRange}
                         setPriceRange={setPriceRange}
                       />
+                       {cartItems.length > 0 && (
+                            <div className="mt-8">
+                                <SheetClose asChild>
+                                    <Button onClick={handleCheckout} className="w-full" size="lg">Checkout</Button>
+                                </SheetClose>
+                            </div>
+                        )}
                    </div>
                 </SheetContent>
               </Sheet>
@@ -412,7 +432,7 @@ export default function PurchasePage() {
             </div>
           ) : (
           <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
-            <div className={cn('grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-y-2 sm:gap-y-8')}>
+            <div className={cn('grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-y-2 sm:gap-y-8')}>
               {filteredProducts.map((product) => (
                 <div key={product.id} className="group relative text-left p-2 sm:p-4">
                   <div 

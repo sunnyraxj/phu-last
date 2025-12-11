@@ -101,9 +101,9 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
 
     const handleCheckout = () => {
         if (user?.isAnonymous) {
-            router.push('/login');
+            router.push('/login?redirect=/checkout');
         } else {
-            // Proceed to checkout page
+            router.push('/checkout');
         }
     };
 
@@ -336,7 +336,9 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                                 <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(cartSubtotal)}</span>
                                             </div>
                                             <p className="text-xs text-muted-foreground">Shipping & taxes calculated at checkout.</p>
-                                            <Button size="lg" className="w-full" onClick={handleCheckout}>Checkout</Button>
+                                            <SheetClose asChild>
+                                                <Button size="lg" className="w-full" onClick={handleCheckout}>Checkout</Button>
+                                            </SheetClose>
                                         </div>
                                     </SheetFooter>
                                 </>
