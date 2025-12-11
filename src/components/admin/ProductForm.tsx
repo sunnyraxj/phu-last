@@ -326,7 +326,7 @@ export function ProductForm({
                                         <Select onValueChange={field.onChange} value={field.value}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select a material" />
-                                            </Trigger>
+                                            </SelectTrigger>
                                             <SelectContent>
                                                 {existingMaterials.map(mat => <SelectItem key={mat} value={mat}>{mat}</SelectItem>)}
                                             </SelectContent>
