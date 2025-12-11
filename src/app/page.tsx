@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
@@ -172,7 +173,7 @@ export default function ProductPage() {
   const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
   const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
   
-  const ordersQuery = useMemoFirebase(() => 
+ const ordersQuery = useMemoFirebase(() => 
     (userData?.role === 'admin' && user && !user.isAnonymous) ? collection(firestore, 'orders') : null,
     [firestore, userData, user]
   );
@@ -400,7 +401,7 @@ export default function ProductPage() {
           <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
             <div className={cn('grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4')}>
               {filteredProducts.map((product) => (
-                <div key={product.id} className="group relative text-left p-4 border-b border-r">
+                <div key={product.id} className="group relative text-left p-4">
                   <div 
                     className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer mb-2 sm:mb-4"
                     onClick={() => setSelectedProduct(product)}
@@ -418,21 +419,23 @@ export default function ProductPage() {
                   </div>
                   
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                        <div className="flex flex-col">
-                            <h3 className="font-bold sm:font-semibold text-sm text-foreground truncate mb-1">{product.name}</h3>
-                            <p className="text-foreground/80 font-bold sm:font-normal text-sm mb-2">
-                                {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
-                            </p>
+                        <div className="flex flex-col flex-grow">
+                             <h3 className="sm:font-bold text-sm text-foreground truncate mb-1 sm:mb-0 font-bold">{product.name}</h3>
+                            <div className="flex sm:flex-col items-baseline sm:items-start justify-between">
+                                 <p className="text-foreground font-bold text-sm mb-2 sm:mb-0">
+                                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
+                                </p>
+                                <Button
+                                    variant="ghost"
+                                    className="w-auto p-0 h-auto text-sm text-primary hover:text-primary/80 disabled:text-muted-foreground font-bold"
+                                    onClick={() => addToCart(product)}
+                                    disabled={!product.inStock}
+                                >
+                                  <ShoppingBagIcon className="mr-2 h-4 w-4 sm:hidden" />
+                                  {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                                </Button>
+                            </div>
                         </div>
-                        <Button
-                            variant="ghost"
-                            className="w-full sm:w-auto justify-start sm:justify-center p-0 h-auto text-sm text-primary hover:text-primary/80 disabled:text-muted-foreground font-bold"
-                            onClick={() => addToCart(product)}
-                            disabled={!product.inStock}
-                        >
-                            <ShoppingBagIcon className="mr-2 h-4 w-4" />
-                            {product.inStock ? 'Add to Cart' : 'Out of Stock'}
-                        </Button>
                     </div>
                 </div>
               ))}
@@ -481,5 +484,4 @@ export default function ProductPage() {
     </div>
   )
 }
-
     
