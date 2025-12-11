@@ -409,9 +409,9 @@ export default function ProductPage() {
             </div>
           ) : (
           <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
-            <div className={cn('grid grid-cols-2 gap-y-8 sm:gap-y-0 sm:gap-4')}>
+            <div className={cn('grid grid-cols-2 gap-x-2 gap-y-8 sm:gap-4')}>
               {productsToShow.map((product) => (
-                <div key={product.id} className="group relative text-left p-2">
+                <div key={product.id} className="group relative text-left p-2 sm:p-4">
                   <div 
                     className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer"
                     onClick={() => setSelectedProduct(product)}
@@ -428,16 +428,14 @@ export default function ProductPage() {
                     </div>
                   </div>
                   
-                  <div className="mt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                      <div className="flex flex-col items-start w-full">
-                          <h3 className="text-sm sm:text-base text-black truncate w-full font-bold">{product.name}</h3>
-                          <p className="font-bold text-sm sm:text-base text-black">
-                              {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
-                          </p>
-                      </div>
+                  <div className="mt-2 flex flex-col items-start w-full">
+                      <h3 className="text-sm sm:text-base text-black truncate w-full font-bold">{product.name}</h3>
+                      <p className="font-bold text-sm sm:text-base text-black">
+                          {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
+                      </p>
                       <Button
                           variant="ghost"
-                          className="w-full sm:w-auto mt-2 sm:mt-0 text-white bg-black hover:bg-black/80 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold text-sm h-auto justify-center"
+                          className="w-full mt-2 text-white bg-black hover:bg-black/80 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold text-sm h-auto justify-center"
                           onClick={() => addToCart(product)}
                           disabled={!product.inStock}
                       >
@@ -529,12 +527,12 @@ export default function ProductPage() {
                                     <CardContent className="flex-grow space-y-3">
                                         <div className="flex items-start gap-3 text-muted-foreground">
                                             <MapPin className="h-5 w-5 mt-1 shrink-0 text-primary" />
-                                            <p>{store.address}</p>
+                                            <p className="text-sm md:text-base">{store.address}</p>
                                         </div>
                                         {store.phone && (
                                             <div className="flex items-center gap-3 text-muted-foreground">
                                                 <Phone className="h-5 w-5 shrink-0 text-primary" />
-                                                <p>{store.phone}</p>
+                                                <p className="text-sm md:text-base">{store.phone}</p>
                                             </div>
                                         )}
                                     </CardContent>
