@@ -1,28 +1,25 @@
 
-
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
 import { collection, doc, query, where, getDocs, writeBatch, setDoc, deleteDoc, addDoc } from "firebase/firestore";
-import { Search, Eye, Filter } from "lucide-react"
+import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import Image from "next/image"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { useAuth, useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { PottersWheelSpinner } from "@/components/shared/PottersWheelSpinner";
-import { signInAnonymously } from "firebase/auth";
-import { useToast } from "@/hooks/use-toast";
-import { setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/shared/Header";
 import { ShoppingBag } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { useToast } from "@/hooks/use-toast";
 
 
 type Product = {
@@ -162,9 +159,9 @@ export default function ProductPage() {
 
   useEffect(() => {
     if (!isUserLoading && !user) {
-      signInAnonymously(auth);
+      addDocumentNonBlocking(collection(firestore, 'users'), { isAnonymous: true });
     }
-  }, [user, isUserLoading, auth]);
+  }, [user, isUserLoading, auth, firestore]);
 
   const productsQuery = useMemoFirebase(() =>
     query(collection(firestore, 'products')),
@@ -175,7 +172,7 @@ export default function ProductPage() {
   const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
   const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
   
- const ordersQuery = useMemoFirebase(() => 
+  const ordersQuery = useMemoFirebase(() => 
     (userData?.role === 'admin' && user && !user.isAnonymous) ? collection(firestore, 'orders') : null,
     [firestore, userData, user]
   );
@@ -347,8 +344,8 @@ export default function ProductPage() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[300px]">
-                    <SheetHeader>
-                        <SheetTitle className="sr-only">Filters</SheetTitle>
+                   <SheetHeader>
+                        <SheetTitle>Filters</SheetTitle>
                     </SheetHeader>
                    <div className="p-6 overflow-y-auto">
                       <Filters 
@@ -401,11 +398,11 @@ export default function ProductPage() {
             </div>
           ) : (
           <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
-            <div className={cn('grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 border-t border-l')}>
+            <div className={cn('grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4')}>
               {filteredProducts.map((product) => (
                 <div key={product.id} className="group relative text-left p-4 border-b border-r">
                   <div 
-                    className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer mb-4"
+                    className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer mb-2 sm:mb-4"
                     onClick={() => setSelectedProduct(product)}
                   >
                     <Image
@@ -415,23 +412,28 @@ export default function ProductPage() {
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
                       data-ai-hint={product['data-ai-hint']}
                     />
+                     <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <p className="text-white font-bold">Quick View</p>
+                    </div>
                   </div>
                   
-                  <div className="flex flex-col">
-                    <h3 className="font-semibold text-sm text-foreground truncate mb-1 sm:mb-0">{product.name}</h3>
-                    <p className="text-foreground/80 text-sm mb-2 sm:mb-0 font-bold sm:font-normal">
-                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
-                    </p>
-                    <Button
-                        variant="ghost"
-                        className="w-full justify-start p-0 h-auto text-sm text-primary hover:text-primary/80 disabled:text-muted-foreground font-bold sm:font-normal"
-                        onClick={() => addToCart(product)}
-                        disabled={!product.inStock}
-                    >
-                        <ShoppingBag className="mr-2 h-4 w-4" />
-                        {product.inStock ? 'Add to Cart' : 'Out of Stock'}
-                    </Button>
-                  </div>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                        <div className="flex flex-col">
+                            <h3 className="font-bold sm:font-semibold text-sm text-foreground truncate mb-1">{product.name}</h3>
+                            <p className="text-foreground/80 font-bold sm:font-normal text-sm mb-2">
+                                {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
+                            </p>
+                        </div>
+                        <Button
+                            variant="ghost"
+                            className="w-full sm:w-auto justify-start sm:justify-center p-0 h-auto text-sm text-primary hover:text-primary/80 disabled:text-muted-foreground font-bold"
+                            onClick={() => addToCart(product)}
+                            disabled={!product.inStock}
+                        >
+                            <ShoppingBagIcon className="mr-2 h-4 w-4" />
+                            {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                        </Button>
+                    </div>
                 </div>
               ))}
             </div>
@@ -479,3 +481,5 @@ export default function ProductPage() {
     </div>
   )
 }
+
+    
