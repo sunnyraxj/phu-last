@@ -22,7 +22,7 @@ import { ShoppingBag } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 
 type Product = {
@@ -53,6 +53,16 @@ type Store = {
     googleMapsLink: string;
     'data-ai-hint'?: string;
 };
+
+type TeamMember = {
+    id: string;
+    name: string;
+    role: 'Founder' | 'Management' | 'Team Member';
+    bio: string;
+    image: string;
+    'data-ai-hint'?: string;
+};
+
 
 const categories = [
   { name: "Crafts", count: 5 },
@@ -166,7 +176,7 @@ export default function ProductPage() {
 
   useEffect(() => {
     if (!isUserLoading && !user) {
-      addDocumentNonBlocking(collection(firestore, 'users'), { isAnonymous: true });
+        // Use non-blocking anonymous sign-in if needed, or handle redirection
     }
   }, [user, isUserLoading, auth, firestore]);
 
@@ -201,6 +211,17 @@ export default function ProductPage() {
 
   const storesQuery = useMemoFirebase(() => collection(firestore, 'stores'), [firestore]);
   const { data: stores, isLoading: storesLoading } = useCollection<Store>(storesQuery);
+  
+  const teamMembersQuery = useMemoFirebase(() => collection(firestore, 'teamMembers'), [firestore]);
+  const { data: teamMembers, isLoading: teamMembersLoading } = useCollection<TeamMember>(teamMembersQuery);
+
+  const { founder, managementMembers } = useMemo(() => {
+      if (!teamMembers) return { founder: null, managementMembers: [] };
+      const founderMember = teamMembers.find(member => member.role === 'Founder');
+      const management = teamMembers.filter(member => member.role === 'Management').slice(0, 3);
+      return { founder: founderMember, managementMembers: management };
+  }, [teamMembers]);
+
 
   const adminActionCounts = useMemo(() => {
       if (userData?.role !== 'admin' || !orders || !allProducts) {
@@ -555,6 +576,48 @@ export default function ProductPage() {
             )}
         </div>
       </section>
+
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+            <div className="text-center mb-10">
+                <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Meet Our Team</h2>
+            </div>
+            {teamMembersLoading ? (
+                <div className="flex justify-center items-center h-64">
+                    <PottersWheelSpinner />
+                </div>
+            ) : (
+                <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 items-start">
+                    {founder && (
+                        <div className="text-center col-span-1 sm:col-span-2 lg:col-span-1 lg:row-span-2 flex flex-col items-center">
+                             <div className="relative h-40 w-40 rounded-full overflow-hidden mb-4 shadow-lg">
+                                <Image src={founder.image} alt={founder.name} fill className="object-cover" data-ai-hint={founder['data-ai-hint']} />
+                            </div>
+                            <h3 className="text-xl font-semibold text-foreground">{founder.name}</h3>
+                            <p className="text-primary font-medium">{founder.role}</p>
+                        </div>
+                    )}
+                    {managementMembers.map((member) => (
+                        <div key={member.id} className="text-center flex flex-col items-center">
+                            <div className="relative h-32 w-32 rounded-full overflow-hidden mb-4 shadow-lg">
+                                <Image src={member.image} alt={member.name} fill className="object-cover" data-ai-hint={member['data-ai-hint']} />
+                            </div>
+                            <h3 className="text-lg font-semibold text-foreground">{member.name}</h3>
+                            <p className="text-primary font-medium text-sm">{member.role}</p>
+                        </div>
+                    ))}
+                </div>
+                <div className="text-center mt-12">
+                    <Link href="/our-team">
+                        <Button variant="outline">View All Team Members</Button>
+                    </Link>
+                </div>
+                </>
+            )}
+        </div>
+      </section>
+
     </div>
   )
 }
