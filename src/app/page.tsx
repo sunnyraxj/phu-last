@@ -4,7 +4,7 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { collection, doc, query, where, getDocs, writeBatch, setDoc, deleteDoc, addDoc } from "firebase/firestore";
-import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon, MapPin, Phone, ExternalLink } from "lucide-react"
+import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon, MapPin, Phone, ExternalLink, Sparkles, Wand2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
@@ -23,6 +23,9 @@ import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle 
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useActionState } from 'react';
+import { getRecommendations, RecommendationState } from '@/lib/actions';
+import { Textarea } from "@/components/ui/textarea";
 
 
 type Product = {
@@ -157,6 +160,33 @@ function Filters({ selectedCategories, handleCategoryChange, selectedMaterials, 
   )
 }
 
+function RecommendationForm({state, formAction, recentProducts}: {state: RecommendationState, formAction: (payload: FormData) => void, recentProducts: Product[]}) {
+    const browsingHistory = useMemo(() => 
+        recentProducts.map(p => p.name).join(', '),
+    [recentProducts]);
+
+    return (
+        <form action={formAction} className="space-y-4">
+            <Textarea 
+                name="preferences"
+                placeholder="e.g., 'I'm looking for a rustic, handmade gift for a friend who loves blue pottery.'" 
+                className="min-h-[100px] text-base"
+            />
+            <input type="hidden" name="browsingHistory" value={browsingHistory} />
+            {state.fieldErrors?.preferences && (
+                <p className="text-sm text-destructive">{state.fieldErrors.preferences.join(', ')}</p>
+            )}
+            <Button type="submit">
+                <Sparkles className="mr-2 h-4 w-4" />
+                Get Recommendations
+            </Button>
+             {state.error && (
+                <p className="text-sm text-destructive mt-2">{state.error}</p>
+            )}
+        </form>
+    );
+}
+
 export default function ProductPage() {
   const [sortBy, setSortBy] = useState("Featured")
   
@@ -173,6 +203,12 @@ export default function ProductPage() {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const router = useRouter();
+
+  const [recommendationState, recommendationFormAction] = useActionState(getRecommendations, {
+    recommendations: '',
+    error: '',
+    fieldErrors: {}
+  });
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -318,6 +354,7 @@ export default function ProductPage() {
   }, [allProducts, selectedCategories, selectedMaterials, availability, priceRange, sortBy, searchTerm]);
   
   const productsToShow = useMemo(() => filteredProducts.slice(0, 20), [filteredProducts]);
+  const recentProducts = useMemo(() => allProducts?.slice(0, 5) || [], [allProducts]);
 
   return (
     <div className="min-h-screen bg-background font-sans">
@@ -515,8 +552,41 @@ export default function ProductPage() {
           )}
         </main>
       </div>
+
+      <section className="bg-muted py-16 mt-16">
+        <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
+                <div className="text-center md:text-left">
+                    <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">For You</h2>
+                    <p className="mt-4 text-lg text-muted-foreground">
+                        Tell us what you're looking for, and our AI will find the perfect craft for you.
+                    </p>
+                </div>
+                <Card className="shadow-lg">
+                    <CardHeader>
+                        <div className="flex items-center gap-2">
+                           <Wand2 className="h-6 w-6 text-primary" />
+                           <CardTitle>Personalized Recommendations</CardTitle>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                         {recommendationState.recommendations ? (
+                            <div>
+                                <p className="text-muted-foreground mb-4">Based on your preferences, here are a few suggestions:</p>
+                                <div className="p-4 bg-background rounded-md border text-sm">
+                                    {recommendationState.recommendations}
+                                </div>
+                            </div>
+                        ) : (
+                            <RecommendationForm state={recommendationState} formAction={recommendationFormAction} recentProducts={recentProducts}/>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+      </section>
       
-      <section className="bg-muted py-16 mt-16 overflow-hidden">
+      <section className="bg-background py-16 mt-16 overflow-hidden">
         <div className="container mx-auto px-4">
             <div className="text-center mb-10">
                 <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Our Store Locations</h2>
@@ -630,11 +700,4 @@ export default function ProductPage() {
   )
 }
     
-
     
-
-    
-
-
-
-
