@@ -344,7 +344,7 @@ export default function ProductPage() {
           />
         </aside>
 
-        <main className="flex-1 p-2 sm:p-4 md:p-8">
+        <main className="flex-1 p-2 sm:p-8">
           <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4 px-2 sm:px-0 pt-4 sm:pt-0">
             <div className="flex w-full sm:w-auto items-center gap-4">
                <Sheet>
@@ -409,7 +409,7 @@ export default function ProductPage() {
             </div>
           ) : (
           <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
-            <div className={cn('grid grid-cols-2 gap-y-8 sm:gap-y-8')}>
+            <div className={cn('grid grid-cols-2 gap-y-8 sm:gap-y-0')}>
               {productsToShow.map((product) => (
                 <div key={product.id} className="group relative text-left p-2 sm:p-4">
                   <div 
@@ -429,20 +429,20 @@ export default function ProductPage() {
                   </div>
                   
                     <div className="mt-2 sm:mt-4 flex flex-col sm:flex-row items-start sm:items-center sm:justify-between">
-                        <div className="flex flex-col items-start">
-                             <h3 className="text-sm sm:text-base font-bold text-black truncate w-full">{product.name}</h3>
+                        <div className="flex flex-col items-start w-full">
+                            <h3 className="text-sm sm:text-base text-black truncate w-full font-bold">{product.name}</h3>
                             <p className="font-bold text-sm sm:text-base text-black">
                                 {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
                             </p>
+                            <Button
+                                variant="ghost"
+                                className="w-full mt-2 text-white bg-black hover:bg-black/80 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold text-sm h-auto justify-center"
+                                onClick={() => addToCart(product)}
+                                disabled={!product.inStock}
+                            >
+                              {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                            </Button>
                         </div>
-                        <Button
-                            variant="ghost"
-                             className="w-full sm:w-auto mt-2 sm:mt-0 text-white bg-black hover:bg-black/80 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold text-sm h-auto justify-center"
-                            onClick={() => addToCart(product)}
-                            disabled={!product.inStock}
-                        >
-                          {product.inStock ? 'Add to Cart' : 'Out of Stock'}
-                        </Button>
                     </div>
                 </div>
               ))}
@@ -497,13 +497,10 @@ export default function ProductPage() {
         </main>
       </div>
       
-      <section className="bg-muted py-12 sm:py-20 mt-12 sm:mt-24">
+      <section className="bg-muted py-16 mt-16">
         <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
+            <div className="text-center mb-10">
                 <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Our Store Locations</h2>
-                <p className="mt-4 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-                    Visit us in person to experience the craftsmanship.
-                </p>
             </div>
              {storesLoading ? (
                 <div className="flex justify-center items-center h-64">
