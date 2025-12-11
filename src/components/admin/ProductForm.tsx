@@ -207,22 +207,53 @@ export function ProductForm({
           <form onSubmit={handleSubmit(handleFormSubmit)}>
               <ScrollArea className="h-[60vh] pr-6 -mr-6">
                   <div className="space-y-4 my-4">
-                       <div className="p-4 rounded-lg bg-muted/50 border border-dashed">
-                            <Label htmlFor="ai-notes" className="flex items-center gap-2 mb-2 font-semibold">
+                       <div className="p-4 rounded-lg bg-muted/50 border border-dashed space-y-4">
+                            <Label className="flex items-center gap-2 font-semibold">
                                 <Sparkles className="h-5 w-5 text-primary" />
-                                AI Content Generation
+                                Image & AI Content Generation
                             </Label>
-                            <Textarea 
-                                id="ai-notes"
-                                placeholder="Enter some notes about the product (e.g., 'handmade clay vase, blue glaze, from Rajasthan'). The AI will use this with the image to generate a name and description."
-                                value={aiNotes}
-                                onChange={(e) => setAiNotes(e.target.value)}
-                                rows={2}
-                            />
+                            <div className="space-y-1">
+                                <Label htmlFor="image">Image</Label>
+                                <div className="flex items-center gap-2">
+                                    <Input 
+                                        {...register('image')} 
+                                        placeholder="https://... or upload a file"
+                                    />
+                                    <Button 
+                                        type="button" 
+                                        variant="outline" 
+                                        onClick={() => fileInputRef.current?.click()}>
+                                        Upload
+                                    </Button>
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleFileChange}
+                                        className="hidden"
+                                        accept="image/*"
+                                    />
+                                </div>
+                                {imageValue && (
+                                    <div className="relative h-32 w-32 mt-2 rounded-md overflow-hidden border">
+                                        <Image src={imageValue} alt="Image preview" fill className="object-cover" />
+                                    </div>
+                                )}
+                                {errors.image && <p className="text-xs text-destructive">{errors.image.message}</p>}
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label htmlFor="ai-notes">AI Notes (Optional)</Label>
+                                <Textarea 
+                                    id="ai-notes"
+                                    placeholder="e.g., 'handmade clay vase, blue glaze, from Rajasthan'. The AI will use this with the image to generate a name and description."
+                                    value={aiNotes}
+                                    onChange={(e) => setAiNotes(e.target.value)}
+                                    rows={2}
+                                />
+                            </div>
                             <Button 
                                 type="button" 
                                 onClick={handleGenerateDetails} 
-                                className="mt-2"
                                 disabled={isGenerating}
                             >
                                 {isGenerating ? <PottersWheelSpinner className="h-5 w-5" /> : <Wand2 className="mr-2 h-4 w-4" />}
@@ -317,36 +348,6 @@ export function ProductForm({
                               </div>
                           </div>
                       </div>
-
-                      <div className="space-y-1">
-                        <Label>Image</Label>
-                        <div className="flex items-center gap-2">
-                            <Input 
-                                {...register('image')} 
-                                placeholder="https://... or upload a file"
-                            />
-                            <Button 
-                                type="button" 
-                                variant="outline" 
-                                onClick={() => fileInputRef.current?.click()}>
-                                Upload
-                            </Button>
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handleFileChange}
-                                className="hidden"
-                                accept="image/*"
-                            />
-                        </div>
-                         {imageValue && (
-                            <div className="relative h-32 w-32 mt-2 rounded-md overflow-hidden border">
-                                <Image src={imageValue} alt="Image preview" fill className="object-cover" />
-                            </div>
-                        )}
-                        {errors.image && <p className="text-xs text-destructive">{errors.image.message}</p>}
-                    </div>
-
                       
                       <div className="space-y-1">
                           <Label htmlFor="data-ai-hint">AI Hint (Optional)</Label>
@@ -403,3 +404,5 @@ export function ProductForm({
     </>
   );
 }
+
+    
