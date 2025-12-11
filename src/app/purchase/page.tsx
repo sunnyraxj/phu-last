@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
@@ -142,7 +141,7 @@ function Filters({ selectedCollections, handleCollectionChange, selectedMaterial
   )
 }
 
-export default function ProductPage() {
+export default function PurchasePage() {
   const [sortBy, setSortBy] = useState("Featured")
   
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
@@ -290,8 +289,6 @@ export default function ProductPage() {
         }
       });
   }, [allProducts, selectedCollections, selectedMaterials, availability, priceRange, sortBy, searchTerm]);
-  
-  const productsToShow = useMemo(() => filteredProducts.slice(0, 20), [filteredProducts]);
 
   return (
     <div className="min-h-screen bg-background font-sans">
@@ -302,31 +299,9 @@ export default function ProductPage() {
         stores={stores || []}
         adminActionCounts={adminActionCounts}
       />
-
-      <section className="relative h-[60vh] w-full flex items-center justify-center text-white">
-        <Image
-          src="https://picsum.photos/seed/hero/1200/800"
-          alt="Handcrafted pottery"
-          fill
-          className="object-cover"
-          data-ai-hint="handicrafts lifestyle"
-        />
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="relative z-10 text-center px-4">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4 tracking-tight">Artisans of the East</h1>
-          <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
-            Discover handcrafted treasures that tell a story.
-          </p>
-          <Link href="/purchase">
-            <Button size="lg" variant="secondary">
-              Shop Now
-            </Button>
-          </Link>
-        </div>
-      </section>
       
-      <div className="container mx-auto flex items-start px-0 sm:px-4">
-        <aside className="w-72 bg-background p-6 border-r border-border h-screen sticky top-0 overflow-y-auto hidden lg:block">
+      <div className="container mx-auto flex items-start px-0 sm:px-4 mt-8">
+        <aside className="w-72 bg-background p-6 border-r border-border h-screen sticky top-[88px] overflow-y-auto hidden lg:block">
           <Filters 
             selectedCollections={selectedCollections}
             handleCollectionChange={handleCollectionChange}
@@ -405,7 +380,7 @@ export default function ProductPage() {
           ) : (
           <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
             <div className={cn('grid grid-cols-2 gap-y-2 sm:gap-y-8')}>
-              {productsToShow.map((product) => (
+              {filteredProducts.map((product) => (
                 <div key={product.id} className="group relative text-left p-2 sm:p-4">
                   <div 
                     className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer"
@@ -440,14 +415,6 @@ export default function ProductPage() {
                 </div>
               ))}
             </div>
-
-            {allProducts && allProducts.length > 20 && (
-                <div className="text-center mt-8">
-                    <Link href="/purchase">
-                        <Button variant="outline" size="lg">View All Products</Button>
-                    </Link>
-                </div>
-            )}
 
             {selectedProduct && (
               <DialogContent className="sm:max-w-[800px]">
@@ -492,6 +459,3 @@ export default function ProductPage() {
     </div>
   )
 }
-    
-
-    

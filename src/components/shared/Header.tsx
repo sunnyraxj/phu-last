@@ -125,7 +125,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                 </Link>
 
                 <nav className="hidden lg:flex items-center gap-8 text-sm font-semibold">
-                    <Link href="/">
+                    <Link href="/purchase">
                         <button className="hover:opacity-80">PURCHASE</button>
                     </Link>
                     <Popover open={isStoresPopoverOpen} onOpenChange={setIsStoresPopoverOpen}>
@@ -376,7 +376,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                             <div className="flex h-full flex-col">
                                 <div className="flex-1 overflow-y-auto p-4">
                                     <Accordion type="multiple" className="w-full text-lg">
-                                        <Link href="/" className="block py-4 border-b border-white/20 text-lg" onClick={() => setIsMobileMenuOpen(false)}>
+                                        <Link href="/purchase" className="block py-4 border-b border-white/20 text-lg" onClick={() => setIsMobileMenuOpen(false)}>
                                             PURCHASE
                                         </Link>
                                         <Link href="/our-stores" className="block py-4 border-b border-white/20 text-lg" onClick={() => setIsMobileMenuOpen(false)}>
