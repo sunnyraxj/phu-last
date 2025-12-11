@@ -15,7 +15,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import Link from 'next/link';
 import { useAuth, useFirestore } from '@/firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
@@ -128,9 +127,9 @@ export default function LoginPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background p-4">
-       <Link href="/" className="absolute top-4 left-4">
-          <Button variant="outline">Back to Home</Button>
-      </Link>
+       <div className="absolute top-4 left-4">
+          <Button variant="outline" onClick={() => router.back()}>Back</Button>
+      </div>
       <Tabs defaultValue="login" className="w-full max-w-sm sm:max-w-md">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="login">Login</TabsTrigger>
