@@ -62,6 +62,7 @@ export function BulkEditForm({
 
   const {
     handleSubmit,
+    register,
     reset,
     control,
     setValue,
