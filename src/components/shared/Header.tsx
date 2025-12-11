@@ -3,7 +3,7 @@
 'use client';
 
 import Link from "next/link";
-import { ChevronDown, ShoppingBag, User, LogOut, Settings, Store, Package, Users, ShoppingCart, Menu, X as CloseIcon } from "lucide-react";
+import { ChevronDown, ShoppingBag, User, LogOut, Settings, Store, Package, Users, ShoppingCart, Menu, X as CloseIcon, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -259,10 +259,12 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                             <PopoverContent className="w-48">
                                 <div className="flex flex-col gap-1">
                                     <p className="font-semibold text-sm p-2">{user.email}</p>
-                                    <Button variant="ghost" className="justify-start p-2 h-auto" onClick={() => { /* Navigate to settings */ }}>
-                                        <Settings className="mr-2 h-4 w-4" />
-                                        Settings
-                                    </Button>
+                                    <Link href="/account">
+                                        <Button variant="ghost" className="w-full justify-start p-2 h-auto">
+                                            <UserCog className="mr-2 h-4 w-4" />
+                                            My Account
+                                        </Button>
+                                    </Link>
                                     <Button variant="ghost" onClick={handleSignOut} className="justify-start p-2 h-auto">
                                         <LogOut className="mr-2 h-4 w-4" />
                                         Logout

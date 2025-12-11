@@ -133,6 +133,23 @@
         "googleMapsLink": { "type": "string", "description": "A URL to the store's location on Google Maps.", "format": "uri" }
       },
       "required": ["id", "name", "address", "googleMapsLink"]
+    },
+    "ShippingAddress": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ShippingAddress",
+      "type": "object",
+      "description": "Represents a user's saved shipping address.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the address." },
+        "userId": { "type": "string", "description": "Reference to the User this address belongs to." },
+        "name": { "type": "string", "description": "Recipient's full name." },
+        "address": { "type": "string", "description": "Street address." },
+        "city": { "type": "string", "description": "City." },
+        "state": { "type": "string", "description": "State or province." },
+        "pincode": { "type": "string", "description": "Postal or ZIP code." },
+        "phone": { "type": "string", "description": "Recipient's phone number." }
+      },
+      "required": ["id", "userId", "name", "address", "city", "state", "pincode", "phone"]
     }
   },
   "auth": {
@@ -143,6 +160,10 @@
       {
         "path": "/users/{userId}",
         "definition": { "entityName": "User", "schema": { "$ref": "#/backend/entities/User" }, "description": "Stores user data, including role (user, admin). Enables role-based access control.", "params": [{ "name": "userId", "description": "The unique identifier of the user." }] }
+      },
+      {
+        "path": "/users/{userId}/shippingAddresses/{addressId}",
+        "definition": { "entityName": "ShippingAddress", "schema": { "$ref": "#/backend/entities/ShippingAddress" }, "description": "Stores a user's saved shipping addresses.", "params": [{ "name": "userId", "description": "The unique identifier of the user." }, { "name": "addressId", "description": "The unique identifier of the shipping address." }] }
       },
       {
         "path": "/artisanProfiles/{artisanProfileId}",
@@ -173,6 +194,6 @@
         "definition": { "entityName": "Store", "schema": { "$ref": "#/backend/entities/Store" }, "description": "Stores details for each physical store location.", "params": [{ "name": "storeId", "description": "The unique identifier for the store." }] }
       }
     ],
-    "reasoning": "The Firestore structure is designed to manage users, artisans, products, orders, reviews, team members, and store details for the 'purbanchal hasta udyog' application. It prioritizes security, scalability, and ease of debugging.\n\n**Authorization Independence:** User roles are stored in the `/users` collection, allowing security rules to validate admin privileges with a single `get()` call.\n\n**Structural Segregation:** Each data model is in its own top-level collection. This isolates security concerns. User data is in `/users`, products in `/products`, and admin-managed content like `/teamMembers` and `/stores` are also in top-level collections.\n\n**Access Modeling:** Path-based ownership secures user data. Role-based access control (RBAC) is used for the admin panel, with the `isAdmin()` function checking the `role` field in a user's document. The new `/teamMembers` and `/stores` collections are publicly readable but writable only by admins, ensuring content integrity."
+    "reasoning": "The Firestore structure is designed to manage users, artisans, products, orders, reviews, team members, and store details for the 'purbanchal hasta udyog' application. It prioritizes security, scalability, and ease of debugging.\n\n**Authorization Independence:** User roles are stored in the `/users` collection, allowing security rules to validate admin privileges with a single `get()` call.\n\n**Structural Segregation:** Each data model is in its own top-level collection. This isolates security concerns. User data is in `/users`, products in `/products`, and admin-managed content like `/teamMembers` and `/stores` are also in top-level collections.\n\n**Access Modeling:** Path-based ownership secures user data. A user's shipping addresses are stored in a subcollection `/users/{userId}/shippingAddresses` to ensure they are private and can only be accessed by the user or an admin. Role-based access control (RBAC) is used for the admin panel, with the `isAdmin()` function checking the `role` field in a user's document. The new `/teamMembers` and `/stores` collections are publicly readable but writable only by admins, ensuring content integrity."
   }
 }

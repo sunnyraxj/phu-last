@@ -91,6 +91,16 @@ service cloud.firestore {
       match /cart/{cartItemId} {
         allow read, write: if isOwner(userId) || isAdmin();
       }
+
+      /**
+       * @description Rules for a user's shipping addresses.
+       * @path /users/{userId}/shippingAddresses/{addressId}
+       * @allow A user can manage their own shipping addresses.
+       * @principle Data is private to the user, with admin override.
+       */
+      match /shippingAddresses/{addressId} {
+        allow read, list, create, update, delete: if isOwner(userId) || isAdmin();
+      }
     }
 
     /**

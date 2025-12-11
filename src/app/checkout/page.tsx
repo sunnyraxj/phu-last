@@ -10,23 +10,17 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { Header } from '@/components/shared/Header';
+import { AddressForm, AddressFormValues } from '@/components/account/AddressForm';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { PlusCircle } from 'lucide-react';
 
-const shippingSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  address: z.string().min(1, 'Address is required'),
-  city: z.string().min(1, 'City is required'),
-  state: z.string().min(1, 'State is required'),
-  pincode: z.string().length(6, 'Pincode must be 6 digits'),
-  phone: z.string().min(10, 'Phone number must be at least 10 digits'),
-});
-
-type ShippingFormValues = z.infer<typeof shippingSchema>;
+type ShippingAddress = AddressFormValues & { id: string };
 
 type Product = {
   id: string;
@@ -46,10 +40,10 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [showNewAddressForm, setShowNewAddressForm] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<ShippingFormValues>({
-    resolver: zodResolver(shippingSchema),
-  });
+  const { reset } = useForm<AddressFormValues>();
 
   const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
   const { data: allProducts } = useCollection<Product>(productsQuery);
@@ -59,6 +53,12 @@ export default function CheckoutPage() {
     [firestore, user]
   );
   const { data: cartData, isLoading: cartLoading } = useCollection<{ productId: string; quantity: number }>(cartItemsQuery);
+
+  const addressesQuery = useMemoFirebase(
+    () => (user ? collection(firestore, 'users', user.uid, 'shippingAddresses') : null),
+    [firestore, user]
+  );
+  const { data: addresses, isLoading: addressesLoading } = useCollection<ShippingAddress>(addressesQuery);
 
   const cartItems = useMemo(() => {
     if (!cartData || !allProducts) return [];
@@ -74,36 +74,50 @@ export default function CheckoutPage() {
   const gstAmount = useMemo(() => subtotal * (GST_RATE / (1 + GST_RATE)), [subtotal]);
   const priceBeforeTax = subtotal - gstAmount;
 
+  const handleNewAddressSubmit = (formData: AddressFormValues) => {
+    if (!user) return;
+    const addressesCollection = collection(firestore, 'users', user.uid, 'shippingAddresses');
+    const newAddressRef = doc(addressesCollection);
+    setDoc(newAddressRef, { ...formData, userId: user.uid, id: newAddressRef.id }).then(() => {
+        setSelectedAddressId(newAddressRef.id);
+        setShowNewAddressForm(false);
+        reset();
+    });
+  };
 
-  const onSubmit = async (data: ShippingFormValues) => {
+  const onSubmit = async () => {
     if (!user || cartItems.length === 0) {
-      toast({
-        variant: "destructive",
-        title: 'Error',
-        description: "Your cart is empty or you are not logged in.",
-      });
+      toast({ variant: "destructive", title: 'Error', description: "Your cart is empty or you are not logged in." });
       return;
+    }
+    
+    if (!selectedAddressId) {
+      toast({ variant: "destructive", title: 'Error', description: "Please select or add a shipping address." });
+      return;
+    }
+    
+    const selectedAddress = addresses?.find(a => a.id === selectedAddressId);
+    if (!selectedAddress) {
+        toast({ variant: "destructive", title: 'Error', description: "Selected address not found." });
+        return;
     }
 
     setIsSubmitting(true);
 
     try {
       const batch = writeBatch(firestore);
-
-      // Create Order document
       const orderRef = doc(collection(firestore, 'orders'));
       batch.set(orderRef, {
         customerId: user.uid,
         orderDate: serverTimestamp(),
         totalAmount: totalAmount,
         status: 'pending',
-        shippingDetails: data,
+        shippingDetails: selectedAddress,
         subtotal: subtotal,
         shippingFee: shippingFee,
         gstAmount: gstAmount
       });
 
-      // Create OrderItem documents and delete cart items
       for (const item of cartItems) {
         const orderItemRef = doc(collection(firestore, 'orderItems'));
         batch.set(orderItemRef, {
@@ -120,27 +134,18 @@ export default function CheckoutPage() {
       }
 
       await batch.commit();
-
-      toast({
-        title: 'Order Placed!',
-        description: 'Your order has been successfully placed.',
-      });
-
+      toast({ title: 'Order Placed!', description: 'Your order has been successfully placed.' });
       router.push(`/order-confirmation/${orderRef.id}`);
 
     } catch (error) {
       console.error("Order placement error:", error);
-      toast({
-        variant: "destructive",
-        title: 'Uh oh!',
-        description: 'There was a problem placing your order.',
-      });
+      toast({ variant: "destructive", title: 'Uh oh!', description: 'There was a problem placing your order.' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (isUserLoading || cartLoading) {
+  if (isUserLoading || cartLoading || addressesLoading) {
     return <div className="flex h-screen items-center justify-center"><PottersWheelSpinner /></div>;
   }
 
@@ -165,47 +170,44 @@ export default function CheckoutPage() {
         <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-8">Checkout</h1>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
             <Card>
-            <CardHeader>
-                <CardTitle>Shipping Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <form onSubmit={handleSubmit(onSubmit)} id="shipping-form" className="space-y-4">
-                <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input id="name" {...register('name')} />
-                    {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="address">Address</Label>
-                    <Input id="address" {...register('address')} />
-                    {errors.address && <p className="text-sm text-destructive">{errors.address.message}</p>}
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="city">City</Label>
-                        <Input id="city" {...register('city')} />
-                        {errors.city && <p className="text-sm text-destructive">{errors.city.message}</p>}
-                    </div>
-                    <div className="space-y-2">
-                    <Label htmlFor="state">State</Label>
-                    <Input id="state" {...register('state')} />
-                    {errors.state && <p className="text-sm text-destructive">{errors.state.message}</p>}
-                    </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                    <Label htmlFor="pincode">Pincode</Label>
-                    <Input id="pincode" {...register('pincode')} />
-                    {errors.pincode && <p className="text-sm text-destructive">{errors.pincode.message}</p>}
-                    </div>
-                    <div className="space-y-2">
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input id="phone" {...register('phone')} />
-                    {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
-                    </div>
-                </div>
-                </form>
-            </CardContent>
+                <CardHeader>
+                    <CardTitle>Shipping Address</CardTitle>
+                    <CardDescription>Select a saved address or add a new one.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <RadioGroup value={selectedAddressId || undefined} onValueChange={setSelectedAddressId} className="space-y-4">
+                        {addresses && addresses.map(address => (
+                            <Label key={address.id} htmlFor={address.id} className="flex items-start gap-4 border rounded-md p-4 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary">
+                                <RadioGroupItem value={address.id} id={address.id} />
+                                <div className="text-sm">
+                                    <p className="font-semibold">{address.name}</p>
+                                    <p className="text-muted-foreground">{address.address}</p>
+                                    <p className="text-muted-foreground">{address.city}, {address.state} - {address.pincode}</p>
+                                    <p className="text-muted-foreground">Phone: {address.phone}</p>
+                                </div>
+                            </Label>
+                        ))}
+                    </RadioGroup>
+                    
+                    <Separator className="my-6" />
+
+                    {showNewAddressForm ? (
+                       <div>
+                         <h3 className="text-lg font-semibold mb-4">Add a New Address</h3>
+                         <AddressForm 
+                            isOpen={true} 
+                            onClose={() => setShowNewAddressForm(false)} 
+                            onSubmit={handleNewAddressSubmit} 
+                            address={null}
+                          />
+                       </div>
+                    ) : (
+                        <Button variant="outline" onClick={() => setShowNewAddressForm(true)}>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Add New Address
+                        </Button>
+                    )}
+                </CardContent>
             </Card>
 
             <div className="space-y-8">
@@ -256,7 +258,7 @@ export default function CheckoutPage() {
                     </div>
                     </CardContent>
                     <CardFooter>
-                         <Button type="submit" form="shipping-form" size="lg" className="w-full" disabled={isSubmitting}>
+                         <Button onClick={onSubmit} size="lg" className="w-full" disabled={isSubmitting}>
                             {isSubmitting ? <PottersWheelSpinner /> : 'Place Order'}
                         </Button>
                     </CardFooter>
