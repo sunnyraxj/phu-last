@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, writeBatch, serverTimestamp, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,7 @@ import { Header } from '@/components/shared/Header';
 import { AddressForm, AddressFormValues } from '@/components/account/AddressForm';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { PlusCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type ShippingAddress = AddressFormValues & { id: string };
 
@@ -34,6 +35,14 @@ type CartItem = Product & { quantity: number; cartItemId: string; };
 
 const GST_RATE = 0.05; // 5%
 
+const paymentPercentages = [
+    { value: 0.2, label: '20% Advance' },
+    { value: 0.5, label: '50% Advance' },
+    { value: 0.8, label: '80% Advance' },
+];
+
+const UPI_ID = 'gpay-12190144290@okbizaxis';
+
 export default function CheckoutPage() {
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
@@ -42,6 +51,8 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
+  const [selectedPaymentPercentage, setSelectedPaymentPercentage] = useState<number>(0.2);
+  const [utr, setUtr] = useState('');
 
   const { reset } = useForm<AddressFormValues>();
 
@@ -74,6 +85,12 @@ export default function CheckoutPage() {
   const gstAmount = useMemo(() => subtotal * (GST_RATE / (1 + GST_RATE)), [subtotal]);
   const priceBeforeTax = subtotal - gstAmount;
 
+  const advanceAmount = useMemo(() => totalAmount * selectedPaymentPercentage, [totalAmount, selectedPaymentPercentage]);
+  const remainingAmount = useMemo(() => totalAmount - advanceAmount, [totalAmount, advanceAmount]);
+  const qrCodeUrl = useMemo(() => {
+    return `https://upiqr.in/api/qr?name=Purbanchal%20Hasta%20Udyog&vpa=${UPI_ID}&amount=${advanceAmount.toFixed(2)}`;
+  }, [advanceAmount]);
+
   const handleNewAddressSubmit = (formData: AddressFormValues) => {
     if (!user) return;
     const addressesCollection = collection(firestore, 'users', user.uid, 'shippingAddresses');
@@ -95,6 +112,11 @@ export default function CheckoutPage() {
       toast({ variant: "destructive", title: 'Error', description: "Please select or add a shipping address." });
       return;
     }
+
+    if (!utr || utr.trim().length === 0) {
+        toast({ variant: "destructive", title: 'Error', description: "Please enter the UTR number from your UPI app." });
+        return;
+    }
     
     const selectedAddress = addresses?.find(a => a.id === selectedAddressId);
     if (!selectedAddress) {
@@ -111,11 +133,18 @@ export default function CheckoutPage() {
         customerId: user.uid,
         orderDate: serverTimestamp(),
         totalAmount: totalAmount,
-        status: 'pending',
+        status: 'pending-payment-approval',
         shippingDetails: selectedAddress,
         subtotal: subtotal,
         shippingFee: shippingFee,
-        gstAmount: gstAmount
+        gstAmount: gstAmount,
+        paymentMethod: 'UPI_PARTIAL',
+        paymentDetails: {
+            advanceAmount: advanceAmount,
+            remainingAmount: remainingAmount,
+            utr: utr,
+            paymentPercentage: selectedPaymentPercentage,
+        }
       });
 
       for (const item of cartItems) {
@@ -134,7 +163,7 @@ export default function CheckoutPage() {
       }
 
       await batch.commit();
-      toast({ title: 'Order Placed!', description: 'Your order has been successfully placed.' });
+      toast({ title: 'Order Placed!', description: 'Your order has been placed and is pending payment approval.' });
       router.push(`/order-confirmation/${orderRef.id}`);
 
     } catch (error) {
@@ -169,46 +198,92 @@ export default function CheckoutPage() {
         <main className="container mx-auto py-8 sm:py-12 px-4">
         <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-8">Checkout</h1>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Shipping Address</CardTitle>
-                    <CardDescription>Select a saved address or add a new one.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <RadioGroup value={selectedAddressId || undefined} onValueChange={setSelectedAddressId} className="space-y-4">
-                        {addresses && addresses.map(address => (
-                            <Label key={address.id} htmlFor={address.id} className="flex items-start gap-4 border rounded-md p-4 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary">
-                                <RadioGroupItem value={address.id} id={address.id} />
-                                <div className="text-sm">
-                                    <p className="font-semibold">{address.name}</p>
-                                    <p className="text-muted-foreground">{address.address}</p>
-                                    <p className="text-muted-foreground">{address.city}, {address.state} - {address.pincode}</p>
-                                    <p className="text-muted-foreground">Phone: {address.phone}</p>
-                                </div>
-                            </Label>
-                        ))}
-                    </RadioGroup>
-                    
-                    <Separator className="my-6" />
+            <div className="space-y-8">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Shipping Address</CardTitle>
+                        <CardDescription>Select a saved address or add a new one.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <RadioGroup value={selectedAddressId || undefined} onValueChange={setSelectedAddressId} className="space-y-4">
+                            {addresses && addresses.map(address => (
+                                <Label key={address.id} htmlFor={address.id} className="flex items-start gap-4 border rounded-md p-4 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary">
+                                    <RadioGroupItem value={address.id} id={address.id} />
+                                    <div className="text-sm">
+                                        <p className="font-semibold">{address.name}</p>
+                                        <p className="text-muted-foreground">{address.address}</p>
+                                        <p className="text-muted-foreground">{address.city}, {address.state} - {address.pincode}</p>
+                                        <p className="text-muted-foreground">Phone: {address.phone}</p>
+                                    </div>
+                                </Label>
+                            ))}
+                        </RadioGroup>
+                        
+                        <Separator className="my-6" />
 
-                    {showNewAddressForm ? (
-                       <div>
-                         <h3 className="text-lg font-semibold mb-4">Add a New Address</h3>
-                         <AddressForm 
-                            isOpen={true} 
-                            onClose={() => setShowNewAddressForm(false)} 
-                            onSubmit={handleNewAddressSubmit} 
-                            address={null}
-                          />
-                       </div>
-                    ) : (
-                        <Button variant="outline" onClick={() => setShowNewAddressForm(true)}>
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Add New Address
-                        </Button>
-                    )}
-                </CardContent>
-            </Card>
+                        {showNewAddressForm ? (
+                        <div>
+                            <h3 className="text-lg font-semibold mb-4">Add a New Address</h3>
+                            <AddressForm 
+                                isOpen={true} 
+                                onClose={() => setShowNewAddressForm(false)} 
+                                onSubmit={handleNewAddressSubmit} 
+                                address={null}
+                            />
+                        </div>
+                        ) : (
+                            <Button variant="outline" onClick={() => setShowNewAddressForm(true)}>
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Add New Address
+                            </Button>
+                        )}
+                    </CardContent>
+                </Card>
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Payment</CardTitle>
+                        <CardDescription>A partial advance payment is required to place the order.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div>
+                            <Label className="font-semibold">Select Advance Payment</Label>
+                            <RadioGroup value={String(selectedPaymentPercentage)} onValueChange={(val) => setSelectedPaymentPercentage(Number(val))} className="flex space-x-4 mt-2">
+                                {paymentPercentages.map(p => (
+                                     <Label key={p.value} htmlFor={`payment-${p.value}`} className="flex items-center gap-2 border rounded-md p-3 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary flex-1 justify-center">
+                                        <RadioGroupItem value={String(p.value)} id={`payment-${p.value}`} />
+                                        <span>{p.label}</span>
+                                    </Label>
+                                ))}
+                            </RadioGroup>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row items-center gap-6 p-4 border rounded-lg bg-muted/30">
+                            <div className="w-40 h-40 p-2 bg-white rounded-md">
+                                <Image src={qrCodeUrl} alt="UPI QR Code" width={150} height={150} />
+                            </div>
+                            <div className="space-y-2 text-center md:text-left">
+                                <p className="font-semibold">Scan to pay with any UPI app</p>
+                                <p className="text-sm text-muted-foreground">You need to pay an advance of:</p>
+                                <p className="text-2xl font-bold text-primary">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(advanceAmount)}</p>
+                                <p className="text-xs text-muted-foreground">UPI ID: {UPI_ID}</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <Label htmlFor="utr" className="font-semibold">Enter UTR Number</Label>
+                             <p className="text-xs text-muted-foreground mb-2">
+                                After payment, find the 12-digit UTR/Transaction ID in your UPI app's history and enter it below.
+                            </p>
+                            <Input 
+                                id="utr" 
+                                value={utr}
+                                onChange={(e) => setUtr(e.target.value)}
+                                placeholder="12-digit UTR Number"
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
 
             <div className="space-y-8">
                 <Card>
@@ -255,6 +330,17 @@ export default function CheckoutPage() {
                     <div className="flex justify-between font-bold text-lg">
                         <p>Total</p>
                         <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalAmount)}</p>
+                    </div>
+                     <Separator />
+                     <div className="space-y-2">
+                        <div className="flex justify-between font-semibold text-primary">
+                            <p>Advance to Pay</p>
+                            <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(advanceAmount)}</p>
+                        </div>
+                        <div className="flex justify-between">
+                            <p className="text-muted-foreground">Remaining Amount</p>
+                            <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(remainingAmount)}</p>
+                        </div>
                     </div>
                     </CardContent>
                     <CardFooter>

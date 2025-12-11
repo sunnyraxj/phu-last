@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Header } from '@/components/shared/Header';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { CheckCircle2, AlertCircle } from 'lucide-react';
 
 
 type Order = {
@@ -22,7 +24,7 @@ type Order = {
   subtotal: number;
   shippingFee: number;
   gstAmount: number;
-  status: 'pending' | 'shipped' | 'delivered';
+  status: 'pending-payment-approval' | 'pending' | 'shipped' | 'delivered' | 'cancelled';
   shippingDetails: {
     name: string;
     address: string;
@@ -30,6 +32,13 @@ type Order = {
     state: string;
     pincode: string;
     phone: string;
+  };
+  paymentMethod?: 'UPI_PARTIAL';
+  paymentDetails?: {
+      advanceAmount: number;
+      remainingAmount: number;
+      utr: string;
+      paymentPercentage: number;
   };
 };
 
@@ -76,6 +85,8 @@ export default function OrderConfirmationPage() {
       return null;
   }
 
+  const isPaymentPendingApproval = order?.status === 'pending-payment-approval';
+
   return (
     <div className="bg-background min-h-screen">
       <Header userData={null} cartItems={[]} updateCartItemQuantity={() => {}} />
@@ -88,16 +99,28 @@ export default function OrderConfirmationPage() {
           <Card className="w-full max-w-4xl mx-auto">
             <CardHeader className="text-center bg-muted/30 p-6">
                 <div className="mx-auto w-12 h-12 flex items-center justify-center rounded-full bg-green-100 mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
+                   <CheckCircle2 className="h-6 w-6 text-green-600" />
                 </div>
                 <CardTitle className="text-2xl sm:text-3xl">Thank you for your order!</CardTitle>
                 <CardDescription className="text-base">
-                    Your order has been placed and is being processed.
+                    {isPaymentPendingApproval 
+                        ? "Your order is awaiting payment confirmation."
+                        : "Your order has been placed and is being processed."
+                    }
                 </CardDescription>
             </CardHeader>
             <CardContent className="p-6 sm:p-8">
+
+              {isPaymentPendingApproval && (
+                 <Alert variant="default" className="mb-8 bg-yellow-50 border-yellow-200">
+                    <AlertCircle className="h-4 w-4 text-yellow-600" />
+                    <AlertTitle className="text-yellow-800">Payment Pending Approval</AlertTitle>
+                    <AlertDescription className="text-yellow-700">
+                        We have received your order. It will be processed as soon as our team confirms your advance payment. This usually takes a few hours.
+                    </AlertDescription>
+                </Alert>
+              )}
+
               <div className="mb-8">
                   <h3 className="font-semibold text-lg mb-4">Tax Invoice</h3>
                   <div className="grid grid-cols-2 gap-4 text-sm">
@@ -161,7 +184,7 @@ export default function OrderConfirmationPage() {
                             <span className="text-muted-foreground">Shipping</span>
                             <span>{order.shippingFee > 0 ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.shippingFee) : "Free"}</span>
                         </div>
-                        <div className="flex justify-between items-center text-sm">
+                         <div className="flex justify-between items-center text-sm">
                             <span className="text-muted-foreground">Total before tax</span>
                             <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(priceBeforeTax)}</span>
                         </div>
@@ -171,14 +194,26 @@ export default function OrderConfirmationPage() {
                         </div>
                         <Separator />
                         <div className="flex justify-between items-center font-bold text-base">
-                            <span>Total Paid</span>
+                            <span>Total</span>
                             <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.totalAmount)}</span>
                         </div>
+                        {order.paymentMethod === 'UPI_PARTIAL' && order.paymentDetails && (
+                            <>
+                                 <div className="flex justify-between items-center text-sm text-green-600 font-semibold">
+                                    <span>Advance Paid</span>
+                                    <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.paymentDetails.advanceAmount)}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm text-destructive font-semibold">
+                                    <span>Remaining Due</span>
+                                    <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.paymentDetails.remainingAmount)}</span>
+                                </div>
+                            </>
+                        )}
                    </div>
               </div>
             </CardContent>
             <CardFooter className="flex-col gap-4 p-6 sm:p-8 bg-muted/30">
-                 <p className="text-center text-sm text-muted-foreground">You will receive an email confirmation shortly.</p>
+                 <p className="text-center text-sm text-muted-foreground">You will receive an email confirmation once the payment is approved.</p>
                  <Link href="/purchase">
                     <Button>Continue Shopping</Button>
                  </Link>

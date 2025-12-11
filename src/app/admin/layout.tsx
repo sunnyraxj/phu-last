@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 
 type Order = {
-    status: 'pending' | 'shipped' | 'delivered';
+    status: 'pending' | 'shipped' | 'delivered' | 'pending-payment-approval';
 };
 
 type Product = {
@@ -44,7 +44,7 @@ export default function AdminLayout({
 
     const pendingOrdersCount = useMemo(() => {
         if (!orders) return 0;
-        return orders.filter(order => order.status === 'pending').length;
+        return orders.filter(order => order.status === 'pending' || order.status === 'pending-payment-approval').length;
     }, [orders]);
 
     const outOfStockCount = useMemo(() => {
