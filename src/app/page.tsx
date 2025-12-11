@@ -522,17 +522,17 @@ export default function ProductPage() {
                                         </div>
                                     )}
                                     <CardHeader>
-                                        <CardTitle className="text-xl">{store.name}</CardTitle>
+                                        <CardTitle className="text-base font-bold">{store.name}</CardTitle>
                                     </CardHeader>
                                     <CardContent className="flex-grow space-y-3">
                                         <div className="flex items-start gap-3 text-muted-foreground">
                                             <MapPin className="h-5 w-5 mt-1 shrink-0 text-primary" />
-                                            <p className="text-sm">{store.address}</p>
+                                            <p className="text-xs sm:text-sm">{store.address}</p>
                                         </div>
                                         {store.phone && (
                                             <div className="flex items-center gap-3 text-muted-foreground">
                                                 <Phone className="h-5 w-5 shrink-0 text-primary" />
-                                                <p className="text-sm">{store.phone}</p>
+                                                <p className="text-xs sm:text-sm">{store.phone}</p>
                                             </div>
                                         )}
                                     </CardContent>
