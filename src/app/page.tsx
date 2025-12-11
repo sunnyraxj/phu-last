@@ -542,10 +542,10 @@ export default function ProductPage() {
                                             />
                                         </div>
                                     )}
-                                    <CardHeader className="p-4">
-                                        <CardTitle className="text-base font-bold truncate">{store.name}</CardTitle>
+                                    <CardHeader className="p-3">
+                                      <CardTitle className="text-base font-bold truncate">{store.name}</CardTitle>
                                     </CardHeader>
-                                    <CardContent className="p-4 pt-0 flex-grow space-y-2">
+                                    <CardContent className="p-3 pt-0 flex-grow space-y-2">
                                         <div className="flex items-start gap-2 text-muted-foreground">
                                             <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
                                             <p className="text-xs">{store.address}</p>
@@ -557,7 +557,7 @@ export default function ProductPage() {
                                             </div>
                                         )}
                                     </CardContent>
-                                    <div className="p-4 pt-0 mt-auto">
+                                    <div className="p-3 pt-0 mt-auto">
                                         <Link href={store.googleMapsLink} target="_blank" rel="noopener noreferrer">
                                             <Button className="w-full h-9 text-sm">
                                                 View on Google Maps <ExternalLink className="ml-2 h-4 w-4" />
@@ -588,21 +588,21 @@ export default function ProductPage() {
                 </div>
             ) : (
                 <>
-                <div className="grid grid-cols-1 gap-10 items-center">
+                <div className="flex flex-col items-center">
                     {founder && (
-                        <div className="flex flex-col items-center text-center group">
-                            <div className="relative h-48 w-48 rounded-full overflow-hidden mb-4 shadow-lg transition-transform duration-300 group-hover:scale-105 border-4 border-primary/20">
+                        <div className="flex flex-col items-center text-center group mb-12">
+                            <div className="relative h-40 w-40 md:h-48 md:w-48 rounded-full overflow-hidden mb-4 shadow-lg transition-transform duration-300 group-hover:scale-105 border-4 border-primary/20">
                                 <Image src={founder.image} alt={founder.name} fill className="object-cover" data-ai-hint={founder['data-ai-hint']} />
                             </div>
-                            <h3 className="text-2xl font-bold text-foreground">{founder.name}</h3>
+                            <h3 className="text-2xl md:text-3xl font-bold text-foreground">{founder.name}</h3>
                             <p className="text-primary font-semibold text-lg">{founder.role}</p>
                         </div>
                     )}
                      {managementMembers.length > 0 && (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mt-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12 w-full max-w-4xl">
                             {managementMembers.map((member) => (
                                 <div key={member.id} className="text-center flex flex-col items-center group">
-                                    <div className="relative h-40 w-40 rounded-full overflow-hidden mb-4 shadow-lg transition-transform duration-300 group-hover:scale-105 border-4 border-muted">
+                                    <div className="relative h-32 w-32 md:h-40 md:w-40 rounded-full overflow-hidden mb-4 shadow-lg transition-transform duration-300 group-hover:scale-105 border-4 border-muted">
                                         <Image src={member.image} alt={member.name} fill className="object-cover" data-ai-hint={member['data-ai-hint']} />
                                     </div>
                                     <h3 className="text-xl font-semibold text-foreground">{member.name}</h3>
