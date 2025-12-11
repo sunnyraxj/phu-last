@@ -17,7 +17,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"Geist"', '"Geist Fallback"', 'sans-serif'],
+        sans: ['var(--font-body)', 'sans-serif'],
         mono: ['"Geist Mono"', '"Geist Mono Fallback"', 'monospace'],
         body: ['var(--font-body)', 'sans-serif'],
       },
