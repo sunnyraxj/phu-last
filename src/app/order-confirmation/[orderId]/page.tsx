@@ -64,6 +64,11 @@ export default function OrderConfirmationPage() {
       year: 'numeric', month: 'long', day: 'numeric',
     });
   }
+  
+  const priceBeforeTax = useMemo(() => {
+      if (!order) return 0;
+      return order.subtotal - order.gstAmount;
+  }, [order]);
 
   // Security check
   if (!orderLoading && order && user && order.customerId !== user.uid) {
@@ -113,7 +118,7 @@ export default function OrderConfirmationPage() {
                         <TableRow>
                             <TableHead className="w-2/3">Product</TableHead>
                             <TableHead className="text-center">Quantity</TableHead>
-                            <TableHead className="text-right">Price</TableHead>
+                            <TableHead className="text-right">Price (incl. GST)</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -149,20 +154,24 @@ export default function OrderConfirmationPage() {
                   </div>
                    <div className="space-y-2">
                         <div className="flex justify-between items-center text-sm">
-                            <span className="text-muted-foreground">Subtotal</span>
+                            <span className="text-muted-foreground">Subtotal (incl. GST)</span>
                             <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.subtotal)}</span>
                         </div>
                         <div className="flex justify-between items-center text-sm">
                             <span className="text-muted-foreground">Shipping</span>
                             <span>{order.shippingFee > 0 ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.shippingFee) : "Free"}</span>
                         </div>
+                        <div className="flex justify-between items-center text-sm">
+                            <span className="text-muted-foreground">Total before tax</span>
+                            <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(priceBeforeTax)}</span>
+                        </div>
                          <div className="flex justify-between items-center text-sm">
-                            <span className="text-muted-foreground">GST (18%)</span>
+                            <span className="text-muted-foreground">GST (5% included)</span>
                             <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.gstAmount)}</span>
                         </div>
                         <Separator />
                         <div className="flex justify-between items-center font-bold text-base">
-                            <span>Total</span>
+                            <span>Total Paid</span>
                             <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.totalAmount)}</span>
                         </div>
                    </div>

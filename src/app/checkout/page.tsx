@@ -38,7 +38,7 @@ type Product = {
 
 type CartItem = Product & { quantity: number; cartItemId: string; };
 
-const GST_RATE = 0.18; // 18%
+const GST_RATE = 0.05; // 5%
 
 export default function CheckoutPage() {
   const firestore = useFirestore();
@@ -70,9 +70,10 @@ export default function CheckoutPage() {
 
   const subtotal = useMemo(() => cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0), [cartItems]);
   const shippingFee = useMemo(() => subtotal > 0 && subtotal < 1000 ? 79 : 0, [subtotal]);
-  const totalBeforeGst = subtotal + shippingFee;
-  const gstAmount = totalBeforeGst * GST_RATE;
-  const totalAmount = totalBeforeGst + gstAmount;
+  const totalAmount = subtotal + shippingFee;
+  const gstAmount = useMemo(() => subtotal * (GST_RATE / (1 + GST_RATE)), [subtotal]);
+  const priceBeforeTax = subtotal - gstAmount;
+
 
   const onSubmit = async (data: ShippingFormValues) => {
     if (!user || cartItems.length === 0) {
@@ -232,16 +233,20 @@ export default function CheckoutPage() {
                     <Separator />
                     <div className="space-y-2">
                         <div className="flex justify-between">
-                        <p className="text-muted-foreground">Subtotal</p>
-                        <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(subtotal)}</p>
+                            <p className="text-muted-foreground">Subtotal</p>
+                            <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(subtotal)}</p>
                         </div>
                         <div className="flex justify-between">
-                        <p className="text-muted-foreground">Shipping Fee</p>
-                        <p>{shippingFee > 0 ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(shippingFee) : 'Free'}</p>
+                            <p className="text-muted-foreground">Shipping Fee</p>
+                            <p>{shippingFee > 0 ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(shippingFee) : 'Free'}</p>
                         </div>
                         <div className="flex justify-between">
-                        <p className="text-muted-foreground">GST (18%)</p>
-                        <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(gstAmount)}</p>
+                            <p className="text-muted-foreground">Total before tax</p>
+                            <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(priceBeforeTax)}</p>
+                        </div>
+                        <div className="flex justify-between">
+                            <p className="text-muted-foreground">GST (5% included)</p>
+                            <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(gstAmount)}</p>
                         </div>
                     </div>
                     <Separator />
