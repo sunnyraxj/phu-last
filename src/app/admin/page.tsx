@@ -17,12 +17,19 @@ import { Badge } from '@/components/ui/badge';
 type Product = {
     id: string;
     name: string;
-    price: number;
+    mrp: number;
     category: string;
     inStock: boolean;
     description: string;
     material: string;
     image: string;
+    hsn?: string;
+    gst?: number;
+    size?: {
+        height?: number;
+        length?: number;
+        width?: number;
+    };
     'data-ai-hint'?: string;
 };
 
@@ -107,7 +114,7 @@ export default function AdminProductsPage() {
                                 <TableRow>
                                     <TableHead>Name</TableHead>
                                     <TableHead>Category</TableHead>
-                                    <TableHead className="hidden md:table-cell">Price</TableHead>
+                                    <TableHead className="hidden md:table-cell">MRP</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
@@ -125,7 +132,7 @@ export default function AdminProductsPage() {
                                             <TableCell className="font-medium">{product.name}</TableCell>
                                             <TableCell>{product.category}</TableCell>
                                             <TableCell className="hidden md:table-cell">
-                                                {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(product.price)}
+                                                {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(product.mrp)}
                                             </TableCell>
                                             <TableCell>
                                                 <Badge variant={product.inStock ? 'default' : 'destructive'}>

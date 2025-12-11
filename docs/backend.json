@@ -40,10 +40,21 @@
         "name": { "type": "string", "description": "The name of the product." },
         "description": { "type": "string", "description": "A detailed description of the product." },
         "images": { "type": "array", "description": "An array of image URLs for the product.", "items": { "type": "string" } },
-        "price": { "type": "number", "description": "The price of the product." },
-        "category": { "type": "string", "description": "The category of the product." }
+        "mrp": { "type": "number", "description": "The Maximum Retail Price of the product." },
+        "category": { "type": "string", "description": "The category of the product." },
+        "hsn": { "type": "string", "description": "Harmonized System of Nomenclature code for the product." },
+        "gst": { "type": "number", "description": "The applicable GST percentage for the product." },
+        "size": {
+          "type": "object",
+          "description": "The dimensions of the product (optional).",
+          "properties": {
+            "height": { "type": "number", "description": "Height of the product." },
+            "length": { "type": "number", "description": "Length of the product." },
+            "width": { "type": "number", "description": "Width of the product." }
+          }
+        }
       },
-      "required": ["id", "artisanId", "name", "description", "images", "price", "category"]
+      "required": ["id", "artisanId", "name", "description", "images", "mrp", "category", "gst"]
     },
     "Order": {
       "$schema": "http://json-schema.org/draft-07/schema#",

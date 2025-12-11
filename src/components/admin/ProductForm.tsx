@@ -24,14 +24,21 @@ import { CreatableSelect } from './CreatableSelect';
 const productSchema = z.object({
   name: z.string().min(1, { message: 'Product name is required' }),
   description: z.string().min(1, { message: 'Description is required' }),
-  price: z.preprocess((a) => parseFloat(z.string().parse(a)), 
-    z.number().positive({ message: 'Price must be a positive number' })),
+  mrp: z.preprocess((a) => parseFloat(z.string().parse(a)), 
+    z.number().positive({ message: 'MRP must be a positive number' })),
   category: z.string().min(1, { message: 'Category is required' }),
   material: z.string().min(1, { message: 'Material is required' }),
-  collection: z.string().optional(), // Keep for data compatibility, but UI is removed
   image: z.string().url({ message: 'Please enter a valid image URL' }),
   'data-ai-hint': z.string().optional(),
   inStock: z.boolean(),
+  hsn: z.string().optional(),
+  gst: z.preprocess((a) => parseFloat(z.string().parse(a) || '0'), 
+    z.number().min(0, { message: 'GST must be a non-negative number' })),
+  size: z.object({
+      height: z.preprocess((a) => a ? parseFloat(z.string().parse(a)) : undefined, z.number().optional()),
+      length: z.preprocess((a) => a ? parseFloat(z.string().parse(a)) : undefined, z.number().optional()),
+      width: z.preprocess((a) => a ? parseFloat(z.string().parse(a)) : undefined, z.number().optional()),
+  }).optional(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -42,7 +49,7 @@ interface ProductFormProps {
   onSubmit: (data: ProductFormValues) => void;
   product: ProductFormValues & { id?: string } | null;
   existingMaterials: string[];
-  existingCategories: string[]; // Renamed from existingCollections
+  existingCategories: string[];
 }
 
 export function ProductForm({ isOpen, onClose, onSubmit, product, existingMaterials, existingCategories }: ProductFormProps) {
@@ -58,12 +65,15 @@ export function ProductForm({ isOpen, onClose, onSubmit, product, existingMateri
     defaultValues: {
       name: '',
       description: '',
-      price: 0,
+      mrp: 0,
       category: '',
       material: '',
       image: '',
       'data-ai-hint': '',
       inStock: true,
+      hsn: '',
+      gst: 0,
+      size: { height: undefined, length: undefined, width: undefined },
     },
   });
 
@@ -75,12 +85,15 @@ export function ProductForm({ isOpen, onClose, onSubmit, product, existingMateri
           reset({
             name: '',
             description: '',
-            price: 0,
+            mrp: 0,
             category: '',
             material: '',
             image: '',
             'data-ai-hint': '',
             inStock: true,
+            hsn: '',
+            gst: 0,
+            size: { height: undefined, length: undefined, width: undefined },
           });
         }
     }
@@ -92,7 +105,7 @@ export function ProductForm({ isOpen, onClose, onSubmit, product, existingMateri
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{product ? 'Edit Product' : 'Add New Product'}</DialogTitle>
           <DialogDescription>
@@ -100,60 +113,90 @@ export function ProductForm({ isOpen, onClose, onSubmit, product, existingMateri
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(handleFormSubmit)}>
-            <ScrollArea className="h-96 pr-6 -mr-6">
+            <ScrollArea className="h-[60vh] pr-6 -mr-6">
                 <div className="space-y-4 my-4">
                     <div className="space-y-1">
                         <Label htmlFor="name">Product Name</Label>
                         <Input id="name" {...register('name')} />
                         {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
                     </div>
-                    <div className="space-y-1">
-                        <Label htmlFor="price">Price (INR)</Label>
-                        <Input id="price" type="number" step="0.01" {...register('price')} />
-                        {errors.price && <p className="text-xs text-destructive">{errors.price.message}</p>}
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <Label htmlFor="mrp">MRP (INR)</Label>
+                            <Input id="mrp" type="number" step="0.01" {...register('mrp')} />
+                            {errors.mrp && <p className="text-xs text-destructive">{errors.mrp.message}</p>}
+                        </div>
+                         <div className="space-y-1">
+                            <Label htmlFor="gst">GST %</Label>
+                            <Input id="gst" type="number" step="0.01" {...register('gst')} />
+                            {errors.gst && <p className="text-xs text-destructive">{errors.gst.message}</p>}
+                        </div>
                     </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                       <Controller
+                            control={control}
+                            name="category"
+                            render={({ field }) => (
+                                <div className="space-y-1">
+                                    <Label>Category</Label>
+                                    <CreatableSelect
+                                        options={existingCategories}
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        placeholder="Select or create a category..."
+                                    />
+                                    {errors.category && <p className="text-xs text-destructive">{errors.category.message}</p>}
+                                </div>
+                            )}
+                        />
+                        <Controller
+                            control={control}
+                            name="material"
+                            render={({ field }) => (
+                                <div className="space-y-1">
+                                    <Label>Material</Label>
+                                    <CreatableSelect
+                                        options={existingMaterials}
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        placeholder="Select or create a material..."
+                                    />
+                                    {errors.material && <p className="text-xs text-destructive">{errors.material.message}</p>}
+                                </div>
+                            )}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <Label htmlFor="hsn">HSN Code (Optional)</Label>
+                            <Input id="hsn" {...register('hsn')} />
+                            {errors.hsn && <p className="text-xs text-destructive">{errors.hsn.message}</p>}
+                        </div>
+                         <div className="space-y-1">
+                            <Label>Size (H x L x W) (Optional)</Label>
+                            <div className="flex gap-2">
+                                <Input placeholder="H" {...register('size.height')} />
+                                <Input placeholder="L" {...register('size.length')} />
+                                <Input placeholder="W" {...register('size.width')} />
+                            </div>
+                         </div>
+                    </div>
+
                     <div className="space-y-1">
                         <Label htmlFor="description">Description</Label>
                         <Textarea id="description" {...register('description')} rows={4} />
                         {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
                     </div>
-                     <Controller
-                        control={control}
-                        name="category"
-                        render={({ field }) => (
-                            <div className="space-y-1">
-                                <Label>Category</Label>
-                                <CreatableSelect
-                                    options={existingCategories}
-                                    value={field.value}
-                                    onChange={field.onChange}
-                                    placeholder="Select or create a category..."
-                                />
-                                {errors.category && <p className="text-xs text-destructive">{errors.category.message}</p>}
-                            </div>
-                        )}
-                    />
-                    <Controller
-                        control={control}
-                        name="material"
-                        render={({ field }) => (
-                            <div className="space-y-1">
-                                <Label>Material</Label>
-                                <CreatableSelect
-                                    options={existingMaterials}
-                                    value={field.value}
-                                    onChange={field.onChange}
-                                    placeholder="Select or create a material..."
-                                />
-                                {errors.material && <p className="text-xs text-destructive">{errors.material.message}</p>}
-                            </div>
-                        )}
-                    />
+
                      <div className="space-y-1">
                         <Label htmlFor="image">Image URL</Label>
                         <Input id="image" {...register('image')} placeholder="https://picsum.photos/seed/..." />
                         {errors.image && <p className="text-xs text-destructive">{errors.image.message}</p>}
                     </div>
+
                     <div className="flex items-center space-x-2 pt-2">
                         <Controller
                           control={control}
@@ -173,7 +216,7 @@ export function ProductForm({ isOpen, onClose, onSubmit, product, existingMateri
                 </div>
             </ScrollArea>
 
-            <DialogFooter className="mt-4">
+            <DialogFooter className="mt-4 pt-4 border-t">
                 <DialogClose asChild>
                     <Button type="button" variant="outline">
                     Cancel
