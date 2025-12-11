@@ -12,6 +12,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
 } from "@/components/ui/command"
 import {
   Popover,
@@ -35,14 +36,14 @@ export function CreatableSelect({ options, value, onChange, placeholder }: Creat
   , [options, inputValue]);
 
   const handleSelect = (currentValue: string) => {
-    onChange(currentValue === value ? "" : currentValue);
+    onChange(currentValue.toLowerCase() === value.toLowerCase() ? "" : currentValue);
     setInputValue("");
     setOpen(false)
   }
 
-  const handleCreate = () => {
-    if (inputValue) {
-        onChange(inputValue);
+  const handleCreate = (newValue: string) => {
+    if (newValue) {
+        onChange(newValue);
         setInputValue("");
         setOpen(false);
     }
@@ -71,12 +72,7 @@ export function CreatableSelect({ options, value, onChange, placeholder }: Creat
             onValueChange={setInputValue}
            />
           <CommandList>
-            <CommandEmpty>
-                <Button variant="ghost" className="w-full justify-start" onClick={handleCreate}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Create "{inputValue}"
-                </Button>
-            </CommandEmpty>
+            <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup>
               {filteredOptions.map((option) => (
                 <CommandItem
@@ -87,13 +83,27 @@ export function CreatableSelect({ options, value, onChange, placeholder }: Creat
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      value === option ? "opacity-100" : "opacity-0"
+                      value.toLowerCase() === option.toLowerCase() ? "opacity-100" : "opacity-0"
                     )}
                   />
                   {option}
                 </CommandItem>
               ))}
             </CommandGroup>
+            {inputValue && (
+              <>
+                <CommandSeparator />
+                <CommandGroup>
+                    <CommandItem
+                        onSelect={() => handleCreate(inputValue)}
+                        className="cursor-pointer"
+                    >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Create "{inputValue}"
+                    </CommandItem>
+                </CommandGroup>
+              </>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>
