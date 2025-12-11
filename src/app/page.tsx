@@ -252,9 +252,9 @@ export default function ProductPage() {
     if (!user) return;
     const itemRef = doc(firestore, 'users', user.uid, 'cart', cartItemId);
     if (newQuantity > 0) {
-      setDocumentNonBlocking(itemRef, { quantity: newQuantity }, { merge: true });
+      setDoc(itemRef, { quantity: newQuantity }, { merge: true });
     } else {
-      deleteDocumentNonBlocking(itemRef);
+      deleteDoc(itemRef);
     }
   };
   
@@ -265,7 +265,7 @@ export default function ProductPage() {
       updateCartItemQuantity(existingItem.cartItemId, existingItem.quantity + 1);
     } else {
       const cartCollection = collection(firestore, 'users', user.uid, 'cart');
-      addDocumentNonBlocking(cartCollection, {
+      addDoc(cartCollection, {
         productId: product.id,
         quantity: 1,
       });
@@ -598,17 +598,19 @@ export default function ProductPage() {
                             <p className="text-primary font-semibold text-lg">{founder.role}</p>
                         </div>
                     )}
-                     {managementMembers.length > 0 && (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12 w-full max-w-4xl">
-                            {managementMembers.map((member) => (
-                                <div key={member.id} className="text-center flex flex-col items-center group">
-                                    <div className="relative h-32 w-32 md:h-40 md:w-40 rounded-full overflow-hidden mb-4 shadow-lg transition-transform duration-300 group-hover:scale-105 border-4 border-muted">
-                                        <Image src={member.image} alt={member.name} fill className="object-cover" data-ai-hint={member['data-ai-hint']} />
+                    {managementMembers.length > 0 && (
+                         <div className="w-full max-w-4xl">
+                            <div className="flex sm:grid sm:grid-cols-3 sm:gap-12 gap-8 overflow-x-auto sm:overflow-visible pb-4 -ml-4 pl-4 sm:ml-0 sm:pl-0 snap-x sm:snap-none">
+                                {managementMembers.map((member) => (
+                                    <div key={member.id} className="text-center flex flex-col items-center group snap-center shrink-0 w-3/4 sm:w-auto">
+                                        <div className="relative h-32 w-32 md:h-40 md:w-40 rounded-full overflow-hidden mb-4 shadow-lg transition-transform duration-300 group-hover:scale-105 border-4 border-muted">
+                                            <Image src={member.image} alt={member.name} fill className="object-cover" data-ai-hint={member['data-ai-hint']} />
+                                        </div>
+                                        <h3 className="text-xl font-semibold text-foreground">{member.name}</h3>
+                                        <p className="text-muted-foreground font-medium text-base">{member.role}</p>
                                     </div>
-                                    <h3 className="text-xl font-semibold text-foreground">{member.name}</h3>
-                                    <p className="text-muted-foreground font-medium text-base">{member.role}</p>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
                     )}
                 </div>
