@@ -409,9 +409,9 @@ export default function ProductPage() {
             </div>
           ) : (
           <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
-            <div className={cn('grid grid-cols-2 gap-x-2 gap-y-8 sm:gap-4')}>
+            <div className={cn('grid grid-cols-2 gap-y-8')}>
               {productsToShow.map((product) => (
-                <div key={product.id} className="group relative text-left p-2 sm:p-0">
+                <div key={product.id} className="group relative text-left p-2 sm:p-4">
                   <div 
                     className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer"
                     onClick={() => setSelectedProduct(product)}
@@ -428,9 +428,9 @@ export default function ProductPage() {
                     </div>
                   </div>
                   
-                  <div className="mt-2 flex flex-col items-start w-full">
-                      <h3 className="text-sm sm:text-base text-black truncate w-full font-bold">{product.name}</h3>
-                      <p className="font-bold text-sm sm:text-base text-black">
+                  <div className="mt-2 sm:mt-4 flex flex-col items-start w-full">
+                      <h3 className="text-sm sm:text-base text-foreground font-bold truncate w-full">{product.name}</h3>
+                      <p className="font-bold text-sm sm:text-base text-foreground">
                           {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
                       </p>
                       <Button
@@ -522,17 +522,17 @@ export default function ProductPage() {
                                         </div>
                                     )}
                                     <CardHeader>
-                                        <CardTitle>{store.name}</CardTitle>
+                                        <CardTitle className="text-xl">{store.name}</CardTitle>
                                     </CardHeader>
                                     <CardContent className="flex-grow space-y-3">
                                         <div className="flex items-start gap-3 text-muted-foreground">
                                             <MapPin className="h-5 w-5 mt-1 shrink-0 text-primary" />
-                                            <p className="text-sm md:text-base">{store.address}</p>
+                                            <p className="text-sm">{store.address}</p>
                                         </div>
                                         {store.phone && (
                                             <div className="flex items-center gap-3 text-muted-foreground">
                                                 <Phone className="h-5 w-5 shrink-0 text-primary" />
-                                                <p className="text-sm md:text-base">{store.phone}</p>
+                                                <p className="text-sm">{store.phone}</p>
                                             </div>
                                         )}
                                     </CardContent>

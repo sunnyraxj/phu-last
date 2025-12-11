@@ -125,7 +125,7 @@ export default function OurStoresPage() {
                             </div>
                         )}
                         <CardHeader>
-                            <CardTitle>{store.name}</CardTitle>
+                            <CardTitle className="text-xl">{store.name}</CardTitle>
                         </CardHeader>
                         <CardContent className="flex-grow space-y-3">
                             <div className="flex items-start gap-3 text-muted-foreground">
