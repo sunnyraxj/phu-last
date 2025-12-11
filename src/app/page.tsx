@@ -4,7 +4,7 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { collection, doc, query, where, getDocs, writeBatch, setDoc, deleteDoc, addDoc } from "firebase/firestore";
-import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon } from "lucide-react"
+import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon, MapPin, Phone, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
@@ -22,6 +22,7 @@ import { ShoppingBag } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 
 type Product = {
@@ -46,7 +47,11 @@ type CartItem = Product & { quantity: number; cartItemId: string; };
 type Store = {
     id: string;
     name: string;
+    address: string;
+    phone?: string;
     image?: string;
+    googleMapsLink: string;
+    'data-ai-hint'?: string;
 };
 
 const categories = [
@@ -195,7 +200,7 @@ export default function ProductPage() {
   }, [cartData, allProducts]);
 
   const storesQuery = useMemoFirebase(() => collection(firestore, 'stores'), [firestore]);
-  const { data: stores } = useCollection<Store>(storesQuery);
+  const { data: stores, isLoading: storesLoading } = useCollection<Store>(storesQuery);
 
   const adminActionCounts = useMemo(() => {
       if (userData?.role !== 'admin' || !orders || !allProducts) {
@@ -404,7 +409,7 @@ export default function ProductPage() {
             </div>
           ) : (
           <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
-            <div className={cn('grid grid-cols-2 gap-y-2 sm:gap-y-8')}>
+            <div className={cn('grid grid-cols-2 gap-y-8 sm:gap-y-8')}>
               {productsToShow.map((product) => (
                 <div key={product.id} className="group relative text-left p-2 sm:p-4">
                   <div 
@@ -423,16 +428,16 @@ export default function ProductPage() {
                     </div>
                   </div>
                   
-                   <div className="mt-2 sm:mt-4 flex flex-col sm:flex-row items-start sm:items-center sm:justify-between">
+                    <div className="mt-2 sm:mt-4 flex flex-col sm:flex-row items-start sm:items-center sm:justify-between">
                         <div className="flex flex-col items-start">
-                            <h3 className="text-sm sm:text-base font-bold text-black truncate w-full">{product.name}</h3>
+                             <h3 className="text-sm sm:text-base font-bold text-black truncate w-full">{product.name}</h3>
                             <p className="font-bold text-sm sm:text-base text-black">
                                 {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
                             </p>
                         </div>
                         <Button
                             variant="ghost"
-                            className="w-full sm:w-auto mt-2 sm:mt-0 text-white bg-black hover:bg-black/80 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold text-sm h-auto justify-center"
+                             className="w-full sm:w-auto mt-2 sm:mt-0 text-white bg-black hover:bg-black/80 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold text-sm h-auto justify-center"
                             onClick={() => addToCart(product)}
                             disabled={!product.inStock}
                         >
@@ -491,6 +496,71 @@ export default function ProductPage() {
           )}
         </main>
       </div>
+      
+      <section className="bg-muted py-12 sm:py-20 mt-12 sm:mt-24">
+        <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+                <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Our Store Locations</h2>
+                <p className="mt-4 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
+                    Visit us in person to experience the craftsmanship.
+                </p>
+            </div>
+             {storesLoading ? (
+                <div className="flex justify-center items-center h-64">
+                    <PottersWheelSpinner />
+                </div>
+            ) : stores && stores.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {stores.map((store) => (
+                        <Card key={store.id} className="overflow-hidden flex flex-col bg-background shadow-lg hover:shadow-xl transition-shadow duration-300">
+                            {store.image && (
+                                <div className="relative h-48 w-full">
+                                    <Image
+                                        src={store.image}
+                                        alt={store.name}
+                                        fill
+                                        className="object-cover"
+                                        data-ai-hint={store['data-ai-hint']}
+                                    />
+                                </div>
+                            )}
+                            <CardHeader>
+                                <CardTitle>{store.name}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="flex-grow space-y-3">
+                                <div className="flex items-start gap-3 text-muted-foreground">
+                                    <MapPin className="h-5 w-5 mt-1 shrink-0 text-primary" />
+                                    <p>{store.address}</p>
+                                </div>
+                                {store.phone && (
+                                    <div className="flex items-center gap-3 text-muted-foreground">
+                                        <Phone className="h-5 w-5 shrink-0 text-primary" />
+                                        <p>{store.phone}</p>
+                                    </div>
+                                )}
+                            </CardContent>
+                            <div className="p-6 pt-0 mt-auto">
+                                <Link href={store.googleMapsLink} target="_blank" rel="noopener noreferrer">
+                                    <Button className="w-full">
+                                        View on Google Maps <ExternalLink className="ml-2 h-4 w-4" />
+                                    </Button>
+                                </Link>
+                            </div>
+                        </Card>
+                    ))}
+                </div>
+            ) : (
+                <div className="text-center h-64 flex flex-col items-center justify-center">
+                    <p className="text-muted-foreground">No store locations have been added yet.</p>
+                </div>
+            )}
+            <div className="text-center mt-12">
+              <Link href="/our-stores">
+                <Button variant="outline">View All Stores</Button>
+              </Link>
+            </div>
+        </div>
+      </section>
     </div>
   )
 }
