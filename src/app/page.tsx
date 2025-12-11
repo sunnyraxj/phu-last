@@ -176,7 +176,7 @@ export default function ProductPage() {
   const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
   
   const ordersQuery = useMemoFirebase(() => 
-    (userData?.role === 'admin') ? collection(firestore, 'orders') : null, 
+    (userData?.role === 'admin') ? collection(firestore, 'orders') : null,
     [firestore, userData]
   );
   const { data: orders } = useCollection<Order>(ordersQuery);
@@ -322,7 +322,7 @@ export default function ProductPage() {
         </div>
       </section>
       
-      <div className="container mx-auto flex items-start">
+      <div className="container mx-auto flex items-start px-0 sm:px-4">
         <aside className="w-72 bg-background p-6 border-r border-border h-screen sticky top-0 overflow-y-auto hidden lg:block">
           <Filters 
             selectedCollections={selectedCollections}
@@ -337,7 +337,7 @@ export default function ProductPage() {
         </aside>
 
         <main className="flex-1 p-2 sm:p-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4 px-2 sm:px-0">
             <div className="flex w-full sm:w-auto items-center gap-4">
                <Sheet>
                 <SheetTrigger asChild>
@@ -380,7 +380,7 @@ export default function ProductPage() {
               </div>
             </div>
 
-            <div className="flex w-full sm:w-auto items-center gap-4 sm:gap-8">
+            <div className="flex w-full sm:w-auto items-center justify-between sm:justify-start gap-4 sm:gap-8">
               <div className="flex items-center gap-3">
                 <label className="text-foreground font-semibold text-sm sm:text-base">Sort By:</label>
                 <Select value={sortBy} onValueChange={setSortBy}>
@@ -396,7 +396,7 @@ export default function ProductPage() {
                 </Select>
 
               </div>
-              <span className="text-foreground font-semibold hidden sm:inline-block">{filteredProducts.length} Products</span>
+              <span className="text-foreground font-semibold text-sm sm:text-base">{filteredProducts.length} Products</span>
             </div>
           </div>
             
@@ -406,11 +406,11 @@ export default function ProductPage() {
             </div>
           ) : (
           <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
-            <div className={cn('grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-2 sm:gap-x-6 gap-y-6 sm:gap-y-10')}>
+            <div className={cn('grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 border-t border-l')}>
               {filteredProducts.map((product) => (
-                <div key={product.id} className="group relative text-left">
+                <div key={product.id} className="group relative text-left p-4 border-b border-r">
                   <div 
-                    className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer"
+                    className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer mb-4"
                     onClick={() => setSelectedProduct(product)}
                   >
                     <Image
@@ -421,22 +421,23 @@ export default function ProductPage() {
                       data-ai-hint={product['data-ai-hint']}
                     />
                   </div>
-                  <div className="mt-2">
-                     <h3 className="font-semibold text-sm text-foreground truncate">{product.name}</h3>
-                     <p className="text-foreground/80 text-sm mt-1">
-                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
-                     </p>
-                     <div className="border-t border-dashed my-3"></div>
-                      <Button 
-                        variant="ghost" 
-                        className="w-full justify-start p-0 h-auto text-sm text-primary hover:text-primary/80 disabled:text-muted-foreground"
-                        onClick={() => addToCart(product)}
-                        disabled={!product.inStock}
-                    >
-                        <ShoppingBag className="mr-2 h-4 w-4" />
-                        {product.inStock ? 'Add to Cart' : 'Out of Stock'}
-                    </Button>
-                  </div>
+                  
+                  <h3 className="font-semibold text-sm text-foreground truncate">{product.name}</h3>
+                  <p className="text-foreground/80 text-sm mt-1">
+                      {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
+                  </p>
+                  
+                  <div className="border-t border-dashed my-3"></div>
+                  
+                  <Button 
+                      variant="ghost" 
+                      className="w-full justify-start p-0 h-auto text-sm text-primary hover:text-primary/80 disabled:text-muted-foreground"
+                      onClick={() => addToCart(product)}
+                      disabled={!product.inStock}
+                  >
+                      <ShoppingBag className="mr-2 h-4 w-4" />
+                      {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                  </Button>
                 </div>
               ))}
             </div>
@@ -484,3 +485,4 @@ export default function ProductPage() {
     </div>
   )
 }
+
