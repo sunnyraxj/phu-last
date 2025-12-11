@@ -430,7 +430,7 @@ export default function ProductPage() {
             </div>
           ) : (
           <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
-            <div className={cn('grid grid-cols-2 gap-y-8')}>
+            <div className={cn('grid grid-cols-2 lg:grid-cols-3 gap-y-8')}>
               {productsToShow.map((product) => (
                 <div key={product.id} className="group relative text-left p-2 sm:p-4">
                   <div 
@@ -634,5 +634,6 @@ export default function ProductPage() {
     
 
     
+
 
 
