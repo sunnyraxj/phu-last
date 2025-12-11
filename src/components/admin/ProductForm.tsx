@@ -20,8 +20,11 @@ import { useEffect, useState } from 'react';
 import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Wand2, Sparkles } from 'lucide-react';
 import { AddOptionDialog } from './AddOptionDialog';
+import { generateProductDetails, GenerateProductDetailsInput } from '@/ai/flows/generate-product-details';
+import { useToast } from '@/hooks/use-toast';
+import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
 
 const productSchema = z.object({
   name: z.string().min(1, { message: 'Product name is required' }),
@@ -68,6 +71,9 @@ export function ProductForm({
 }: ProductFormProps) {
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [isMaterialDialogOpen, setIsMaterialDialogOpen] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [aiNotes, setAiNotes] = useState('');
+  const { toast } = useToast();
 
   const {
     register,
@@ -76,6 +82,7 @@ export function ProductForm({
     formState: { errors, isSubmitting },
     control,
     setValue,
+    getValues,
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -112,6 +119,7 @@ export function ProductForm({
             size: { height: undefined, length: undefined, width: undefined },
           });
         }
+        setAiNotes('');
     }
   }, [product, reset, isOpen]);
 
@@ -131,10 +139,63 @@ export function ProductForm({
     setIsMaterialDialogOpen(false);
   }
 
+  const handleGenerateDetails = async () => {
+    const imageUrl = getValues('image');
+    if (!imageUrl) {
+      toast({
+        variant: 'destructive',
+        title: 'Image URL required',
+        description: 'Please provide an image URL to generate details.',
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      // Basic client-side fetch and conversion to Data URI
+      const response = await fetch(imageUrl);
+      if (!response.ok) throw new Error('Failed to fetch image.');
+      const blob = await response.blob();
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = async () => {
+        const base64data = reader.result as string;
+        
+        const input: GenerateProductDetailsInput = {
+            imageDataUri: base64data,
+            productInfo: aiNotes,
+        };
+
+        const result = await generateProductDetails(input);
+
+        setValue('name', result.name, { shouldValidate: true });
+        setValue('description', result.description, { shouldValidate: true });
+
+        toast({
+            title: 'Details Generated!',
+            description: 'The product name and description have been populated.',
+        });
+        setIsGenerating(false);
+      };
+      reader.onerror = () => {
+          throw new Error("Failed to read image data.");
+      }
+
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'Generation Failed',
+        description: 'Could not generate details. Please check the image URL and try again.',
+      });
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{product ? 'Edit Product' : 'Add New Product'}</DialogTitle>
             <DialogDescription>
@@ -144,10 +205,37 @@ export function ProductForm({
           <form onSubmit={handleSubmit(handleFormSubmit)}>
               <ScrollArea className="h-[60vh] pr-6 -mr-6">
                   <div className="space-y-4 my-4">
+                       <div className="p-4 rounded-lg bg-muted/50 border border-dashed">
+                            <Label htmlFor="ai-notes" className="flex items-center gap-2 mb-2 font-semibold">
+                                <Sparkles className="h-5 w-5 text-primary" />
+                                AI Content Generation
+                            </Label>
+                            <Textarea 
+                                id="ai-notes"
+                                placeholder="Enter some notes about the product (e.g., 'handmade clay vase, blue glaze, from Rajasthan'). The AI will use this with the image to generate a name and description."
+                                value={aiNotes}
+                                onChange={(e) => setAiNotes(e.target.value)}
+                                rows={2}
+                            />
+                            <Button 
+                                type="button" 
+                                onClick={handleGenerateDetails} 
+                                className="mt-2"
+                                disabled={isGenerating}
+                            >
+                                {isGenerating ? <PottersWheelSpinner className="h-5 w-5" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                                {isGenerating ? 'Generating...' : 'Generate Name & Description'}
+                            </Button>
+                        </div>
                       <div className="space-y-1">
                           <Label htmlFor="name">Product Name</Label>
                           <Input id="name" {...register('name')} />
                           {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+                      </div>
+                      <div className="space-y-1">
+                          <Label htmlFor="description">Description</Label>
+                          <Textarea id="description" {...register('description')} rows={4} />
+                          {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
                       </div>
                       
                       <div className="grid grid-cols-2 gap-4">
@@ -229,12 +317,6 @@ export function ProductForm({
                       </div>
 
                       <div className="space-y-1">
-                          <Label htmlFor="description">Description</Label>
-                          <Textarea id="description" {...register('description')} rows={4} />
-                          {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
-                      </div>
-
-                      <div className="space-y-1">
                           <Label htmlFor="image">Image URL</Label>
                           <Input id="image" {...register('image')} placeholder="https://picsum.photos/seed/..." />
                           {errors.image && <p className="text-xs text-destructive">{errors.image.message}</p>}
@@ -271,7 +353,7 @@ export function ProductForm({
                       Cancel
                       </Button>
                   </DialogClose>
-                  <Button type="submit" disabled={isSubmitting}>
+                  <Button type="submit" disabled={isSubmitting || isGenerating}>
                   {isSubmitting ? 'Saving...' : 'Save Product'}
                   </Button>
               </DialogFooter>
