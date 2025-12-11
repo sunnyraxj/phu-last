@@ -28,7 +28,7 @@ const productSchema = z.object({
     z.number().positive({ message: 'Price must be a positive number' })),
   category: z.string().min(1, { message: 'Category is required' }),
   material: z.string().min(1, { message: 'Material is required' }),
-  collection: z.string().min(1, { message: 'Collection is required' }),
+  collection: z.string().optional(), // Keep for data compatibility, but UI is removed
   image: z.string().url({ message: 'Please enter a valid image URL' }),
   'data-ai-hint': z.string().optional(),
   inStock: z.boolean(),
@@ -42,10 +42,10 @@ interface ProductFormProps {
   onSubmit: (data: ProductFormValues) => void;
   product: ProductFormValues & { id?: string } | null;
   existingMaterials: string[];
-  existingCollections: string[];
+  existingCategories: string[]; // Renamed from existingCollections
 }
 
-export function ProductForm({ isOpen, onClose, onSubmit, product, existingMaterials, existingCollections }: ProductFormProps) {
+export function ProductForm({ isOpen, onClose, onSubmit, product, existingMaterials, existingCategories }: ProductFormProps) {
   const {
     register,
     handleSubmit,
@@ -61,7 +61,6 @@ export function ProductForm({ isOpen, onClose, onSubmit, product, existingMateri
       price: 0,
       category: '',
       material: '',
-      collection: '',
       image: '',
       'data-ai-hint': '',
       inStock: true,
@@ -79,7 +78,6 @@ export function ProductForm({ isOpen, onClose, onSubmit, product, existingMateri
             price: 0,
             category: '',
             material: '',
-            collection: '',
             image: '',
             'data-ai-hint': '',
             inStock: true,
@@ -119,11 +117,22 @@ export function ProductForm({ isOpen, onClose, onSubmit, product, existingMateri
                         <Textarea id="description" {...register('description')} rows={4} />
                         {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
                     </div>
-                    <div className="space-y-1">
-                        <Label htmlFor="category">Category</Label>
-                        <Input id="category" {...register('category')} />
-                        {errors.category && <p className="text-xs text-destructive">{errors.category.message}</p>}
-                    </div>
+                     <Controller
+                        control={control}
+                        name="category"
+                        render={({ field }) => (
+                            <div className="space-y-1">
+                                <Label>Category</Label>
+                                <CreatableSelect
+                                    options={existingCategories}
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    placeholder="Select or create a category..."
+                                />
+                                {errors.category && <p className="text-xs text-destructive">{errors.category.message}</p>}
+                            </div>
+                        )}
+                    />
                     <Controller
                         control={control}
                         name="material"
@@ -137,22 +146,6 @@ export function ProductForm({ isOpen, onClose, onSubmit, product, existingMateri
                                     placeholder="Select or create a material..."
                                 />
                                 {errors.material && <p className="text-xs text-destructive">{errors.material.message}</p>}
-                            </div>
-                        )}
-                    />
-                     <Controller
-                        control={control}
-                        name="collection"
-                        render={({ field }) => (
-                            <div className="space-y-1">
-                                <Label>Collection</Label>
-                                <CreatableSelect
-                                    options={existingCollections}
-                                    value={field.value}
-                                    onChange={field.onChange}
-                                    placeholder="Select or create a collection..."
-                                />
-                                {errors.collection && <p className="text-xs text-destructive">{errors.collection.message}</p>}
                             </div>
                         )}
                     />

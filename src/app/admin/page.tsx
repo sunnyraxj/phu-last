@@ -22,7 +22,6 @@ type Product = {
     inStock: boolean;
     description: string;
     material: string;
-    collection: string;
     image: string;
     'data-ai-hint'?: string;
 };
@@ -42,9 +41,9 @@ export default function AdminProductsPage() {
         return [...new Set(products.map(p => p.material).filter(Boolean))];
     }, [products]);
 
-    const existingCollections = useMemo(() => {
+    const existingCategories = useMemo(() => {
         if (!products) return [];
-        return [...new Set(products.map(p => p.collection).filter(Boolean))];
+        return [...new Set(products.map(p => p.category).filter(Boolean))];
     }, [products]);
 
     const handleAddProduct = () => {
@@ -94,7 +93,7 @@ export default function AdminProductsPage() {
                 onSubmit={handleFormSubmit}
                 product={selectedProduct}
                 existingMaterials={existingMaterials}
-                existingCollections={existingCollections}
+                existingCategories={existingCategories}
             />
             
             <Card>

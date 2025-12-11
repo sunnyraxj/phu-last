@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { collection, doc, query, where, getDocs, writeBatch, setDoc, deleteDoc, addDoc } from "firebase/firestore";
-import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon } from "lucide-react"
+import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
@@ -29,7 +29,7 @@ type Product = {
   price: number;
   image: string;
   "data-ai-hint": string;
-  collection: string;
+  category: string;
   material: string;
   inStock: boolean;
   description: string;
@@ -48,34 +48,34 @@ type Store = {
     image?: string;
 };
 
-const collections = [
+const categories = [
   { name: "Crafts", count: 5 },
   { name: "LifeStyle", count: 5 },
 ]
 
 const materials = ["Paper", "Ceramic", "Brass", "Sabai Grass", "Jute"];
 
-function Filters({ selectedCollections, handleCollectionChange, selectedMaterials, handleMaterialChange, availability, setAvailability, priceRange, setPriceRange }: any) {
+function Filters({ selectedCategories, handleCategoryChange, selectedMaterials, handleMaterialChange, availability, setAvailability, priceRange, setPriceRange }: any) {
   return (
     <>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold">Filter:</h2>
       </div>
 
-      <Accordion type="multiple" defaultValue={["collection", "material", "availability", "price"]} className="w-full">
-        <AccordionItem value="collection">
-          <AccordionTrigger className="font-semibold py-3 text-base">Collection</AccordionTrigger>
+      <Accordion type="multiple" defaultValue={["category", "material", "availability", "price"]} className="w-full">
+        <AccordionItem value="category">
+          <AccordionTrigger className="font-semibold py-3 text-base">Category</AccordionTrigger>
           <AccordionContent>
             <div className="space-y-2 pt-2">
-              {collections.map((col) => (
-                <label key={col.name} className="flex items-center gap-3 cursor-pointer">
+              {categories.map((cat) => (
+                <label key={cat.name} className="flex items-center gap-3 cursor-pointer">
                   <Checkbox
-                    id={col.name}
-                    onCheckedChange={() => handleCollectionChange(col.name)}
-                    checked={selectedCollections.includes(col.name)}
+                    id={cat.name}
+                    onCheckedChange={() => handleCategoryChange(cat.name)}
+                    checked={selectedCategories.includes(cat.name)}
                   />
                   <span className="text-sm">
-                    {col.name} <span className="text-muted-foreground">({col.count})</span>
+                    {cat.name} <span className="text-muted-foreground">({cat.count})</span>
                   </span>
                 </label>
               ))}
@@ -141,10 +141,32 @@ function Filters({ selectedCollections, handleCollectionChange, selectedMaterial
   )
 }
 
+function Breadcrumbs({ categories, onClear }: { categories: string[], onClear: (category: string) => void }) {
+    if (categories.length === 0) {
+        return (
+            <div className="flex items-center text-sm text-muted-foreground">
+                <span>All</span>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex items-center flex-wrap gap-1 text-sm text-muted-foreground">
+            <button onClick={() => onClear('all')} className="hover:text-foreground">All</button>
+            {categories.map((cat, index) => (
+                 <span key={index} className="flex items-center gap-1">
+                    <ChevronRight size={14} />
+                    <button onClick={() => onClear(cat)} className="hover:text-foreground">{cat}</button>
+                </span>
+            ))}
+        </div>
+    );
+}
+
 export default function PurchasePage() {
   const [sortBy, setSortBy] = useState("Featured")
   
-  const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [availability, setAvailability] = useState<string>("all"); // all, in-stock, out-of-stock
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
@@ -205,11 +227,11 @@ export default function PurchasePage() {
       return { pendingOrders, outOfStockProducts };
   }, [orders, allProducts, userData]);
 
-  const handleCollectionChange = (collectionName: string) => {
-    setSelectedCollections(prev => 
-      prev.includes(collectionName) 
-        ? prev.filter(c => c !== collectionName)
-        : [...prev, collectionName]
+  const handleCategoryChange = (categoryName: string) => {
+    setSelectedCategories(prev => 
+      prev.includes(categoryName) 
+        ? prev.filter(c => c !== categoryName)
+        : [...prev, categoryName]
     )
   }
   
@@ -219,6 +241,14 @@ export default function PurchasePage() {
         ? prev.filter(m => m !== materialName)
         : [...prev, materialName]
     )
+  }
+
+  const handleBreadcrumbClear = (category: string) => {
+      if (category === 'all') {
+          setSelectedCategories([]);
+      } else {
+          setSelectedCategories(prev => prev.filter(c => c !== category));
+      }
   }
   
   const updateCartItemQuantity = (cartItemId: string, newQuantity: number) => {
@@ -254,7 +284,7 @@ export default function PurchasePage() {
     if (!allProducts) return [];
     return allProducts
       .filter(product => {
-        if (selectedCollections.length > 0 && !selectedCollections.includes(product.collection)) {
+        if (selectedCategories.length > 0 && !selectedCategories.includes(product.category)) {
           return false;
         }
         if (selectedMaterials.length > 0 && !selectedMaterials.includes(product.material)) {
@@ -288,7 +318,7 @@ export default function PurchasePage() {
             return 0; 
         }
       });
-  }, [allProducts, selectedCollections, selectedMaterials, availability, priceRange, sortBy, searchTerm]);
+  }, [allProducts, selectedCategories, selectedMaterials, availability, priceRange, sortBy, searchTerm]);
 
   return (
     <div className="min-h-screen bg-background font-sans">
@@ -303,8 +333,8 @@ export default function PurchasePage() {
       <div className="container mx-auto flex items-start px-0 sm:px-4 mt-8">
         <aside className="w-72 bg-background p-6 border-r border-border h-screen sticky top-[88px] overflow-y-auto hidden lg:block">
           <Filters 
-            selectedCollections={selectedCollections}
-            handleCollectionChange={handleCollectionChange}
+            selectedCategories={selectedCategories}
+            handleCategoryChange={handleCategoryChange}
             selectedMaterials={selectedMaterials}
             handleMaterialChange={handleMaterialChange}
             availability={availability}
@@ -315,7 +345,7 @@ export default function PurchasePage() {
         </aside>
 
         <main className="flex-1 p-2 sm:p-4 md:p-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4 px-2 sm:px-0 pt-4 sm:pt-0">
+          <div className="flex flex-col sm:flex-row items-center justify-between mb-4 gap-4 px-2 sm:px-0 pt-4 sm:pt-0">
             <div className="flex w-full sm:w-auto items-center gap-4">
                <Sheet>
                 <SheetTrigger asChild>
@@ -330,8 +360,8 @@ export default function PurchasePage() {
                     </SheetHeader>
                    <div className="p-6 overflow-y-auto">
                       <Filters 
-                        selectedCollections={selectedCollections}
-                        handleCollectionChange={handleCollectionChange}
+                        selectedCategories={selectedCategories}
+                        handleCategoryChange={handleCategoryChange}
                         selectedMaterials={selectedMaterials}
                         handleMaterialChange={handleMaterialChange}
                         availability={availability}
@@ -372,6 +402,9 @@ export default function PurchasePage() {
               <span className="text-foreground font-semibold text-sm sm:text-base">{filteredProducts.length} Products</span>
             </div>
           </div>
+          <div className="px-2 sm:px-0 mb-8">
+            <Breadcrumbs categories={selectedCategories} onClear={handleBreadcrumbClear} />
+          </div>
             
           {productsLoading ? (
             <div className="flex justify-center items-center h-96">
@@ -399,8 +432,8 @@ export default function PurchasePage() {
                   </div>
                   
                   <div className="mt-2 sm:mt-4 flex flex-col items-start">
-                    <h3 className="text-sm text-black sm:text-base font-bold truncate w-full">{product.name}</h3>
-                    <p className="font-bold text-black text-sm sm:text-base">
+                    <h3 className="text-sm sm:text-base font-bold text-black truncate w-full">{product.name}</h3>
+                    <p className="font-bold text-sm sm:text-base text-black">
                         {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
                     </p>
                     <Button
