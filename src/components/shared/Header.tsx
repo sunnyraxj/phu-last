@@ -315,6 +315,12 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                             My Account
                                         </Button>
                                     </Link>
+                                    <Link href="/orders">
+                                        <Button variant="ghost" className="w-full justify-start p-2 h-auto">
+                                            <ShoppingBag className="mr-2 h-4 w-4" />
+                                            My Orders
+                                        </Button>
+                                    </Link>
                                     <Button variant="ghost" onClick={handleSignOut} className="justify-start p-2 h-auto">
                                         <LogOut className="mr-2 h-4 w-4" />
                                         Logout
