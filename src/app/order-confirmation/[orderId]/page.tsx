@@ -31,6 +31,9 @@ type Order = {
   subtotal: number;
   shippingFee: number;
   gstAmount: number;
+  cgstAmount?: number;
+  sgstAmount?: number;
+  igstAmount?: number;
   status: 'pending-payment-approval' | 'pending' | 'shipped' | 'delivered' | 'cancelled';
   shippingDetails: {
     name: string;
@@ -92,7 +95,9 @@ export default function OrderConfirmationPage() {
 
   // Security check
   if (!orderLoading && order && user && order.customerId !== user.uid) {
-      router.push('/');
+      // Allow admins to view any order
+      const userDocRef = doc(firestore, 'users', user.uid);
+      useDoc<{role: string}>(userDocRef).data?.role !== 'admin' && router.push('/');
       return null;
   }
 
@@ -188,7 +193,7 @@ export default function OrderConfirmationPage() {
                   </div>
                    <div className="space-y-2">
                         <div className="flex justify-between items-center text-sm">
-                            <span className="text-muted-foreground">Subtotal (incl. GST)</span>
+                            <span className="text-muted-foreground">Subtotal</span>
                             <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.subtotal)}</span>
                         </div>
                         <div className="flex justify-between items-center text-sm">
@@ -199,10 +204,24 @@ export default function OrderConfirmationPage() {
                             <span className="text-muted-foreground">Total before tax</span>
                             <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(priceBeforeTax)}</span>
                         </div>
-                         <div className="flex justify-between items-center text-sm">
-                            <span className="text-muted-foreground">GST (5% included)</span>
-                            <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.gstAmount)}</span>
-                        </div>
+                        {order.cgstAmount && order.cgstAmount > 0 && (
+                             <div className="flex justify-between items-center text-sm">
+                                <span className="text-muted-foreground">CGST (2.5%)</span>
+                                <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.cgstAmount)}</span>
+                            </div>
+                        )}
+                        {order.sgstAmount && order.sgstAmount > 0 && (
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-muted-foreground">SGST (2.5%)</span>
+                                <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.sgstAmount)}</span>
+                            </div>
+                        )}
+                        {order.igstAmount && order.igstAmount > 0 && (
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-muted-foreground">IGST (5%)</span>
+                                <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.igstAmount)}</span>
+                            </div>
+                        )}
                         <Separator />
                         <div className="flex justify-between items-center font-bold text-base">
                             <span>Total</span>
@@ -243,3 +262,5 @@ export default function OrderConfirmationPage() {
     </div>
   );
 }
+
+    

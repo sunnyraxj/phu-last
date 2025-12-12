@@ -67,7 +67,11 @@
         "orderDate": { "type": "string", "description": "The date the order was placed.", "format": "date-time" },
         "totalAmount": { "type": "number", "description": "The total amount of the order." },
         "status": { "type": "string", "description": "The status of the order (e.g., 'pending', 'shipped', 'delivered')." },
-        "orderItemIds": { "type": "array", "description": "References to OrderItems. (Relationship: Order 1:N OrderItem)", "items": { "type": "string" } }
+        "orderItemIds": { "type": "array", "description": "References to OrderItems. (Relationship: Order 1:N OrderItem)", "items": { "type": "string" } },
+        "gstAmount": { "type": "number", "description": "The total GST amount for the order." },
+        "cgstAmount": { "type": "number", "description": "The CGST component of the total tax." },
+        "sgstAmount": { "type": "number", "description": "The SGST component of the total tax." },
+        "igstAmount": { "type": "number", "description": "The IGST component of the total tax." }
       },
       "required": ["id", "customerId", "orderDate", "totalAmount", "status"]
     },
@@ -217,3 +221,5 @@
     "reasoning": "The Firestore structure is designed to manage users, artisans, products, orders, reviews, team members, and store details for the 'purbanchal hasta udyog' application. It prioritizes security, scalability, and ease of debugging.\n\n**Authorization Independence:** User roles are stored in the `/users` collection, allowing security rules to validate admin privileges with a single `get()` call.\n\n**Structural Segregation:** Each data model is in its own top-level collection. This isolates security concerns. User data is in `/users`, products in `/products`, and admin-managed content like `/teamMembers` and `/stores` are also in top-level collections.\n\n**Access Modeling:** Path-based ownership secures user data. A user's shipping addresses are stored in a subcollection `/users/{userId}/shippingAddresses` to ensure they are private and can only be accessed by the user or an admin. Role-based access control (RBAC) is used for the admin panel, with the `isAdmin()` function checking the `role` field in a user's document. The new `/teamMembers` and `/stores` collections are publicly readable but writable only by admins, ensuring content integrity. A new singleton document at `/companySettings/main` is added to store invoice and company details, writable only by admins."
   }
 }
+
+    

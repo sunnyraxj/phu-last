@@ -99,14 +99,15 @@ export default function AdminProductsPage() {
     };
     
     const handleFormSubmit = (formData: Omit<Product, 'id'>) => {
+        const dataWithGST = { ...formData, gst: formData.gst || 5 };
         if (selectedProduct) {
             // Update existing product
             const productRef = doc(firestore, "products", selectedProduct.id);
-            setDocumentNonBlocking(productRef, formData, { merge: true });
+            setDocumentNonBlocking(productRef, dataWithGST, { merge: true });
         } else {
             // Add new product
             const productsCollection = collection(firestore, "products");
-            addDocumentNonBlocking(productsCollection, formData);
+            addDocumentNonBlocking(productsCollection, dataWithGST);
         }
         setIsFormOpen(false);
         setSelectedProduct(null);
@@ -337,3 +338,5 @@ export default function AdminProductsPage() {
         </div>
     );
 }
+
+    

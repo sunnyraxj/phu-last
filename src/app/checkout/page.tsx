@@ -26,14 +26,13 @@ type ShippingAddress = AddressFormValues & { id: string };
 type Product = {
   id: string;
   name: string;
-  price: number;
+  mrp: number;
+  gst: number;
   image: string;
   inStock: boolean;
 };
 
 type CartItem = Product & { quantity: number; cartItemId: string; };
-
-const GST_RATE = 0.05; // 5%
 
 const UPI_ID = 'gpay-12190144290@okbizaxis';
 const PAYEE_NAME = 'Purbanchal Hasta Udyog';
@@ -81,11 +80,35 @@ export default function CheckoutPage() {
     }).filter((item): item is CartItem => item !== null);
   }, [cartData, allProducts]);
 
-  const subtotal = useMemo(() => cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0), [cartItems]);
+  const subtotal = useMemo(() => cartItems.reduce((acc, item) => acc + item.mrp * item.quantity, 0), [cartItems]);
   const shippingFee = useMemo(() => subtotal > 0 && subtotal < 1000 ? 79 : 0, [subtotal]);
   const totalAmount = subtotal + shippingFee;
-  const gstAmount = useMemo(() => subtotal * (GST_RATE / (1 + GST_RATE)), [subtotal]);
-  const priceBeforeTax = subtotal - gstAmount;
+  
+  const { totalGST, cgst, sgst, igst } = useMemo(() => {
+    const selectedAddress = addresses?.find(a => a.id === selectedAddressId);
+    let totalGST = 0;
+    let cgst = 0;
+    let sgst = 0;
+    let igst = 0;
+
+    cartItems.forEach(item => {
+        const itemTotal = item.mrp * item.quantity;
+        const gstRate = (item.gst || 5) / 100;
+        const itemGST = itemTotal - (itemTotal / (1 + gstRate));
+        totalGST += itemGST;
+    });
+
+    if (selectedAddress?.state.toLowerCase() === 'assam') {
+        cgst = totalGST / 2;
+        sgst = totalGST / 2;
+    } else {
+        igst = totalGST;
+    }
+
+    return { totalGST, cgst, sgst, igst };
+  }, [cartItems, addresses, selectedAddressId]);
+  
+  const priceBeforeTax = subtotal - totalGST;
   
   const paymentPercentages = useMemo(() => {
     return [
@@ -167,7 +190,10 @@ export default function CheckoutPage() {
         shippingDetails: selectedAddress,
         subtotal: subtotal,
         shippingFee: shippingFee,
-        gstAmount: gstAmount,
+        gstAmount: totalGST,
+        cgstAmount: cgst,
+        sgstAmount: sgst,
+        igstAmount: igst,
         paymentMethod: selectedPaymentPercentage === 1 ? 'UPI_FULL' : 'UPI_PARTIAL',
         paymentDetails: {
             advanceAmount: advanceAmount,
@@ -184,7 +210,7 @@ export default function CheckoutPage() {
           orderId: orderRef.id,
           productId: item.id,
           quantity: item.quantity,
-          price: item.price,
+          price: item.mrp,
           productName: item.name,
           productImage: item.image,
         });
@@ -340,33 +366,28 @@ export default function CheckoutPage() {
                             </div>
                         </div>
                         <p className="font-semibold">
-                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.price * item.quantity)}
+                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.mrp * item.quantity)}
                         </p>
                         </div>
                     ))}
                     <Separator />
                     <div className="space-y-2">
                         <div className="flex justify-between">
-                            <p className="text-muted-foreground">Subtotal</p>
+                            <p className="text-muted-foreground">Subtotal (incl. Tax)</p>
                             <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(subtotal)}</p>
                         </div>
                         <div className="flex justify-between">
                             <p className="text-muted-foreground">Shipping Fee</p>
                             <p>{shippingFee > 0 ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(shippingFee) : 'Free'}</p>
                         </div>
-                        <div className="flex justify-between">
-                            <p className="text-muted-foreground">Total before tax</p>
-                            <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(priceBeforeTax)}</p>
+                         <Separator />
+                        <div className="flex justify-between font-bold text-lg">
+                            <p>Total</p>
+                            <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalAmount)}</p>
                         </div>
-                        <div className="flex justify-between">
-                            <p className="text-muted-foreground">GST (5% included)</p>
-                            <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(gstAmount)}</p>
+                        <div className="text-xs text-muted-foreground pt-2">
+                            <p>Includes a total of {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalGST)} in taxes.</p>
                         </div>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between font-bold text-lg">
-                        <p>Total</p>
-                        <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalAmount)}</p>
                     </div>
                      <Separator />
                      <div className="space-y-2">
@@ -381,14 +402,24 @@ export default function CheckoutPage() {
                     </div>
                     </CardContent>
                     <CardFooter>
-                         <Button onClick={onSubmit} size="lg" className="w-full" disabled={isSubmitting}>
+                         <Button onClick={onSubmit} size="lg" className="w-full" disabled={isSubmitting || !selectedAddressId}>
                             {isSubmitting ? <PottersWheelSpinner /> : 'Place Order'}
                         </Button>
                     </CardFooter>
                 </Card>
+                 {!selectedAddressId && (
+                    <Alert variant="destructive">
+                        <AlertTitle>Address Required</AlertTitle>
+                        <AlertDescription>
+                            Please select or add a shipping address to calculate taxes and place your order.
+                        </AlertDescription>
+                    </Alert>
+                )}
             </div>
         </div>
         </main>
     </div>
   );
 }
+
+    
