@@ -45,6 +45,8 @@ export default function OrdersPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
     const [orderToApprove, setOrderToApprove] = useState<Order | null>(null);
+    const [orderToUpdateStatus, setOrderToUpdateStatus] = useState<{order: Order, newStatus: OrderStatus} | null>(null);
+
 
     const ordersQuery = useMemoFirebase(() => collection(firestore, 'orders'), [firestore]);
     const { data: orders, isLoading: ordersLoading } = useCollection<Order>(ordersQuery);
@@ -84,13 +86,17 @@ export default function OrdersPage() {
         setOrderToApprove(null);
     }
     
-    const updateOrderStatus = (order: Order, newStatus: OrderStatus) => {
+    const updateOrderStatus = () => {
+        if (!orderToUpdateStatus) return;
+
+        const { order, newStatus } = orderToUpdateStatus;
         const orderRef = doc(firestore, 'orders', order.id);
         setDocumentNonBlocking(orderRef, { status: newStatus }, { merge: true });
         toast({
             title: 'Order Status Updated',
             description: `Order ${order.id} has been updated to '${newStatus.replace(/-/g, ' ')}'.`
         });
+        setOrderToUpdateStatus(null);
     }
 
     const statusChangeOptions: OrderStatus[] = ['shipped', 'delivered', 'cancelled'];
@@ -177,7 +183,7 @@ export default function OrdersPage() {
                                                         {statusChangeOptions.map(status => (
                                                              <DropdownMenuItem 
                                                                 key={status} 
-                                                                onClick={() => updateOrderStatus(order, status)} 
+                                                                onClick={() => setOrderToUpdateStatus({order: order, newStatus: status})} 
                                                                 disabled={order.status === status}
                                                                 className="capitalize"
                                                             >
@@ -201,6 +207,8 @@ export default function OrdersPage() {
                     </div>
                 </CardContent>
             </Card>
+            
+            {/* Payment Approval Dialog */}
             <AlertDialog open={!!orderToApprove} onOpenChange={(isOpen) => !isOpen && setOrderToApprove(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -212,6 +220,22 @@ export default function OrdersPage() {
                     <AlertDialogFooter>
                         <AlertDialogCancel onClick={() => setOrderToApprove(null)}>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={handleApprovePayment}>Approve</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            
+            {/* Status Change Confirmation Dialog */}
+            <AlertDialog open={!!orderToUpdateStatus} onOpenChange={(isOpen) => !isOpen && setOrderToUpdateStatus(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Confirm Status Change</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to change the status of this order to "{orderToUpdateStatus?.newStatus.replace(/-/g, ' ')}"?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setOrderToUpdateStatus(null)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={updateOrderStatus}>Confirm</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
