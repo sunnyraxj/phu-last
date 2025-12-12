@@ -281,7 +281,7 @@ export default function CheckoutPage() {
                         <div className="flex flex-col md:flex-row items-center gap-6 p-4 border rounded-lg bg-muted/30">
                             <div className="w-40 h-40 p-2 bg-white rounded-md flex items-center justify-center">
                                 {qrCodeUrl ? (
-                                    <Image src={qrCodeUrl} alt="UPI QR Code" width={150} height={150} />
+                                    <Image src={qrCodeUrl} alt="UPI QR Code" width={150} height={150} unoptimized />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-gray-100">
                                       <PottersWheelSpinner />
