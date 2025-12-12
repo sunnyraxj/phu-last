@@ -105,6 +105,8 @@ export default function FinalInvoicePage() {
 
   const isLoading = orderLoading || itemsLoading || settingsLoading;
   
+  const isFinalInvoice = order?.status === 'delivered' || order?.paymentMethod === 'UPI_FULL';
+
   return (
     <div className="bg-background min-h-screen">
       <Header userData={null} cartItems={[]} updateCartItemQuantity={() => {}} />
@@ -123,7 +125,9 @@ export default function FinalInvoicePage() {
                                 <Image src={settings.invoiceLogoUrl} alt="Company Logo" layout="fill" objectFit="contain" objectPosition="left" />
                             </div>
                         )}
-                        <h1 className="text-2xl font-bold">Tax Invoice</h1>
+                        <h1 className="text-2xl font-bold">
+                            {isFinalInvoice ? 'Tax Invoice' : 'Proforma Invoice'}
+                        </h1>
                         <p className="text-muted-foreground text-sm">Invoice #{order.id.substring(0,8)}</p>
                     </div>
                     <div className="text-sm text-right">
@@ -135,21 +139,20 @@ export default function FinalInvoicePage() {
             </CardHeader>
             <CardContent className="p-6 sm:p-8">
 
-              {order.status !== 'delivered' && (
+              {isFinalInvoice ? (
+                <Alert variant="default" className="mb-8 bg-green-50 border-green-200">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <AlertTitle className="text-green-800">Final Tax Invoice</AlertTitle>
+                    <AlertDescription className="text-green-700">
+                       This is the final tax invoice for your order. Thank you for your purchase.
+                    </AlertDescription>
+                </Alert>
+              ) : (
                  <Alert variant="default" className="mb-8 bg-blue-50 border-blue-200">
                     <AlertCircle className="h-4 w-4 text-blue-600" />
                     <AlertTitle className="text-blue-800">This is a Proforma Invoice</AlertTitle>
                     <AlertDescription className="text-blue-700">
-                        The final tax invoice will be confirmed upon delivery. The current status of your order is: <span className="font-semibold capitalize">{order.status.replace(/-/g, ' ')}</span>.
-                    </AlertDescription>
-                </Alert>
-              )}
-               {order.status === 'delivered' && (
-                 <Alert variant="default" className="mb-8 bg-green-50 border-green-200">
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    <AlertTitle className="text-green-800">Final Tax Invoice</AlertTitle>
-                    <AlertDescription className="text-green-700">
-                        Your order has been delivered. Thank you for your purchase.
+                        The final tax invoice will be generated upon full payment and delivery. The current status of your order is: <span className="font-semibold capitalize">{order.status.replace(/-/g, ' ')}</span>.
                     </AlertDescription>
                 </Alert>
               )}
@@ -200,7 +203,9 @@ export default function FinalInvoicePage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-8">
                   <div>
-                      <h4 className="font-semibold mb-2">Order Status: <span className="font-medium capitalize text-primary">{order.status.replace(/-/g, ' ')}</span></h4>
+                      {isFinalInvoice && order.status !== 'cancelled' && (
+                         <h4 className="font-semibold mb-2">Payment Status: <span className="font-medium capitalize text-green-600">Paid in Full</span></h4>
+                      )}
                   </div>
                    <div className="space-y-2">
                         <div className="flex justify-between items-center text-sm">
@@ -279,3 +284,5 @@ export default function FinalInvoicePage() {
     </div>
   );
 }
+
+    
