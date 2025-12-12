@@ -88,6 +88,7 @@ export default function CheckoutPage() {
   const advanceAmount = useMemo(() => totalAmount * selectedPaymentPercentage, [totalAmount, selectedPaymentPercentage]);
   const remainingAmount = useMemo(() => totalAmount - advanceAmount, [totalAmount, advanceAmount]);
   const qrCodeUrl = useMemo(() => {
+    if (advanceAmount <= 0) return null;
     return `https://upiqr.in/api/qr?name=Purbanchal%20Hasta%20Udyog&vpa=${UPI_ID}&amount=${advanceAmount.toFixed(2)}`;
   }, [advanceAmount]);
 
@@ -258,8 +259,12 @@ export default function CheckoutPage() {
                         </div>
 
                         <div className="flex flex-col md:flex-row items-center gap-6 p-4 border rounded-lg bg-muted/30">
-                            <div className="w-40 h-40 p-2 bg-white rounded-md">
-                                <Image src={qrCodeUrl} alt="UPI QR Code" width={150} height={150} />
+                            <div className="w-40 h-40 p-2 bg-white rounded-md flex items-center justify-center">
+                                {qrCodeUrl ? (
+                                    <Image src={qrCodeUrl} alt="UPI QR Code" width={150} height={150} />
+                                ) : (
+                                    <PottersWheelSpinner />
+                                )}
                             </div>
                             <div className="space-y-2 text-center md:text-left">
                                 <p className="font-semibold">Scan to pay with any UPI app</p>
