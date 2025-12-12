@@ -53,6 +53,8 @@ export default function CheckoutPage() {
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
   const [selectedPaymentPercentage, setSelectedPaymentPercentage] = useState<number>(0.2);
   const [utr, setUtr] = useState('');
+  const [transactionId, setTransactionId] = useState('');
+
 
   const { reset } = useForm<AddressFormValues>();
 
@@ -87,9 +89,13 @@ export default function CheckoutPage() {
 
   const advanceAmount = useMemo(() => totalAmount * selectedPaymentPercentage, [totalAmount, selectedPaymentPercentage]);
   const remainingAmount = useMemo(() => totalAmount - advanceAmount, [totalAmount, advanceAmount]);
+  
   const qrCodeUrl = useMemo(() => {
     if (advanceAmount <= 0) return null;
-    return `https://upiqr.in/api/qr?name=Purbanchal%20Hasta%20Udyog&vpa=${UPI_ID}&amount=${advanceAmount.toFixed(2)}`;
+    // Generate a unique transaction ID for each QR code generation
+    const newTransactionId = `PHU${Date.now()}`;
+    setTransactionId(newTransactionId);
+    return `https://upiqr.in/api/qr?name=Purbanchal%20Hasta%20Udyog&vpa=${UPI_ID}&amount=${advanceAmount.toFixed(2)}&tn=Order%20Payment&tr=${newTransactionId}`;
   }, [advanceAmount]);
 
   const handleNewAddressSubmit = (formData: AddressFormValues) => {
@@ -145,6 +151,7 @@ export default function CheckoutPage() {
             remainingAmount: remainingAmount,
             utr: utr,
             paymentPercentage: selectedPaymentPercentage,
+            transactionId: transactionId,
         }
       });
 
@@ -263,7 +270,9 @@ export default function CheckoutPage() {
                                 {qrCodeUrl ? (
                                     <Image src={qrCodeUrl} alt="UPI QR Code" width={150} height={150} />
                                 ) : (
-                                    <PottersWheelSpinner />
+                                    <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                                      <PottersWheelSpinner />
+                                    </div>
                                 )}
                             </div>
                             <div className="space-y-2 text-center md:text-left">
@@ -360,3 +369,5 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
+    
