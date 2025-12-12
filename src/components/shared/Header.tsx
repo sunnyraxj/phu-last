@@ -46,26 +46,29 @@ interface HeaderProps {
     cartItems: CartItem[];
     updateCartItemQuantity: (cartItemId: string, newQuantity: number) => void;
     stores?: Store[];
+    products?: Product[];
     adminActionCounts?: {
         pendingOrders: number;
         outOfStockProducts: number;
     };
 }
 
-export function Header({ userData, cartItems, updateCartItemQuantity, stores = [], adminActionCounts = { pendingOrders: 0, outOfStockProducts: 0 } }: HeaderProps) {
+export function Header({ userData, cartItems, updateCartItemQuantity, stores = [], products = [], adminActionCounts = { pendingOrders: 0, outOfStockProducts: 0 } }: HeaderProps) {
     const { user, isUserLoading } = useUser();
     const auth = useAuth();
     const router = useRouter();
     const [isCraftsPopoverOpen, setIsCraftsPopoverOpen] = useState(false);
     const [isStoresPopoverOpen, setIsStoresPopoverOpen] = useState(false);
+    const [isPurchasePopoverOpen, setIsPurchasePopoverOpen] = useState(false);
     const [isAdminPopoverOpen, setIsAdminPopoverOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
     const craftsTimer = useRef<NodeJS.Timeout | null>(null);
     const storesTimer = useRef<NodeJS.Timeout | null>(null);
+    const purchaseTimer = useRef<NodeJS.Timeout | null>(null);
     const adminTimer = useRef<NodeJS.Timeout | null>(null);
 
-    const handleMouseEnter = (popover: 'crafts' | 'stores' | 'admin') => {
+    const handleMouseEnter = (popover: 'crafts' | 'stores' | 'admin' | 'purchase') => {
         if (popover === 'crafts') {
             if (craftsTimer.current) clearTimeout(craftsTimer.current);
             setIsCraftsPopoverOpen(true);
@@ -75,10 +78,13 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
         } else if (popover === 'admin') {
             if (adminTimer.current) clearTimeout(adminTimer.current);
             setIsAdminPopoverOpen(true);
+        } else if (popover === 'purchase') {
+            if (purchaseTimer.current) clearTimeout(purchaseTimer.current);
+            setIsPurchasePopoverOpen(true);
         }
     };
 
-    const handleMouseLeave = (popover: 'crafts' | 'stores' | 'admin') => {
+    const handleMouseLeave = (popover: 'crafts' | 'stores' | 'admin' | 'purchase') => {
         const timerSetter = (setter: React.Dispatch<React.SetStateAction<boolean>>) => {
             return setTimeout(() => {
                 setter(false);
@@ -91,6 +97,8 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
             storesTimer.current = timerSetter(setIsStoresPopoverOpen);
         } else if (popover === 'admin') {
             adminTimer.current = timerSetter(setIsAdminPopoverOpen);
+        } else if (popover === 'purchase') {
+            purchaseTimer.current = timerSetter(setIsPurchasePopoverOpen);
         }
     };
 
@@ -125,9 +133,45 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                 </Link>
 
                 <nav className="hidden lg:flex items-center gap-8 text-sm font-semibold">
-                    <Link href="/purchase">
-                        <button className="hover:opacity-80">PURCHASE</button>
-                    </Link>
+                     <Popover open={isPurchasePopoverOpen} onOpenChange={setIsPurchasePopoverOpen}>
+                        <PopoverTrigger asChild>
+                             <div 
+                                onMouseEnter={() => handleMouseEnter('purchase')} 
+                                onMouseLeave={() => handleMouseLeave('purchase')}
+                                className="flex items-center"
+                            >
+                                <Link href="/purchase">
+                                    <button className="flex items-center gap-1 hover:opacity-80">
+                                        PURCHASE <ChevronDown size={16} />
+                                    </button>
+                                </Link>
+                            </div>
+                        </PopoverTrigger>
+                         <PopoverContent 
+                            className="w-96"
+                            onMouseEnter={() => handleMouseEnter('purchase')} 
+                            onMouseLeave={() => handleMouseLeave('purchase')}
+                        >
+                            <div className="grid gap-4">
+                                <p className="font-semibold">Featured Products</p>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {products.slice(0, 3).map((product) => (
+                                        <Link href="/purchase" key={product.id} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted -m-2">
+                                            <div className="relative h-20 w-20 rounded-md overflow-hidden">
+                                                <Image src={product.image} alt={product.name} fill className="object-cover" />
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-xs truncate w-20 text-center">{product.name}</p>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                                <Link href="/purchase">
+                                    <Button variant="link" className="p-0 h-auto text-primary w-full justify-center">View More</Button>
+                                </Link>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
                     <Popover open={isStoresPopoverOpen} onOpenChange={setIsStoresPopoverOpen}>
                         <PopoverTrigger asChild>
                              <div 

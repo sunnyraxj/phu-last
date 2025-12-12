@@ -335,6 +335,7 @@ export default function PurchasePage() {
         cartItems={cartItems}
         updateCartItemQuantity={updateCartItemQuantity}
         stores={stores || []}
+        products={allProducts || []}
         adminActionCounts={adminActionCounts}
       />
       
