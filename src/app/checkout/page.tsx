@@ -35,12 +35,6 @@ type CartItem = Product & { quantity: number; cartItemId: string; };
 
 const GST_RATE = 0.05; // 5%
 
-const paymentPercentages = [
-    { value: 0.2, label: '20% Advance' },
-    { value: 0.5, label: '50% Advance' },
-    { value: 0.8, label: '80% Advance' },
-];
-
 const UPI_ID = 'gpay-12190144290@okbizaxis';
 const PAYEE_NAME = 'Purbanchal Hasta Udyog';
 
@@ -52,7 +46,7 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
-  const [selectedPaymentPercentage, setSelectedPaymentPercentage] = useState<number>(0.2);
+  const [selectedPaymentPercentage, setSelectedPaymentPercentage] = useState<number>(1);
   const [utr, setUtr] = useState('');
   const [transactionId, setTransactionId] = useState('');
 
@@ -92,6 +86,25 @@ export default function CheckoutPage() {
   const totalAmount = subtotal + shippingFee;
   const gstAmount = useMemo(() => subtotal * (GST_RATE / (1 + GST_RATE)), [subtotal]);
   const priceBeforeTax = subtotal - gstAmount;
+  
+  const paymentPercentages = useMemo(() => {
+    const options = [{ value: 1, label: 'Full Payment' }];
+    if (totalAmount < 10000) {
+      options.push({ value: 0.2, label: '20% Advance' });
+    } else {
+      options.push({ value: 0.35, label: '35% Advance' });
+    }
+    return options;
+  }, [totalAmount]);
+
+  useEffect(() => {
+    // Set a default payment percentage when options change
+    if (paymentPercentages.length > 0) {
+      // If full payment is the only option, select it. Otherwise, select the first advance option.
+      const defaultOption = paymentPercentages.length > 1 ? paymentPercentages[1].value : paymentPercentages[0].value;
+      setSelectedPaymentPercentage(defaultOption);
+    }
+  }, [paymentPercentages]);
 
   const advanceAmount = useMemo(() => totalAmount * selectedPaymentPercentage, [totalAmount, selectedPaymentPercentage]);
   const remainingAmount = useMemo(() => totalAmount - advanceAmount, [totalAmount, advanceAmount]);
@@ -160,7 +173,7 @@ export default function CheckoutPage() {
         subtotal: subtotal,
         shippingFee: shippingFee,
         gstAmount: gstAmount,
-        paymentMethod: 'UPI_PARTIAL',
+        paymentMethod: selectedPaymentPercentage === 1 ? 'UPI_FULL' : 'UPI_PARTIAL',
         paymentDetails: {
             advanceAmount: advanceAmount,
             remainingAmount: remainingAmount,
@@ -269,7 +282,7 @@ export default function CheckoutPage() {
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div>
-                            <Label className="font-semibold">Select Advance Payment</Label>
+                            <Label className="font-semibold">Select Payment Option</Label>
                             <RadioGroup value={String(selectedPaymentPercentage)} onValueChange={(val) => setSelectedPaymentPercentage(Number(val))} className="flex space-x-4 mt-2">
                                 {paymentPercentages.map(p => (
                                      <Label key={p.value} htmlFor={`payment-${p.value}`} className="flex items-center gap-2 border rounded-md p-3 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary flex-1 justify-center">
@@ -292,7 +305,7 @@ export default function CheckoutPage() {
                             </div>
                             <div className="space-y-2 text-center md:text-left">
                                 <p className="font-semibold">Scan to pay with any UPI app</p>
-                                <p className="text-sm text-muted-foreground">You need to pay an advance of:</p>
+                                <p className="text-sm text-muted-foreground">You need to pay an amount of:</p>
                                 <p className="text-2xl font-bold text-primary">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(advanceAmount)}</p>
                                 <p className="text-xs text-muted-foreground">UPI ID: {UPI_ID}</p>
                             </div>
@@ -363,7 +376,7 @@ export default function CheckoutPage() {
                      <Separator />
                      <div className="space-y-2">
                         <div className="flex justify-between font-semibold text-primary">
-                            <p>Advance to Pay</p>
+                            <p>{selectedPaymentPercentage === 1 ? 'Amount Paid' : 'Advance to Pay'}</p>
                             <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(advanceAmount)}</p>
                         </div>
                         <div className="flex justify-between">
