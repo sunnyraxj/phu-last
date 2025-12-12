@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -45,7 +46,7 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
-  const [selectedPaymentPercentage, setSelectedPaymentPercentage] = useState<number>(0.2);
+  const [selectedPaymentPercentage, setSelectedPaymentPercentage] = useState<number>(0);
   const [utr, setUtr] = useState('');
   const [transactionId, setTransactionId] = useState('');
 
@@ -111,18 +112,24 @@ export default function CheckoutPage() {
   const priceBeforeTax = subtotal - totalGST;
   
   const paymentPercentages = useMemo(() => {
-    return [
-        { value: 1, label: 'Full Payment' },
-        { value: 0.8, label: '80% Advance' },
-        { value: 0.5, label: '50% Advance' },
-        { value: 0.35, label: '35% Advance' },
-        { value: 0.2, label: '20% Advance' },
-    ];
-  }, []);
+    const options = [{ value: 1, label: 'Full Payment' }];
+    if (totalAmount < 10000) {
+        options.push({ value: 0.2, label: '20% Advance' });
+    } else {
+        options.push({ value: 0.35, label: '35% Advance' });
+        options.push({ value: 0.5, label: '50% Advance' });
+        options.push({ value: 0.8, label: '80% Advance' });
+    }
+    return options;
+  }, [totalAmount]);
 
   useEffect(() => {
-    setSelectedPaymentPercentage(0.2);
-  }, []);
+    if (paymentPercentages.length > 1) {
+        setSelectedPaymentPercentage(paymentPercentages[1].value); // Default to the first advance option
+    } else {
+        setSelectedPaymentPercentage(1); // Default to full payment
+    }
+  }, [paymentPercentages]);
 
   const advanceAmount = useMemo(() => totalAmount * selectedPaymentPercentage, [totalAmount, selectedPaymentPercentage]);
   const remainingAmount = useMemo(() => totalAmount - advanceAmount, [totalAmount, advanceAmount]);
@@ -221,7 +228,7 @@ export default function CheckoutPage() {
 
       await batch.commit();
       toast({ title: 'Order Placed!', description: 'Your order has been placed and is pending payment approval.' });
-      router.push(`/order-confirmation/${orderRef.id}`);
+      router.push(`/receipt/${orderRef.id}`);
 
     } catch (error) {
       console.error("Order placement error:", error);
@@ -421,5 +428,3 @@ export default function CheckoutPage() {
     </div>
   );
 }
-
-    

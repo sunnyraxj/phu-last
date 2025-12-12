@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useMemo } from 'react';
@@ -44,7 +45,7 @@ type Order = {
     pincode: string;
     phone: string;
   };
-  paymentMethod?: 'UPI_PARTIAL';
+  paymentMethod?: 'UPI_PARTIAL' | 'UPI_FULL';
   paymentDetails?: {
       advanceAmount: number;
       remainingAmount: number;
@@ -63,7 +64,7 @@ type OrderItem = {
   productImage: string;
 };
 
-export default function OrderConfirmationPage() {
+export default function FinalInvoicePage() {
   const { orderId } = useParams();
   const firestore = useFirestore();
   const { user } = useUser();
@@ -91,7 +92,6 @@ export default function OrderConfirmationPage() {
   
   const priceBeforeTax = useMemo(() => {
       if (!order) return 0;
-      // This is an approximation. The accurate value should ideally be stored with the order.
       return order.subtotal - order.gstAmount;
   }, [order]);
 
@@ -104,8 +104,7 @@ export default function OrderConfirmationPage() {
   }
 
   const isLoading = orderLoading || itemsLoading || settingsLoading;
-  const isPaymentPendingApproval = order?.status === 'pending-payment-approval';
-
+  
   return (
     <div className="bg-background min-h-screen">
       <Header userData={null} cartItems={[]} updateCartItemQuantity={() => {}} />
@@ -136,15 +135,25 @@ export default function OrderConfirmationPage() {
             </CardHeader>
             <CardContent className="p-6 sm:p-8">
 
-              {isPaymentPendingApproval && (
-                 <Alert variant="default" className="mb-8 bg-yellow-50 border-yellow-200">
-                    <AlertCircle className="h-4 w-4 text-yellow-600" />
-                    <AlertTitle className="text-yellow-800">Payment Pending Approval</AlertTitle>
-                    <AlertDescription className="text-yellow-700">
-                        We have received your order. It will be processed as soon as our team confirms your advance payment. This usually takes a few hours.
+              {order.status !== 'delivered' && (
+                 <Alert variant="default" className="mb-8 bg-blue-50 border-blue-200">
+                    <AlertCircle className="h-4 w-4 text-blue-600" />
+                    <AlertTitle className="text-blue-800">This is a Proforma Invoice</AlertTitle>
+                    <AlertDescription className="text-blue-700">
+                        The final tax invoice will be confirmed upon delivery. The current status of your order is: <span className="font-semibold capitalize">{order.status.replace(/-/g, ' ')}</span>.
                     </AlertDescription>
                 </Alert>
               )}
+               {order.status === 'delivered' && (
+                 <Alert variant="default" className="mb-8 bg-green-50 border-green-200">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <AlertTitle className="text-green-800">Final Tax Invoice</AlertTitle>
+                    <AlertDescription className="text-green-700">
+                        Your order has been delivered. Thank you for your purchase.
+                    </AlertDescription>
+                </Alert>
+              )}
+
 
               <div className="mb-8 grid grid-cols-2 gap-4 text-sm">
                   <div>
@@ -241,11 +250,17 @@ export default function OrderConfirmationPage() {
                                 </div>
                             </>
                         )}
+                        {order.paymentMethod === 'UPI_FULL' && (
+                             <div className="flex justify-between items-center text-sm text-green-600 font-semibold">
+                                <span>Amount Paid</span>
+                                <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.totalAmount)}</span>
+                            </div>
+                        )}
                    </div>
               </div>
             </CardContent>
             <CardFooter className="flex-col gap-4 p-6 sm:p-8 bg-muted/30">
-                 <p className="text-center text-sm text-muted-foreground">You will receive an email confirmation once the payment is approved.</p>
+                 <p className="text-center text-sm text-muted-foreground">Thank you for your business!</p>
                  <Link href="/purchase">
                     <Button>Continue Shopping</Button>
                  </Link>

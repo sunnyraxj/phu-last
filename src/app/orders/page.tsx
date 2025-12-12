@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, Fragment } from 'react';
@@ -150,7 +151,10 @@ export default function OrdersPage() {
                                                 ) : (
                                                     <p className="text-muted-foreground text-sm">Loading items...</p>
                                                 )}
-                                                 <div className="text-right mt-4">
+                                                 <div className="flex justify-end gap-2 mt-4">
+                                                    <Link href={`/receipt/${order.id}`}>
+                                                        <Button variant="outline" size="sm">View Receipt</Button>
+                                                    </Link>
                                                     <Link href={`/order-confirmation/${order.id}`}>
                                                         <Button variant="outline" size="sm">View Invoice</Button>
                                                     </Link>
