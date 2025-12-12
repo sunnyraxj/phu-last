@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -74,6 +74,11 @@ export default function CheckoutPage() {
   );
   const { data: addresses, isLoading: addressesLoading } = useCollection<ShippingAddress>(addressesQuery);
 
+  useEffect(() => {
+    // Generate a unique transaction ID when the component mounts
+    setTransactionId(`PHU${Date.now()}`);
+  }, []);
+
   const cartItems = useMemo(() => {
     if (!cartData || !allProducts) return [];
     return cartData.map(cartItem => {
@@ -92,21 +97,19 @@ export default function CheckoutPage() {
   const remainingAmount = useMemo(() => totalAmount - advanceAmount, [totalAmount, advanceAmount]);
   
   const qrCodeUrl = useMemo(() => {
-    if (advanceAmount <= 0) return null;
-    const newTransactionId = `PHU${Date.now()}`;
-    setTransactionId(newTransactionId);
+    if (advanceAmount <= 0 || !transactionId) return null;
 
     const upiParams = new URLSearchParams({
         pa: UPI_ID,
         pn: PAYEE_NAME,
         am: advanceAmount.toFixed(2),
         cu: 'INR',
-        tn: `Order Payment for ${newTransactionId}`
+        tn: `Order Payment for ${transactionId}`
     });
     const upiUrl = `upi://pay?${upiParams.toString()}`;
     
     return `https://upiqr.in/api/qr?data=${encodeURIComponent(upiUrl)}`;
-  }, [advanceAmount]);
+  }, [advanceAmount, transactionId]);
 
   const handleNewAddressSubmit = (formData: AddressFormValues) => {
     if (!user) return;
