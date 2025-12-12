@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -8,16 +9,29 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+
+type OrderStatus = 'pending-payment-approval' | 'pending' | 'shipped' | 'delivered' | 'cancelled';
+
+type ShippingDetails = {
+    name: string;
+    address: string;
+    city: string;
+    state: string;
+    pincode: string;
+    phone: string;
+}
 
 type Order = {
     id: string;
     customerId: string;
     orderDate: { seconds: number; nanoseconds: number; };
     totalAmount: number;
-    status: 'pending-payment-approval' | 'pending' | 'shipped' | 'delivered' | 'cancelled';
+    status: OrderStatus;
+    shippingDetails: ShippingDetails;
     paymentMethod?: 'UPI_PARTIAL';
     paymentDetails?: {
         advanceAmount: number;
@@ -30,6 +44,8 @@ type Order = {
 export default function OrdersPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
+    const [orderToApprove, setOrderToApprove] = useState<Order | null>(null);
+
     const ordersQuery = useMemoFirebase(() => collection(firestore, 'orders'), [firestore]);
     const { data: orders, isLoading: ordersLoading } = useCollection<Order>(ordersQuery);
 
@@ -57,14 +73,27 @@ export default function OrdersPage() {
         }
     }
 
-    const approvePayment = (order: Order) => {
-        const orderRef = doc(firestore, 'orders', order.id);
+    const handleApprovePayment = () => {
+        if (!orderToApprove) return;
+        const orderRef = doc(firestore, 'orders', orderToApprove.id);
         setDocumentNonBlocking(orderRef, { status: 'pending' }, { merge: true });
         toast({
             title: 'Payment Approved',
-            description: `Order ${order.id} has been moved to 'pending'.`
+            description: `Order ${orderToApprove.id} has been moved to 'pending'.`
+        });
+        setOrderToApprove(null);
+    }
+    
+    const updateOrderStatus = (order: Order, newStatus: OrderStatus) => {
+        const orderRef = doc(firestore, 'orders', order.id);
+        setDocumentNonBlocking(orderRef, { status: newStatus }, { merge: true });
+        toast({
+            title: 'Order Status Updated',
+            description: `Order ${order.id} has been updated to '${newStatus.replace(/-/g, ' ')}'.`
         });
     }
+
+    const statusChangeOptions: OrderStatus[] = ['shipped', 'delivered', 'cancelled'];
 
     return (
         <div className="flex-1 space-y-4 p-2 sm:p-4 md:p-8 pt-6">
@@ -84,10 +113,10 @@ export default function OrdersPage() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Order ID</TableHead>
-                                    <TableHead>Customer ID</TableHead>
+                                    <TableHead>Customer</TableHead>
                                     <TableHead>Date</TableHead>
                                     <TableHead>Status</TableHead>
-                                    <TableHead>Payment Details</TableHead>
+                                    <TableHead>Payment</TableHead>
                                     <TableHead className="text-right">Total</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
@@ -102,24 +131,34 @@ export default function OrdersPage() {
                                 ) : orders && orders.length > 0 ? (
                                     orders.map((order) => (
                                         <TableRow key={order.id}>
-                                            <TableCell className="font-mono text-xs">{order.id}</TableCell>
-                                            <TableCell className="font-mono text-xs">{order.customerId}</TableCell>
-                                            <TableCell>{formatDate(order.orderDate)}</TableCell>
-                                            <TableCell>
+                                            <TableCell className="font-mono text-xs align-top pt-4">{order.id}</TableCell>
+                                            <TableCell className="align-top pt-4">
+                                                {order.shippingDetails ? (
+                                                    <div className="text-xs">
+                                                        <p className="font-semibold">{order.shippingDetails.name}</p>
+                                                        <p className="text-muted-foreground">{order.shippingDetails.address}</p>
+                                                        <p className="text-muted-foreground">{order.shippingDetails.city}, {order.shippingDetails.state} {order.shippingDetails.pincode}</p>
+                                                        <p className="text-muted-foreground">{order.shippingDetails.phone}</p>
+                                                    </div>
+                                                ): 'N/A'}
+                                            </TableCell>
+                                            <TableCell className="align-top pt-4">{formatDate(order.orderDate)}</TableCell>
+                                            <TableCell className="align-top pt-4">
                                                 <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status.replace(/-/g, ' ')}</Badge>
                                             </TableCell>
-                                            <TableCell>
+                                            <TableCell className="align-top pt-4">
                                                 {order.paymentMethod === 'UPI_PARTIAL' && order.paymentDetails ? (
                                                     <div className="text-xs">
                                                         <p>UTR: <span className="font-mono">{order.paymentDetails.utr}</span></p>
                                                         <p>Paid: <span className="font-semibold">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.paymentDetails.advanceAmount)}</span></p>
+                                                        <p>Due: <span className="font-semibold text-destructive">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.paymentDetails.remainingAmount)}</span></p>
                                                     </div>
-                                                ) : 'N/A'}
+                                                ) : 'Full Payment'}
                                             </TableCell>
-                                            <TableCell className="text-right">
+                                            <TableCell className="text-right align-top pt-4">
                                                 {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.totalAmount)}
                                             </TableCell>
-                                            <TableCell className="text-right">
+                                            <TableCell className="text-right align-top pt-4">
                                                  <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
                                                         <Button variant="ghost" size="icon">
@@ -128,11 +167,23 @@ export default function OrdersPage() {
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
                                                         {order.status === 'pending-payment-approval' && (
-                                                            <DropdownMenuItem onClick={() => approvePayment(order)}>
-                                                                Approve Payment
-                                                            </DropdownMenuItem>
+                                                            <>
+                                                                <DropdownMenuItem onClick={() => setOrderToApprove(order)}>
+                                                                    Approve Payment
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuSeparator />
+                                                            </>
                                                         )}
-                                                         <DropdownMenuItem disabled>Change Status</DropdownMenuItem>
+                                                        {statusChangeOptions.map(status => (
+                                                             <DropdownMenuItem 
+                                                                key={status} 
+                                                                onClick={() => updateOrderStatus(order, status)} 
+                                                                disabled={order.status === status}
+                                                                className="capitalize"
+                                                            >
+                                                                Mark as {status}
+                                                             </DropdownMenuItem>
+                                                        ))}
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             </TableCell>
@@ -150,6 +201,20 @@ export default function OrdersPage() {
                     </div>
                 </CardContent>
             </Card>
+            <AlertDialog open={!!orderToApprove} onOpenChange={(isOpen) => !isOpen && setOrderToApprove(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Approve Payment?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will confirm the advance payment and move the order to "Pending" status for processing. This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setOrderToApprove(null)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleApprovePayment}>Approve</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
