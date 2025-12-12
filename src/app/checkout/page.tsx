@@ -46,7 +46,7 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
-  const [selectedPaymentPercentage, setSelectedPaymentPercentage] = useState<number>(1);
+  const [selectedPaymentPercentage, setSelectedPaymentPercentage] = useState<number>(0.2);
   const [utr, setUtr] = useState('');
   const [transactionId, setTransactionId] = useState('');
 
@@ -88,23 +88,18 @@ export default function CheckoutPage() {
   const priceBeforeTax = subtotal - gstAmount;
   
   const paymentPercentages = useMemo(() => {
-    const options = [{ value: 1, label: 'Full Payment' }];
-    if (totalAmount < 10000) {
-      options.push({ value: 0.2, label: '20% Advance' });
-    } else {
-      options.push({ value: 0.35, label: '35% Advance' });
-    }
-    return options;
-  }, [totalAmount]);
+    return [
+        { value: 1, label: 'Full Payment' },
+        { value: 0.8, label: '80% Advance' },
+        { value: 0.5, label: '50% Advance' },
+        { value: 0.35, label: '35% Advance' },
+        { value: 0.2, label: '20% Advance' },
+    ];
+  }, []);
 
   useEffect(() => {
-    // Set a default payment percentage when options change
-    if (paymentPercentages.length > 0) {
-      // If full payment is the only option, select it. Otherwise, select the first advance option.
-      const defaultOption = paymentPercentages.length > 1 ? paymentPercentages[1].value : paymentPercentages[0].value;
-      setSelectedPaymentPercentage(defaultOption);
-    }
-  }, [paymentPercentages]);
+    setSelectedPaymentPercentage(0.2);
+  }, []);
 
   const advanceAmount = useMemo(() => totalAmount * selectedPaymentPercentage, [totalAmount, selectedPaymentPercentage]);
   const remainingAmount = useMemo(() => totalAmount - advanceAmount, [totalAmount, advanceAmount]);
@@ -283,9 +278,9 @@ export default function CheckoutPage() {
                     <CardContent className="space-y-6">
                         <div>
                             <Label className="font-semibold">Select Payment Option</Label>
-                            <RadioGroup value={String(selectedPaymentPercentage)} onValueChange={(val) => setSelectedPaymentPercentage(Number(val))} className="flex space-x-4 mt-2">
+                            <RadioGroup value={String(selectedPaymentPercentage)} onValueChange={(val) => setSelectedPaymentPercentage(Number(val))} className="flex flex-wrap gap-2 mt-2">
                                 {paymentPercentages.map(p => (
-                                     <Label key={p.value} htmlFor={`payment-${p.value}`} className="flex items-center gap-2 border rounded-md p-3 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary flex-1 justify-center">
+                                     <Label key={p.value} htmlFor={`payment-${p.value}`} className="flex items-center gap-2 border rounded-md p-3 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary flex-1 justify-center min-w-[120px]">
                                         <RadioGroupItem value={String(p.value)} id={`payment-${p.value}`} />
                                         <span>{p.label}</span>
                                     </Label>
