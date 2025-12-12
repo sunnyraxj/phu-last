@@ -16,6 +16,13 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 
 
+type CompanySettings = {
+    companyName?: string;
+    companyAddress?: string;
+    gstin?: string;
+    invoiceLogoUrl?: string;
+};
+
 type Order = {
   id: string;
   customerId: string;
@@ -67,6 +74,10 @@ export default function OrderConfirmationPage() {
   );
   const { data: orderItems, isLoading: itemsLoading } = useCollection<OrderItem>(orderItemsQuery);
 
+  const settingsRef = useMemoFirebase(() => doc(firestore, 'companySettings', 'main'), [firestore]);
+  const { data: settings, isLoading: settingsLoading } = useDoc<CompanySettings>(settingsRef);
+
+
   const formatDate = (timestamp: { seconds: number }) => {
     if (!timestamp) return 'N/A';
     return new Date(timestamp.seconds * 1000).toLocaleDateString('en-GB', {
@@ -85,29 +96,36 @@ export default function OrderConfirmationPage() {
       return null;
   }
 
+  const isLoading = orderLoading || itemsLoading || settingsLoading;
   const isPaymentPendingApproval = order?.status === 'pending-payment-approval';
 
   return (
     <div className="bg-background min-h-screen">
       <Header userData={null} cartItems={[]} updateCartItemQuantity={() => {}} />
       <main className="container mx-auto py-8 sm:py-12 px-4">
-        {orderLoading || itemsLoading ? (
+        {isLoading ? (
             <div className="flex justify-center items-center h-96">
                 <PottersWheelSpinner />
             </div>
         ) : order && orderItems ? (
           <Card className="w-full max-w-4xl mx-auto">
-            <CardHeader className="text-center bg-muted/30 p-6">
-                <div className="mx-auto w-12 h-12 flex items-center justify-center rounded-full bg-green-100 mb-4">
-                   <CheckCircle2 className="h-6 w-6 text-green-600" />
+            <CardHeader className="p-6 sm:p-8">
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-6">
+                    <div>
+                         {settings?.invoiceLogoUrl && (
+                            <div className="relative h-16 w-48 mb-4">
+                                <Image src={settings.invoiceLogoUrl} alt="Company Logo" layout="fill" objectFit="contain" objectPosition="left" />
+                            </div>
+                        )}
+                        <h1 className="text-2xl font-bold">Tax Invoice</h1>
+                        <p className="text-muted-foreground text-sm">Invoice #{order.id.substring(0,8)}</p>
+                    </div>
+                    <div className="text-sm text-right">
+                        <p className="font-bold">{settings?.companyName || 'Purbanchal Hasta Udyog'}</p>
+                        {settings?.companyAddress && <p className="text-muted-foreground whitespace-pre-line">{settings.companyAddress}</p>}
+                        {settings?.gstin && <p className="text-muted-foreground">GSTIN: {settings.gstin}</p>}
+                    </div>
                 </div>
-                <CardTitle className="text-2xl sm:text-3xl">Thank you for your order!</CardTitle>
-                <CardDescription className="text-base">
-                    {isPaymentPendingApproval 
-                        ? "Your order is awaiting payment confirmation."
-                        : "Your order has been placed and is being processed."
-                    }
-                </CardDescription>
             </CardHeader>
             <CardContent className="p-6 sm:p-8">
 
@@ -121,17 +139,16 @@ export default function OrderConfirmationPage() {
                 </Alert>
               )}
 
-              <div className="mb-8">
-                  <h3 className="font-semibold text-lg mb-4">Tax Invoice</h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                          <p className="text-muted-foreground">Order ID:</p>
-                          <p className="font-mono text-xs break-all">{order.id}</p>
-                      </div>
-                       <div className="text-right">
-                          <p className="text-muted-foreground">Order Date:</p>
-                          <p>{formatDate(order.orderDate)}</p>
-                      </div>
+              <div className="mb-8 grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                      <p className="font-semibold text-muted-foreground">Billed To</p>
+                      <p className="font-medium">{order.shippingDetails.name}</p>
+                      <p className="text-muted-foreground whitespace-pre-line">{`${order.shippingDetails.address}\n${order.shippingDetails.city}, ${order.shippingDetails.state} - ${order.shippingDetails.pincode}`}</p>
+                      <p className="text-muted-foreground">{order.shippingDetails.phone}</p>
+                  </div>
+                  <div className="text-right">
+                        <p className="font-semibold text-muted-foreground">Order Date</p>
+                        <p>{formatDate(order.orderDate)}</p>
                   </div>
               </div>
 
@@ -167,13 +184,7 @@ export default function OrderConfirmationPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-8">
                   <div>
-                      <h4 className="font-semibold mb-2">Shipping To:</h4>
-                      <div className="text-sm text-muted-foreground">
-                          <p className="font-medium text-foreground">{order.shippingDetails.name}</p>
-                          <p>{order.shippingDetails.address}</p>
-                          <p>{order.shippingDetails.city}, {order.shippingDetails.state} - {order.shippingDetails.pincode}</p>
-                          <p>Phone: {order.shippingDetails.phone}</p>
-                      </div>
+                      <h4 className="font-semibold mb-2">Order Status: <span className="font-medium capitalize text-primary">{order.status.replace(/-/g, ' ')}</span></h4>
                   </div>
                    <div className="space-y-2">
                         <div className="flex justify-between items-center text-sm">

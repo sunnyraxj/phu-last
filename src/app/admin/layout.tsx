@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { collection, doc } from 'firebase/firestore';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Button } from '@/components/ui/button';
-import { Home, Package, ShoppingCart, Users, Store, Menu } from 'lucide-react';
+import { Home, Package, ShoppingCart, Users, Store, Menu, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
@@ -102,6 +102,7 @@ export default function AdminLayout({
         { href: '/admin/orders', label: 'Orders', icon: ShoppingCart, badge: pendingOrdersCount > 0 ? pendingOrdersCount : null, badgeVariant: 'default' as const },
         { href: '/admin/team', label: 'Our Team', icon: Users },
         { href: '/admin/store', label: 'Our Store', icon: Store },
+        { href: '/admin/settings', label: 'Settings', icon: Settings },
     ];
 
     const navContent = (

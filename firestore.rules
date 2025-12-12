@@ -196,5 +196,17 @@ service cloud.firestore {
         allow get, list: if true;
         allow create, update, delete: if isAdmin();
     }
+
+    /**
+     * @description Rules for the Company Settings collection.
+     * @path /companySettings/main
+     * @allow (read) Anyone can view company settings for invoices.
+     * @allow (write) Only admins can create or update company settings.
+     * @principle Public read, admin-only write for a singleton document.
+     */
+    match /companySettings/main {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
   }
 }

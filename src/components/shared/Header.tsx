@@ -280,6 +280,12 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                                 <p className="font-semibold text-sm">Our Store</p>
                                             </div>
                                         </Link>
+                                        <Link href="/admin/settings" className="flex items-center justify-between gap-4 p-2 rounded-lg hover:bg-muted -m-2">
+                                            <div className="flex items-center gap-4">
+                                                <Settings className="h-5 w-5 mt-0.5 text-primary"/>
+                                                <p className="font-semibold text-sm">Settings</p>
+                                            </div>
+                                        </Link>
                                     </div>
                                 </div>
                             </PopoverContent>
@@ -452,6 +458,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                                         </Link>
                                                         <Link href="/admin/team" onClick={() => setIsMobileMenuOpen(false)} className="block p-2 rounded-lg hover:bg-white/10 -m-2">Our Team</Link>
                                                         <Link href="/admin/store" onClick={() => setIsMobileMenuOpen(false)} className="block p-2 rounded-lg hover:bg-white/10 -m-2">Our Store</Link>
+                                                        <Link href="/admin/settings" onClick={() => setIsMobileMenuOpen(false)} className="block p-2 rounded-lg hover:bg-white/10 -m-2">Settings</Link>
                                                     </div>
                                                 </AccordionContent>
                                             </AccordionItem>
