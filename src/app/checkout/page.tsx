@@ -42,6 +42,7 @@ const paymentPercentages = [
 ];
 
 const UPI_ID = 'gpay-12190144290@okbizaxis';
+const PAYEE_NAME = 'Purbanchal Hasta Udyog';
 
 export default function CheckoutPage() {
   const firestore = useFirestore();
@@ -92,10 +93,19 @@ export default function CheckoutPage() {
   
   const qrCodeUrl = useMemo(() => {
     if (advanceAmount <= 0) return null;
-    // Generate a unique transaction ID for each QR code generation
     const newTransactionId = `PHU${Date.now()}`;
     setTransactionId(newTransactionId);
-    return `https://upiqr.in/api/qr?name=Purbanchal%20Hasta%20Udyog&vpa=${UPI_ID}&amount=${advanceAmount.toFixed(2)}&tn=Order%20Payment&tr=${newTransactionId}`;
+
+    const upiParams = new URLSearchParams({
+        pa: UPI_ID,
+        pn: PAYEE_NAME,
+        am: advanceAmount.toFixed(2),
+        cu: 'INR',
+        tn: `Order Payment for ${newTransactionId}`
+    });
+    const upiUrl = `upi://pay?${upiParams.toString()}`;
+    
+    return `https://upiqr.in/api/qr?data=${encodeURIComponent(upiUrl)}`;
   }, [advanceAmount]);
 
   const handleNewAddressSubmit = (formData: AddressFormValues) => {
