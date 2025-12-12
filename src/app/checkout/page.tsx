@@ -49,12 +49,12 @@ export default function CheckoutPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting = useState(false);
-  const [selectedAddressId, setSelectedAddressId = useState<string | null>(null);
-  const [showNewAddressForm, setShowNewAddressForm = useState(false);
-  const [selectedPaymentPercentage, setSelectedPaymentPercentage = useState<number>(0.2);
-  const [utr, setUtr = useState('');
-  const [transactionId, setTransactionId = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [showNewAddressForm, setShowNewAddressForm] = useState(false);
+  const [selectedPaymentPercentage, setSelectedPaymentPercentage] = useState<number>(0.2);
+  const [utr, setUtr] = useState('');
+  const [transactionId, setTransactionId] = useState('');
 
 
   const { reset } = useForm<AddressFormValues>();
