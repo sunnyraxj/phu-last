@@ -98,17 +98,19 @@ export default function CheckoutPage() {
   
   const qrCodeUrl = useMemo(() => {
     if (!advanceAmount || advanceAmount <= 0 || !transactionId) return null;
-
-    const upiParams = new URLSearchParams({
-        pa: UPI_ID,
-        pn: PAYEE_NAME,
-        am: advanceAmount.toFixed(2),
-        cu: 'INR',
-        tn: `Order Payment for ${transactionId}`
-    });
-    const upiUrl = `upi://pay?${upiParams.toString()}`;
     
-    return `https://upiqr.in/api/qr?data=${encodeURIComponent(upiUrl)}`;
+    const upiLink = new URL('upi://pay');
+    upiLink.searchParams.set('pa', UPI_ID);
+    upiLink.searchParams.set('pn', PAYEE_NAME);
+    upiLink.searchParams.set('am', advanceAmount.toFixed(2));
+    upiLink.searchParams.set('cu', 'INR');
+    upiLink.searchParams.set('tn', `Order for ${transactionId}`);
+
+    const qrApiUrl = new URL('https://api.qrserver.com/v1/create-qr-code/');
+    qrApiUrl.searchParams.set('size', '200x200');
+    qrApiUrl.searchParams.set('data', upiLink.toString());
+
+    return qrApiUrl.toString();
   }, [advanceAmount, transactionId]);
 
   const handleNewAddressSubmit = (formData: AddressFormValues) => {

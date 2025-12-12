@@ -37,7 +37,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https' as const,
-        hostname: 'upiqr.in',
+        hostname: 'api.qrserver.com',
         port: '',
         pathname: '/**',
       }
