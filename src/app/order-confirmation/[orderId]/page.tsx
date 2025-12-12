@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo } from 'react';
@@ -90,6 +91,7 @@ export default function OrderConfirmationPage() {
   
   const priceBeforeTax = useMemo(() => {
       if (!order) return 0;
+      // This is an approximation. The accurate value should ideally be stored with the order.
       return order.subtotal - order.gstAmount;
   }, [order]);
 
@@ -204,21 +206,21 @@ export default function OrderConfirmationPage() {
                             <span className="text-muted-foreground">Total before tax</span>
                             <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(priceBeforeTax)}</span>
                         </div>
-                        {order.cgstAmount && order.cgstAmount > 0 && (
+                        {order.cgstAmount != null && order.cgstAmount > 0 && (
                              <div className="flex justify-between items-center text-sm">
-                                <span className="text-muted-foreground">CGST (2.5%)</span>
+                                <span className="text-muted-foreground">CGST</span>
                                 <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.cgstAmount)}</span>
                             </div>
                         )}
-                        {order.sgstAmount && order.sgstAmount > 0 && (
+                        {order.sgstAmount != null && order.sgstAmount > 0 && (
                             <div className="flex justify-between items-center text-sm">
-                                <span className="text-muted-foreground">SGST (2.5%)</span>
+                                <span className="text-muted-foreground">SGST</span>
                                 <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.sgstAmount)}</span>
                             </div>
                         )}
-                        {order.igstAmount && order.igstAmount > 0 && (
+                        {order.igstAmount != null && order.igstAmount > 0 && (
                             <div className="flex justify-between items-center text-sm">
-                                <span className="text-muted-foreground">IGST (5%)</span>
+                                <span className="text-muted-foreground">IGST</span>
                                 <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.igstAmount)}</span>
                             </div>
                         )}
@@ -262,5 +264,3 @@ export default function OrderConfirmationPage() {
     </div>
   );
 }
-
-    
