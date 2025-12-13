@@ -105,7 +105,7 @@ export default function FinalInvoicePage() {
 
   const isLoading = orderLoading || itemsLoading || settingsLoading;
   
-  const isFinalInvoice = order?.status === 'delivered' || order?.paymentMethod === 'UPI_FULL';
+  const isPaidInFull = order?.paymentMethod === 'UPI_FULL';
 
   return (
     <div className="bg-background min-h-screen">
@@ -126,7 +126,7 @@ export default function FinalInvoicePage() {
                             </div>
                         )}
                         <h1 className="text-2xl font-bold">
-                            {isFinalInvoice ? 'Tax Invoice' : 'Proforma Invoice'}
+                            Tax Invoice
                         </h1>
                         <p className="text-muted-foreground text-sm">Invoice #{order.id.substring(0,8)}</p>
                     </div>
@@ -139,25 +139,6 @@ export default function FinalInvoicePage() {
             </CardHeader>
             <CardContent className="p-6 sm:p-8">
 
-              {isFinalInvoice ? (
-                <Alert variant="default" className="mb-8 bg-green-50 border-green-200">
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    <AlertTitle className="text-green-800">Final Tax Invoice</AlertTitle>
-                    <AlertDescription className="text-green-700">
-                       This is the final tax invoice for your order. Thank you for your purchase.
-                    </AlertDescription>
-                </Alert>
-              ) : (
-                 <Alert variant="default" className="mb-8 bg-blue-50 border-blue-200">
-                    <AlertCircle className="h-4 w-4 text-blue-600" />
-                    <AlertTitle className="text-blue-800">This is a Proforma Invoice</AlertTitle>
-                    <AlertDescription className="text-blue-700">
-                        The final tax invoice will be generated upon full payment and delivery. The current status of your order is: <span className="font-semibold capitalize">{order.status.replace(/-/g, ' ')}</span>.
-                    </AlertDescription>
-                </Alert>
-              )}
-
-
               <div className="mb-8 grid grid-cols-2 gap-4 text-sm">
                   <div>
                       <p className="font-semibold text-muted-foreground">Billed To</p>
@@ -168,6 +149,8 @@ export default function FinalInvoicePage() {
                   <div className="text-right">
                         <p className="font-semibold text-muted-foreground">Order Date</p>
                         <p>{formatDate(order.orderDate)}</p>
+                        <p className="font-semibold text-muted-foreground mt-2">Order Status</p>
+                        <p className="capitalize font-medium">{order.status.replace(/-/g, ' ')}</p>
                   </div>
               </div>
 
@@ -203,7 +186,7 @@ export default function FinalInvoicePage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-8">
                   <div>
-                      {isFinalInvoice && order.status !== 'cancelled' && (
+                      {isPaidInFull && order.status !== 'cancelled' && (
                          <h4 className="font-semibold mb-2">Payment Status: <span className="font-medium capitalize text-green-600">Paid in Full</span></h4>
                       )}
                   </div>
@@ -284,5 +267,3 @@ export default function FinalInvoicePage() {
     </div>
   );
 }
-
-    
