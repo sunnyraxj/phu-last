@@ -110,11 +110,11 @@ export default function OurStoresPage() {
                 <PottersWheelSpinner />
             </div>
         ) : stores && stores.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {stores.map((store) => (
                     <Card key={store.id} className="overflow-hidden flex flex-col">
                         {store.image && (
-                            <div className="relative h-48 w-full">
+                            <div className="relative h-56 w-full">
                                 <Image
                                     src={store.image}
                                     alt={store.name}
@@ -125,23 +125,23 @@ export default function OurStoresPage() {
                             </div>
                         )}
                         <CardHeader className="p-4">
-                            <CardTitle className="text-base font-bold truncate">{store.name}</CardTitle>
+                            <CardTitle className="text-lg font-bold truncate">{store.name}</CardTitle>
                         </CardHeader>
-                        <CardContent className="p-4 pt-0 flex-grow space-y-2">
-                            <div className="flex items-start gap-2 text-muted-foreground">
-                                <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
-                                <p className="text-xs">{store.address}</p>
+                        <CardContent className="p-4 pt-0 flex-grow space-y-3">
+                            <div className="flex items-start gap-3 text-muted-foreground">
+                                <MapPin className="h-5 w-5 mt-0.5 shrink-0" />
+                                <p className="text-sm">{store.address}</p>
                             </div>
                              {store.phone && (
-                                <div className="flex items-center gap-2 text-muted-foreground">
-                                    <Phone className="h-4 w-4 shrink-0" />
-                                    <p className="text-xs">{store.phone}</p>
+                                <div className="flex items-center gap-3 text-muted-foreground">
+                                    <Phone className="h-5 w-5 shrink-0" />
+                                    <p className="text-sm">{store.phone}</p>
                                 </div>
                             )}
                         </CardContent>
                         <div className="p-4 pt-0 mt-auto">
                              <Link href={store.googleMapsLink} target="_blank" rel="noopener noreferrer">
-                                <Button className="w-full h-9 text-sm">
+                                <Button className="w-full text-sm">
                                     View on Google Maps <ExternalLink className="ml-2 h-4 w-4" />
                                 </Button>
                             </Link>

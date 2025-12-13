@@ -517,71 +517,78 @@ export default function ProductPage() {
         </main>
       </div>
 
-      <section className="bg-background py-8 overflow-hidden">
+      <section className="bg-background py-16">
         <div className="container mx-auto px-4">
-            <div className="text-center mb-10">
+            <div className="text-center mb-12">
                 <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Our Store Locations</h2>
+                 <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+                    Visit us in person to experience the craftsmanship firsthand.
+                </p>
             </div>
              {storesLoading ? (
                 <div className="flex justify-center items-center h-64">
                     <PottersWheelSpinner />
                 </div>
             ) : stores && stores.length > 0 ? (
-                <div className="md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6">
-                    <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 md:contents pb-4 -ml-4 pl-4">
-                        {stores.map((store) => (
-                             <div key={store.id} className="snap-start shrink-0 w-3/4 sm:w-2/3 md:w-auto">
-                                <Card className="overflow-hidden h-full flex flex-col bg-background shadow-lg hover:shadow-xl transition-shadow duration-300">
-                                    {store.image && (
-                                        <div className="relative h-48 w-full">
-                                            <Image
-                                                src={store.image}
-                                                alt={store.name}
-                                                fill
-                                                className="object-cover"
-                                                data-ai-hint={store['data-ai-hint']}
-                                            />
-                                        </div>
-                                    )}
-                                    <CardHeader className="p-3">
-                                        <CardTitle className="text-sm font-bold truncate">{store.name}</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="p-3 pt-0 flex-grow space-y-2">
-                                        <div className="flex items-start gap-2 text-muted-foreground">
-                                            <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
-                                            <p className="text-xs">{store.address}</p>
-                                        </div>
-                                        {store.phone && (
-                                            <div className="flex items-center gap-2 text-muted-foreground">
-                                                <Phone className="h-4 w-4 shrink-0 text-primary" />
-                                                <p className="text-xs">{store.phone}</p>
-                                            </div>
-                                        )}
-                                    </CardContent>
-                                    <div className="p-3 pt-0 mt-auto">
-                                        <Link href={store.googleMapsLink} target="_blank" rel="noopener noreferrer">
-                                            <Button className="w-full h-9 text-sm">
-                                                View on Google Maps <ExternalLink className="ml-2 h-4 w-4" />
-                                            </Button>
-                                        </Link>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {stores.slice(0, 3).map((store) => (
+                        <Card key={store.id} className="overflow-hidden flex flex-col bg-card shadow-lg hover:shadow-xl transition-shadow duration-300">
+                            {store.image && (
+                                <div className="relative h-56 w-full">
+                                    <Image
+                                        src={store.image}
+                                        alt={store.name}
+                                        fill
+                                        className="object-cover"
+                                        data-ai-hint={store['data-ai-hint']}
+                                    />
+                                </div>
+                            )}
+                            <CardHeader className="p-4">
+                                <CardTitle className="text-lg font-bold truncate">{store.name}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-4 pt-0 flex-grow space-y-3">
+                                <div className="flex items-start gap-3 text-muted-foreground">
+                                    <MapPin className="h-5 w-5 mt-0.5 shrink-0 text-primary" />
+                                    <p className="text-sm">{store.address}</p>
+                                </div>
+                                {store.phone && (
+                                    <div className="flex items-center gap-3 text-muted-foreground">
+                                        <Phone className="h-5 w-5 shrink-0 text-primary" />
+                                        <p className="text-sm">{store.phone}</p>
                                     </div>
-                                </Card>
+                                )}
+                            </CardContent>
+                            <div className="p-4 pt-0 mt-auto">
+                                <Link href={store.googleMapsLink} target="_blank" rel="noopener noreferrer">
+                                    <Button className="w-full text-sm">
+                                        View on Google Maps <ExternalLink className="ml-2 h-4 w-4" />
+                                    </Button>
+                                </Link>
                             </div>
-                        ))}
-                    </div>
+                        </Card>
+                    ))}
                 </div>
             ) : (
                 <div className="text-center h-64 flex flex-col items-center justify-center">
                     <p className="text-muted-foreground">No store locations have been added yet.</p>
                 </div>
             )}
+            <div className="text-center mt-12">
+                <Link href="/our-stores">
+                    <Button variant="outline">View All Locations</Button>
+                </Link>
+            </div>
         </div>
       </section>
 
-      <section className="py-8">
+      <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
             <div className="text-center mb-12">
                 <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Meet Our Team</h2>
+                 <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+                    The passionate individuals behind our handcrafted collection.
+                </p>
             </div>
             {teamMembersLoading ? (
                 <div className="flex justify-center items-center h-64">
@@ -591,29 +598,28 @@ export default function ProductPage() {
                 <>
                 <div className="flex flex-col items-center">
                     {founder && (
-                        <div className="relative flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10 p-6 rounded-2xl bg-muted/50 mb-12 shadow-lg ring-1 ring-black/5 hover:shadow-primary/10 transition-shadow duration-300 w-full max-w-2xl">
-                            <div className="text-center md:text-left">
-                                <h3 className="text-3xl md:text-4xl font-bold text-foreground">{founder.name}</h3>
-                                <p className="text-primary font-semibold text-lg">{founder.role}</p>
-                            </div>
-                             <div className="relative h-28 w-28 md:h-32 md:w-32 rounded-full overflow-hidden shadow-lg border-4 border-white flex-shrink-0">
+                         <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 mb-16">
+                            <div className="relative h-56 w-56 md:h-64 md:w-64 rounded-full overflow-hidden shadow-lg border-4 border-background">
                                 <Image src={founder.image} alt={founder.name} fill className="object-cover" data-ai-hint={founder['data-ai-hint']} />
+                            </div>
+                            <div className="text-center md:text-left max-w-md">
+                                <p className="text-primary font-semibold tracking-wide">{founder.role}</p>
+                                <h3 className="text-3xl md:text-4xl font-bold text-foreground mt-1">{founder.name}</h3>
+                                <p className="mt-3 text-muted-foreground">{founder.bio}</p>
                             </div>
                         </div>
                     )}
                     {managementMembers.length > 0 && (
-                         <div className="w-full max-w-5xl">
-                             <div className="flex flex-wrap justify-center gap-4 sm:gap-8">
-                                {managementMembers.map((member) => (
-                                    <div key={member.id} className="text-center flex flex-col items-center group w-[calc(100%/3-1rem)] sm:w-auto">
-                                        <div className="relative h-24 w-24 md:h-32 md:w-32 rounded-full overflow-hidden mb-3 shadow-lg transition-transform duration-300 group-hover:scale-105 border-4 border-background">
-                                            <Image src={member.image} alt={member.name} fill className="object-cover" data-ai-hint={member['data-ai-hint']} />
-                                        </div>
-                                        <h3 className="text-sm font-semibold text-foreground md:text-lg truncate w-full">{member.name}</h3>
-                                        <p className="text-muted-foreground font-medium text-xs md:text-base">{member.role}</p>
+                         <div className="w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {managementMembers.map((member) => (
+                                <div key={member.id} className="text-center flex flex-col items-center group">
+                                    <div className="relative h-32 w-32 rounded-full overflow-hidden mb-4 shadow-lg transition-transform duration-300 group-hover:scale-105 border-4 border-background">
+                                        <Image src={member.image} alt={member.name} fill className="object-cover" data-ai-hint={member['data-ai-hint']} />
                                     </div>
-                                ))}
-                            </div>
+                                    <h3 className="font-semibold text-foreground text-lg">{member.name}</h3>
+                                    <p className="text-muted-foreground font-medium text-sm">{member.role}</p>
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>
