@@ -70,11 +70,12 @@ export default function OrdersPage() {
     const { data: orderItems, isLoading: itemsLoading } = useCollection<OrderItem>(orderItemsQuery);
     
     const orders = useMemo(() => {
-        if (!allOrders) return { pending: [], shipped: [], archived: [] };
+        if (!allOrders) return { pending: [], shipped: [], delivered: [], archived: [] };
         const pending = allOrders.filter(o => o.status === 'pending' || o.status === 'pending-payment-approval');
         const shipped = allOrders.filter(o => o.status === 'shipped');
-        const archived = allOrders.filter(o => o.status === 'delivered' || o.status === 'cancelled');
-        return { pending, shipped, archived };
+        const delivered = allOrders.filter(o => o.status === 'delivered');
+        const archived = allOrders.filter(o => o.status === 'cancelled');
+        return { pending, shipped, delivered, archived };
     }, [allOrders]);
 
     const formatDate = (timestamp: { seconds: number }) => {
@@ -279,6 +280,7 @@ export default function OrdersPage() {
                 <TabsList>
                     <TabsTrigger value="pending">Pending <Badge variant={orders.pending.length > 0 ? "default" : "outline"} className="ml-2">{orders.pending.length}</Badge></TabsTrigger>
                     <TabsTrigger value="shipped">Shipped <Badge variant={orders.shipped.length > 0 ? "default" : "outline"} className="ml-2">{orders.shipped.length}</Badge></TabsTrigger>
+                    <TabsTrigger value="delivered">Delivered <Badge variant={orders.delivered.length > 0 ? "default" : "outline"} className="ml-2">{orders.delivered.length}</Badge></TabsTrigger>
                     <TabsTrigger value="archived">Archived</TabsTrigger>
                 </TabsList>
                 <TabsContent value="pending" className="mt-4">
@@ -307,12 +309,25 @@ export default function OrdersPage() {
                         </CardContent>
                     </Card>
                 </TabsContent>
+                 <TabsContent value="delivered" className="mt-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Delivered Orders</CardTitle>
+                            <CardDescription>
+                                Orders that have been successfully delivered to the customer.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <OrderTable orders={orders.delivered} emptyMessage="No delivered orders." />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
                 <TabsContent value="archived" className="mt-4">
                     <Card>
                         <CardHeader>
                             <CardTitle>Archived Orders</CardTitle>
                             <CardDescription>
-                                Orders that have been delivered or cancelled.
+                                Orders that have been cancelled.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
