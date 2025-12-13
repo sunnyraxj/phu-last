@@ -143,7 +143,6 @@ export default function OrdersPage() {
                         <TableHead>Order Details</TableHead>
                         <TableHead>Customer</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Payment</TableHead>
                         <TableHead className="text-right">Total</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -151,7 +150,7 @@ export default function OrdersPage() {
                 <TableBody>
                     {isLoading ? (
                         <TableRow>
-                            <TableCell colSpan={7} className="h-24 text-center">
+                            <TableCell colSpan={6} className="h-24 text-center">
                                 <PottersWheelSpinner />
                             </TableCell>
                         </TableRow>
@@ -172,28 +171,12 @@ export default function OrdersPage() {
                                             <p className="text-muted-foreground text-xs">{formatDate(order.orderDate)}</p>
                                         </TableCell>
                                         <TableCell className="align-top pt-4">
-                                            {order.shippingDetails ? (
-                                                <div className="text-xs">
-                                                    <p className="font-semibold">{order.shippingDetails.name}</p>
-                                                    <p className="text-muted-foreground">{order.shippingDetails.address}</p>
-                                                    <p className="text-muted-foreground">{order.shippingDetails.city}, {order.shippingDetails.state} {order.shippingDetails.pincode}</p>
-                                                    <p className="text-muted-foreground">{order.shippingDetails.phone}</p>
-                                                </div>
-                                            ): 'N/A'}
+                                            <p className="font-semibold">{order.shippingDetails?.name || 'N/A'}</p>
                                         </TableCell>
                                         <TableCell className="align-top pt-4">
                                             <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status.replace(/-/g, ' ')}</Badge>
                                         </TableCell>
-                                        <TableCell className="align-top pt-4">
-                                            {order.paymentMethod === 'UPI_PARTIAL' && order.paymentDetails ? (
-                                                <div className="text-xs">
-                                                    <p>UTR: <span className="font-mono">{order.paymentDetails.utr}</span></p>
-                                                    <p>Paid: <span className="font-semibold">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.paymentDetails.advanceAmount)}</span></p>
-                                                    <p>Due: <span className="font-semibold text-destructive">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.paymentDetails.remainingAmount)}</span></p>
-                                                </div>
-                                            ) : 'Full Payment'}
-                                        </TableCell>
-                                        <TableCell className="text-right align-top pt-4">
+                                        <TableCell className="text-right align-top pt-4 font-semibold">
                                             {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.totalAmount)}
                                         </TableCell>
                                         <TableCell className="text-right align-top pt-4">
@@ -228,29 +211,55 @@ export default function OrdersPage() {
                                     </TableRow>
                                     {isExpanded && (
                                         <TableRow>
-                                            <TableCell colSpan={7}>
-                                                <div className="p-4 bg-muted/50 rounded-md">
-                                                    <h4 className="font-semibold mb-2">Order Items</h4>
-                                                    {itemsInOrder.length > 0 ? (
-                                                        <div className="space-y-2">
-                                                            {itemsInOrder.map(item => (
-                                                                <div key={item.id} className="flex items-center gap-4 text-sm p-2 bg-background rounded">
-                                                                    <div className="relative h-12 w-12 rounded-md overflow-hidden bg-muted">
-                                                                        {item.productImage ? <Image src={item.productImage} alt={item.productName} fill className="object-cover" /> : <div className="h-full w-full bg-muted"></div>}
+                                            <TableCell colSpan={6}>
+                                                <div className="p-4 bg-muted/50 rounded-md grid md:grid-cols-2 gap-6">
+                                                     <div>
+                                                        <h4 className="font-semibold mb-2">Order Items</h4>
+                                                        {itemsInOrder.length > 0 ? (
+                                                            <div className="space-y-2">
+                                                                {itemsInOrder.map(item => (
+                                                                    <div key={item.id} className="flex items-center gap-4 text-sm p-2 bg-background rounded">
+                                                                        <div className="relative h-12 w-12 rounded-md overflow-hidden bg-muted">
+                                                                            {item.productImage ? <Image src={item.productImage} alt={item.productName} fill className="object-cover" /> : <div className="h-full w-full bg-muted"></div>}
+                                                                        </div>
+                                                                        <div className="flex-1">
+                                                                            <p className="font-medium">{item.productName}</p>
+                                                                            <p className="text-muted-foreground">Qty: {item.quantity}</p>
+                                                                        </div>
+                                                                        <p className="font-semibold">
+                                                                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.price * item.quantity)}
+                                                                        </p>
                                                                     </div>
-                                                                    <div className="flex-1">
-                                                                        <p className="font-medium">{item.productName}</p>
-                                                                        <p className="text-muted-foreground">Qty: {item.quantity}</p>
-                                                                    </div>
-                                                                    <p className="font-semibold">
-                                                                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.price * item.quantity)}
-                                                                    </p>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <p className="text-muted-foreground text-sm">No items found for this order.</p>
+                                                        )}
+                                                    </div>
+                                                    <div className="space-y-4">
+                                                        <div>
+                                                            <h4 className="font-semibold mb-2">Shipping Address</h4>
+                                                            {order.shippingDetails ? (
+                                                                <div className="text-xs">
+                                                                    <p className="font-semibold">{order.shippingDetails.name}</p>
+                                                                    <p className="text-muted-foreground">{order.shippingDetails.address}</p>
+                                                                    <p className="text-muted-foreground">{order.shippingDetails.city}, {order.shippingDetails.state} {order.shippingDetails.pincode}</p>
+                                                                    <p className="text-muted-foreground">{order.shippingDetails.phone}</p>
                                                                 </div>
-                                                            ))}
+                                                            ): 'N/A'}
                                                         </div>
-                                                    ) : (
-                                                        <p className="text-muted-foreground text-sm">No items found for this order.</p>
-                                                    )}
+                                                        <div>
+                                                            <h4 className="font-semibold mb-2">Payment Details</h4>
+                                                            {order.paymentMethod === 'UPI_PARTIAL' && order.paymentDetails ? (
+                                                                <div className="text-xs space-y-1">
+                                                                    <p>Method: <span className="font-semibold">Partial UPI</span></p>
+                                                                    <p>UTR: <span className="font-mono">{order.paymentDetails.utr}</span></p>
+                                                                    <p>Paid: <span className="font-semibold text-green-600">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.paymentDetails.advanceAmount)}</span></p>
+                                                                    <p>Due: <span className="font-semibold text-destructive">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.paymentDetails.remainingAmount)}</span></p>
+                                                                </div>
+                                                            ) : <p className="text-xs">Full Payment</p>}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </TableCell>
                                         </TableRow>
@@ -260,7 +269,7 @@ export default function OrdersPage() {
                         })
                     ) : (
                         <TableRow>
-                            <TableCell colSpan={7} className="h-24 text-center">
+                            <TableCell colSpan={6} className="h-24 text-center">
                                 {emptyMessage}
                             </TableCell>
                         </TableRow>
