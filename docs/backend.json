@@ -212,6 +212,7 @@
         "title": { "type": "string", "description": "The title of the blog post." },
         "slug": { "type": "string", "description": "The URL-friendly slug for the blog post." },
         "content": { "type": "string", "description": "The main content of the blog post in Markdown or HTML format." },
+        "featuredImage": { "type": "string", "description": "URL of the main image for the blog post.", "format": "uri" },
         "status": { "type": "string", "description": "The status of the blog post.", "enum": ["draft", "published"] },
         "createdAt": { "type": "string", "description": "The date the blog post was created.", "format": "date-time" },
         "faqs": {

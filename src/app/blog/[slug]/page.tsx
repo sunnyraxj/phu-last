@@ -9,6 +9,7 @@ import { Header } from '@/components/shared/Header';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import Image from 'next/image';
 
 type FAQ = {
     question: string;
@@ -20,6 +21,7 @@ type Blog = {
     title: string;
     slug: string;
     content: string;
+    featuredImage?: string;
     status: 'draft' | 'published';
     createdAt: Timestamp;
     faqs?: FAQ[];
@@ -79,6 +81,11 @@ export default function BlogPostPage() {
                 ) : post ? (
                     <article className="max-w-3xl mx-auto">
                         <header className="mb-8">
+                            {post.featuredImage && (
+                                <div className="relative h-64 sm:h-96 w-full rounded-xl overflow-hidden mb-8">
+                                    <Image src={post.featuredImage} alt={post.title} fill className="object-cover" />
+                                </div>
+                            )}
                             <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl mb-4">{post.title}</h1>
                             <p className="text-muted-foreground">{formatDate(post.createdAt)}</p>
                         </header>

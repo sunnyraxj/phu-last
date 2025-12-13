@@ -8,12 +8,14 @@ import { Header } from '@/components/shared/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import Image from 'next/image';
 
 type Blog = {
     id: string;
     title: string;
     slug: string;
     content: string;
+    featuredImage?: string;
     status: 'draft' | 'published';
     createdAt: Timestamp;
 };
@@ -50,7 +52,12 @@ export default function BlogListPage() {
                 ) : blogs && blogs.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {blogs.sort((a, b) => b.createdAt.seconds - a.createdAt.seconds).map((post) => (
-                            <Card key={post.id} className="flex flex-col">
+                            <Card key={post.id} className="flex flex-col overflow-hidden">
+                                {post.featuredImage && (
+                                    <div className="relative h-48 w-full">
+                                        <Image src={post.featuredImage} alt={post.title} fill className="object-cover" />
+                                    </div>
+                                )}
                                 <CardHeader>
                                     <CardTitle className="leading-tight">{post.title}</CardTitle>
                                     <CardDescription>{formatDate(post.createdAt)}</CardDescription>

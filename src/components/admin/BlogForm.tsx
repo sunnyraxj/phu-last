@@ -16,12 +16,15 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Separator } from '../ui/separator';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Trash2, UploadCloud } from 'lucide-react';
+import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
+import { useToast } from '@/hooks/use-toast';
+import Image from 'next/image';
 
 const faqSchema = z.object({
     question: z.string().min(1, 'Question is required'),
@@ -32,6 +35,7 @@ const blogSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   slug: z.string().min(1, 'Slug is required').regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase and contain only letters, numbers, and hyphens'),
   content: z.string().min(1, 'Content is required'),
+  featuredImage: z.string().min(1, 'A featured image is required.'),
   status: z.enum(['draft', 'published']),
   faqs: z.array(faqSchema).optional(),
 });
@@ -46,6 +50,10 @@ interface BlogFormProps {
 }
 
 export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const { toast } = useToast();
+  
   const {
     register,
     handleSubmit,
@@ -60,17 +68,19 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
       title: '',
       slug: '',
       content: '',
+      featuredImage: '',
       status: 'draft',
       faqs: [],
     },
   });
+  
+  const imageValue = watch('featuredImage');
+  const titleValue = watch('title');
 
   const { fields, append, remove } = useFieldArray({
       control,
       name: "faqs",
   });
-
-  const titleValue = watch('title');
 
   useEffect(() => {
     if (isOpen) {
@@ -84,6 +94,7 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
             title: '',
             slug: '',
             content: '',
+            featuredImage: '',
             status: 'draft',
             faqs: [],
           });
@@ -97,6 +108,44 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
           setValue('slug', slug, { shouldValidate: true });
       }
   }, [titleValue, setValue, post]);
+  
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const response = await fetch(`/api/upload?filename=${file.name}`, {
+        method: 'POST',
+        body: file,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
+      }
+
+      const newBlob = await response.json();
+      setValue('featuredImage', newBlob.url, { shouldValidate: true });
+      toast({
+        title: 'Image Uploaded',
+        description: 'The featured image has been successfully uploaded.',
+      });
+
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Upload Failed',
+        description: error.message,
+      });
+    } finally {
+      setIsUploading(false);
+       if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
 
   const handleFormSubmit: SubmitHandler<BlogFormValues> = (data) => {
     onSubmit(data);
@@ -126,6 +175,43 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
                                 <Label htmlFor="slug">Slug</Label>
                                 <Input id="slug" {...register('slug')} />
                                 {errors.slug && <p className="text-xs text-destructive">{errors.slug.message}</p>}
+                            </div>
+                            <div className="space-y-1">
+                                <Label htmlFor="featuredImage">Featured Image</Label>
+                                <div 
+                                    className="relative flex justify-center items-center w-full h-48 border-2 border-dashed rounded-md cursor-pointer hover:bg-muted"
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    {isUploading ? (
+                                        <div className="flex flex-col items-center gap-2">
+                                            <PottersWheelSpinner />
+                                            <p className="text-sm text-muted-foreground">Uploading...</p>
+                                        </div>
+                                    ) : imageValue ? (
+                                        <Image src={imageValue} alt="Featured image preview" fill className="object-cover rounded-md" />
+                                    ) : (
+                                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                            <UploadCloud className="h-8 w-8" />
+                                            <p className="font-semibold">Click to upload image</p>
+                                            <p className="text-xs">PNG, JPG, GIF up to 10MB</p>
+                                        </div>
+                                    )}
+                                </div>
+                                 <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleFileChange}
+                                    className="hidden"
+                                    accept="image/*"
+                                    disabled={isUploading}
+                                />
+                                {errors.featuredImage && <p className="text-xs text-destructive mt-1">{errors.featuredImage.message}</p>}
+                                <Input 
+                                    {...register('featuredImage')}
+                                    placeholder="Or paste an image URL here"
+                                    className="mt-2"
+                                    readOnly={isUploading}
+                                />
                             </div>
                              <div className="space-y-1">
                                 <Label htmlFor="content">Content</Label>
@@ -212,7 +298,7 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
                     Cancel
                     </Button>
                 </DialogClose>
-                <Button type="submit" disabled={isSubmitting}>
+                <Button type="submit" disabled={isSubmitting || isUploading}>
                 {isSubmitting ? 'Saving...' : 'Save Post'}
                 </Button>
             </DialogFooter>
