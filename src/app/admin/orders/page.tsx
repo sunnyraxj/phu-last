@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, Fragment, useMemo } from 'react';
@@ -12,7 +11,7 @@ import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, ChevronDown, ChevronUp, Calendar as CalendarIcon, Search } from 'lucide-react';
+import { MoreHorizontal, ChevronDown, ChevronUp, Calendar as CalendarIcon, Search, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -21,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
+import Link from 'next/link';
 
 type OrderStatus = 'pending-payment-approval' | 'pending' | 'shipped' | 'delivered' | 'cancelled';
 
@@ -221,14 +221,21 @@ export default function OrdersPage() {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem asChild>
+                                                        <Link href={`/order-confirmation/${order.id}`} target="_blank">
+                                                            <FileText className="mr-2 h-4 w-4" />
+                                                            View Invoice
+                                                        </Link>
+                                                    </DropdownMenuItem>
                                                     {order.status === 'pending-payment-approval' && (
                                                         <>
+                                                            <DropdownMenuSeparator />
                                                             <DropdownMenuItem onClick={() => setOrderToApprove(order)}>
                                                                 Approve Payment
                                                             </DropdownMenuItem>
-                                                            <DropdownMenuSeparator />
                                                         </>
                                                     )}
+                                                    <DropdownMenuSeparator />
                                                     {statusChangeOptions.map(status => (
                                                          <DropdownMenuItem 
                                                             key={status} 
