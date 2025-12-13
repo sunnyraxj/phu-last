@@ -17,6 +17,11 @@ type TeamMember = {
     id: string;
 }
 
+type Blog = {
+    slug: string;
+    status: 'published' | 'draft';
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://purbanchal-hasta-udyog.com'; // Replace with your actual domain
 
@@ -50,6 +55,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
   }));
 
+  // Get all blog posts
+  const blogsSnapshot = await getDocs(collection(firestore, 'blogs'));
+  const blogs = blogsSnapshot.docs.map(doc => doc.data() as Blog);
+  const blogUrls = blogs
+    .filter(blog => blog.status === 'published' && blog.slug)
+    .map(blog => ({
+        url: `${baseUrl}/blog/${blog.slug}`,
+        lastModified: new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+    }));
+
 
   const staticUrls: MetadataRoute.Sitemap = [
     {
@@ -76,6 +93,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 0.7,
     },
+     {
+      url: `${baseUrl}/blog`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
     {
       url: `${baseUrl}/privacy-policy`,
       lastModified: new Date(),
@@ -90,5 +113,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  return [...staticUrls, ...productUrls, ...storeUrls, ...teamMemberUrls];
+  return [...staticUrls, ...productUrls, ...storeUrls, ...teamMemberUrls, ...blogUrls];
 }

@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { collection, doc } from 'firebase/firestore';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Button } from '@/components/ui/button';
-import { Home, Package, ShoppingCart, Users, Store, Menu, Settings, Undo2, LayoutDashboard } from 'lucide-react';
+import { Home, Package, ShoppingCart, Users, Store, Menu, Settings, Undo2, LayoutDashboard, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -127,6 +127,7 @@ export default function AdminLayout({
         {
             title: 'Content',
             items: [
+                { href: '/admin/blog', label: 'Blog', icon: FileText },
                 { href: '/admin/team', label: 'Our Team', icon: Users },
                 { href: '/admin/store', label: 'Our Store', icon: Store },
             ]
@@ -150,8 +151,9 @@ export default function AdminLayout({
                                 <Link href={item.href}>
                                     <span className={cn(
                                         "flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-base text-foreground transition-all hover:text-primary hover:bg-muted",
-                                        pathname === item.href && "bg-muted text-primary font-semibold",
-                                        pathname === '/admin' && item.href === '/admin' && "bg-muted text-primary font-semibold"
+                                        pathname.startsWith(item.href) && item.href !== '/admin' && "bg-muted text-primary font-semibold",
+                                        pathname === '/admin' && item.href === '/admin' && "bg-muted text-primary font-semibold",
+                                        pathname === item.href && "bg-muted text-primary font-semibold"
                                     )}>
                                         <div className="flex items-center gap-3">
                                             <item.icon className="h-5 w-5" />
