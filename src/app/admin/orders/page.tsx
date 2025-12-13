@@ -348,24 +348,26 @@ export default function OrdersPage() {
         <div className="flex-1 space-y-4 p-2 sm:p-4 md:p-8 pt-6">
             <div className="flex flex-col sm:flex-row items-center justify-between space-y-2">
                 <h2 className="text-3xl font-bold tracking-tight">Orders</h2>
-                 <div className="relative w-full sm:max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input
-                        placeholder="Search by Order ID or Customer Name..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                    />
-                </div>
             </div>
             
             <Tabs defaultValue="pending">
-                <TabsList>
-                    <TabsTrigger value="pending">Pending <Badge variant={orders.pending.length > 0 ? "default" : "outline"} className="ml-2">{orders.pending.length}</Badge></TabsTrigger>
-                    <TabsTrigger value="shipped">Shipped <Badge variant={orders.shipped.length > 0 ? "default" : "outline"} className="ml-2">{orders.shipped.length}</Badge></TabsTrigger>
-                    <TabsTrigger value="delivered">Delivered <Badge variant={orders.delivered.length > 0 ? "default" : "outline"} className="ml-2">{orders.delivered.length}</Badge></TabsTrigger>
-                    <TabsTrigger value="archived">Archived</TabsTrigger>
-                </TabsList>
+                 <div className="flex flex-col sm:flex-row items-center justify-between space-y-2">
+                    <TabsList>
+                        <TabsTrigger value="pending">Pending <Badge variant={orders.pending.length > 0 ? "default" : "outline"} className="ml-2">{orders.pending.length}</Badge></TabsTrigger>
+                        <TabsTrigger value="shipped">Shipped <Badge variant={orders.shipped.length > 0 ? "default" : "outline"} className="ml-2">{orders.shipped.length}</Badge></TabsTrigger>
+                        <TabsTrigger value="delivered">Delivered <Badge variant={orders.delivered.length > 0 ? "default" : "outline"} className="ml-2">{orders.delivered.length}</Badge></TabsTrigger>
+                        <TabsTrigger value="archived">Archived</TabsTrigger>
+                    </TabsList>
+                    <div className="relative w-full sm:max-w-sm">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input
+                            placeholder="Search by Order ID or Customer Name..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10"
+                        />
+                    </div>
+                </div>
                 <TabsContent value="pending" className="mt-4">
                      <Card>
                         <CardHeader>
@@ -456,5 +458,7 @@ export default function OrdersPage() {
 }
 
 
+
+    
 
     
