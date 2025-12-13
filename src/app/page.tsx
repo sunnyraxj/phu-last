@@ -516,7 +516,7 @@ export default function ProductPage() {
         </main>
       </div>
 
-      <section className="bg-background py-16 mt-16 overflow-hidden">
+      <section className="bg-background py-12 overflow-hidden">
         <div className="container mx-auto px-4">
             <div className="text-center mb-10">
                 <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Our Store Locations</h2>
@@ -577,7 +577,7 @@ export default function ProductPage() {
         </div>
       </section>
 
-      <section className="py-16">
+      <section className="py-12">
         <div className="container mx-auto px-4">
             <div className="text-center mb-12">
                 <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Meet Our Team</h2>
