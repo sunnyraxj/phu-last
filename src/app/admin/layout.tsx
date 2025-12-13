@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Fragment } from 'react';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -110,76 +110,101 @@ export default function AdminLayout({
         );
     }
     
-    const navItems = [
-        { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { href: '/admin', label: 'Products', icon: Package, badge: outOfStockCount > 0 ? outOfStockCount : null, badgeVariant: 'destructive' as const },
-        { href: '/admin/orders', label: 'Orders', icon: ShoppingCart, badge: pendingOrdersCount > 0 ? pendingOrdersCount : null, badgeVariant: 'default' as const },
-        { href: '/admin/returns', label: 'Returns', icon: Undo2, badge: pendingReturnsCount > 0 ? pendingReturnsCount : null, badgeVariant: 'destructive' as const },
-        { href: '/admin/team', label: 'Our Team', icon: Users },
-        { href: '/admin/store', label: 'Our Store', icon: Store },
-        { href: '/admin/settings', label: 'Settings', icon: Settings },
+    const navGroups = [
+        {
+            items: [
+                { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+            ]
+        },
+        {
+            title: 'Store Management',
+            items: [
+                { href: '/admin', label: 'Products', icon: Package, badge: outOfStockCount > 0 ? outOfStockCount : null, badgeVariant: 'destructive' as const },
+                { href: '/admin/orders', label: 'Orders', icon: ShoppingCart, badge: pendingOrdersCount > 0 ? pendingOrdersCount : null, badgeVariant: 'default' as const },
+                { href: '/admin/returns', label: 'Returns', icon: Undo2, badge: pendingReturnsCount > 0 ? pendingReturnsCount : null, badgeVariant: 'destructive' as const },
+            ]
+        },
+        {
+            title: 'Content',
+            items: [
+                { href: '/admin/team', label: 'Our Team', icon: Users },
+                { href: '/admin/store', label: 'Our Store', icon: Store },
+            ]
+        },
+        {
+            title: 'General',
+            items: [
+                { href: '/admin/settings', label: 'Settings', icon: Settings },
+            ]
+        }
     ];
 
     const navContent = (
-         <ul className="space-y-1">
-            {navItems.map((item) => (
-                <li key={item.href}>
-                    <Link href={item.href}>
-                        <span className={cn(
-                            "flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                            pathname.startsWith(item.href) && item.href !== '/admin' && "bg-muted text-primary",
-                            pathname === '/admin' && item.href === '/admin' && "bg-muted text-primary",
-                            pathname === '/admin/dashboard' && item.href === '/admin/dashboard' && "bg-muted text-primary"
-                        )}>
-                            <div className="flex items-center gap-3">
-                                <item.icon className="h-4 w-4" />
-                                {item.label}
-                            </div>
-                            {item.badge != null && <Badge variant={item.badgeVariant}>{item.badge}</Badge>}
-                        </span>
-                    </Link>
-                </li>
+        <nav className="flex flex-col gap-4">
+            {navGroups.map((group, index) => (
+                 <div key={index} className="flex flex-col gap-1">
+                    {group.title && <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{group.title}</h3>}
+                    <ul className="space-y-1">
+                        {group.items.map((item) => (
+                            <li key={item.href}>
+                                <Link href={item.href}>
+                                    <span className={cn(
+                                        "flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:bg-muted",
+                                        pathname === item.href && "bg-muted text-primary",
+                                        // Special case for /admin matching Products link
+                                        pathname === '/admin' && item.href === '/admin' && "bg-muted text-primary"
+                                    )}>
+                                        <div className="flex items-center gap-3">
+                                            <item.icon className="h-4 w-4" />
+                                            {item.label}
+                                        </div>
+                                        {item.badge != null && <Badge variant={item.badgeVariant} className="h-5">{item.badge}</Badge>}
+                                    </span>
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
             ))}
-        </ul>
+        </nav>
     );
 
     return (
-        <div className="flex min-h-screen w-full">
-            <aside className="w-64 flex-col border-r bg-background hidden md:flex">
-                <div className="flex h-[60px] items-center border-b px-6">
-                    <Link href="/" className="flex items-center gap-2 font-semibold">
-                         <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
-                            <span className="text-lg font-bold">P</span>
-                        </div>
-                        <span className="">Hasta Udyog Admin</span>
-                    </Link>
-                </div>
-                <nav className="flex-1 p-4">
-                    {navContent}
-                </nav>
-                 <div className="mt-auto p-4">
-                    <Link href="/">
-                        <Button variant="ghost" className="w-full justify-start">
-                            <Home className="mr-2 h-4 w-4" />
-                            Back to Store
-                        </Button>
-                    </Link>
+        <div className="grid min-h-screen w-full md:grid-cols-[280px_1fr]">
+            <aside className="hidden border-r bg-background md:block">
+                <div className="flex h-full max-h-screen flex-col gap-2">
+                    <div className="flex h-14 items-center border-b px-6">
+                        <Link href="/" className="flex items-center gap-2 font-semibold">
+                             <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
+                                <span className="text-lg font-bold">P</span>
+                            </div>
+                            <span className="">Hasta Udyog Admin</span>
+                        </Link>
+                    </div>
+                    <div className="flex-1 overflow-y-auto py-4">
+                        {navContent}
+                    </div>
+                     <div className="mt-auto p-4">
+                        <Link href="/">
+                            <Button variant="ghost" className="w-full justify-start">
+                                <Home className="mr-2 h-4 w-4" />
+                                Back to Store
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
             </aside>
-            <div className="flex flex-col flex-1">
-                <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 sm:px-6 lg:h-[60px]">
+            <div className="flex flex-col">
+                <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
                      <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                         <SheetTrigger asChild>
-                            <Button variant="outline" size="icon" className="md:hidden">
+                            <Button variant="outline" size="icon" className="shrink-0 md:hidden">
                                 <Menu className="h-5 w-5" />
                                 <span className="sr-only">Toggle navigation menu</span>
                             </Button>
                         </SheetTrigger>
-                        <SheetContent side="left" className="flex flex-col w-full max-w-xs p-0">
-                           <SheetHeader className="p-4">
-                                <SheetTitle className="sr-only">Admin Menu</SheetTitle>
-                           </SheetHeader>
-                           <div className="flex h-[60px] items-center border-b px-6">
+                        <SheetContent side="left" className="flex flex-col p-0">
+                           <div className="flex h-14 items-center border-b px-6">
                                 <Link href="/" className="flex items-center gap-2 font-semibold">
                                     <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
                                         <span className="text-lg font-bold">P</span>
@@ -187,9 +212,9 @@ export default function AdminLayout({
                                     <span className="">Admin</span>
                                 </Link>
                             </div>
-                             <nav className="flex-1 p-4">
+                             <div className="flex-1 overflow-y-auto py-4">
                                 {navContent}
-                            </nav>
+                            </div>
                              <div className="mt-auto p-4 border-t">
                                 <Link href="/">
                                     <Button variant="ghost" className="w-full justify-start">
@@ -204,7 +229,7 @@ export default function AdminLayout({
                         {/* Can add a search bar here if needed */}
                     </div>
                 </header>
-                <main className="flex-1 overflow-auto">
+                <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 overflow-auto">
                     {children}
                 </main>
             </div>
