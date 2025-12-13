@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm, SubmitHandler, Controller } from 'react-hook-form';
@@ -24,6 +25,10 @@ import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 const bulkEditSchema = z.object({
   category: z.string().optional(),
   material: z.string().optional(),
+  mrp: z.preprocess(
+    (a) => (a === '' ? undefined : parseFloat(z.string().parse(a))),
+    z.number().positive({ message: 'MRP must be a positive number' }).optional()
+  ),
   gst: z.preprocess(
     (a) => (a === '' ? undefined : parseFloat(z.string().parse(a))),
     z.number().min(0, { message: 'GST must be a non-negative number' }).optional()
@@ -72,6 +77,7 @@ export function BulkEditForm({
     defaultValues: {
       category: '',
       material: '',
+      mrp: undefined,
       gst: undefined,
       inStock: undefined,
     },
@@ -82,6 +88,7 @@ export function BulkEditForm({
         reset({
             category: '',
             material: '',
+            mrp: undefined,
             gst: undefined,
             inStock: undefined,
         });
@@ -163,6 +170,12 @@ export function BulkEditForm({
                       </div>
                       {errors.material && <p className="text-xs text-destructive">{errors.material.message}</p>}
                   </div>
+
+                  <div className="space-y-1">
+                        <Label htmlFor="mrp">MRP (INR)</Label>
+                        <Input id="mrp" type="number" step="0.01" {...register('mrp')} placeholder="Keep original or enter new" />
+                        {errors.mrp && <p className="text-xs text-destructive">{errors.mrp.message}</p>}
+                    </div>
 
                   <div className="space-y-1">
                       <Label htmlFor="gst">GST %</Label>

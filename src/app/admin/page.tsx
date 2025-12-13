@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
@@ -122,6 +123,7 @@ export default function AdminProductsPage() {
         // Build the update object only with the fields that were actually changed
         if (formData.category) updates.category = formData.category;
         if (formData.material) updates.material = formData.material;
+        if (formData.mrp !== undefined && !isNaN(formData.mrp)) updates.mrp = formData.mrp;
         if (formData.inStock !== undefined) updates.inStock = formData.inStock;
         if (formData.gst !== undefined && !isNaN(formData.gst)) updates.gst = formData.gst;
 
