@@ -15,14 +15,25 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown } from 'lucide-react';
 import Link from 'next/link';
+import { addDays, format } from 'date-fns';
 
 type OrderStatus = 'pending-payment-approval' | 'pending' | 'shipped' | 'delivered' | 'cancelled';
+
+type ShippingDetails = {
+    name: string;
+    address: string;
+    city: string;
+    state: string;
+    pincode: string;
+    phone: string;
+}
 
 type Order = {
     id: string;
     orderDate: { seconds: number; nanoseconds: number; };
     totalAmount: number;
     status: OrderStatus;
+    shippingDetails: ShippingDetails;
 };
 
 type OrderItem = {
@@ -56,10 +67,15 @@ export default function OrdersPage() {
 
     const formatDate = (timestamp: { seconds: number }) => {
         if (!timestamp) return 'N/A';
-        return new Date(timestamp.seconds * 1000).toLocaleDateString('en-US', {
-            year: 'numeric', month: 'long', day: 'numeric'
-        });
+        return format(new Date(timestamp.seconds * 1000), 'd MMMM yyyy');
     };
+
+    const getEstimatedDeliveryDate = (timestamp: { seconds: number }) => {
+        if (!timestamp) return 'N/A';
+        const orderDate = new Date(timestamp.seconds * 1000);
+        const deliveryDate = addDays(orderDate, 7);
+        return format(deliveryDate, 'd MMMM yyyy');
+    }
 
     const getStatusVariant = (status: Order['status']) => {
         switch (status) {
@@ -102,56 +118,77 @@ export default function OrdersPage() {
                             return (
                                 <Collapsible key={order.id} asChild>
                                     <Card>
-                                        <div className="flex items-center p-4">
-                                            <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                                <div>
-                                                    <p className="font-semibold text-muted-foreground">Order ID</p>
-                                                    <p className="font-mono text-xs">{order.id}</p>
+                                        <div className="p-4">
+                                            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                                                 <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                                                    <div>
+                                                        <p className="font-semibold text-muted-foreground">Order ID</p>
+                                                        <p className="font-mono text-xs">{order.id}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-semibold text-muted-foreground">Date</p>
+                                                        <p>{formatDate(order.orderDate)}</p>
+                                                    </div>
+                                                     <div>
+                                                        <p className="font-semibold text-muted-foreground">Status</p>
+                                                        <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status.replace(/-/g, ' ')}</Badge>
+                                                    </div>
+                                                     <div>
+                                                        <p className="font-semibold text-muted-foreground">Total</p>
+                                                        <p className="font-semibold">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.totalAmount)}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-semibold text-muted-foreground">Est. Delivery</p>
+                                                        <p>{getEstimatedDeliveryDate(order.orderDate)}</p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <p className="font-semibold text-muted-foreground">Date</p>
-                                                    <p>{formatDate(order.orderDate)}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="font-semibold text-muted-foreground">Total</p>
-                                                    <p className="font-semibold">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.totalAmount)}</p>
-                                                </div>
-                                                <div>
-                                                     <p className="font-semibold text-muted-foreground">Status</p>
-                                                    <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status.replace(/-/g, ' ')}</Badge>
-                                                </div>
+                                                <CollapsibleTrigger asChild>
+                                                    <Button variant="ghost" size="sm">
+                                                        View Details
+                                                        <ChevronDown className="h-4 w-4 ml-2" />
+                                                    </Button>
+                                                </CollapsibleTrigger>
                                             </div>
-                                             <CollapsibleTrigger asChild>
-                                                <Button variant="ghost" size="sm">
-                                                    View Details
-                                                    <ChevronDown className="h-4 w-4 ml-2" />
-                                                </Button>
-                                            </CollapsibleTrigger>
                                         </div>
                                         <CollapsibleContent>
                                             <div className="p-4 border-t">
-                                                <h4 className="font-semibold mb-4 text-base">Order Items</h4>
-                                                {itemsInOrder.length > 0 ? (
-                                                    <div className="space-y-4">
-                                                        {itemsInOrder.map(item => (
-                                                            <div key={item.id} className="flex items-center gap-4 text-sm">
-                                                                <div className="relative h-16 w-16 rounded-md overflow-hidden bg-muted">
-                                                                    {item.productImage ? <Image src={item.productImage} alt={item.productName} fill className="object-cover" /> : <div className="h-full w-full bg-muted"></div>}
-                                                                </div>
-                                                                <div className="flex-1">
-                                                                    <p className="font-medium">{item.productName}</p>
-                                                                    <p className="text-muted-foreground">Qty: {item.quantity}</p>
-                                                                </div>
-                                                                <p className="font-semibold">
-                                                                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.price * item.quantity)}
-                                                                </p>
+                                                <div className="grid md:grid-cols-2 gap-6">
+                                                    <div>
+                                                        <h4 className="font-semibold mb-4 text-base">Order Items</h4>
+                                                        {itemsInOrder.length > 0 ? (
+                                                            <div className="space-y-4">
+                                                                {itemsInOrder.map(item => (
+                                                                    <div key={item.id} className="flex items-center gap-4 text-sm">
+                                                                        <div className="relative h-16 w-16 rounded-md overflow-hidden bg-muted">
+                                                                            {item.productImage ? <Image src={item.productImage} alt={item.productName} fill className="object-cover" /> : <div className="h-full w-full bg-muted"></div>}
+                                                                        </div>
+                                                                        <div className="flex-1">
+                                                                            <p className="font-medium">{item.productName}</p>
+                                                                            <p className="text-muted-foreground">Qty: {item.quantity}</p>
+                                                                        </div>
+                                                                        <p className="font-semibold">
+                                                                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.price * item.quantity)}
+                                                                        </p>
+                                                                    </div>
+                                                                ))}
                                                             </div>
-                                                        ))}
+                                                        ) : (
+                                                            <p className="text-muted-foreground text-sm">Loading items...</p>
+                                                        )}
                                                     </div>
-                                                ) : (
-                                                    <p className="text-muted-foreground text-sm">Loading items...</p>
-                                                )}
-                                                 <div className="flex justify-end gap-2 mt-4">
+                                                    <div>
+                                                        <h4 className="font-semibold mb-4 text-base">Shipping Address</h4>
+                                                         {order.shippingDetails ? (
+                                                            <div className="text-sm">
+                                                                <p className="font-semibold">{order.shippingDetails.name}</p>
+                                                                <p className="text-muted-foreground">{order.shippingDetails.address}</p>
+                                                                <p className="text-muted-foreground">{order.shippingDetails.city}, {order.shippingDetails.state} {order.shippingDetails.pincode}</p>
+                                                                <p className="text-muted-foreground">{order.shippingDetails.phone}</p>
+                                                            </div>
+                                                        ): 'N/A'}
+                                                    </div>
+                                                </div>
+                                                 <div className="flex justify-end gap-2 mt-6">
                                                     <Link href={`/receipt/${order.id}`}>
                                                         <Button variant="outline" size="sm">View Receipt</Button>
                                                     </Link>
