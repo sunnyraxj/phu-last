@@ -199,6 +199,49 @@ function ProductGrid({ productsToShow, addToCart, setSelectedProduct }: { produc
   )
 }
 
+const TypewriterHeadline = ({ text }: { text: string }) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [loopNum, setLoopNum] = useState(0);
+  const typingSpeed = 150;
+  const deletingSpeed = 100;
+  const delay = 2000;
+
+  useEffect(() => {
+    let ticker: NodeJS.Timeout;
+    const handleTyping = () => {
+      setDisplayedText(text.substring(0, displayedText.length + 1));
+      if (displayedText === text) {
+        setTimeout(() => setIsDeleting(true), delay);
+      }
+    };
+
+    const handleDeleting = () => {
+      setDisplayedText(text.substring(0, displayedText.length - 1));
+      if (displayedText === '') {
+        setIsDeleting(false);
+        setLoopNum(loopNum + 1);
+      }
+    };
+
+    if (isDeleting) {
+      ticker = setTimeout(handleDeleting, deletingSpeed);
+    } else {
+      ticker = setTimeout(handleTyping, typingSpeed);
+    }
+
+    return () => clearTimeout(ticker);
+  }, [displayedText, isDeleting, text, loopNum, deletingSpeed, typingSpeed]);
+
+  return (
+    <h1 className="text-4xl md:text-6xl font-bold mb-4 tracking-tight">
+      {displayedText}
+      <span className="animate-pulse">|</span>
+    </h1>
+  );
+};
+
+
 export default function ProductPage() {
   const [sortBy, setSortBy] = useState("Featured")
 
@@ -382,7 +425,7 @@ export default function ProductPage() {
         />
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 text-center px-4">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4 tracking-tight">Artisans of the East: Authentic Handicrafts from North-East India</h1>
+          <TypewriterHeadline text="Handcrafted Treasures from the East" />
           <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
             Discover handcrafted treasures that tell a story. Explore unique bamboo, jute, and cane items.
           </p>
@@ -653,4 +696,5 @@ export default function ProductPage() {
 }
     
     
+
 
