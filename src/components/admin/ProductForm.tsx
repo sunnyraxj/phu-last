@@ -22,7 +22,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { PlusCircle, Wand2, Sparkles } from 'lucide-react';
 import { AddOptionDialog } from './AddOptionDialog';
-import { generateProductDetails, GenerateProductDetailsInput } from '@/ai/flows/generate-product-details';
+import { GenerateProductDetailsOutput } from '@/ai/flows/generate-product-details';
 import { useToast } from '@/hooks/use-toast';
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
 import Image from 'next/image';
@@ -168,26 +168,37 @@ export function ProductForm({
 
     setIsGenerating(true);
     try {
-        const input: GenerateProductDetailsInput = {
-            imageDataUri: imageDataUri,
-            productInfo: aiNotes,
-        };
+      const response = await fetch('/api/generate-product-details', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          imageDataUri: imageDataUri,
+          productInfo: aiNotes,
+        }),
+      });
 
-        const result = await generateProductDetails(input);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate details.');
+      }
 
-        setValue('name', result.name, { shouldValidate: true });
-        setValue('description', result.description, { shouldValidate: true });
+      const result: GenerateProductDetailsOutput = await response.json();
 
-        toast({
-            title: 'Details Generated!',
-            description: 'The product name and description have been populated.',
-        });
+      setValue('name', result.name, { shouldValidate: true });
+      setValue('description', result.description, { shouldValidate: true });
+
+      toast({
+        title: 'Details Generated!',
+        description: 'The product name and description have been populated.',
+      });
     } catch (error: any) {
       console.error(error);
       toast({
-          variant: 'destructive',
-          title: 'Generation Failed',
-          description: error.message || 'Could not generate details. Please check the image and try again.',
+        variant: 'destructive',
+        title: 'Generation Failed',
+        description: error.message || 'Could not generate details. Please check the image and try again.',
       });
     } finally {
       setIsGenerating(false);
