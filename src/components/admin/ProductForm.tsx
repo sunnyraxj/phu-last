@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, DragEvent } from 'react';
 import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -76,6 +76,7 @@ export function ProductForm({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [aiNotes, setAiNotes] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -145,9 +146,8 @@ export function ProductForm({
     setValue('material', newMaterial, { shouldValidate: true });
     setIsMaterialDialogOpen(false);
   }
-
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  
+  const handleFileUpload = async (file: File) => {
     if (!file) return;
 
     setIsUploading(true);
@@ -177,11 +177,32 @@ export function ProductForm({
       });
     } finally {
       setIsUploading(false);
-       // Reset the file input so the same file can be re-uploaded if needed
-      if (fileInputRef.current) {
+       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     }
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) handleFileUpload(file);
+  };
+  
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+    const file = event.dataTransfer.files[0];
+    if (file) handleFileUpload(file);
   };
 
   const handleGenerateDetails = async () => {
@@ -255,8 +276,11 @@ export function ProductForm({
                              <div className="space-y-1">
                                 <Label htmlFor="image">Image</Label>
                                 <div 
-                                    className="relative flex justify-center items-center w-full h-48 border-2 border-dashed rounded-md cursor-pointer hover:bg-muted"
+                                    className={cn("relative flex justify-center items-center w-full h-48 border-2 border-dashed rounded-md cursor-pointer hover:bg-muted transition-colors", isDragging && "bg-muted border-primary")}
                                     onClick={() => fileInputRef.current?.click()}
+                                    onDragOver={handleDragOver}
+                                    onDragLeave={handleDragLeave}
+                                    onDrop={handleDrop}
                                 >
                                     {isUploading ? (
                                         <div className="flex flex-col items-center gap-2">
@@ -266,9 +290,9 @@ export function ProductForm({
                                     ) : imageValue ? (
                                         <Image src={imageValue} alt="Image preview" fill className="object-cover rounded-md" />
                                     ) : (
-                                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                        <div className="flex flex-col items-center gap-2 text-muted-foreground text-center">
                                             <UploadCloud className="h-8 w-8" />
-                                            <p className="font-semibold">Click to upload image</p>
+                                            <p className="font-semibold">Click or drag & drop to upload</p>
                                             <p className="text-xs">PNG, JPG, GIF up to 10MB</p>
                                         </div>
                                     )}
