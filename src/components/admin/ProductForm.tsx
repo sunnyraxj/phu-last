@@ -26,6 +26,7 @@ import { GenerateProductDetailsOutput } from '@/ai/flows/generate-product-detail
 import { useToast } from '@/hooks/use-toast';
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 const productSchema = z.object({
   name: z.string().min(1, { message: 'Product name is required' }),
@@ -151,11 +152,8 @@ export function ProductForm({
 
     setIsUploading(true);
     try {
-      const response = await fetch('/api/upload', {
+      const response = await fetch(`/api/upload?filename=${file.name}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': file.type,
-        },
         body: file,
       });
 
@@ -254,37 +252,43 @@ export function ProductForm({
                                 <Sparkles className="h-5 w-5 text-primary" />
                                 AI Content Generation & Image
                             </Label>
-                            <div className="space-y-1">
+                             <div className="space-y-1">
                                 <Label htmlFor="image">Image</Label>
-                                <div className="flex items-center gap-2">
-                                    <Input 
-                                        {...register('image')} 
-                                        placeholder="https://... or upload a file"
-                                        readOnly={isUploading}
-                                    />
-                                    <Button 
-                                        type="button" 
-                                        variant="outline" 
-                                        onClick={() => fileInputRef.current?.click()}
-                                        disabled={isUploading}>
-                                        {isUploading ? <PottersWheelSpinner className="h-5 w-5"/> : <UploadCloud className="h-5 w-5" />}
-                                    </Button>
-                                    <input
-                                        type="file"
-                                        ref={fileInputRef}
-                                        onChange={handleFileChange}
-                                        className="hidden"
-                                        accept="image/*"
-                                        disabled={isUploading}
-                                    />
+                                <div 
+                                    className="relative flex justify-center items-center w-full h-48 border-2 border-dashed rounded-md cursor-pointer hover:bg-muted"
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    {isUploading ? (
+                                        <div className="flex flex-col items-center gap-2">
+                                            <PottersWheelSpinner />
+                                            <p className="text-sm text-muted-foreground">Uploading...</p>
+                                        </div>
+                                    ) : imageValue ? (
+                                        <Image src={imageValue} alt="Image preview" fill className="object-cover rounded-md" />
+                                    ) : (
+                                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                            <UploadCloud className="h-8 w-8" />
+                                            <p className="font-semibold">Click to upload image</p>
+                                            <p className="text-xs">PNG, JPG, GIF up to 10MB</p>
+                                        </div>
+                                    )}
                                 </div>
-                                {imageValue && (
-                                    <div className="relative h-32 w-32 mt-2 rounded-md overflow-hidden border">
-                                        <Image src={imageValue} alt="Image preview" fill className="object-cover" />
-                                    </div>
-                                )}
-                                {errors.image && <p className="text-xs text-destructive">{errors.image.message}</p>}
-                            </div>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleFileChange}
+                                    className="hidden"
+                                    accept="image/*"
+                                    disabled={isUploading}
+                                />
+                                {errors.image && <p className="text-xs text-destructive mt-1">{errors.image.message}</p>}
+                                <Input 
+                                    {...register('image')}
+                                    placeholder="Or paste an image URL here"
+                                    className="mt-2"
+                                    readOnly={isUploading}
+                                />
+                             </div>
 
                             <div className="space-y-1">
                                 <Label htmlFor="ai-notes">AI Notes (Optional)</Label>
@@ -299,7 +303,7 @@ export function ProductForm({
                             <Button 
                                 type="button" 
                                 onClick={handleGenerateDetails} 
-                                disabled={isGenerating || !imageValue}
+                                disabled={isGenerating || !imageValue || isUploading}
                             >
                                 {isGenerating ? <PottersWheelSpinner className="h-5 w-5" /> : <Wand2 className="mr-2 h-4 w-4" />}
                                 {isGenerating ? 'Generating...' : 'Generate Name & Description'}

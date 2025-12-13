@@ -9,13 +9,10 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'No filename or file body provided.' }, { status: 400 });
   }
 
-  try {
-    const blob = await put(filename, request.body, {
-      access: 'public',
-    });
+  // ⚠️ The below code is for App Router Route Handlers only
+  const blob = await put(filename, request.body, {
+    access: 'public',
+  });
 
-    return NextResponse.json(blob);
-  } catch (error: any) {
-    return NextResponse.json({ error: 'Failed to upload file.', details: error.message }, { status: 500 });
-  }
+  return NextResponse.json(blob);
 }
