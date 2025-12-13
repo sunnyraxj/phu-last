@@ -523,9 +523,6 @@ export default function ProductPage() {
         <div className="container mx-auto px-4">
             <div className="text-center mb-12">
                 <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Our Store Locations</h2>
-                 <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-                    Visit us in person to experience the craftsmanship firsthand.
-                </p>
             </div>
              {storesLoading ? (
                 <div className="flex justify-center items-center h-64">
