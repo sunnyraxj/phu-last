@@ -332,16 +332,16 @@ export default function ProductPage() {
       <section className="relative h-[60vh] w-full flex items-center justify-center text-white">
         <Image
           src="https://picsum.photos/seed/hero/1200/800"
-          alt="Handcrafted pottery"
+          alt="Authentic handicrafts from North-East India, including bamboo and jute products."
           fill
           className="object-cover"
           data-ai-hint="handicrafts lifestyle"
         />
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 text-center px-4">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4 tracking-tight">Artisans of the East</h1>
+          <h1 className="text-4xl md:text-6xl font-bold mb-4 tracking-tight">Artisans of the East: Authentic Handicrafts from North-East India</h1>
           <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
-            Discover handcrafted treasures that tell a story.
+            Discover handcrafted treasures that tell a story. Explore unique bamboo, jute, and cane items.
           </p>
           <Link href="/purchase">
             <Button size="lg" variant="secondary">

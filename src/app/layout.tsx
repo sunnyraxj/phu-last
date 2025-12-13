@@ -10,8 +10,8 @@ import { Footer } from '@/components/shared/Footer';
 const inter = Inter({ subsets: ['latin'], variable: '--font-body' });
 
 export const metadata: Metadata = {
-  title: 'Purbanchal Hasta Udyog',
-  description: 'Handicrafts from the East',
+  title: 'Purbanchal Hasta Udyog | Authentic Handicrafts from North-East India',
+  description: 'Discover and buy authentic, handcrafted items from the artisans of North-East India. Featuring unique products made from bamboo, jute, cane, and more.',
 };
 
 export default function RootLayout({

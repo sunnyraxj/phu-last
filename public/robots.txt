@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://purbanchal-hasta-udyog.com/sitemap.xml
