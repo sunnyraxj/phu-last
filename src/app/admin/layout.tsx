@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Home, Package, ShoppingCart, Users, Store, Menu, Settings, Undo2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 type Order = {
     status: 'pending' | 'shipped' | 'delivered' | 'pending-payment-approval';
@@ -172,6 +172,9 @@ export default function AdminLayout({
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="left" className="flex flex-col w-full max-w-xs p-0">
+                           <SheetHeader className="p-4">
+                                <SheetTitle className="sr-only">Admin Menu</SheetTitle>
+                           </SheetHeader>
                            <div className="flex h-[60px] items-center border-b px-6">
                                 <Link href="/" className="flex items-center gap-2 font-semibold">
                                     <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
