@@ -143,19 +143,18 @@ export default function AdminLayout({
         <nav className="flex flex-col gap-4">
             {navGroups.map((group, index) => (
                  <div key={index} className="flex flex-col gap-1">
-                    {group.title && <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{group.title}</h3>}
+                    {group.title && <h3 className="px-3 text-sm font-semibold text-muted-foreground uppercase tracking-wider">{group.title}</h3>}
                     <ul className="space-y-1">
                         {group.items.map((item) => (
                             <li key={item.href}>
                                 <Link href={item.href}>
                                     <span className={cn(
-                                        "flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:bg-muted",
-                                        pathname === item.href && "bg-muted text-primary",
-                                        // Special case for /admin matching Products link
-                                        pathname === '/admin' && item.href === '/admin' && "bg-muted text-primary"
+                                        "flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-base text-foreground transition-all hover:text-primary hover:bg-muted",
+                                        pathname === item.href && "bg-muted text-primary font-semibold",
+                                        pathname === '/admin' && item.href === '/admin' && "bg-muted text-primary font-semibold"
                                     )}>
                                         <div className="flex items-center gap-3">
-                                            <item.icon className="h-4 w-4" />
+                                            <item.icon className="h-5 w-5" />
                                             {item.label}
                                         </div>
                                         {item.badge != null && <Badge variant={item.badgeVariant} className="h-5">{item.badge}</Badge>}
@@ -170,7 +169,7 @@ export default function AdminLayout({
     );
 
     return (
-        <div className="grid min-h-screen w-full md:grid-cols-[280px_1fr]">
+        <div className="grid min-h-screen w-full md:grid-cols-[320px_1fr]">
             <aside className="hidden border-r bg-background md:block">
                 <div className="flex h-full max-h-screen flex-col gap-2">
                     <div className="flex h-14 items-center border-b px-6">
@@ -178,7 +177,7 @@ export default function AdminLayout({
                              <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
                                 <span className="text-lg font-bold">P</span>
                             </div>
-                            <span className="">Hasta Udyog Admin</span>
+                            <span className="text-lg">Hasta Udyog Admin</span>
                         </Link>
                     </div>
                     <div className="flex-1 overflow-y-auto py-4">
@@ -186,8 +185,8 @@ export default function AdminLayout({
                     </div>
                      <div className="mt-auto p-4">
                         <Link href="/">
-                            <Button variant="ghost" className="w-full justify-start">
-                                <Home className="mr-2 h-4 w-4" />
+                            <Button variant="ghost" className="w-full justify-start text-base">
+                                <Home className="mr-2 h-5 w-5" />
                                 Back to Store
                             </Button>
                         </Link>
@@ -209,7 +208,7 @@ export default function AdminLayout({
                                     <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
                                         <span className="text-lg font-bold">P</span>
                                     </div>
-                                    <span className="">Admin</span>
+                                    <span className="text-lg">Admin</span>
                                 </Link>
                             </div>
                              <div className="flex-1 overflow-y-auto py-4">
@@ -217,8 +216,8 @@ export default function AdminLayout({
                             </div>
                              <div className="mt-auto p-4 border-t">
                                 <Link href="/">
-                                    <Button variant="ghost" className="w-full justify-start">
-                                        <Home className="mr-2 h-4 w-4" />
+                                    <Button variant="ghost" className="w-full justify-start text-base">
+                                        <Home className="mr-2 h-5 w-5" />
                                         Back to Store
                                     </Button>
                                 </Link>
