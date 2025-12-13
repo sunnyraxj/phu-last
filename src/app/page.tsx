@@ -352,169 +352,171 @@ export default function ProductPage() {
         </div>
       </section>
       
-      <div className="container mx-auto flex items-start px-0 sm:px-4">
-        <aside className="w-72 bg-background p-6 border-r border-border h-screen sticky top-0 overflow-y-auto hidden lg:block">
-          <Filters 
-            selectedCategories={selectedCategories}
-            handleCategoryChange={handleCategoryChange}
-            selectedMaterials={selectedMaterials}
-            handleMaterialChange={handleMaterialChange}
-            availability={availability}
-            setAvailability={setAvailability}
-            priceRange={priceRange}
-            setPriceRange={setPriceRange}
-          />
-        </aside>
+      <div className="container mx-auto px-0 sm:px-4">
+        <div className="flex items-start">
+            <aside className="w-72 bg-background p-6 border-r border-border h-screen sticky top-0 overflow-y-auto hidden lg:block">
+              <Filters 
+                selectedCategories={selectedCategories}
+                handleCategoryChange={handleCategoryChange}
+                selectedMaterials={selectedMaterials}
+                handleMaterialChange={handleMaterialChange}
+                availability={availability}
+                setAvailability={setAvailability}
+                priceRange={priceRange}
+                setPriceRange={setPriceRange}
+              />
+            </aside>
 
-        <main className="flex-1 p-2 sm:p-4 md:p-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4 px-2 sm:px-0 pt-4 sm:pt-0">
-            <div className="flex w-full sm:w-auto items-center gap-4">
-               <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="outline" className="lg:hidden">
-                    <Filter className="mr-2 h-4 w-4" />
-                    Filters
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-[300px]">
-                   <SheetHeader>
-                        <SheetTitle>Filters</SheetTitle>
-                    </SheetHeader>
-                   <div className="p-6 overflow-y-auto">
-                      <Filters 
-                        selectedCategories={selectedCategories}
-                        handleCategoryChange={handleCategoryChange}
-                        selectedMaterials={selectedMaterials}
-                        handleMaterialChange={handleMaterialChange}
-                        availability={availability}
-                        setAvailability={setAvailability}
-                        priceRange={priceRange}
-                        setPriceRange={setPriceRange}
-                      />
-                   </div>
-                </SheetContent>
-              </Sheet>
-              <div className="relative w-full sm:max-w-xs">
-                <Input 
-                  placeholder="Search products..."
-                  className="pl-10"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              </div>
-            </div>
-
-            <div className="flex w-full sm:w-auto items-center justify-between sm:justify-start gap-4 sm:gap-8">
-              <div className="flex items-center gap-3">
-                <label className="text-foreground font-semibold text-sm sm:text-base">Sort By:</label>
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-full sm:w-48">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Featured">Featured</SelectItem>
-                    <SelectItem value="price-low-high">Price: Low to High</SelectItem>
-                    <SelectItem value="price-high-low">Price: High to Low</SelectItem>
-                    <SelectItem value="newest">Newest</SelectItem>
-                  </SelectContent>
-                </Select>
-
-              </div>
-              <span className="text-foreground font-semibold text-sm sm:text-base">{filteredProducts.length} Products</span>
-            </div>
-          </div>
-            
-          {productsLoading ? (
-            <div className="flex justify-center items-center h-96">
-                <PottersWheelSpinner />
-            </div>
-          ) : (
-          <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
-            <div className={cn('grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-y-8')}>
-              {productsToShow.map((product) => (
-                <div key={product.id} className="group relative text-left p-2 sm:p-4">
-                  <div 
-                    className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer"
-                    onClick={() => setSelectedProduct(product)}
-                  >
-                    <Image
-                      src={product.image}
-                      alt={product.name}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      data-ai-hint={product['data-ai-hint']}
+            <main className="flex-1 p-2 sm:p-4 md:p-8">
+              <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4 px-2 sm:px-0 pt-4 sm:pt-0">
+                <div className="flex w-full sm:w-auto items-center gap-4">
+                   <Sheet>
+                    <SheetTrigger asChild>
+                      <Button variant="outline" className="lg:hidden">
+                        <Filter className="mr-2 h-4 w-4" />
+                        Filters
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="w-[300px]">
+                       <SheetHeader>
+                            <SheetTitle>Filters</SheetTitle>
+                        </SheetHeader>
+                       <div className="p-6 overflow-y-auto">
+                          <Filters 
+                            selectedCategories={selectedCategories}
+                            handleCategoryChange={handleCategoryChange}
+                            selectedMaterials={selectedMaterials}
+                            handleMaterialChange={handleMaterialChange}
+                            availability={availability}
+                            setAvailability={setAvailability}
+                            priceRange={priceRange}
+                            setPriceRange={setPriceRange}
+                          />
+                       </div>
+                    </SheetContent>
+                  </Sheet>
+                  <div className="relative w-full sm:max-w-xs">
+                    <Input 
+                      placeholder="Search products..."
+                      className="pl-10"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Eye className="text-white h-8 w-8" />
-                    </div>
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   </div>
-                  
-                  <div className="mt-2 sm:mt-4 flex flex-col items-start w-full">
-                      <h3 className="text-sm sm:text-base text-foreground font-bold truncate w-full">{product.name}</h3>
-                      <p className="font-bold text-sm sm:text-base text-foreground">
-                          {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
-                      </p>
-                      <Button
-                          variant="ghost"
-                          className="w-full mt-2 text-white bg-black hover:bg-black/80 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold text-sm h-auto justify-center"
-                          onClick={() => addToCart(product)}
-                          disabled={!product.inStock}
+                </div>
+
+                <div className="flex w-full sm:w-auto items-center justify-between sm:justify-start gap-4 sm:gap-8">
+                  <div className="flex items-center gap-3">
+                    <label className="text-foreground font-semibold text-sm sm:text-base">Sort By:</label>
+                    <Select value={sortBy} onValueChange={setSortBy}>
+                      <SelectTrigger className="w-full sm:w-48">
+                        <SelectValue placeholder="Sort by" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Featured">Featured</SelectItem>
+                        <SelectItem value="price-low-high">Price: Low to High</SelectItem>
+                        <SelectItem value="price-high-low">Price: High to Low</SelectItem>
+                        <SelectItem value="newest">Newest</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                  </div>
+                  <span className="text-foreground font-semibold text-sm sm:text-base">{filteredProducts.length} Products</span>
+                </div>
+              </div>
+                
+              {productsLoading ? (
+                <div className="flex justify-center items-center h-96">
+                    <PottersWheelSpinner />
+                </div>
+              ) : (
+              <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
+                <div className={cn('grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-y-8')}>
+                  {productsToShow.map((product) => (
+                    <div key={product.id} className="group relative text-left p-2 sm:p-4">
+                      <div 
+                        className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer"
+                        onClick={() => setSelectedProduct(product)}
                       >
-                        {product.inStock ? 'Add to Cart' : 'Out of Stock'}
-                      </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {allProducts && allProducts.length > 20 && (
-                <div className="text-center mt-8">
-                    <Link href="/purchase">
-                        <Button variant="outline" size="lg">View All Products</Button>
-                    </Link>
-                </div>
-            )}
-
-            {selectedProduct && (
-              <DialogContent className="sm:max-w-[800px]">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-2">
-                  <div className="relative aspect-square bg-muted rounded-lg">
-                    <Image
-                      src={selectedProduct.image}
-                      alt={selectedProduct.name}
-                      fill
-                      className="object-cover rounded-lg"
-                    />
-                  </div>
-                  <div className="flex flex-col justify-center">
-                    <DialogHeader>
-                      <DialogTitle className="text-3xl font-bold">{selectedProduct.name}</DialogTitle>
-                      <DialogDescription className="text-base pt-4">
-                        {selectedProduct.description}
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="mt-4">
-                      <p className="text-2xl font-bold">
-                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(selectedProduct.price)}
-                      </p>
-                      <p className={cn("mt-2 text-sm font-semibold", selectedProduct.inStock ? "text-green-600" : "text-red-600")}>
-                        {selectedProduct.inStock ? "In Stock" : "Out of Stock"}
-                      </p>
+                        <Image
+                          src={product.image}
+                          alt={product.name}
+                          fill
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          data-ai-hint={product['data-ai-hint']}
+                        />
+                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Eye className="text-white h-8 w-8" />
+                        </div>
+                      </div>
+                      
+                      <div className="mt-2 sm:mt-4 flex flex-col items-start w-full">
+                          <h3 className="text-sm sm:text-base text-foreground font-bold truncate w-full">{product.name}</h3>
+                          <p className="font-bold text-sm sm:text-base text-foreground">
+                              {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
+                          </p>
+                          <Button
+                              variant="ghost"
+                              className="w-full mt-2 text-white bg-black hover:bg-black/80 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold text-sm h-auto justify-center"
+                              onClick={() => addToCart(product)}
+                              disabled={!product.inStock}
+                          >
+                            {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                          </Button>
+                      </div>
                     </div>
-                    <DialogFooter className="mt-6">
-                      <Button size="lg" className="w-full" onClick={() => addToCart(selectedProduct)} disabled={!selectedProduct.inStock}>
-                        <ShoppingBag className="mr-2" />
-                        Add to Cart
-                      </Button>
-                    </DialogFooter>
-                  </div>
+                  ))}
                 </div>
-              </DialogContent>
-            )}
-          </Dialog>
-          )}
-        </main>
+
+                {allProducts && allProducts.length > 20 && (
+                    <div className="text-center mt-8">
+                        <Link href="/purchase">
+                            <Button variant="outline" size="lg">View All Products</Button>
+                        </Link>
+                    </div>
+                )}
+
+                {selectedProduct && (
+                  <DialogContent className="sm:max-w-[800px]">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-2">
+                      <div className="relative aspect-square bg-muted rounded-lg">
+                        <Image
+                          src={selectedProduct.image}
+                          alt={selectedProduct.name}
+                          fill
+                          className="object-cover rounded-lg"
+                        />
+                      </div>
+                      <div className="flex flex-col justify-center">
+                        <DialogHeader>
+                          <DialogTitle className="text-3xl font-bold">{selectedProduct.name}</DialogTitle>
+                          <DialogDescription className="text-base pt-4">
+                            {selectedProduct.description}
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="mt-4">
+                          <p className="text-2xl font-bold">
+                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(selectedProduct.price)}
+                          </p>
+                          <p className={cn("mt-2 text-sm font-semibold", selectedProduct.inStock ? "text-green-600" : "text-red-600")}>
+                            {selectedProduct.inStock ? "In Stock" : "Out of Stock"}
+                          </p>
+                        </div>
+                        <DialogFooter className="mt-6">
+                          <Button size="lg" className="w-full" onClick={() => addToCart(selectedProduct)} disabled={!selectedProduct.inStock}>
+                            <ShoppingBag className="mr-2" />
+                            Add to Cart
+                          </Button>
+                        </DialogFooter>
+                      </div>
+                    </div>
+                  </DialogContent>
+                )}
+              </Dialog>
+              )}
+            </main>
+        </div>
       </div>
 
       <section className="bg-background py-16">
