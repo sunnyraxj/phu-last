@@ -13,11 +13,14 @@ import Image from 'next/image';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, Undo2 } from 'lucide-react';
+import { ChevronDown, Undo2, Info } from 'lucide-react';
 import Link from 'next/link';
 import { addDays, format, isBefore } from 'date-fns';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type OrderStatus = 'pending-payment-approval' | 'pending' | 'shipped' | 'delivered' | 'cancelled';
+type ReturnStatus = 'none' | 'requested' | 'approved' | 'rejected' | 'refunded';
+
 
 type ShippingDetails = {
     name: string;
@@ -34,6 +37,7 @@ type Order = {
     totalAmount: number;
     status: OrderStatus;
     shippingDetails: ShippingDetails;
+    returnStatus?: ReturnStatus;
 };
 
 type OrderItem = {
@@ -152,6 +156,15 @@ export default function OrdersPage() {
                                         </CollapsibleTrigger>
                                         <CollapsibleContent>
                                             <div className="p-4 border-t">
+                                                {order.returnStatus === 'approved' && (
+                                                    <Alert className="mb-4">
+                                                        <Info className="h-4 w-4" />
+                                                        <AlertTitle>Return Approved</AlertTitle>
+                                                        <AlertDescription>
+                                                          Your return request has been approved. Your refund will be processed within 3 business days after we receive the returned item.
+                                                        </AlertDescription>
+                                                    </Alert>
+                                                )}
                                                 <div className="grid md:grid-cols-2 gap-6">
                                                     <div>
                                                         <h4 className="font-semibold mb-4 text-base">Order Items</h4>
@@ -196,7 +209,7 @@ export default function OrdersPage() {
                                                     </div>
                                                 </div>
                                                  <div className="flex justify-end gap-2 mt-6">
-                                                    {order.status === 'delivered' && (
+                                                    {order.status === 'delivered' && !order.returnStatus && (
                                                          <Link href={`/returns/request/${order.id}`}>
                                                             <Button variant="outline" size="sm" disabled={!isReturnEligible(order.orderDate)}>
                                                                 <Undo2 className="mr-2 h-4 w-4" />
@@ -204,6 +217,11 @@ export default function OrdersPage() {
                                                             </Button>
                                                         </Link>
                                                     )}
+                                                     {order.returnStatus && order.returnStatus !== 'none' && (
+                                                        <Badge variant={order.returnStatus === 'approved' ? 'default' : 'secondary'} className="capitalize">
+                                                            Return {order.returnStatus.replace(/-/g, ' ')}
+                                                        </Badge>
+                                                     )}
                                                     <Link href={`/receipt/${order.id}`}>
                                                         <Button variant="outline" size="sm">View Receipt</Button>
                                                     </Link>
