@@ -59,6 +59,11 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
     const router = useRouter();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+    
+    const [purchaseMenuOpen, setPurchaseMenuOpen] = useState(false);
+    const [storesMenuOpen, setStoresMenuOpen] = useState(false);
+    const [adminMenuOpen, setAdminMenuOpen] = useState(false);
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
 
     useEffect(() => {
         const selectRandomProducts = () => {
@@ -105,14 +110,15 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                 </Link>
 
                 <nav className="hidden lg:flex items-center gap-8 text-sm font-semibold">
-                     <Popover>
-                        <PopoverTrigger asChild>
+                     <Popover open={purchaseMenuOpen} onOpenChange={setPurchaseMenuOpen}>
+                        <PopoverTrigger asChild onMouseEnter={() => setPurchaseMenuOpen(true)} onMouseLeave={() => setPurchaseMenuOpen(false)}>
                             <button className="flex items-center gap-1 hover:opacity-80">
                                 PURCHASE <ChevronDown size={16} />
                             </button>
                         </PopoverTrigger>
                          <PopoverContent 
                             className="w-96"
+                            onMouseEnter={() => setPurchaseMenuOpen(true)} onMouseLeave={() => setPurchaseMenuOpen(false)}
                         >
                             <div className="grid gap-4">
                                 <p className="font-semibold">Featured Products</p>
@@ -134,14 +140,15 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                             </div>
                         </PopoverContent>
                     </Popover>
-                    <Popover>
-                        <PopoverTrigger asChild>
+                    <Popover open={storesMenuOpen} onOpenChange={setStoresMenuOpen}>
+                        <PopoverTrigger asChild onMouseEnter={() => setStoresMenuOpen(true)} onMouseLeave={() => setStoresMenuOpen(false)}>
                             <button className="flex items-center gap-1 hover:opacity-80">
                                 OUR STORES <ChevronDown size={16} />
                             </button>
                         </PopoverTrigger>
                          <PopoverContent 
                             className="w-80"
+                             onMouseEnter={() => setStoresMenuOpen(true)} onMouseLeave={() => setStoresMenuOpen(false)}
                         >
                             <div className="grid gap-4">
                                 <p className="font-semibold">Store Locations</p>
@@ -179,8 +186,8 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                     </Link>
                     <button className="hover:opacity-80">BLOG</button>
                      {userData?.role === 'admin' && (
-                        <Popover>
-                            <PopoverTrigger asChild>
+                        <Popover open={adminMenuOpen} onOpenChange={setAdminMenuOpen}>
+                            <PopoverTrigger asChild onMouseEnter={() => setAdminMenuOpen(true)} onMouseLeave={() => setAdminMenuOpen(false)}>
                                 <div className="flex items-center relative">
                                     <Link href="/admin">
                                         <button className="flex items-center gap-1 hover:opacity-80">
@@ -196,6 +203,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                             </PopoverTrigger>
                             <PopoverContent 
                                 className="w-64"
+                                onMouseEnter={() => setAdminMenuOpen(true)} onMouseLeave={() => setAdminMenuOpen(false)}
                             >
                                 <div className="grid gap-4">
                                     <p className="font-semibold">Admin Panel</p>
@@ -246,13 +254,13 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                         </Link>
                     )}
                     {!isUserLoading && user && !user.isAnonymous && (
-                        <Popover>
-                            <PopoverTrigger asChild>
+                        <Popover open={userMenuOpen} onOpenChange={setUserMenuOpen}>
+                            <PopoverTrigger asChild onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)}>
                                 <Button variant="ghost" className="hover:opacity-80 p-0 rounded-full">
                                     <User size={20} />
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-48">
+                            <PopoverContent className="w-48" onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)}>
                                 <div className="flex flex-col gap-1">
                                     <p className="font-semibold text-sm p-2">{user.email}</p>
                                     <Link href="/account">
