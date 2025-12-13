@@ -119,7 +119,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
     const cartSubtotal = useMemo(() => cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0), [cartItems]);
 
     const totalAdminActionCount = useMemo(() => {
-        return adminActionCounts.pendingOrders + adminActionCounts.outOfStockProducts;
+        return (adminActionCounts?.pendingOrders || 0) + (adminActionCounts?.outOfStockProducts || 0);
     }, [adminActionCounts]);
 
     return (
@@ -259,14 +259,14 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                                 <Package className="h-5 w-5 mt-0.5 text-primary"/>
                                                 <p className="font-semibold text-sm">Products</p>
                                             </div>
-                                            {adminActionCounts.outOfStockProducts > 0 && <Badge variant="destructive">{adminActionCounts.outOfStockProducts}</Badge>}
+                                            {(adminActionCounts?.outOfStockProducts || 0) > 0 && <Badge variant="destructive">{adminActionCounts?.outOfStockProducts}</Badge>}
                                         </Link>
                                         <Link href="/admin/orders" className="flex items-center justify-between gap-4 p-2 rounded-lg hover:bg-muted -m-2">
                                             <div className="flex items-center gap-4">
                                                 <ShoppingCart className="h-5 w-5 mt-0.5 text-primary"/>
                                                 <p className="font-semibold text-sm">Orders</p>
                                             </div>
-                                            {adminActionCounts.pendingOrders > 0 && <Badge>{adminActionCounts.pendingOrders}</Badge>}
+                                            {(adminActionCounts?.pendingOrders || 0) > 0 && <Badge>{adminActionCounts?.pendingOrders}</Badge>}
                                         </Link>
                                         <Link href="/admin/team" className="flex items-center justify-between gap-4 p-2 rounded-lg hover:bg-muted -m-2">
                                             <div className="flex items-center gap-4">
@@ -456,11 +456,11 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                                     <div className="grid gap-2 mt-2">
                                                         <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-2 rounded-lg hover:bg-white/10 -m-2">
                                                             <p>Products</p>
-                                                            {adminActionCounts.outOfStockProducts > 0 && <Badge variant="destructive">{adminActionCounts.outOfStockProducts}</Badge>}
+                                                            {(adminActionCounts?.outOfStockProducts || 0) > 0 && <Badge variant="destructive">{adminActionCounts?.outOfStockProducts}</Badge>}
                                                         </Link>
                                                         <Link href="/admin/orders" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-2 rounded-lg hover:bg-white/10 -m-2">
                                                             <p>Orders</p>
-                                                            {adminActionCounts.pendingOrders > 0 && <Badge>{adminActionCounts.pendingOrders}</Badge>}
+                                                            {(adminActionCounts?.pendingOrders || 0) > 0 && <Badge>{adminActionCounts?.pendingOrders}</Badge>}
                                                         </Link>
                                                         <Link href="/admin/team" onClick={() => setIsMobileMenuOpen(false)} className="block p-2 rounded-lg hover:bg-white/10 -m-2">Our Team</Link>
                                                         <Link href="/admin/store" onClick={() => setIsMobileMenuOpen(false)} className="block p-2 rounded-lg hover:bg-white/10 -m-2">Our Store</Link>
@@ -486,3 +486,4 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
         </header>
     );
 }
+

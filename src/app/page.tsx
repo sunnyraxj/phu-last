@@ -39,7 +39,7 @@ type Product = {
 };
 
 type Order = {
-    status: 'pending' | 'shipped' | 'delivered';
+    status: 'pending' | 'shipped' | 'delivered' | 'pending-payment-approval';
 };
 
 type CartItem = Product & { quantity: number; cartItemId: string; };
@@ -224,10 +224,10 @@ export default function ProductPage() {
 
 
   const adminActionCounts = useMemo(() => {
-      if (userData?.role !== 'admin' || !orders || !allProducts) {
+      if (userData?.role !== 'admin' || !allProducts) {
           return { pendingOrders: 0, outOfStockProducts: 0 };
       }
-      const pendingOrders = orders.filter(order => order.status === 'pending').length;
+      const pendingOrders = orders?.filter(order => order.status === 'pending' || order.status === 'pending-payment-approval').length || 0;
       const outOfStockProducts = allProducts.filter(p => !p.inStock).length;
       return { pendingOrders, outOfStockProducts };
   }, [orders, allProducts, userData]);
@@ -631,3 +631,4 @@ export default function ProductPage() {
 }
     
     
+
