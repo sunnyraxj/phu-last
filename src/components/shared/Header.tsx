@@ -9,7 +9,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { signOut } from "firebase/auth";
 import { useAuth, useUser } from "@/firebase";
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Separator } from "../ui/separator";
 import { Input } from "../ui/input";
@@ -62,11 +62,26 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
     const [isPurchasePopoverOpen, setIsPurchasePopoverOpen] = useState(false);
     const [isAdminPopoverOpen, setIsAdminPopoverOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
     
     const craftsTimer = useRef<NodeJS.Timeout | null>(null);
     const storesTimer = useRef<NodeJS.Timeout | null>(null);
     const purchaseTimer = useRef<NodeJS.Timeout | null>(null);
     const adminTimer = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        const selectRandomProducts = () => {
+            if (products.length > 0) {
+                const shuffled = [...products].sort(() => 0.5 - Math.random());
+                setFeaturedProducts(shuffled.slice(0, 3));
+            }
+        };
+
+        selectRandomProducts(); // Initial selection
+        const intervalId = setInterval(selectRandomProducts, 5 * 60 * 1000); // Refresh every 5 minutes
+
+        return () => clearInterval(intervalId); // Cleanup on unmount
+    }, [products]);
 
     const handleMouseEnter = (popover: 'crafts' | 'stores' | 'admin' | 'purchase') => {
         if (popover === 'crafts') {
@@ -155,7 +170,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                             <div className="grid gap-4">
                                 <p className="font-semibold">Featured Products</p>
                                 <div className="grid grid-cols-3 gap-2">
-                                    {products.slice(0, 3).map((product) => (
+                                    {featuredProducts.map((product) => (
                                         <Link href="/purchase" key={product.id} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted -m-2">
                                             <div className="relative h-20 w-20 rounded-md overflow-hidden">
                                                 <Image src={product.image} alt={product.name} fill className="object-cover" />
