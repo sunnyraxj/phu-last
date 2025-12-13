@@ -61,15 +61,19 @@ function Filters({ selectedCategories, handleCategoryChange, selectedMaterials, 
   
   const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);
-    if (value >= 0 && value <= priceRange[1]) {
+    if (!isNaN(value) && value >= 0 && value <= priceRange[1]) {
       setPriceRange([value, priceRange[1]]);
+    } else if (e.target.value === '') {
+      setPriceRange([0, priceRange[1]]);
     }
   };
 
   const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);
-    if (value >= priceRange[0] && value <= maxPrice) {
+    if (!isNaN(value) && value >= priceRange[0] && value <= maxPrice) {
       setPriceRange([priceRange[0], value]);
+    } else if (e.target.value === '') {
+        setPriceRange([priceRange[0], 0]);
     }
   };
 
