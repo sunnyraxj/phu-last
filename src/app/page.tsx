@@ -606,7 +606,7 @@ export default function ProductPage() {
                         </div>
                     )}
                     {managementMembers.length > 0 && (
-                         <div className="w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                         <div className="w-full max-w-4xl grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                             {managementMembers.map((member) => (
                                 <div key={member.id} className="text-center flex flex-col items-center group">
                                     <div className="relative h-32 w-32 rounded-full overflow-hidden mb-4 shadow-lg transition-transform duration-300 group-hover:scale-105 border-4 border-background">
@@ -634,3 +634,4 @@ export default function ProductPage() {
 }
     
     
+
