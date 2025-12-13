@@ -125,12 +125,12 @@ export default function OrdersPage() {
                             return (
                                 <Collapsible key={order.id} asChild>
                                     <Card>
-                                        <div className="p-4">
-                                            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                                                 <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                                        <CollapsibleTrigger asChild>
+                                            <div className="flex justify-between items-center p-4 cursor-pointer hover:bg-muted/50">
+                                                <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                                                     <div>
                                                         <p className="font-semibold text-muted-foreground">Order ID</p>
-                                                        <p className="font-mono text-xs">{order.id}</p>
+                                                        <p className="font-mono text-xs truncate">{order.id}</p>
                                                     </div>
                                                     <div>
                                                         <p className="font-semibold text-muted-foreground">Date</p>
@@ -144,19 +144,12 @@ export default function OrdersPage() {
                                                         <p className="font-semibold text-muted-foreground">Total</p>
                                                         <p className="font-semibold">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.totalAmount)}</p>
                                                     </div>
-                                                    <div>
-                                                        <p className="font-semibold text-muted-foreground">Est. Delivery</p>
-                                                        <p>{getEstimatedDeliveryDate(order.orderDate)}</p>
-                                                    </div>
                                                 </div>
-                                                <CollapsibleTrigger asChild>
-                                                    <Button variant="ghost" size="sm">
-                                                        View Details
-                                                        <ChevronDown className="h-4 w-4 ml-2" />
-                                                    </Button>
-                                                </CollapsibleTrigger>
+                                                <Button variant="ghost" size="sm" className="w-9 p-0">
+                                                    <ChevronDown className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-180" />
+                                                </Button>
                                             </div>
-                                        </div>
+                                        </CollapsibleTrigger>
                                         <CollapsibleContent>
                                             <div className="p-4 border-t">
                                                 <div className="grid md:grid-cols-2 gap-6">
@@ -184,13 +177,20 @@ export default function OrdersPage() {
                                                         )}
                                                     </div>
                                                     <div>
-                                                        <h4 className="font-semibold mb-4 text-base">Shipping Address</h4>
+                                                        <h4 className="font-semibold mb-4 text-base">Shipping & Delivery</h4>
                                                          {order.shippingDetails ? (
-                                                            <div className="text-sm">
-                                                                <p className="font-semibold">{order.shippingDetails.name}</p>
-                                                                <p className="text-muted-foreground">{order.shippingDetails.address}</p>
-                                                                <p className="text-muted-foreground">{order.shippingDetails.city}, {order.shippingDetails.state} {order.shippingDetails.pincode}</p>
-                                                                <p className="text-muted-foreground">{order.shippingDetails.phone}</p>
+                                                            <div className="text-sm space-y-2">
+                                                                <div>
+                                                                    <p className="font-medium text-muted-foreground">Address</p>
+                                                                    <p className="font-semibold">{order.shippingDetails.name}</p>
+                                                                    <p className="text-muted-foreground">{order.shippingDetails.address}</p>
+                                                                    <p className="text-muted-foreground">{order.shippingDetails.city}, {order.shippingDetails.state} {order.shippingDetails.pincode}</p>
+                                                                    <p className="text-muted-foreground">{order.shippingDetails.phone}</p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="font-medium text-muted-foreground">Estimated Delivery</p>
+                                                                    <p>{getEstimatedDeliveryDate(order.orderDate)}</p>
+                                                                </div>
                                                             </div>
                                                         ): 'N/A'}
                                                     </div>
