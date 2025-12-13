@@ -519,7 +519,7 @@ export default function ProductPage() {
         </div>
       </div>
 
-      <section className="bg-background py-16">
+      <section className="bg-background py-8">
         <div className="container mx-auto px-4">
             <div className="text-center mb-12">
                 <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Our Store Locations</h2>
@@ -581,7 +581,7 @@ export default function ProductPage() {
         </div>
       </section>
 
-      <section className="py-16 bg-muted/30">
+      <section className="py-8 bg-muted/30">
         <div className="container mx-auto px-4">
             <div className="text-center mb-12">
                 <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Meet Our Team</h2>
@@ -634,4 +634,3 @@ export default function ProductPage() {
 }
     
     
-
