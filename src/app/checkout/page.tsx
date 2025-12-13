@@ -113,14 +113,14 @@ export default function CheckoutPage() {
   
   const paymentPercentages = useMemo(() => {
     const options = [{ value: 1, label: 'Full Payment' }];
-    if (totalAmount > 50000) {
+    if (totalAmount > 40000) {
         options.push({ value: 0.5, label: '50% Advance' });
     }
     return options;
   }, [totalAmount]);
 
   useEffect(() => {
-    if (totalAmount > 50000) {
+    if (totalAmount > 40000) {
         setSelectedPaymentPercentage(0.5); // Default to 50% advance if available
     } else {
         setSelectedPaymentPercentage(1); // Default to full payment
@@ -302,7 +302,7 @@ export default function CheckoutPage() {
                  <Card>
                     <CardHeader>
                         <CardTitle>Payment</CardTitle>
-                        <CardDescription>{totalAmount > 50000 ? 'A partial advance payment is required to place the order.' : 'Full payment is required for this order.'}</CardDescription>
+                        <CardDescription>{totalAmount > 40000 ? 'An advance payment option is available for this order.' : 'Full payment is required for this order.'}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         {paymentPercentages.length > 1 && (
@@ -426,3 +426,5 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
+    
