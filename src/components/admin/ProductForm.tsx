@@ -20,7 +20,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { PlusCircle, Wand2, Sparkles } from 'lucide-react';
+import { PlusCircle, Wand2, Sparkles, UploadCloud } from 'lucide-react';
 import { AddOptionDialog } from './AddOptionDialog';
 import { GenerateProductDetailsOutput } from '@/ai/flows/generate-product-details';
 import { useToast } from '@/hooks/use-toast';
@@ -73,6 +73,7 @@ export function ProductForm({
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [isMaterialDialogOpen, setIsMaterialDialogOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [aiNotes, setAiNotes] = useState('');
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -144,14 +145,44 @@ export function ProductForm({
     setIsMaterialDialogOpen(false);
   }
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setValue('image', reader.result as string, { shouldValidate: true });
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': file.type,
+        },
+        body: file,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
+      }
+
+      const newBlob = await response.json();
+      setValue('image', newBlob.url, { shouldValidate: true });
+      toast({
+        title: 'Image Uploaded',
+        description: 'The image has been successfully uploaded and the URL is set.',
+      });
+
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Upload Failed',
+        description: error.message,
+      });
+    } finally {
+      setIsUploading(false);
+       // Reset the file input so the same file can be re-uploaded if needed
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -229,12 +260,14 @@ export function ProductForm({
                                     <Input 
                                         {...register('image')} 
                                         placeholder="https://... or upload a file"
+                                        readOnly={isUploading}
                                     />
                                     <Button 
                                         type="button" 
                                         variant="outline" 
-                                        onClick={() => fileInputRef.current?.click()}>
-                                        Upload
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={isUploading}>
+                                        {isUploading ? <PottersWheelSpinner className="h-5 w-5"/> : <UploadCloud className="h-5 w-5" />}
                                     </Button>
                                     <input
                                         type="file"
@@ -242,6 +275,7 @@ export function ProductForm({
                                         onChange={handleFileChange}
                                         className="hidden"
                                         accept="image/*"
+                                        disabled={isUploading}
                                     />
                                 </div>
                                 {imageValue && (
@@ -265,7 +299,7 @@ export function ProductForm({
                             <Button 
                                 type="button" 
                                 onClick={handleGenerateDetails} 
-                                disabled={isGenerating}
+                                disabled={isGenerating || !imageValue}
                             >
                                 {isGenerating ? <PottersWheelSpinner className="h-5 w-5" /> : <Wand2 className="mr-2 h-4 w-4" />}
                                 {isGenerating ? 'Generating...' : 'Generate Name & Description'}
@@ -391,7 +425,7 @@ export function ProductForm({
                       Cancel
                       </Button>
                   </DialogClose>
-                  <Button type="submit" disabled={isSubmitting || isGenerating}>
+                  <Button type="submit" disabled={isSubmitting || isGenerating || isUploading}>
                   {isSubmitting ? 'Saving...' : 'Save Product'}
                   </Button>
               </DialogFooter>
