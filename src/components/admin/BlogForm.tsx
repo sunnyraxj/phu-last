@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, DragEvent } from 'react';
 import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -26,6 +26,8 @@ import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { GenerateBlogPostOutput } from '@/ai/flows/generate-blog-post';
+import { cn } from '@/lib/utils';
+
 
 const faqSchema = z.object({
     question: z.string().min(1, 'Question is required'),
@@ -55,6 +57,7 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiNotes, setAiNotes] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
   const { toast } = useToast();
   
   const {
@@ -114,9 +117,8 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
           setValue('slug', slug, { shouldValidate: true });
       }
   }, [titleValue, setValue, post, getValues]);
-  
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+
+  const handleFileUpload = async (file: File) => {
     if (!file) return;
 
     setIsUploading(true);
@@ -150,6 +152,28 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
         fileInputRef.current.value = '';
       }
     }
+  }
+  
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    handleFileUpload(file as File);
+  };
+
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+    const file = event.dataTransfer.files[0];
+    handleFileUpload(file);
   };
 
   const handleGenerateContent = async () => {
@@ -232,8 +256,13 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
                         <div className="space-y-1">
                             <Label htmlFor="featuredImage">Featured Image</Label>
                             <div 
-                                className="relative flex justify-center items-center w-full h-48 border-2 border-dashed rounded-md cursor-pointer hover:bg-muted/80 bg-muted/40"
+                                className={cn("relative flex justify-center items-center w-full h-48 border-2 border-dashed rounded-md cursor-pointer hover:bg-muted/80 bg-muted/40 transition-colors",
+                                  isDragging && "bg-muted border-primary"
+                                )}
                                 onClick={() => fileInputRef.current?.click()}
+                                onDragOver={handleDragOver}
+                                onDragLeave={handleDragLeave}
+                                onDrop={handleDrop}
                             >
                                 {isUploading ? (
                                     <div className="flex flex-col items-center gap-2">
@@ -243,9 +272,9 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
                                 ) : imageValue ? (
                                     <Image src={imageValue} alt="Featured image preview" fill className="object-cover rounded-md" />
                                 ) : (
-                                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                    <div className="flex flex-col items-center gap-2 text-muted-foreground text-center">
                                         <UploadCloud className="h-8 w-8" />
-                                        <p className="font-semibold">Click to upload image</p>
+                                        <p className="font-semibold">Click or drag & drop to upload</p>
                                         <p className="text-xs">PNG, JPG, GIF up to 10MB</p>
                                     </div>
                                 )}
