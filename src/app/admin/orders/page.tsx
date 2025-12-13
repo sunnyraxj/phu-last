@@ -302,8 +302,8 @@ export default function OrdersPage() {
                                                         </div>
                                                          <div>
                                                             <h4 className="font-semibold mb-2">Delivery Date</h4>
-                                                            <div className="flex items-center gap-2">
-                                                                <p className={cn("text-sm", !order.deliveryDate && "text-muted-foreground")}>
+                                                            <div className="flex items-center gap-4">
+                                                                <p className={cn("text-lg font-bold", !order.deliveryDate && "text-muted-foreground font-normal text-sm")}>
                                                                     {order.deliveryDate ? formatDate(order.deliveryDate) : 'Not set'}
                                                                 </p>
                                                                 <Popover>
@@ -455,3 +455,6 @@ export default function OrdersPage() {
     );
 }
 
+
+
+    
