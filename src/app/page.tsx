@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { Label } from "@/components/ui/label";
 
 
 type Product = {
@@ -72,7 +73,22 @@ const categories = [
 
 const materials = ["Paper", "Ceramic", "Brass", "Sabai Grass", "Jute"];
 
-function Filters({ selectedCategories, handleCategoryChange, selectedMaterials, handleMaterialChange, availability, setAvailability, priceRange, setPriceRange }: any) {
+function Filters({ selectedCategories, handleCategoryChange, selectedMaterials, handleMaterialChange, availability, setAvailability, priceRange, setPriceRange, maxPrice }: any) {
+  
+  const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value);
+    if (value >= 0 && value <= priceRange[1]) {
+      setPriceRange([value, priceRange[1]]);
+    }
+  };
+
+  const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value);
+    if (value >= priceRange[0] && value <= maxPrice) {
+      setPriceRange([priceRange[0], value]);
+    }
+  };
+  
   return (
     <>
       <div className="flex justify-between items-center mb-6">
@@ -137,18 +153,35 @@ function Filters({ selectedCategories, handleCategoryChange, selectedMaterials, 
         <AccordionItem value="price">
           <AccordionTrigger className="font-semibold py-3 text-base">Price</AccordionTrigger>
           <AccordionContent>
-            <div className="pt-2">
+             <div className="pt-2">
               <Slider
-                defaultValue={[0, 10000]}
-                max={10000}
+                max={maxPrice}
                 step={100}
                 min={0}
                 value={priceRange}
                 onValueChange={(value) => setPriceRange(value as [number, number])}
               />
-              <div className="flex justify-between text-sm text-muted-foreground mt-2">
-                <span>₹{priceRange[0]}</span>
-                <span>₹{priceRange[1]}</span>
+              <div className="flex items-center gap-4 mt-4">
+                <div className="flex-1 space-y-1">
+                  <Label htmlFor="min-price" className="text-xs">Min</Label>
+                  <Input
+                    id="min-price"
+                    type="number"
+                    value={priceRange[0]}
+                    onChange={handleMinPriceChange}
+                    className="h-8"
+                  />
+                </div>
+                 <div className="flex-1 space-y-1">
+                  <Label htmlFor="max-price" className="text-xs">Max</Label>
+                  <Input
+                    id="max-price"
+                    type="number"
+                    value={priceRange[1]}
+                    onChange={handleMaxPriceChange}
+                    className="h-8"
+                  />
+                </div>
               </div>
             </div>
           </AccordionContent>
@@ -282,6 +315,16 @@ export default function ProductPage() {
     [firestore]
   );
   const { data: allProducts, isLoading: productsLoading } = useCollection<Product>(productsQuery);
+
+  const maxPrice = useMemo(() => {
+    if (!allProducts || allProducts.length === 0) return 10000;
+    return Math.max(...allProducts.map(p => p.price));
+  }, [allProducts]);
+
+  useEffect(() => {
+    setPriceRange([0, maxPrice]);
+  }, [maxPrice]);
+
 
   const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
   const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
@@ -469,6 +512,7 @@ export default function ProductPage() {
                 setAvailability={setAvailability}
                 priceRange={priceRange}
                 setPriceRange={setPriceRange}
+                maxPrice={maxPrice}
               />
             </aside>
 
@@ -496,6 +540,7 @@ export default function ProductPage() {
                           setAvailability={setAvailability}
                           priceRange={priceRange}
                           setPriceRange={setPriceRange}
+                          maxPrice={maxPrice}
                         />
                       </div>
                     </SheetContent>
@@ -717,6 +762,7 @@ export default function ProductPage() {
 }
     
     
+
 
 
 
