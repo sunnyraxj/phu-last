@@ -57,17 +57,8 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
     const { user, isUserLoading } = useUser();
     const auth = useAuth();
     const router = useRouter();
-    const [isCraftsPopoverOpen, setIsCraftsPopoverOpen] = useState(false);
-    const [isStoresPopoverOpen, setIsStoresPopoverOpen] = useState(false);
-    const [isPurchasePopoverOpen, setIsPurchasePopoverOpen] = useState(false);
-    const [isAdminPopoverOpen, setIsAdminPopoverOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-    
-    const craftsTimer = useRef<NodeJS.Timeout | null>(null);
-    const storesTimer = useRef<NodeJS.Timeout | null>(null);
-    const purchaseTimer = useRef<NodeJS.Timeout | null>(null);
-    const adminTimer = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         const selectRandomProducts = () => {
@@ -82,40 +73,6 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
 
         return () => clearInterval(intervalId); // Cleanup on unmount
     }, [products]);
-
-    const handleMouseEnter = (popover: 'crafts' | 'stores' | 'admin' | 'purchase') => {
-        if (popover === 'crafts') {
-            if (craftsTimer.current) clearTimeout(craftsTimer.current);
-            setIsCraftsPopoverOpen(true);
-        } else if (popover === 'stores') {
-            if (storesTimer.current) clearTimeout(storesTimer.current);
-            setIsStoresPopoverOpen(true);
-        } else if (popover === 'admin') {
-            if (adminTimer.current) clearTimeout(adminTimer.current);
-            setIsAdminPopoverOpen(true);
-        } else if (popover === 'purchase') {
-            if (purchaseTimer.current) clearTimeout(purchaseTimer.current);
-            setIsPurchasePopoverOpen(true);
-        }
-    };
-
-    const handleMouseLeave = (popover: 'crafts' | 'stores' | 'admin' | 'purchase') => {
-        const timerSetter = (setter: React.Dispatch<React.SetStateAction<boolean>>) => {
-            return setTimeout(() => {
-                setter(false);
-            }, 1000);
-        };
-
-        if (popover === 'crafts') {
-            craftsTimer.current = timerSetter(setIsCraftsPopoverOpen);
-        } else if (popover === 'stores') {
-            storesTimer.current = timerSetter(setIsStoresPopoverOpen);
-        } else if (popover === 'admin') {
-            adminTimer.current = timerSetter(setIsAdminPopoverOpen);
-        } else if (popover === 'purchase') {
-            purchaseTimer.current = timerSetter(setIsPurchasePopoverOpen);
-        }
-    };
 
 
     const handleSignOut = async () => {
@@ -148,24 +105,14 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                 </Link>
 
                 <nav className="hidden lg:flex items-center gap-8 text-sm font-semibold">
-                     <Popover open={isPurchasePopoverOpen} onOpenChange={setIsPurchasePopoverOpen}>
+                     <Popover>
                         <PopoverTrigger asChild>
-                             <div 
-                                onMouseEnter={() => handleMouseEnter('purchase')} 
-                                onMouseLeave={() => handleMouseLeave('purchase')}
-                                className="flex items-center"
-                            >
-                                <Link href="/purchase">
-                                    <button className="flex items-center gap-1 hover:opacity-80">
-                                        PURCHASE <ChevronDown size={16} />
-                                    </button>
-                                </Link>
-                            </div>
+                            <button className="flex items-center gap-1 hover:opacity-80">
+                                PURCHASE <ChevronDown size={16} />
+                            </button>
                         </PopoverTrigger>
                          <PopoverContent 
                             className="w-96"
-                            onMouseEnter={() => handleMouseEnter('purchase')} 
-                            onMouseLeave={() => handleMouseLeave('purchase')}
                         >
                             <div className="grid gap-4">
                                 <p className="font-semibold">Featured Products</p>
@@ -187,24 +134,14 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                             </div>
                         </PopoverContent>
                     </Popover>
-                    <Popover open={isStoresPopoverOpen} onOpenChange={setIsStoresPopoverOpen}>
+                    <Popover>
                         <PopoverTrigger asChild>
-                             <div 
-                                onMouseEnter={() => handleMouseEnter('stores')} 
-                                onMouseLeave={() => handleMouseLeave('stores')}
-                                className="flex items-center"
-                            >
-                                <Link href="/our-stores">
-                                    <button className="flex items-center gap-1 hover:opacity-80">
-                                        OUR STORES <ChevronDown size={16} />
-                                    </button>
-                                </Link>
-                            </div>
+                            <button className="flex items-center gap-1 hover:opacity-80">
+                                OUR STORES <ChevronDown size={16} />
+                            </button>
                         </PopoverTrigger>
                          <PopoverContent 
                             className="w-80"
-                            onMouseEnter={() => handleMouseEnter('stores')} 
-                            onMouseLeave={() => handleMouseLeave('stores')}
                         >
                             <div className="grid gap-4">
                                 <p className="font-semibold">Store Locations</p>
@@ -242,13 +179,9 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                     </Link>
                     <button className="hover:opacity-80">BLOG</button>
                      {userData?.role === 'admin' && (
-                        <Popover open={isAdminPopoverOpen} onOpenChange={setIsAdminPopoverOpen}>
+                        <Popover>
                             <PopoverTrigger asChild>
-                                <div 
-                                    onMouseEnter={() => handleMouseEnter('admin')} 
-                                    onMouseLeave={() => handleMouseLeave('admin')}
-                                    className="flex items-center relative"
-                                >
+                                <div className="flex items-center relative">
                                     <Link href="/admin">
                                         <button className="flex items-center gap-1 hover:opacity-80">
                                             ADMIN <ChevronDown size={16} />
@@ -263,8 +196,6 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                             </PopoverTrigger>
                             <PopoverContent 
                                 className="w-64"
-                                onMouseEnter={() => handleMouseEnter('admin')} 
-                                onMouseLeave={() => handleMouseLeave('admin')}
                             >
                                 <div className="grid gap-4">
                                     <p className="font-semibold">Admin Panel</p>
@@ -501,4 +432,3 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
         </header>
     );
 }
-
