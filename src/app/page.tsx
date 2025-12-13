@@ -76,20 +76,16 @@ const materials = ["Paper", "Ceramic", "Brass", "Sabai Grass", "Jute"];
 function Filters({ selectedCategories, handleCategoryChange, selectedMaterials, handleMaterialChange, availability, setAvailability, priceRange, setPriceRange, maxPrice }: any) {
   
   const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number(e.target.value);
+    const value = e.target.value === '' ? 0 : Number(e.target.value);
     if (!isNaN(value) && value >= 0 && value <= priceRange[1]) {
       setPriceRange([value, priceRange[1]]);
-    } else if (e.target.value === '') {
-      setPriceRange([0, priceRange[1]]);
     }
   };
 
   const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number(e.target.value);
+    const value = e.target.value === '' ? 0 : Number(e.target.value);
     if (!isNaN(value) && value >= priceRange[0] && value <= maxPrice) {
       setPriceRange([priceRange[0], value]);
-    } else if (e.target.value === '') {
-      setPriceRange([priceRange[0], 0]);
     }
   };
   
@@ -171,7 +167,7 @@ function Filters({ selectedCategories, handleCategoryChange, selectedMaterials, 
                   <Input
                     id="min-price"
                     type="number"
-                    value={priceRange[0]}
+                    value={isNaN(priceRange[0]) ? '' : priceRange[0]}
                     onChange={handleMinPriceChange}
                     className="h-8"
                   />
@@ -181,7 +177,7 @@ function Filters({ selectedCategories, handleCategoryChange, selectedMaterials, 
                   <Input
                     id="max-price"
                     type="number"
-                    value={priceRange[1]}
+                    value={isNaN(priceRange[1]) ? '' : priceRange[1]}
                     onChange={handleMaxPriceChange}
                     className="h-8"
                   />
@@ -766,6 +762,7 @@ export default function ProductPage() {
 }
     
     
+
 
 
 
