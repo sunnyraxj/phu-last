@@ -101,15 +101,15 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
 
     return (
         <header className="bg-black text-white sticky top-0 z-40">
-            <div className="container mx-auto flex items-center justify-between px-4 sm:px-8 py-4">
-                <Link href="/" className="flex items-center gap-2">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-full flex items-center justify-center">
-                        <span className="text-xl sm:text-2xl font-bold">P</span>
+            <div className="container mx-auto flex items-center justify-between px-4 sm:px-8 py-6">
+                <Link href="/" className="flex items-center gap-3">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 rounded-full flex items-center justify-center">
+                        <span className="text-2xl sm:text-3xl font-bold">P</span>
                     </div>
-                    <span className="text-base sm:text-lg font-semibold">Purbanchal Hasta Udyog</span>
+                    <span className="text-lg sm:text-xl font-semibold">Purbanchal Hasta Udyog</span>
                 </Link>
 
-                <nav className="hidden lg:flex items-center gap-8 text-sm font-semibold">
+                <nav className="hidden lg:flex items-center gap-10 text-base font-semibold">
                      <Popover open={purchaseMenuOpen} onOpenChange={setPurchaseMenuOpen}>
                         <PopoverTrigger asChild onMouseEnter={() => setPurchaseMenuOpen(true)} onMouseLeave={() => setPurchaseMenuOpen(false)}>
                             <button className="flex items-center gap-1 hover:opacity-80">
@@ -259,7 +259,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                         <Popover open={userMenuOpen} onOpenChange={setUserMenuOpen}>
                             <PopoverTrigger asChild onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)}>
                                 <Button variant="ghost" className="hover:opacity-80 p-0 rounded-full">
-                                    <User size={20} />
+                                    <User size={24} />
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-48" onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)}>
@@ -289,7 +289,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                     <Sheet>
                         <SheetTrigger asChild>
                             <button className="relative hover:opacity-80">
-                                <ShoppingBag size={20} />
+                                <ShoppingBag size={24} />
                                 {cartCount > 0 && (
                                     <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
                                         {cartCount}
