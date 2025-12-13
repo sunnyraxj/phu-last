@@ -21,10 +21,11 @@ import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Separator } from '../ui/separator';
-import { PlusCircle, Trash2, UploadCloud } from 'lucide-react';
+import { PlusCircle, Trash2, UploadCloud, Wand2, Sparkles } from 'lucide-react';
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import { GenerateBlogPostOutput } from '@/ai/flows/generate-blog-post';
 
 const faqSchema = z.object({
     question: z.string().min(1, 'Question is required'),
@@ -52,6 +53,8 @@ interface BlogFormProps {
 export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [aiNotes, setAiNotes] = useState('');
   const { toast } = useToast();
   
   const {
@@ -61,6 +64,7 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
     control,
     setValue,
     watch,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<BlogFormValues>({
     resolver: zodResolver(blogSchema),
@@ -99,15 +103,17 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
             faqs: [],
           });
         }
+        setAiNotes('');
     }
   }, [post, reset, isOpen]);
 
   useEffect(() => {
-      if (!post) { // Only auto-generate slug for new posts
+      // Auto-generate slug only if it's a new post or slug is empty
+      if (!post || !getValues('slug')) {
           const slug = titleValue.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
           setValue('slug', slug, { shouldValidate: true });
       }
-  }, [titleValue, setValue, post]);
+  }, [titleValue, setValue, post, getValues]);
   
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -146,6 +152,57 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
     }
   };
 
+  const handleGenerateContent = async () => {
+    const imageDataUri = getValues('featuredImage');
+    if (!imageDataUri) {
+      toast({
+        variant: 'destructive',
+        title: 'Image required',
+        description: 'Please upload an image to generate blog content.',
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const response = await fetch('/api/generate-blog-post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          imageDataUri,
+          userNotes: aiNotes,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate content.');
+      }
+
+      const result: GenerateBlogPostOutput = await response.json();
+
+      setValue('title', result.title, { shouldValidate: true });
+      setValue('slug', result.slug, { shouldValidate: true });
+      setValue('content', result.content, { shouldValidate: true });
+
+      toast({
+        title: 'Content Generated!',
+        description: 'Title, slug, and content have been populated.',
+      });
+    } catch (error: any) {
+      console.error(error);
+      toast({
+        variant: 'destructive',
+        title: 'Generation Failed',
+        description: error.message,
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
 
   const handleFormSubmit: SubmitHandler<BlogFormValues> = (data) => {
     onSubmit(data);
@@ -163,8 +220,66 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
         <form onSubmit={handleSubmit(handleFormSubmit)}>
             <ScrollArea className="h-[70vh] pr-6 -mr-6">
                 <div className="space-y-6 my-4">
+                    <div className="p-4 rounded-lg bg-muted/50 border border-dashed space-y-4">
+                        <Label className="flex items-center gap-2 font-semibold">
+                            <Sparkles className="h-5 w-5 text-primary" />
+                            AI Content Generation
+                        </Label>
+                        <div className="space-y-1">
+                            <Label htmlFor="featuredImage">Featured Image</Label>
+                            <div 
+                                className="relative flex justify-center items-center w-full h-48 border-2 border-dashed rounded-md cursor-pointer hover:bg-muted/80 bg-muted/40"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                {isUploading ? (
+                                    <div className="flex flex-col items-center gap-2">
+                                        <PottersWheelSpinner />
+                                        <p className="text-sm text-muted-foreground">Uploading...</p>
+                                    </div>
+                                ) : imageValue ? (
+                                    <Image src={imageValue} alt="Featured image preview" fill className="object-cover rounded-md" />
+                                ) : (
+                                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                        <UploadCloud className="h-8 w-8" />
+                                        <p className="font-semibold">Click to upload image</p>
+                                        <p className="text-xs">PNG, JPG, GIF up to 10MB</p>
+                                    </div>
+                                )}
+                            </div>
+                             <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                className="hidden"
+                                accept="image/*"
+                                disabled={isUploading}
+                            />
+                            {errors.featuredImage && <p className="text-xs text-destructive mt-1">{errors.featuredImage.message}</p>}
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="ai-notes">AI Notes (Optional)</Label>
+                            <Textarea 
+                                id="ai-notes"
+                                placeholder="e.g., 'A blog post about traditional bamboo weaving techniques'."
+                                value={aiNotes}
+                                onChange={(e) => setAiNotes(e.target.value)}
+                                rows={2}
+                            />
+                        </div>
+                        <Button 
+                            type="button" 
+                            onClick={handleGenerateContent} 
+                            disabled={isGenerating || !imageValue || isUploading}
+                        >
+                            {isGenerating ? <PottersWheelSpinner className="h-5 w-5" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                            {isGenerating ? 'Generating...' : 'Generate Blog Content'}
+                        </Button>
+                    </div>
+
+                    <Separator />
+                    
                     <div>
-                        <h3 className="text-lg font-medium mb-2">Basic Details</h3>
+                        <h3 className="text-lg font-medium mb-2">Blog Details</h3>
                         <div className="space-y-4 p-4 border rounded-lg">
                             <div className="space-y-1">
                                 <Label htmlFor="title">Title</Label>
@@ -175,43 +290,6 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
                                 <Label htmlFor="slug">Slug</Label>
                                 <Input id="slug" {...register('slug')} />
                                 {errors.slug && <p className="text-xs text-destructive">{errors.slug.message}</p>}
-                            </div>
-                            <div className="space-y-1">
-                                <Label htmlFor="featuredImage">Featured Image</Label>
-                                <div 
-                                    className="relative flex justify-center items-center w-full h-48 border-2 border-dashed rounded-md cursor-pointer hover:bg-muted"
-                                    onClick={() => fileInputRef.current?.click()}
-                                >
-                                    {isUploading ? (
-                                        <div className="flex flex-col items-center gap-2">
-                                            <PottersWheelSpinner />
-                                            <p className="text-sm text-muted-foreground">Uploading...</p>
-                                        </div>
-                                    ) : imageValue ? (
-                                        <Image src={imageValue} alt="Featured image preview" fill className="object-cover rounded-md" />
-                                    ) : (
-                                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                                            <UploadCloud className="h-8 w-8" />
-                                            <p className="font-semibold">Click to upload image</p>
-                                            <p className="text-xs">PNG, JPG, GIF up to 10MB</p>
-                                        </div>
-                                    )}
-                                </div>
-                                 <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    onChange={handleFileChange}
-                                    className="hidden"
-                                    accept="image/*"
-                                    disabled={isUploading}
-                                />
-                                {errors.featuredImage && <p className="text-xs text-destructive mt-1">{errors.featuredImage.message}</p>}
-                                <Input 
-                                    {...register('featuredImage')}
-                                    placeholder="Or paste an image URL here"
-                                    className="mt-2"
-                                    readOnly={isUploading}
-                                />
                             </div>
                              <div className="space-y-1">
                                 <Label htmlFor="content">Content</Label>
@@ -246,7 +324,7 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
                         <h3 className="text-lg font-medium mb-2">Frequently Asked Questions</h3>
                          <div className="space-y-4 p-4 border rounded-lg">
                             {fields.map((field, index) => (
-                                <div key={field.id} className="p-4 border rounded-md relative space-y-2">
+                                <div key={field.id} className="p-4 border rounded-md relative space-y-2 bg-muted/30">
                                      <Button
                                         type="button"
                                         variant="ghost"
@@ -298,7 +376,7 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
                     Cancel
                     </Button>
                 </DialogClose>
-                <Button type="submit" disabled={isSubmitting || isUploading}>
+                <Button type="submit" disabled={isSubmitting || isUploading || isGenerating}>
                 {isSubmitting ? 'Saving...' : 'Save Post'}
                 </Button>
             </DialogFooter>
