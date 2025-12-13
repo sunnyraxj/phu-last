@@ -10,14 +10,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, ExternalLink, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { MoreHorizontal, ExternalLink, ThumbsUp, ThumbsDown, CircleCheck, Wallet } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
 import Link from 'next/link';
 
-type ReturnStatus = 'pending-review' | 'approved' | 'rejected';
+type ReturnStatus = 'pending-review' | 'approved' | 'rejected' | 'refunded';
 
 type ReturnRequest = {
     id: string;
@@ -40,17 +40,18 @@ export default function ReturnsPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
 
-    const [requestToUpdate, setRequestToUpdate] = useState<{ request: ReturnRequest; newStatus: 'approved' | 'rejected' } | null>(null);
+    const [requestToUpdate, setRequestToUpdate] = useState<{ request: ReturnRequest; newStatus: 'approved' | 'rejected' | 'refunded' } | null>(null);
 
     const returnsQuery = useMemoFirebase(() => collection(firestore, 'returnRequests'), [firestore]);
     const { data: allReturns, isLoading: returnsLoading } = useCollection<ReturnRequest>(returnsQuery);
 
     const returns = useMemo(() => {
-        if (!allReturns) return { pending: [], approved: [], rejected: [] };
+        if (!allReturns) return { pending: [], approved: [], rejected: [], refunded: [] };
         const pending = allReturns.filter(r => r.status === 'pending-review');
         const approved = allReturns.filter(r => r.status === 'approved');
         const rejected = allReturns.filter(r => r.status === 'rejected');
-        return { pending, approved, rejected };
+        const refunded = allReturns.filter(r => r.status === 'refunded');
+        return { pending, approved, rejected, refunded };
     }, [allReturns]);
 
     const formatDate = (timestamp: { seconds: number }) => {
@@ -68,6 +69,8 @@ export default function ReturnsPage() {
                 return 'default';
             case 'rejected':
                 return 'secondary';
+            case 'refunded':
+                return 'outline';
             default:
                 return 'outline';
         }
@@ -91,7 +94,7 @@ export default function ReturnsPage() {
         setRequestToUpdate(null);
     };
 
-    const ReturnRequestTable = ({ requests, emptyMessage }: { requests: ReturnRequest[] | undefined, emptyMessage: string }) => (
+    const ReturnRequestTable = ({ requests, emptyMessage, currentTab }: { requests: ReturnRequest[] | undefined, emptyMessage: string, currentTab: ReturnStatus | 'pending-review' }) => (
         <div className="rounded-md border">
             <Table>
                 <TableHeader>
@@ -149,6 +152,11 @@ export default function ReturnsPage() {
                                             </Button>
                                         </div>
                                     )}
+                                    {req.status === 'approved' && (
+                                         <Button variant="default" size="sm" onClick={() => setRequestToUpdate({ request: req, newStatus: 'refunded' })}>
+                                            <Wallet className="h-4 w-4 mr-2" />Mark as Refunded
+                                        </Button>
+                                    )}
                                 </TableCell>
                             </TableRow>
                         ))
@@ -176,6 +184,7 @@ export default function ReturnsPage() {
                     <TabsTrigger value="pending">Pending Review <Badge variant={returns.pending.length > 0 ? "destructive" : "outline"} className="ml-2">{returns.pending.length}</Badge></TabsTrigger>
                     <TabsTrigger value="approved">Approved <Badge variant={returns.approved.length > 0 ? "default" : "outline"} className="ml-2">{returns.approved.length}</Badge></TabsTrigger>
                     <TabsTrigger value="rejected">Rejected <Badge variant={returns.rejected.length > 0 ? "default" : "outline"} className="ml-2">{returns.rejected.length}</Badge></TabsTrigger>
+                     <TabsTrigger value="refunded">Refunded <Badge variant={returns.refunded.length > 0 ? "default" : "outline"} className="ml-2">{returns.refunded.length}</Badge></TabsTrigger>
                 </TabsList>
                  <TabsContent value="pending" className="mt-4">
                     <Card>
@@ -186,7 +195,7 @@ export default function ReturnsPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                           <ReturnRequestTable requests={returns.pending} emptyMessage="No pending return requests." />
+                           <ReturnRequestTable requests={returns.pending} emptyMessage="No pending return requests." currentTab="pending-review" />
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -195,11 +204,11 @@ export default function ReturnsPage() {
                         <CardHeader>
                             <CardTitle>Approved Returns</CardTitle>
                             <CardDescription>
-                                These return requests have been approved.
+                                These returns are approved. Mark as refunded after processing the refund.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                           <ReturnRequestTable requests={returns.approved} emptyMessage="No approved return requests." />
+                           <ReturnRequestTable requests={returns.approved} emptyMessage="No approved return requests." currentTab="approved" />
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -212,7 +221,20 @@ export default function ReturnsPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                           <ReturnRequestTable requests={returns.rejected} emptyMessage="No rejected return requests." />
+                           <ReturnRequestTable requests={returns.rejected} emptyMessage="No rejected return requests." currentTab="rejected" />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                 <TabsContent value="refunded" className="mt-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Refunded Returns</CardTitle>
+                            <CardDescription>
+                                These return requests have been successfully refunded.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                           <ReturnRequestTable requests={returns.refunded} emptyMessage="No refunded returns." currentTab="refunded" />
                         </CardContent>
                     </Card>
                 </TabsContent>

@@ -67,7 +67,7 @@
         "orderDate": { "type": "string", "description": "The date the order was placed.", "format": "date-time" },
         "totalAmount": { "type": "number", "description": "The total amount of the order." },
         "status": { "type": "string", "description": "The status of the order (e.g., 'pending', 'shipped', 'delivered')." },
-        "returnStatus": { "type": "string", "description": "The status of any return associated with this order (e.g., 'none', 'requested', 'approved', 'rejected')." },
+        "returnStatus": { "type": "string", "description": "The status of any return associated with this order (e.g., 'none', 'requested', 'approved', 'rejected', 'refunded')." },
         "orderItemIds": { "type": "array", "description": "References to OrderItems. (Relationship: Order 1:N OrderItem)", "items": { "type": "string" } },
         "gstAmount": { "type": "number", "description": "The total GST amount for the order." },
         "cgstAmount": { "type": "number", "description": "The CGST component of the total tax." },
@@ -183,7 +183,7 @@
         "customerId": { "type": "string", "description": "Reference to the User who made the request." },
         "requestDate": { "type": "string", "description": "The date the return was requested.", "format": "date-time" },
         "reason": { "type": "string", "description": "The reason for the return, e.g., 'damaged-item'." },
-        "status": { "type": "string", "description": "The status of the request, e.g., 'pending-review', 'approved', 'rejected'." },
+        "status": { "type": "string", "description": "The status of the request, e.g., 'pending-review', 'approved', 'rejected', 'refunded'." },
         "items": { 
           "type": "array", 
           "description": "The specific items being returned.", 
