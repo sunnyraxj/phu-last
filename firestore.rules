@@ -208,5 +208,21 @@ service cloud.firestore {
       allow get, list: if true;
       allow create, update, delete: if isAdmin();
     }
+    
+    /**
+     * @description Rules for the Return Requests collection.
+     * @path /returnRequests/{returnRequestId}
+     * @allow (read) A user can read their own return requests, admins can read all.
+     * @allow (create) A user can create a return request for their own order.
+     * @allow (update) Only admins can update the status of a return request.
+     * @principle Customer can create and read their own requests. Admin manages status.
+     */
+    match /returnRequests/{returnRequestId} {
+      allow get: if (isOwner(resource.data.customerId) && isNotAnonymous()) || isAdmin();
+      allow list: if ((request.query.get('customerId') == request.auth.uid) && isNotAnonymous()) || isAdmin();
+      allow create: if (isSignedIn() && request.resource.data.customerId == request.auth.uid && isNotAnonymous());
+      allow update: if isAdmin(); // Only admins can approve/reject
+      allow delete: if false; // Returns should not be deleted
+    }
   }
 }

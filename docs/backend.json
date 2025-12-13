@@ -67,6 +67,7 @@
         "orderDate": { "type": "string", "description": "The date the order was placed.", "format": "date-time" },
         "totalAmount": { "type": "number", "description": "The total amount of the order." },
         "status": { "type": "string", "description": "The status of the order (e.g., 'pending', 'shipped', 'delivered')." },
+        "returnStatus": { "type": "string", "description": "The status of any return associated with this order (e.g., 'none', 'requested', 'approved', 'rejected')." },
         "orderItemIds": { "type": "array", "description": "References to OrderItems. (Relationship: Order 1:N OrderItem)", "items": { "type": "string" } },
         "gstAmount": { "type": "number", "description": "The total GST amount for the order." },
         "cgstAmount": { "type": "number", "description": "The CGST component of the total tax." },
@@ -170,6 +171,36 @@
         "invoiceLogoUrl": { "type": "string", "description": "A URL to the company's logo for invoices.", "format": "uri" }
       },
       "required": ["companyName", "companyAddress"]
+    },
+    "ReturnRequest": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ReturnRequest",
+      "type": "object",
+      "description": "Represents a customer's request to return items from an order.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the return request." },
+        "orderId": { "type": "string", "description": "Reference to the original Order." },
+        "customerId": { "type": "string", "description": "Reference to the User who made the request." },
+        "requestDate": { "type": "string", "description": "The date the return was requested.", "format": "date-time" },
+        "reason": { "type": "string", "description": "The reason for the return, e.g., 'damaged-item'." },
+        "status": { "type": "string", "description": "The status of the request, e.g., 'pending-review', 'approved', 'rejected'." },
+        "items": { 
+          "type": "array", 
+          "description": "The specific items being returned.", 
+          "items": { 
+            "type": "object",
+            "properties": {
+              "productId": { "type": "string" },
+              "productName": { "type": "string" },
+              "quantity": { "type": "number" },
+              "price": { "type": "number" }
+            }
+          }
+        },
+        "customerComments": { "type": "string", "description": "Customer's detailed comments about the damage." },
+        "damageImages": { "type": "array", "description": "URLs of images uploaded by the customer showing the damage.", "items": { "type": "string", "format": "uri" } }
+      },
+      "required": ["id", "orderId", "customerId", "requestDate", "reason", "status", "items"]
     }
   },
   "auth": {
@@ -216,10 +247,12 @@
       {
         "path": "/companySettings/main",
         "definition": { "entityName": "CompanySettings", "schema": { "$ref": "#/backend/entities/CompanySettings" }, "description": "A singleton document storing company-wide settings for invoices and branding." }
+      },
+      {
+        "path": "/returnRequests/{returnRequestId}",
+        "definition": { "entityName": "ReturnRequest", "schema": { "$ref": "#/backend/entities/ReturnRequest" }, "description": "Stores customer return requests for admin review.", "params": [{ "name": "returnRequestId", "description": "The unique identifier for the return request." }] }
       }
     ],
-    "reasoning": "The Firestore structure is designed to manage users, artisans, products, orders, reviews, team members, and store details for the 'purbanchal hasta udyog' application. It prioritizes security, scalability, and ease of debugging.\n\n**Authorization Independence:** User roles are stored in the `/users` collection, allowing security rules to validate admin privileges with a single `get()` call.\n\n**Structural Segregation:** Each data model is in its own top-level collection. This isolates security concerns. User data is in `/users`, products in `/products`, and admin-managed content like `/teamMembers` and `/stores` are also in top-level collections.\n\n**Access Modeling:** Path-based ownership secures user data. A user's shipping addresses are stored in a subcollection `/users/{userId}/shippingAddresses` to ensure they are private and can only be accessed by the user or an admin. Role-based access control (RBAC) is used for the admin panel, with the `isAdmin()` function checking the `role` field in a user's document. The new `/teamMembers` and `/stores` collections are publicly readable but writable only by admins, ensuring content integrity. A new singleton document at `/companySettings/main` is added to store invoice and company details, writable only by admins."
+    "reasoning": "The Firestore structure is designed to manage users, artisans, products, orders, reviews, team members, and store details for the 'purbanchal hasta udyog' application. It prioritizes security, scalability, and ease of debugging.\n\n**Authorization Independence:** User roles are stored in the `/users` collection, allowing security rules to validate admin privileges with a single `get()` call.\n\n**Structural Segregation:** Each data model is in its own top-level collection. This isolates security concerns. User data is in `/users`, products in `/products`, and admin-managed content like `/teamMembers` and `/stores` are also in top-level collections. A new `/returnRequests` collection is added to manage customer returns, with rules to ensure customers can only manage their own requests while admins have full access.\n\n**Access Modeling:** Path-based ownership secures user data. A user's shipping addresses are stored in a subcollection `/users/{userId}/shippingAddresses` to ensure they are private and can only be accessed by the user or an admin. Role-based access control (RBAC) is used for the admin panel, with the `isAdmin()` function checking the `role` field in a user's document. The new `/teamMembers` and `/stores` collections are publicly readable but writable only by admins, ensuring content integrity. A new singleton document at `/companySettings/main` is added to store invoice and company details, writable only by admins."
   }
 }
-
-    

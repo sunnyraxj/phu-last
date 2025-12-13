@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { collection, doc } from 'firebase/firestore';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Button } from '@/components/ui/button';
-import { Home, Package, ShoppingCart, Users, Store, Menu, Settings } from 'lucide-react';
+import { Home, Package, ShoppingCart, Users, Store, Menu, Settings, Undo2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
@@ -19,6 +19,10 @@ type Order = {
 type Product = {
     inStock: boolean;
 };
+
+type ReturnRequest = {
+    status: 'pending-review';
+}
 
 export default function AdminLayout({
     children,
@@ -41,6 +45,9 @@ export default function AdminLayout({
     
     const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
     const { data: products } = useCollection<Product>(productsQuery);
+    
+    const returnsQuery = useMemoFirebase(() => collection(firestore, 'returnRequests'), [firestore]);
+    const { data: returnRequests } = useCollection<ReturnRequest>(returnsQuery);
 
     const pendingOrdersCount = useMemo(() => {
         if (!orders) return 0;
@@ -51,6 +58,11 @@ export default function AdminLayout({
         if (!products) return 0;
         return products.filter(product => !product.inStock).length;
     }, [products]);
+    
+    const pendingReturnsCount = useMemo(() => {
+        if (!returnRequests) return 0;
+        return returnRequests.filter(req => req.status === 'pending-review').length;
+    }, [returnRequests]);
 
 
     useEffect(() => {
@@ -100,6 +112,7 @@ export default function AdminLayout({
     const navItems = [
         { href: '/admin', label: 'Products', icon: Package, badge: outOfStockCount > 0 ? outOfStockCount : null, badgeVariant: 'destructive' as const },
         { href: '/admin/orders', label: 'Orders', icon: ShoppingCart, badge: pendingOrdersCount > 0 ? pendingOrdersCount : null, badgeVariant: 'default' as const },
+        { href: '/admin/returns', label: 'Returns', icon: Undo2, badge: pendingReturnsCount > 0 ? pendingReturnsCount : null, badgeVariant: 'destructive' as const },
         { href: '/admin/team', label: 'Our Team', icon: Users },
         { href: '/admin/store', label: 'Our Store', icon: Store },
         { href: '/admin/settings', label: 'Settings', icon: Settings },
@@ -118,7 +131,7 @@ export default function AdminLayout({
                                 <item.icon className="h-4 w-4" />
                                 {item.label}
                             </div>
-                            {item.badge && <Badge variant={item.badgeVariant}>{item.badge}</Badge>}
+                            {item.badge != null && <Badge variant={item.badgeVariant}>{item.badge}</Badge>}
                         </span>
                     </Link>
                 </li>

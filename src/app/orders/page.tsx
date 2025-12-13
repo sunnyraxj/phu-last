@@ -13,9 +13,9 @@ import Image from 'next/image';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Undo2 } from 'lucide-react';
 import Link from 'next/link';
-import { addDays, format } from 'date-fns';
+import { addDays, format, isBefore } from 'date-fns';
 
 type OrderStatus = 'pending-payment-approval' | 'pending' | 'shipped' | 'delivered' | 'cancelled';
 
@@ -75,6 +75,13 @@ export default function OrdersPage() {
         const orderDate = new Date(timestamp.seconds * 1000);
         const deliveryDate = addDays(orderDate, 7);
         return format(deliveryDate, 'd MMMM yyyy');
+    }
+    
+    const isReturnEligible = (timestamp: { seconds: number }) => {
+        if (!timestamp) return false;
+        const orderDate = new Date(timestamp.seconds * 1000);
+        const returnDeadline = addDays(orderDate, 3);
+        return isBefore(new Date(), returnDeadline);
     }
 
     const getStatusVariant = (status: Order['status']) => {
@@ -189,6 +196,14 @@ export default function OrdersPage() {
                                                     </div>
                                                 </div>
                                                  <div className="flex justify-end gap-2 mt-6">
+                                                    {order.status === 'delivered' && (
+                                                         <Link href={`/returns/request/${order.id}`}>
+                                                            <Button variant="outline" size="sm" disabled={!isReturnEligible(order.orderDate)}>
+                                                                <Undo2 className="mr-2 h-4 w-4" />
+                                                                Request Return
+                                                            </Button>
+                                                        </Link>
+                                                    )}
                                                     <Link href={`/receipt/${order.id}`}>
                                                         <Button variant="outline" size="sm">View Receipt</Button>
                                                     </Link>
