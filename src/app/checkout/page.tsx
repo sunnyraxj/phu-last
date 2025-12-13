@@ -46,7 +46,7 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
-  const [selectedPaymentPercentage, setSelectedPaymentPercentage] = useState<number>(0);
+  const [selectedPaymentPercentage, setSelectedPaymentPercentage] = useState<number>(1);
   const [utr, setUtr] = useState('');
   const [transactionId, setTransactionId] = useState('');
 
@@ -113,23 +113,19 @@ export default function CheckoutPage() {
   
   const paymentPercentages = useMemo(() => {
     const options = [{ value: 1, label: 'Full Payment' }];
-    if (totalAmount < 10000) {
-        options.push({ value: 0.2, label: '20% Advance' });
-    } else {
-        options.push({ value: 0.35, label: '35% Advance' });
+    if (totalAmount > 50000) {
         options.push({ value: 0.5, label: '50% Advance' });
-        options.push({ value: 0.8, label: '80% Advance' });
     }
     return options;
   }, [totalAmount]);
 
   useEffect(() => {
-    if (paymentPercentages.length > 1) {
-        setSelectedPaymentPercentage(paymentPercentages[1].value); // Default to the first advance option
+    if (totalAmount > 50000) {
+        setSelectedPaymentPercentage(0.5); // Default to 50% advance if available
     } else {
         setSelectedPaymentPercentage(1); // Default to full payment
     }
-  }, [paymentPercentages]);
+  }, [totalAmount]);
 
   const advanceAmount = useMemo(() => totalAmount * selectedPaymentPercentage, [totalAmount, selectedPaymentPercentage]);
   const remainingAmount = useMemo(() => totalAmount - advanceAmount, [totalAmount, advanceAmount]);
@@ -306,20 +302,22 @@ export default function CheckoutPage() {
                  <Card>
                     <CardHeader>
                         <CardTitle>Payment</CardTitle>
-                        <CardDescription>A partial advance payment is required to place the order.</CardDescription>
+                        <CardDescription>{totalAmount > 50000 ? 'A partial advance payment is required to place the order.' : 'Full payment is required for this order.'}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        <div>
-                            <Label className="font-semibold">Select Payment Option</Label>
-                            <RadioGroup value={String(selectedPaymentPercentage)} onValueChange={(val) => setSelectedPaymentPercentage(Number(val))} className="flex flex-wrap gap-2 mt-2">
-                                {paymentPercentages.map(p => (
-                                     <Label key={p.value} htmlFor={`payment-${p.value}`} className="flex items-center gap-2 border rounded-md p-3 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary flex-1 justify-center min-w-[120px]">
-                                        <RadioGroupItem value={String(p.value)} id={`payment-${p.value}`} />
-                                        <span>{p.label}</span>
-                                    </Label>
-                                ))}
-                            </RadioGroup>
-                        </div>
+                        {paymentPercentages.length > 1 && (
+                            <div>
+                                <Label className="font-semibold">Select Payment Option</Label>
+                                <RadioGroup value={String(selectedPaymentPercentage)} onValueChange={(val) => setSelectedPaymentPercentage(Number(val))} className="flex flex-wrap gap-2 mt-2">
+                                    {paymentPercentages.map(p => (
+                                        <Label key={p.value} htmlFor={`payment-${p.value}`} className="flex items-center gap-2 border rounded-md p-3 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary flex-1 justify-center min-w-[120px]">
+                                            <RadioGroupItem value={String(p.value)} id={`payment-${p.value}`} />
+                                            <span>{p.label}</span>
+                                        </Label>
+                                    ))}
+                                </RadioGroup>
+                            </div>
+                        )}
 
                         <div className="flex flex-col md:flex-row items-center gap-6 p-4 border rounded-lg bg-muted/30">
                             <div className="w-40 h-40 p-2 bg-white rounded-md flex items-center justify-center">
@@ -399,7 +397,7 @@ export default function CheckoutPage() {
                      <Separator />
                      <div className="space-y-2">
                         <div className="flex justify-between font-semibold text-primary">
-                            <p>{selectedPaymentPercentage === 1 ? 'Amount Paid' : 'Advance to Pay'}</p>
+                            <p>{selectedPaymentPercentage === 1 ? 'Amount to Pay' : 'Advance to Pay'}</p>
                             <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(advanceAmount)}</p>
                         </div>
                         <div className="flex justify-between">
