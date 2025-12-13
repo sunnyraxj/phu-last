@@ -140,11 +140,11 @@ export default function OrdersPage() {
             <Table>
                 <TableHeader>
                     <TableRow>
+                        <TableHead className="w-28 text-center">Details</TableHead>
                         <TableHead>Order Details</TableHead>
                         <TableHead>Customer</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Total</TableHead>
-                        <TableHead className="w-28 text-center">Details</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -162,6 +162,17 @@ export default function OrdersPage() {
                             return (
                                 <Fragment key={order.id}>
                                     <TableRow className={cn("align-top", isExpanded && "bg-muted/50")}>
+                                        <TableCell className="text-center">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => toggleExpand(order.id)}
+                                                className={cn("font-normal text-xs h-8", isExpanded && 'bg-primary text-primary-foreground')}
+                                            >
+                                                {isExpanded ? 'Hide' : 'Details'}
+                                                {isExpanded ? <ChevronUp className="h-3 w-3 ml-2" /> : <ChevronDown className="h-3 w-3 ml-2" />}
+                                            </Button>
+                                        </TableCell>
                                         <TableCell className="pt-3">
                                             <p className="font-mono text-xs">{order.id}</p>
                                             <p className="text-muted-foreground text-xs">{formatDate(order.orderDate)}</p>
@@ -174,17 +185,6 @@ export default function OrdersPage() {
                                         </TableCell>
                                         <TableCell className="text-right pt-3 font-semibold">
                                             {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.totalAmount)}
-                                        </TableCell>
-                                        <TableCell className="text-center">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => toggleExpand(order.id)}
-                                                className="font-normal text-xs h-8"
-                                            >
-                                                {isExpanded ? 'Hide' : 'Details'}
-                                                {isExpanded ? <ChevronUp className="h-3 w-3 ml-2" /> : <ChevronDown className="h-3 w-3 ml-2" />}
-                                            </Button>
                                         </TableCell>
                                         <TableCell className="text-right pt-3">
                                              <DropdownMenu>
