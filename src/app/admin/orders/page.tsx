@@ -11,11 +11,12 @@ import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, ChevronDown, ChevronRight } from 'lucide-react';
+import { MoreHorizontal, ChevronDown, ChevronRight, ChevronUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 type OrderStatus = 'pending-payment-approval' | 'pending' | 'shipped' | 'delivered' | 'cancelled';
 
@@ -139,11 +140,11 @@ export default function OrdersPage() {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead className="w-12"></TableHead>
                         <TableHead>Order Details</TableHead>
                         <TableHead>Customer</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Total</TableHead>
+                        <TableHead className="w-28 text-center">Details</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -160,26 +161,32 @@ export default function OrdersPage() {
                             const isExpanded = expandedOrderIds.includes(order.id);
                             return (
                                 <Fragment key={order.id}>
-                                    <TableRow onClick={() => toggleExpand(order.id)} className="cursor-pointer">
-                                        <TableCell>
-                                            <Button variant="ghost" size="icon">
-                                                {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                                            </Button>
-                                        </TableCell>
-                                        <TableCell className="align-top pt-4">
+                                    <TableRow className={cn("align-top", isExpanded && "bg-muted/50")}>
+                                        <TableCell className="pt-3">
                                             <p className="font-mono text-xs">{order.id}</p>
                                             <p className="text-muted-foreground text-xs">{formatDate(order.orderDate)}</p>
                                         </TableCell>
-                                        <TableCell className="align-top pt-4">
+                                        <TableCell className="pt-3">
                                             <p className="font-semibold">{order.shippingDetails?.name || 'N/A'}</p>
                                         </TableCell>
-                                        <TableCell className="align-top pt-4">
+                                        <TableCell className="pt-3">
                                             <Badge variant={getStatusVariant(order.status)} className="capitalize">{order.status.replace(/-/g, ' ')}</Badge>
                                         </TableCell>
-                                        <TableCell className="text-right align-top pt-4 font-semibold">
+                                        <TableCell className="text-right pt-3 font-semibold">
                                             {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.totalAmount)}
                                         </TableCell>
-                                        <TableCell className="text-right align-top pt-4">
+                                        <TableCell className="text-center">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => toggleExpand(order.id)}
+                                                className="font-normal text-xs h-8"
+                                            >
+                                                {isExpanded ? 'Hide' : 'Details'}
+                                                {isExpanded ? <ChevronUp className="h-3 w-3 ml-2" /> : <ChevronDown className="h-3 w-3 ml-2" />}
+                                            </Button>
+                                        </TableCell>
+                                        <TableCell className="text-right pt-3">
                                              <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
