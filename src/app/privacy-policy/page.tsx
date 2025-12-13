@@ -12,9 +12,9 @@ export default function PrivacyPolicyPage() {
 
             <main className="container mx-auto py-8 sm:py-12 px-4">
                 <div className="text-center mb-12">
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">Our Policies</h1>
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">Privacy Policy</h1>
                     <p className="mt-4 text-base text-muted-foreground max-w-2xl mx-auto sm:text-xl">
-                        Your trust is important to us. Here’s how we handle shipping, returns, and your data.
+                        Your trust is important to us. Here’s how we handle your data, shipping, and returns.
                     </p>
                 </div>
 
