@@ -40,13 +40,13 @@ export default function AdminLayout({
     const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
     const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
 
-    const ordersQuery = useMemoFirebase(() => collection(firestore, 'orders'), [firestore]);
+    const ordersQuery = useMemoFirebase(() => (isAuthorized ? collection(firestore, 'orders') : null), [firestore, isAuthorized]);
     const { data: orders } = useCollection<Order>(ordersQuery);
     
-    const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
+    const productsQuery = useMemoFirebase(() => (isAuthorized ? collection(firestore, 'products') : null), [firestore, isAuthorized]);
     const { data: products } = useCollection<Product>(productsQuery);
     
-    const returnsQuery = useMemoFirebase(() => collection(firestore, 'returnRequests'), [firestore]);
+    const returnsQuery = useMemoFirebase(() => (isAuthorized ? collection(firestore, 'returnRequests') : null), [firestore, isAuthorized]);
     const { data: returnRequests } = useCollection<ReturnRequest>(returnsQuery);
 
     const pendingOrdersCount = useMemo(() => {
@@ -72,7 +72,7 @@ export default function AdminLayout({
             }
 
             if (!user) {
-                router.push('/login');
+                router.push('/login?redirect=/admin');
                 return;
             }
 
