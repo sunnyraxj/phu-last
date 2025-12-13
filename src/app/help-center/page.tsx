@@ -1,17 +1,51 @@
 
 'use client';
 
+import { useMemo } from "react";
+import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
+import { doc } from "firebase/firestore";
 import { Header } from "@/components/shared/Header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Mail, MessageSquare } from "lucide-react";
 import Link from "next/link";
+import { PottersWheelSpinner } from "@/components/shared/PottersWheelSpinner";
 
-// Replace with your actual WhatsApp number and email
-const WHATSAPP_NUMBER = '919876543210'; // Example number, include country code without '+'
-const SUPPORT_EMAIL = 'support@purbanchal.com'; // Example email
+const WHATSAPP_NUMBER = '919876543210'; 
+const SUPPORT_EMAIL = 'support@purbanchal.com'; 
+
+type UserProfile = {
+    firstName: string;
+    lastName: string;
+};
 
 export default function HelpCenterPage() {
+    const { user, isUserLoading } = useUser();
+    const firestore = useFirestore();
+
+    const userDocRef = useMemoFirebase(
+        () => (user ? doc(firestore, 'users', user.uid) : null),
+        [firestore, user]
+    );
+    const { data: userData, isLoading: userDataLoading } = useDoc<UserProfile>(userDocRef);
+
+    const whatsappMessage = useMemo(() => {
+        if (!user || !userData) {
+            return "Hello, I have a question.";
+        }
+        const name = `${userData.firstName || ''} ${userData.lastName || ''}`.trim();
+        const template = `Hello, I have a question.\n\nName: ${name}\nEmail: ${user.email}`;
+        return encodeURIComponent(template);
+    }, [user, userData]);
+
+    if (isUserLoading || userDataLoading) {
+        return (
+            <div className="flex h-screen items-center justify-center">
+                <PottersWheelSpinner />
+            </div>
+        )
+    }
+
     return (
         <div className="bg-background">
             <Header userData={null} cartItems={[]} updateCartItemQuantity={() => {}} />
@@ -34,7 +68,7 @@ export default function HelpCenterPage() {
                             <CardDescription>Get a quick response for your queries.</CardDescription>
                         </CardHeader>
                         <CardContent className="text-center">
-                             <Link href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noopener noreferrer">
+                             <Link href={`https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`} target="_blank" rel="noopener noreferrer">
                                 <Button size="lg">Send Message</Button>
                             </Link>
                         </CardContent>
