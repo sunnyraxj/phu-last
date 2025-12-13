@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -24,10 +25,16 @@ const GenerateBlogPostInputSchema = z.object({
 });
 export type GenerateBlogPostInput = z.infer<typeof GenerateBlogPostInputSchema>;
 
+const FaqSchema = z.object({
+  question: z.string().describe("A long-tail, SEO-friendly question that a user might search for."),
+  answer: z.string().describe("A concise, direct answer (40-100 words) to the question, providing immediate value."),
+});
+
 const GenerateBlogPostOutputSchema = z.object({
   title: z.string().describe('A creative, SEO-friendly title for the blog post.'),
   slug: z.string().describe("A URL-friendly slug for the blog post, derived from the title."),
   content: z.string().describe('A well-written, engaging, and SEO-optimized blog post content.'),
+  faqs: z.array(FaqSchema).describe("An array of 5-7 SEO-friendly frequently asked questions based on the blog content.")
 });
 export type GenerateBlogPostOutput = z.infer<typeof GenerateBlogPostOutputSchema>;
 
@@ -52,6 +59,7 @@ The blog post should be engaging, informative, and optimized for search engines.
 - The title should be catchy and include relevant keywords.
 - The slug should be a URL-friendly version of the title.
 - The content should be well-structured, easy to read, and provide value to the reader. It should subtly promote the products or lifestyle associated with the image.
+- Based on the generated content, create a list of 5-7 SEO-friendly FAQs. The questions should be long-tail and phrased naturally, as a user would search. The answers should be direct, concise (40-100 words), and unique.
 
 User Notes: {{{userNotes}}}
 Blog Post Image: {{media url=imageDataUri}}

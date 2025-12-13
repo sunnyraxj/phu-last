@@ -81,7 +81,7 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
   const imageValue = watch('featuredImage');
   const titleValue = watch('title');
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
       control,
       name: "faqs",
   });
@@ -186,10 +186,14 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
       setValue('title', result.title, { shouldValidate: true });
       setValue('slug', result.slug, { shouldValidate: true });
       setValue('content', result.content, { shouldValidate: true });
+      if (result.faqs) {
+        replace(result.faqs);
+      }
+
 
       toast({
         title: 'Content Generated!',
-        description: 'Title, slug, and content have been populated.',
+        description: 'Title, slug, content, and FAQs have been populated.',
       });
     } catch (error: any) {
       console.error(error);
