@@ -206,14 +206,26 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Blog",
       "type": "object",
-      "description": "Represents a single blog post.",
+      "description": "Represents a single blog post with SEO fields and an FAQ section.",
       "properties": {
         "id": { "type": "string", "description": "Unique identifier for the blog post." },
         "title": { "type": "string", "description": "The title of the blog post." },
         "slug": { "type": "string", "description": "The URL-friendly slug for the blog post." },
         "content": { "type": "string", "description": "The main content of the blog post in Markdown or HTML format." },
         "status": { "type": "string", "description": "The status of the blog post.", "enum": ["draft", "published"] },
-        "createdAt": { "type": "string", "description": "The date the blog post was created.", "format": "date-time" }
+        "createdAt": { "type": "string", "description": "The date the blog post was created.", "format": "date-time" },
+        "faqs": {
+          "type": "array",
+          "description": "An array of frequently asked questions related to the blog post.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "question": { "type": "string" },
+              "answer": { "type": "string" }
+            },
+            "required": ["question", "answer"]
+          }
+        }
       },
       "required": ["id", "title", "slug", "content", "status", "createdAt"]
     }
