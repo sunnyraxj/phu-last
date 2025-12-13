@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -7,7 +8,7 @@ import Link from 'next/link';
 import { collection, doc } from 'firebase/firestore';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Button } from '@/components/ui/button';
-import { Home, Package, ShoppingCart, Users, Store, Menu, Settings, Undo2 } from 'lucide-react';
+import { Home, Package, ShoppingCart, Users, Store, Menu, Settings, Undo2, LayoutDashboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -110,6 +111,7 @@ export default function AdminLayout({
     }
     
     const navItems = [
+        { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { href: '/admin', label: 'Products', icon: Package, badge: outOfStockCount > 0 ? outOfStockCount : null, badgeVariant: 'destructive' as const },
         { href: '/admin/orders', label: 'Orders', icon: ShoppingCart, badge: pendingOrdersCount > 0 ? pendingOrdersCount : null, badgeVariant: 'default' as const },
         { href: '/admin/returns', label: 'Returns', icon: Undo2, badge: pendingReturnsCount > 0 ? pendingReturnsCount : null, badgeVariant: 'destructive' as const },
@@ -125,7 +127,9 @@ export default function AdminLayout({
                     <Link href={item.href}>
                         <span className={cn(
                             "flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                            pathname === item.href && "bg-muted text-primary"
+                            pathname.startsWith(item.href) && item.href !== '/admin' && "bg-muted text-primary",
+                            pathname === '/admin' && item.href === '/admin' && "bg-muted text-primary",
+                            pathname === '/admin/dashboard' && item.href === '/admin/dashboard' && "bg-muted text-primary"
                         )}>
                             <div className="flex items-center gap-3">
                                 <item.icon className="h-4 w-4" />

@@ -1,9 +1,10 @@
 
+
 'use client';
 
 import { useState, Fragment, useMemo } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { collection, doc, serverTimestamp } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -11,12 +12,15 @@ import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, ChevronDown, ChevronRight, ChevronUp } from 'lucide-react';
+import { MoreHorizontal, ChevronDown, ChevronUp, Calendar as CalendarIcon, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { Input } from '@/components/ui/input';
 
 type OrderStatus = 'pending-payment-approval' | 'pending' | 'shipped' | 'delivered' | 'cancelled';
 
@@ -33,6 +37,7 @@ type Order = {
     id: string;
     customerId: string;
     orderDate: { seconds: number; nanoseconds: number; };
+    deliveryDate?: { seconds: number; nanoseconds: number; };
     totalAmount: number;
     status: OrderStatus;
     shippingDetails: ShippingDetails;
@@ -62,6 +67,7 @@ export default function OrdersPage() {
     const [orderToApprove, setOrderToApprove] = useState<Order | null>(null);
     const [orderToUpdateStatus, setOrderToUpdateStatus] = useState<{order: Order, newStatus: OrderStatus} | null>(null);
     const [expandedOrderIds, setExpandedOrderIds] = useState<string[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
 
 
     const ordersQuery = useMemoFirebase(() => collection(firestore, 'orders'), [firestore]);
@@ -70,16 +76,28 @@ export default function OrdersPage() {
     const orderItemsQuery = useMemoFirebase(() => collection(firestore, 'orderItems'), [firestore]);
     const { data: orderItems, isLoading: itemsLoading } = useCollection<OrderItem>(orderItemsQuery);
     
-    const orders = useMemo(() => {
-        if (!allOrders) return { pending: [], shipped: [], delivered: [], archived: [] };
-        const pending = allOrders.filter(o => o.status === 'pending' || o.status === 'pending-payment-approval');
-        const shipped = allOrders.filter(o => o.status === 'shipped');
-        const delivered = allOrders.filter(o => o.status === 'delivered');
-        const archived = allOrders.filter(o => o.status === 'cancelled');
-        return { pending, shipped, delivered, archived };
-    }, [allOrders]);
+    const filteredOrders = useMemo(() => {
+        if (!allOrders) return [];
+        if (!searchTerm) return allOrders;
+        
+        const lowercasedFilter = searchTerm.toLowerCase();
+        return allOrders.filter(order =>
+            order.id.toLowerCase().includes(lowercasedFilter) ||
+            order.shippingDetails.name.toLowerCase().includes(lowercasedFilter)
+        );
+    }, [allOrders, searchTerm]);
 
-    const formatDate = (timestamp: { seconds: number }) => {
+    const orders = useMemo(() => {
+        const source = filteredOrders;
+        if (!source) return { pending: [], shipped: [], delivered: [], archived: [] };
+        const pending = source.filter(o => o.status === 'pending' || o.status === 'pending-payment-approval');
+        const shipped = source.filter(o => o.status === 'shipped');
+        const delivered = source.filter(o => o.status === 'delivered');
+        const archived = source.filter(o => o.status === 'cancelled');
+        return { pending, shipped, delivered, archived };
+    }, [filteredOrders]);
+
+    const formatDate = (timestamp?: { seconds: number }) => {
         if (!timestamp) return 'N/A';
         return new Date(timestamp.seconds * 1000).toLocaleDateString('en-US', {
             year: 'numeric', month: 'long', day: 'numeric'
@@ -127,6 +145,16 @@ export default function OrdersPage() {
         setOrderToUpdateStatus(null);
     }
 
+    const updateDeliveryDate = (order: Order, date: Date | undefined) => {
+        if (!date) return;
+        const orderRef = doc(firestore, 'orders', order.id);
+        setDocumentNonBlocking(orderRef, { deliveryDate: date }, { merge: true });
+        toast({
+            title: "Delivery Date Updated",
+            description: `Delivery date for order ${order.id} set to ${formatDate({ seconds: date.getTime() / 1000 })}.`
+        });
+    }
+
     const toggleExpand = (orderId: string) => {
         setExpandedOrderIds(prev => prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]);
     }
@@ -140,7 +168,7 @@ export default function OrdersPage() {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead className="w-28 text-center">Details</TableHead>
+                        <TableHead className="w-10"></TableHead>
                         <TableHead>Order Details</TableHead>
                         <TableHead>Customer</TableHead>
                         <TableHead>Status</TableHead>
@@ -164,13 +192,12 @@ export default function OrdersPage() {
                                     <TableRow className={cn("align-top", isExpanded && "bg-muted/50")}>
                                         <TableCell className="text-center">
                                             <Button
-                                                variant="outline"
-                                                size="sm"
+                                                variant="ghost"
+                                                size="icon"
                                                 onClick={() => toggleExpand(order.id)}
-                                                className={cn("font-normal text-xs h-8", isExpanded && 'bg-primary text-primary-foreground')}
+                                                className="h-8 w-8"
                                             >
-                                                {isExpanded ? 'Hide' : 'Details'}
-                                                {isExpanded ? <ChevronUp className="h-3 w-3 ml-2" /> : <ChevronDown className="h-3 w-3 ml-2" />}
+                                                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                                             </Button>
                                         </TableCell>
                                         <TableCell className="pt-3">
@@ -266,6 +293,30 @@ export default function OrdersPage() {
                                                                 </div>
                                                             ) : <p className="text-xs">Full Payment</p>}
                                                         </div>
+                                                         <div>
+                                                            <h4 className="font-semibold mb-2">Delivery Date</h4>
+                                                            <div className="flex items-center gap-2">
+                                                                <p className={cn("text-sm", !order.deliveryDate && "text-muted-foreground")}>
+                                                                    {order.deliveryDate ? formatDate(order.deliveryDate) : 'Not set'}
+                                                                </p>
+                                                                <Popover>
+                                                                    <PopoverTrigger asChild>
+                                                                        <Button variant="outline" size="sm" className="h-8">
+                                                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                                                            <span>{order.deliveryDate ? "Change" : "Set"} Date</span>
+                                                                        </Button>
+                                                                    </PopoverTrigger>
+                                                                    <PopoverContent className="w-auto p-0">
+                                                                        <Calendar
+                                                                            mode="single"
+                                                                            selected={order.deliveryDate ? new Date(order.deliveryDate.seconds * 1000) : undefined}
+                                                                            onSelect={(date) => updateDeliveryDate(order, date)}
+                                                                            initialFocus
+                                                                        />
+                                                                    </PopoverContent>
+                                                                </Popover>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </TableCell>
@@ -288,8 +339,17 @@ export default function OrdersPage() {
 
     return (
         <div className="flex-1 space-y-4 p-2 sm:p-4 md:p-8 pt-6">
-            <div className="flex items-center justify-between space-y-2">
+            <div className="flex flex-col sm:flex-row items-center justify-between space-y-2">
                 <h2 className="text-3xl font-bold tracking-tight">Orders</h2>
+                 <div className="relative w-full sm:max-w-sm">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                        placeholder="Search by Order ID or Customer Name..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                    />
+                </div>
             </div>
             
             <Tabs defaultValue="pending">
@@ -387,3 +447,4 @@ export default function OrdersPage() {
         </div>
     );
 }
+
