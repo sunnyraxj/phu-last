@@ -326,6 +326,7 @@ export default function ProductPage() {
         cartItems={cartItems}
         updateCartItemQuantity={updateCartItemQuantity}
         stores={stores || []}
+        products={allProducts || []}
         adminActionCounts={adminActionCounts}
       />
 
