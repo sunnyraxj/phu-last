@@ -155,9 +155,6 @@ export default function OrdersPage() {
                                                     <Link href={`/receipt/${order.id}`}>
                                                         <Button variant="outline" size="sm">View Receipt</Button>
                                                     </Link>
-                                                    <Link href={`/order-confirmation/${order.id}`}>
-                                                        <Button variant="outline" size="sm">View Invoice</Button>
-                                                    </Link>
                                                 </div>
                                             </div>
                                         </CollapsibleContent>
