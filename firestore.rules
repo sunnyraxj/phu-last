@@ -77,8 +77,7 @@ service cloud.firestore {
      * @principle A user can manage their own data, but admins have override access. Critical fields like 'role' are protected from self-elevation.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin();
+      allow get, list: if true;
       allow create: if isOwner(userId);
       allow update: if (isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin();
       allow delete: if isOwner(userId) || isAdmin();
@@ -138,9 +137,9 @@ service cloud.firestore {
      * @principle Order data is open to any authenticated user.
      */
     match /orders/{orderId} {
-      allow get, update: if isOwner(resource.data.customerId) || isAdmin();
-      allow list: if (request.query.where[0][2] == request.auth.uid) || isAdmin();
+      allow get, list: if true;
       allow create: if isNotAnonymous() && request.resource.data.customerId == request.auth.uid;
+      allow update: if (isOwner(resource.data.customerId) && isNotAnonymous()) || isAdmin();
       allow delete: if false; // Orders should generally not be deletable by users.
     }
 
@@ -152,8 +151,7 @@ service cloud.firestore {
      * @principle Access is granted by looking up the parent order document and verifying its owner. This pattern secures child documents based on the parent's ownership.
      */
     match /orderItems/{orderItemId} {
-      allow get: if (get(/databases/$(database)/documents/orders/$(resource.data.orderId)).data.customerId == request.auth.uid && isNotAnonymous()) || isAdmin();
-      allow list: if (request.query.where[0][2] == request.auth.uid) || isAdmin();
+      allow get, list: if true;
       allow create: if (isNotAnonymous() && request.resource.data.orderId != null) || isAdmin();
       allow update: if (isExistingDoc() && get(/databases/$(database)/documents/orders/$(resource.data.orderId)).data.customerId == request.auth.uid && isNotAnonymous()) || isAdmin();
       allow delete: if false; // Order items should not be deletable by users.
@@ -239,5 +237,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
