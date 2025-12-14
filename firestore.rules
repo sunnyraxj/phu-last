@@ -122,26 +122,23 @@ service cloud.firestore {
      * @description Rules for the Products collection.
      * @path /products/{productId}
      * @allow (list) Any user, signed in or not, can list and view all products.
-     * @deny (create) Any user attempting to create or modify a product.
-     * @principle Data is public, but writes require a direct ownership link which is currently missing from the schema. Access is restricted to admins until the schema is updated.
+     * @allow (create) An artisan can create a product.
+     * @principle Data is public. Writes are restricted to the linked artisan or an admin.
      */
     match /products/{productId} {
-      allow get, list: if true;
-      allow create, update, delete: if isAdmin();
+        allow get, list: if true;
+        allow create: if (isNotAnonymous() && get(/databases/$(database)/documents/artisanProfiles/$(request.resource.data.artisanId)).data.userId == request.auth.uid) || isAdmin();
+        allow update, delete: if (isNotAnonymous() && get(/databases/$(database)/documents/artisanProfiles/$(resource.data.artisanId)).data.userId == request.auth.uid) || isAdmin();
     }
 
     /**
      * @description Rules for the Orders collection.
      * @path /orders/{orderId}
-     * @allow (get) A customer viewing their own order document.
-     * @deny (get) A customer trying to read another customer's order.
-     * @principle Order data is private and accessible only to the customer who created it or an admin. Listing requires a query filter.
+     * @allow (get, list, create, update) Any signed-in user can manage orders.
+     * @principle Order data is open to any authenticated user.
      */
     match /orders/{orderId} {
-      allow get: if (isOwner(resource.data.customerId) && isNotAnonymous()) || isAdmin();
-      allow list: if (isNotAnonymous() && request.query.get('customerId') == request.auth.uid) || isAdmin();
-      allow create: if isNotAnonymous() && request.resource.data.customerId == request.auth.uid;
-      allow update: if (isExistingOwner(resource.data.customerId) && isNotAnonymous()) || isAdmin();
+      allow get, list, create, update: if isSignedIn();
       allow delete: if false; // Orders should generally not be deletable by users.
     }
 
@@ -240,5 +237,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
