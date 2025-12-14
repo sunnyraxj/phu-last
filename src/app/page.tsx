@@ -656,41 +656,41 @@ export default function ProductPage() {
                           {stores.map((store) => (
                               <CarouselItem key={store.id} className="md:basis-1/2 lg:basis-1/3 basis-2/3">
                                   <div className="p-1">
-                                      <Card className="overflow-hidden flex flex-col bg-card shadow-lg hover:shadow-xl transition-shadow duration-300 h-full">
-                                          {store.image && (
-                                              <div className="relative h-56 w-full">
-                                                  <Image
-                                                      src={store.image}
-                                                      alt={store.name}
-                                                      fill
-                                                      className="object-cover"
-                                                      data-ai-hint={store['data-ai-hint']}
-                                                  />
-                                              </div>
-                                          )}
-                                          <CardHeader className="p-4">
-                                              <CardTitle className="text-lg font-bold truncate">{store.name}</CardTitle>
-                                          </CardHeader>
-                                          <CardContent className="p-4 pt-0 flex-grow space-y-3">
-                                              <div className="flex items-start gap-3 text-muted-foreground">
-                                                  <MapPin className="h-5 w-5 mt-0.5 shrink-0 text-primary" />
-                                                  <p className="text-sm">{store.address}</p>
-                                              </div>
-                                              {store.phone && (
-                                                  <div className="flex items-center gap-3 text-muted-foreground">
-                                                      <Phone className="h-5 w-5 shrink-0 text-primary" />
-                                                      <p className="text-sm">{store.phone}</p>
-                                                  </div>
-                                              )}
-                                          </CardContent>
-                                          <div className="p-4 pt-0 mt-auto">
-                                              <Link href={store.googleMapsLink} target="_blank" rel="noopener noreferrer">
-                                                  <Button className="w-full text-sm">
-                                                      View on Google Maps <ExternalLink className="ml-2 h-4 w-4" />
-                                                  </Button>
-                                              </Link>
-                                          </div>
-                                      </Card>
+                                    <Card className="overflow-hidden flex flex-col bg-card shadow-lg hover:shadow-xl transition-shadow duration-300 h-full">
+                                        {store.image && (
+                                            <div className="relative h-56 w-full">
+                                                <Image
+                                                    src={store.image}
+                                                    alt={store.name}
+                                                    fill
+                                                    className="object-cover"
+                                                    data-ai-hint={store['data-ai-hint']}
+                                                />
+                                            </div>
+                                        )}
+                                        <CardHeader className="p-4">
+                                            <CardTitle className="text-lg font-bold truncate">{store.name}</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="p-4 pt-0 flex-grow space-y-3">
+                                            <div className="flex items-start gap-3 text-muted-foreground">
+                                                <MapPin className="h-5 w-5 mt-0.5 shrink-0 text-primary" />
+                                                <p className="text-sm">{store.address}</p>
+                                            </div>
+                                            {store.phone && (
+                                                <div className="flex items-center gap-3 text-muted-foreground">
+                                                    <Phone className="h-5 w-5 shrink-0 text-primary" />
+                                                    <p className="text-sm">{store.phone}</p>
+                                                </div>
+                                            )}
+                                        </CardContent>
+                                        <div className="p-4 pt-0 mt-auto">
+                                            <Link href={store.googleMapsLink} target="_blank" rel="noopener noreferrer">
+                                                <Button className="w-full text-sm">
+                                                    View on Google Maps <ExternalLink className="ml-2 h-4 w-4" />
+                                                </Button>
+                                            </Link>
+                                        </div>
+                                    </Card>
                                   </div>
                               </CarouselItem>
                           ))}
@@ -762,6 +762,7 @@ export default function ProductPage() {
 }
     
     
+
 
 
 
