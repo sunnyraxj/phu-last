@@ -156,7 +156,9 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
   
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    handleFileUpload(file as File);
+    if(file) {
+      handleFileUpload(file as File);
+    }
   };
 
   const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
@@ -173,7 +175,9 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
     event.preventDefault();
     setIsDragging(false);
     const file = event.dataTransfer.files[0];
-    handleFileUpload(file);
+    if(file) {
+      handleFileUpload(file);
+    }
   };
 
   const handleGenerateContent = async () => {
