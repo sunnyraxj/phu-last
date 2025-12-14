@@ -38,6 +38,7 @@ type Order = {
     status: OrderStatus;
     shippingDetails: ShippingDetails;
     returnStatus?: ReturnStatus;
+    deliveryDate?: { seconds: number; };
 };
 
 type OrderItem = {
@@ -56,7 +57,7 @@ export default function OrdersPage() {
     const router = useRouter();
 
     const ordersQuery = useMemoFirebase(
-        () => (user ? query(collection(firestore, 'orders'), where('customerId', '==', user.uid)) : null),
+        () => (user && !user.isAnonymous ? query(collection(firestore, 'orders'), where('customerId', '==', user.uid)) : null),
         [firestore, user]
     );
     const { data: orders, isLoading: ordersLoading } = useCollection<Order>(ordersQuery);
@@ -79,18 +80,12 @@ export default function OrdersPage() {
         if (!timestamp) return 'N/A';
         return format(new Date(timestamp.seconds * 1000), 'd MMMM yyyy');
     };
-
-    const getEstimatedDeliveryDate = (timestamp: { seconds: number }) => {
-        if (!timestamp) return 'N/A';
-        const orderDate = new Date(timestamp.seconds * 1000);
-        const deliveryDate = addDays(orderDate, 7);
-        return format(deliveryDate, 'd MMMM yyyy');
-    }
     
     const isReturnEligible = (timestamp: { seconds: number }) => {
         if (!timestamp) return false;
-        const orderDate = new Date(timestamp.seconds * 1000);
-        const returnDeadline = addDays(orderDate, 3);
+        // Return window is 3 days from the delivery date.
+        const deliveryDate = new Date(timestamp.seconds * 1000);
+        const returnDeadline = addDays(deliveryDate, 3);
         return isBefore(new Date(), returnDeadline);
     }
 
@@ -201,8 +196,8 @@ export default function OrdersPage() {
                                                                     <p className="text-muted-foreground">{order.shippingDetails.phone}</p>
                                                                 </div>
                                                                 <div>
-                                                                    <p className="font-medium text-muted-foreground">Estimated Delivery</p>
-                                                                    <p>{getEstimatedDeliveryDate(order.orderDate)}</p>
+                                                                    <p className="font-medium text-muted-foreground">Delivery Date</p>
+                                                                    <p>{order.deliveryDate ? formatDate(order.deliveryDate) : `Est. by ${format(addDays(new Date(order.orderDate.seconds * 1000), 7), 'd MMM yyyy')}`}</p>
                                                                 </div>
                                                             </div>
                                                         ): 'N/A'}
@@ -211,7 +206,7 @@ export default function OrdersPage() {
                                                  <div className="flex justify-end gap-2 mt-6">
                                                     {order.status === 'delivered' && !order.returnStatus && (
                                                          <Link href={`/returns/request/${order.id}`}>
-                                                            <Button variant="outline" size="sm" disabled={!isReturnEligible(order.orderDate)}>
+                                                            <Button variant="outline" size="sm" disabled={!order.deliveryDate || !isReturnEligible(order.deliveryDate)}>
                                                                 <Undo2 className="mr-2 h-4 w-4" />
                                                                 Request Return
                                                             </Button>
@@ -222,8 +217,8 @@ export default function OrdersPage() {
                                                             Return {order.returnStatus.replace(/-/g, ' ')}
                                                         </Badge>
                                                      )}
-                                                    <Link href={`/receipt/${order.id}`}>
-                                                        <Button variant="outline" size="sm">View Receipt</Button>
+                                                    <Link href={`/order-confirmation/${order.id}`} target="_blank">
+                                                        <Button variant="outline" size="sm">View Invoice</Button>
                                                     </Link>
                                                 </div>
                                             </div>

@@ -3,7 +3,7 @@
 
 import { useState, Fragment, useMemo } from 'react';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, doc, serverTimestamp, query } from 'firebase/firestore';
+import { collection, doc, query } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -145,7 +145,13 @@ export default function OrdersPage() {
 
         const { order, newStatus } = orderToUpdateStatus;
         const orderRef = doc(firestore, 'orders', order.id);
-        setDocumentNonBlocking(orderRef, { status: newStatus }, { merge: true });
+        
+        const updateData: { status: OrderStatus; deliveryDate?: Date } = { status: newStatus };
+        if (newStatus === 'delivered' && !order.deliveryDate) {
+            updateData.deliveryDate = new Date();
+        }
+
+        setDocumentNonBlocking(orderRef, updateData, { merge: true });
         toast({
             title: 'Order Status Updated',
             description: `Order ${order.id} has been updated to '${newStatus.replace(/-/g, ' ')}'.`
@@ -464,9 +470,3 @@ export default function OrdersPage() {
         </div>
     );
 }
-
-
-
-    
-
-    
