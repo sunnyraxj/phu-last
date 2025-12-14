@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useFirestore, useDoc, useCollection, useUser, useMemoFirebase } from '@/firebase';
 import { doc, collection, query, where } from 'firebase/firestore';
 import { useParams, useRouter } from 'next/navigation';
@@ -81,6 +81,20 @@ export default function FinalInvoicePage() {
 
   const settingsRef = useMemoFirebase(() => doc(firestore, 'companySettings', 'main'), [firestore]);
   const { data: settings, isLoading: settingsLoading } = useDoc<CompanySettings>(settingsRef);
+  
+  const userDocRef = useMemoFirebase(() => (user ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
+  const { data: userData, isLoading: userIsLoading } = useDoc<{role: string}>(userDocRef);
+
+
+  useEffect(() => {
+    // Security check
+    if (!orderLoading && order && user && order.customerId !== user.uid) {
+        // Allow admins to view any order
+        if (!userIsLoading && userData?.role !== 'admin') {
+            router.push('/');
+        }
+    }
+  }, [order, orderLoading, user, userIsLoading, userData, router])
 
 
   const formatDate = (timestamp: { seconds: number }) => {
@@ -95,13 +109,6 @@ export default function FinalInvoicePage() {
       return order.subtotal - order.gstAmount;
   }, [order]);
 
-  // Security check
-  if (!orderLoading && order && user && order.customerId !== user.uid) {
-      // Allow admins to view any order
-      const userDocRef = doc(firestore, 'users', user.uid);
-      useDoc<{role: string}>(userDocRef).data?.role !== 'admin' && router.push('/');
-      return null;
-  }
 
   const isLoading = orderLoading || itemsLoading || settingsLoading;
   
@@ -275,4 +282,5 @@ export default function FinalInvoicePage() {
     </div>
   );
 }
+
 
