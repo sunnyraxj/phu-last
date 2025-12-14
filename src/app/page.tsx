@@ -369,7 +369,8 @@ export default function ProductPage() {
     }
     const pendingOrders = orders?.filter(order => order.status === 'pending' || order.status === 'pending-payment-approval').length || 0;
     const outOfStockProducts = allProducts.filter(p => !p.inStock).length;
-    return { pendingOrders, outOfStockProducts, pendingReturns: 0 };
+    const pendingReturns = 0; // Assuming this needs to be implemented
+    return { pendingOrders, outOfStockProducts, pendingReturns };
   }, [orders, allProducts, userData]);
 
   const handleCategoryChange = (categoryName: string) => {
@@ -654,7 +655,7 @@ export default function ProductPage() {
                   >
                       <CarouselContent>
                           {stores.map((store) => (
-                              <CarouselItem key={store.id} className="md:basis-1/2 lg:basis-1/3 basis-full sm:basis-2/3">
+                              <CarouselItem key={store.id} className="basis-4/5 md:basis-1/2 lg:basis-1/3">
                                   <div className="p-1">
                                     <Card className="overflow-hidden flex flex-col bg-card shadow-lg hover:shadow-xl transition-shadow duration-300 h-full">
                                         {store.image && (
@@ -762,6 +763,7 @@ export default function ProductPage() {
 }
     
     
+
 
 
 

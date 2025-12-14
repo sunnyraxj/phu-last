@@ -80,7 +80,8 @@ export default function OurStoresPage() {
         }
         const pendingOrders = orders.filter(order => order.status === 'pending' || order.status === 'pending-payment-approval').length;
         const outOfStockProducts = allProducts.filter(p => !p.inStock).length;
-        return { pendingOrders, outOfStockProducts, pendingReturns: 0 };
+        const pendingReturns = 0; // Assuming this needs to be implemented
+        return { pendingOrders, outOfStockProducts, pendingReturns };
     }, [orders, allProducts, userData]);
 
     const updateCartItemQuantity = (cartItemId: string, newQuantity: number) => {
@@ -94,6 +95,7 @@ export default function OurStoresPage() {
         cartItems={cartItems}
         updateCartItemQuantity={updateCartItemQuantity}
         stores={stores || []}
+        products={allProducts || []}
         adminActionCounts={adminActionCounts}
       />
 
