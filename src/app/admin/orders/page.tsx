@@ -3,7 +3,7 @@
 
 import { useState, Fragment, useMemo } from 'react';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, doc, query } from 'firebase/firestore';
+import { collection, doc, query, where } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -69,6 +69,39 @@ export default function OrdersPage() {
     const [orderToUpdateStatus, setOrderToUpdateStatus] = useState<{order: Order, newStatus: OrderStatus} | null>(null);
     const [expandedOrderIds, setExpandedOrderIds] = useState<string[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
+    
+    const [itemsByOrder, setItemsByOrder] = useState<{[key: string]: OrderItem[]}>({});
+    
+    const orderIdsToFetch = useMemo(() => expandedOrderIds.filter(id => !itemsByOrder[id]), [expandedOrderIds, itemsByOrder]);
+
+    const itemsQuery = useMemoFirebase(
+      () =>
+        orderIdsToFetch.length > 0
+          ? query(
+              collection(firestore, 'orderItems'),
+              where('orderId', 'in', orderIdsToFetch)
+            )
+          : null,
+      [firestore, orderIdsToFetch]
+    );
+
+    const { data: fetchedItems, isLoading: itemsLoading } = useCollection<OrderItem>(itemsQuery);
+
+    useEffect(() => {
+        if (fetchedItems) {
+            const newItemsByOrder = { ...itemsByOrder };
+            fetchedItems.forEach(item => {
+                if (!newItemsByOrder[item.orderId]) {
+                    newItemsByOrder[item.orderId] = [];
+                }
+                if (!newItemsByOrder[item.orderId].find(i => i.id === item.id)) {
+                  newItemsByOrder[item.orderId].push(item);
+                }
+            });
+            setItemsByOrder(newItemsByOrder);
+        }
+    }, [fetchedItems, itemsByOrder]);
+
 
     const userDocRef = useMemoFirebase(() => (user ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
     const { data: userData } = useDoc<{ role: string }>(userDocRef);
@@ -78,11 +111,6 @@ export default function OrdersPage() {
         isAuthorizedAdmin ? query(collection(firestore, 'orders')) : null, 
     [firestore, isAuthorizedAdmin]);
     const { data: allOrders, isLoading: ordersLoading } = useCollection<Order>(ordersQuery);
-
-    const orderItemsQuery = useMemoFirebase(() => 
-        isAuthorizedAdmin ? query(collection(firestore, 'orderItems')) : null, 
-    [firestore, isAuthorizedAdmin]);
-    const { data: orderItems, isLoading: itemsLoading } = useCollection<OrderItem>(orderItemsQuery);
     
     const filteredOrders = useMemo(() => {
         if (!allOrders) return [];
@@ -175,7 +203,7 @@ export default function OrdersPage() {
 
     const statusChangeOptions: OrderStatus[] = ['shipped', 'delivered', 'cancelled'];
     
-    const isLoading = ordersLoading || itemsLoading;
+    const isLoading = ordersLoading;
 
     const OrderTable = ({ orders, emptyMessage }: { orders: Order[] | undefined, emptyMessage: string }) => (
         <div className="rounded-md border">
@@ -199,7 +227,7 @@ export default function OrdersPage() {
                         </TableRow>
                     ) : orders && orders.length > 0 ? (
                         orders.map((order) => {
-                            const itemsInOrder = orderItems?.filter(item => item.orderId === order.id) || [];
+                            const itemsInOrder = itemsByOrder[order.id] || [];
                             const isExpanded = expandedOrderIds.includes(order.id);
                             return (
                                 <Fragment key={order.id}>
@@ -270,7 +298,9 @@ export default function OrdersPage() {
                                                 <div className="p-4 bg-muted/50 rounded-md grid md:grid-cols-2 gap-6">
                                                      <div>
                                                         <h4 className="font-semibold mb-2">Order Items</h4>
-                                                        {itemsInOrder.length > 0 ? (
+                                                        {itemsLoading && orderIdsToFetch.includes(order.id) ? (
+                                                          <PottersWheelSpinner />
+                                                        ) : itemsInOrder.length > 0 ? (
                                                             <div className="space-y-2">
                                                                 {itemsInOrder.map(item => (
                                                                     <div key={item.id} className="flex items-center gap-4 text-sm p-2 bg-background rounded">
