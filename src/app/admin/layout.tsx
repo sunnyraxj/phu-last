@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, Fragment } from 'react';
@@ -15,7 +16,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/co
 import { Header } from '@/components/shared/Header';
 
 type Order = {
-    status: 'pending' | 'shipped' | 'delivered' | 'pending-payment-approval';
+    status: 'pending' | 'shipped' | 'delivered' | 'pending-payment-approval' | 'order-confirmed';
 };
 
 type Product = {
@@ -46,7 +47,7 @@ export default function AdminLayout({
 
     const isAuthorizedAdmin = userData?.role === 'admin';
 
-    const ordersQuery = useMemoFirebase(() => (isAuthorizedAdmin ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval'])) : null), [firestore, isAuthorizedAdmin]);
+    const ordersQuery = useMemoFirebase(() => (isAuthorizedAdmin ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval', 'order-confirmed'])) : null), [firestore, isAuthorizedAdmin]);
     const { data: orders } = useCollection<Order>(ordersQuery);
     
     const productsQuery = useMemoFirebase(() => (isAuthorizedAdmin ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null), [firestore, isAuthorizedAdmin]);
@@ -236,3 +237,6 @@ export default function AdminLayout({
         </div>
     );
 }
+
+
+    

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, Fragment, useMemo, useEffect } from 'react';
@@ -22,7 +23,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 
-type OrderStatus = 'pending-payment-approval' | 'pending' | 'shipped' | 'delivered' | 'cancelled';
+type OrderStatus = 'pending-payment-approval' | 'pending' | 'shipped' | 'delivered' | 'cancelled'|'order-confirmed';
 
 type ShippingDetails = {
     name: string;
@@ -126,7 +127,7 @@ export default function OrdersPage() {
     const orders = useMemo(() => {
         const source = filteredOrders;
         if (!source) return { pending: [], shipped: [], delivered: [], archived: [] };
-        const pending = source.filter(o => o.status === 'pending' || o.status === 'pending-payment-approval');
+        const pending = source.filter(o => o.status === 'pending' || o.status === 'pending-payment-approval' || o.status === 'order-confirmed');
         const shipped = source.filter(o => o.status === 'shipped');
         const delivered = source.filter(o => o.status === 'delivered');
         const archived = source.filter(o => o.status === 'cancelled');
@@ -144,6 +145,8 @@ export default function OrdersPage() {
         switch (status) {
             case 'pending':
                 return 'secondary';
+            case 'order-confirmed':
+                return 'secondary';
             case 'pending-payment-approval':
                 return 'destructive';
             case 'shipped':
@@ -160,10 +163,10 @@ export default function OrdersPage() {
     const handleApprovePayment = () => {
         if (!orderToApprove) return;
         const orderRef = doc(firestore, 'orders', orderToApprove.id);
-        setDocumentNonBlocking(orderRef, { status: 'pending' }, { merge: true });
+        setDocumentNonBlocking(orderRef, { status: 'order-confirmed' }, { merge: true });
         toast({
             title: 'Payment Approved',
-            description: `Order ${orderToApprove.id} has been moved to 'pending'.`
+            description: `Order ${orderToApprove.id} has been moved to 'order-confirmed'.`
         });
         setOrderToApprove(null);
     }
@@ -500,5 +503,7 @@ export default function OrdersPage() {
         </div>
     );
 }
+
+    
 
     
