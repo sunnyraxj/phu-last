@@ -58,21 +58,23 @@ export default function OurTeamPage() {
     const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
     const { data: allProducts } = useCollection<Product>(productsQuery);
     
+    const isAuthorizedAdmin = userData?.role === 'admin';
+
     const ordersQuery = useMemoFirebase(() => 
-      (userData?.role === 'admin') ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval'])) : null,
-      [firestore, userData]
+      (isAuthorizedAdmin) ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval'])) : null,
+      [firestore, isAuthorizedAdmin]
     );
     const { data: orders } = useCollection<Order>(ordersQuery);
 
     const outOfStockQuery = useMemoFirebase(() => 
-        (userData?.role === 'admin') ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null,
-        [firestore, userData]
+        (isAuthorizedAdmin) ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null,
+        [firestore, isAuthorizedAdmin]
     );
     const { data: outOfStockProducts } = useCollection<Product>(outOfStockQuery);
 
     const returnsQuery = useMemoFirebase(() => 
-        (userData?.role === 'admin') ? query(collection(firestore, 'returnRequests'), where('status', '==', 'pending-review')) : null,
-        [firestore, userData]
+        (isAuthorizedAdmin) ? query(collection(firestore, 'returnRequests'), where('status', '==', 'pending-review')) : null,
+        [firestore, isAuthorizedAdmin]
     );
     const { data: returnRequests } = useCollection<any>(returnsQuery);
 

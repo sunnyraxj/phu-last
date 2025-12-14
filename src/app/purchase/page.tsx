@@ -14,7 +14,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { useAuth, useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
+import { useAuth, useCollection, useDoc, useFirestore, useMemoFirebase, useUser, useFirebase } from "@/firebase";
 import { PottersWheelSpinner } from "@/components/shared/PottersWheelSpinner";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/shared/Header";

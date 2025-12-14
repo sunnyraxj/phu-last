@@ -106,7 +106,12 @@ export default function OrdersPage() {
         }
     };
     
-    if (isUserLoading || ordersLoading || itemsLoading || !user || user.isAnonymous) {
+    if (isUserLoading || ordersLoading || itemsLoading) {
+        return <div className="flex h-screen items-center justify-center"><PottersWheelSpinner /></div>;
+    }
+
+    if (!user || user.isAnonymous) {
+        // The useEffect above will handle the redirect, so we can just show a spinner here.
         return <div className="flex h-screen items-center justify-center"><PottersWheelSpinner /></div>;
     }
 

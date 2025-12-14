@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, Fragment } from 'react';
@@ -45,13 +44,15 @@ export default function AdminLayout({
     const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
     const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
 
-    const ordersQuery = useMemoFirebase(() => (isAuthorized ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval'])) : null), [firestore, isAuthorized]);
+    const isAuthorizedAdmin = userData?.role === 'admin';
+
+    const ordersQuery = useMemoFirebase(() => (isAuthorizedAdmin ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval'])) : null), [firestore, isAuthorizedAdmin]);
     const { data: orders } = useCollection<Order>(ordersQuery);
     
-    const productsQuery = useMemoFirebase(() => (isAuthorized ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null), [firestore, isAuthorized]);
+    const productsQuery = useMemoFirebase(() => (isAuthorizedAdmin ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null), [firestore, isAuthorizedAdmin]);
     const { data: products } = useCollection<Product>(productsQuery);
     
-    const returnsQuery = useMemoFirebase(() => (isAuthorized ? query(collection(firestore, 'returnRequests'), where('status', '==', 'pending-review')) : null), [firestore, isAuthorized]);
+    const returnsQuery = useMemoFirebase(() => (isAuthorizedAdmin ? query(collection(firestore, 'returnRequests'), where('status', '==', 'pending-review')) : null), [firestore, isAuthorizedAdmin]);
     const { data: returnRequests } = useCollection<ReturnRequest>(returnsQuery);
 
     const cartItemsQuery = useMemoFirebase(() =>

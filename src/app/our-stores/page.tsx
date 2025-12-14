@@ -12,6 +12,8 @@ import { Header } from "@/components/shared/Header";
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { MapPin, Phone, ExternalLink } from "lucide-react";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+
 
 type Store = {
     id: string;
@@ -54,21 +56,23 @@ export default function OurStoresPage() {
     const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
     const { data: allProducts } = useCollection<Product>(productsQuery);
 
+    const isAuthorizedAdmin = userData?.role === 'admin';
+
     const ordersQuery = useMemoFirebase(() =>
-        (userData?.role === 'admin') ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval'])) : null,
-        [firestore, userData]
+        (isAuthorizedAdmin) ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval'])) : null,
+        [firestore, isAuthorizedAdmin]
     );
     const { data: orders } = useCollection<Order>(ordersQuery);
     
     const outOfStockQuery = useMemoFirebase(() => 
-        (userData?.role === 'admin') ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null,
-        [firestore, userData]
+        (isAuthorizedAdmin) ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null,
+        [firestore, isAuthorizedAdmin]
     );
     const { data: outOfStockProducts } = useCollection<Product>(outOfStockQuery);
 
     const returnsQuery = useMemoFirebase(() => 
-        (userData?.role === 'admin') ? query(collection(firestore, 'returnRequests'), where('status', '==', 'pending-review')) : null,
-        [firestore, userData]
+        (isAuthorizedAdmin) ? query(collection(firestore, 'returnRequests'), where('status', '==', 'pending-review')) : null,
+        [firestore, isAuthorizedAdmin]
     );
     const { data: returnRequests } = useCollection<any>(returnsQuery);
 
@@ -126,45 +130,56 @@ export default function OurStoresPage() {
                 <PottersWheelSpinner />
             </div>
         ) : stores && stores.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {stores.map((store) => (
-                    <Card key={store.id} className="overflow-hidden flex flex-col">
-                        {store.image && (
-                            <div className="relative h-48 sm:h-56 w-full">
-                                <Image
-                                    src={store.image}
-                                    alt={store.name}
-                                    fill
-                                    className="object-cover"
-                                    data-ai-hint={store['data-ai-hint']}
-                                />
+            <Carousel
+                opts={{
+                    align: "start",
+                }}
+                className="w-full"
+            >
+                <CarouselContent className="-ml-2 md:-ml-4">
+                    {stores.map((store) => (
+                        <CarouselItem key={store.id} className="pl-2 md:pl-4 basis-4/5 sm:basis-1/2 md:basis-1/3">
+                            <div className="p-1">
+                                <Card className="overflow-hidden flex flex-col h-full">
+                                    {store.image && (
+                                        <div className="relative h-40 sm:h-48 w-full">
+                                            <Image
+                                                src={store.image}
+                                                alt={store.name}
+                                                fill
+                                                className="object-cover"
+                                                data-ai-hint={store['data-ai-hint']}
+                                            />
+                                        </div>
+                                    )}
+                                    <CardHeader className="p-3">
+                                        <CardTitle className="text-base font-bold truncate">{store.name}</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="p-3 pt-0 flex-grow space-y-2">
+                                        <div className="flex items-start gap-2 text-muted-foreground">
+                                            <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
+                                            <p className="text-xs">{store.address}</p>
+                                        </div>
+                                        {store.phone && (
+                                            <div className="flex items-center gap-2 text-muted-foreground">
+                                                <Phone className="h-4 w-4 shrink-0" />
+                                                <p className="text-xs">{store.phone}</p>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                    <div className="p-3 pt-0 mt-auto">
+                                        <Link href={store.googleMapsLink} target="_blank" rel="noopener noreferrer">
+                                            <Button className="w-full text-xs">
+                                                View on Google Maps <ExternalLink className="ml-2 h-3 w-3" />
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                </Card>
                             </div>
-                        )}
-                        <CardHeader className="p-3 sm:p-4">
-                            <CardTitle className="text-base sm:text-lg font-bold truncate">{store.name}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-3 sm:p-4 pt-0 flex-grow space-y-2">
-                            <div className="flex items-start gap-2 text-muted-foreground">
-                                <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
-                                <p className="text-sm">{store.address}</p>
-                            </div>
-                             {store.phone && (
-                                <div className="flex items-center gap-2 text-muted-foreground">
-                                    <Phone className="h-4 w-4 shrink-0" />
-                                    <p className="text-sm">{store.phone}</p>
-                                </div>
-                            )}
-                        </CardContent>
-                        <div className="p-3 sm:p-4 pt-0 mt-auto">
-                             <Link href={store.googleMapsLink} target="_blank" rel="noopener noreferrer">
-                                <Button className="w-full text-xs">
-                                    View on Google Maps <ExternalLink className="ml-2 h-3 w-3" />
-                                </Button>
-                            </Link>
-                        </div>
-                    </Card>
-                ))}
-            </div>
+                        </CarouselItem>
+                    ))}
+                </CarouselContent>
+            </Carousel>
         ) : (
             <div className="text-center h-64 flex flex-col items-center justify-center">
                 <p className="text-muted-foreground">No store locations have been added yet.</p>

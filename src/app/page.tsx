@@ -3,7 +3,7 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
-import { collection, doc, query, where, writeBatch, setDoc, deleteDoc, addDoc } from "firebase/firestore";
+import { collection, doc, query, where, writeBatch, setDoc, deleteDoc } from "firebase/firestore";
 import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon, MapPin, Phone, ExternalLink, Sparkles, Wand2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -14,7 +14,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { useAuth, useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
+import { useAuth, useCollection, useDoc, useFirestore, useMemoFirebase, useUser, useFirebase } from "@/firebase";
 import { PottersWheelSpinner } from "@/components/shared/PottersWheelSpinner";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/shared/Header";
@@ -303,6 +303,7 @@ export default function ProductPage() {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const router = useRouter();
+  const { addDocumentNonBlocking } = useFirebase();
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -329,9 +330,11 @@ export default function ProductPage() {
   const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
   const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
 
+  const isAuthorizedAdmin = userData?.role === 'admin';
+
   const ordersQuery = useMemoFirebase(() =>
-    (userData?.role === 'admin' && user && !user.isAnonymous) ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval'])) : null,
-    [firestore, userData, user]
+    (isAuthorizedAdmin && user && !user.isAnonymous) ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval'])) : null,
+    [firestore, isAuthorizedAdmin, user]
   );
   const { data: orders } = useCollection<Order>(ordersQuery);
 
@@ -356,14 +359,14 @@ export default function ProductPage() {
   const { data: teamMembers, isLoading: teamMembersLoading } = useCollection<TeamMember>(teamMembersQuery);
 
   const outOfStockQuery = useMemoFirebase(() => 
-    (userData?.role === 'admin') ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null,
-    [firestore, userData]
+    (isAuthorizedAdmin) ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null,
+    [firestore, isAuthorizedAdmin]
   );
   const { data: outOfStockProducts } = useCollection<Product>(outOfStockQuery);
 
   const returnsQuery = useMemoFirebase(() => 
-      (userData?.role === 'admin') ? query(collection(firestore, 'returnRequests'), where('status', '==', 'pending-review')) : null,
-      [firestore, userData]
+      (isAuthorizedAdmin) ? query(collection(firestore, 'returnRequests'), where('status', '==', 'pending-review')) : null,
+      [firestore, isAuthorizedAdmin]
   );
   const { data: returnRequests } = useCollection<any>(returnsQuery);
 
@@ -419,7 +422,7 @@ export default function ProductPage() {
       updateCartItemQuantity(existingItem.cartItemId, existingItem.quantity + 1);
     } else {
       const cartCollection = collection(firestore, 'users', user.uid, 'cart');
-      addDoc(cartCollection, {
+      addDocumentNonBlocking(cartCollection, {
         productId: product.id,
         quantity: 1,
       });
@@ -666,13 +669,13 @@ export default function ProductPage() {
                       }}
                       className="w-full"
                   >
-                      <CarouselContent>
+                      <CarouselContent className="-ml-2 md:-ml-4">
                           {stores.map((store) => (
-                              <CarouselItem key={store.id} className="basis-4/5 md:basis-1/2 lg:basis-1/3">
+                              <CarouselItem key={store.id} className="pl-2 md:pl-4 basis-[80%] sm:basis-1/2 md:basis-1/3">
                                   <div className="p-1">
                                     <Card className="overflow-hidden flex flex-col bg-card shadow-lg hover:shadow-xl transition-shadow duration-300 h-full">
                                         {store.image && (
-                                            <div className="relative h-40 sm:h-56 w-full">
+                                            <div className="relative h-40 sm:h-48 w-full">
                                                 <Image
                                                     src={store.image}
                                                     alt={store.name}
@@ -682,10 +685,10 @@ export default function ProductPage() {
                                                 />
                                             </div>
                                         )}
-                                        <CardHeader className="p-3 sm:p-4">
-                                            <CardTitle className="text-sm sm:text-base font-bold truncate">{store.name}</CardTitle>
+                                        <CardHeader className="p-3">
+                                            <CardTitle className="text-base font-bold truncate">{store.name}</CardTitle>
                                         </CardHeader>
-                                        <CardContent className="p-3 sm:p-4 pt-0 flex-grow space-y-2">
+                                        <CardContent className="p-3 pt-0 flex-grow space-y-2">
                                             <div className="flex items-start gap-2 text-muted-foreground">
                                                 <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
                                                 <p className="text-xs">{store.address}</p>
@@ -697,7 +700,7 @@ export default function ProductPage() {
                                                 </div>
                                             )}
                                         </CardContent>
-                                        <div className="p-3 sm:p-4 pt-0 mt-auto">
+                                        <div className="p-3 pt-0 mt-auto">
                                             <Link href={store.googleMapsLink} target="_blank" rel="noopener noreferrer">
                                                 <Button className="w-full text-xs">
                                                     View on Google Maps <ExternalLink className="ml-2 h-3 w-3" />
@@ -776,6 +779,7 @@ export default function ProductPage() {
 }
     
     
+
 
 
 
