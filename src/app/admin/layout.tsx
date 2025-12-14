@@ -12,6 +12,7 @@ import { Home, Package, ShoppingCart, Users, Store, Menu, Settings, Undo2, Layou
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Header } from '@/components/shared/Header';
 
 type Order = {
     status: 'pending' | 'shipped' | 'delivered' | 'pending-payment-approval';
@@ -24,6 +25,8 @@ type Product = {
 type ReturnRequest = {
     status: 'pending-review';
 }
+
+type CartItem = Product & { productId: string; quantity: number; cartItemId: string; };
 
 export default function AdminLayout({
     children,
@@ -50,6 +53,30 @@ export default function AdminLayout({
     const returnsQuery = useMemoFirebase(() => (isAuthorized ? collection(firestore, 'returnRequests') : null), [firestore, isAuthorized]);
     const { data: returnRequests } = useCollection<ReturnRequest>(returnsQuery);
 
+    const cartItemsQuery = useMemoFirebase(() =>
+        user ? collection(firestore, 'users', user.uid, 'cart') : null,
+        [firestore, user]
+    );
+    const { data: cartData } = useCollection<{ productId: string; quantity: number }>(cartItemsQuery);
+
+    const allProductsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
+    const { data: allProducts } = useCollection<Product>(allProductsQuery);
+
+    const cartItems = useMemo(() => {
+        if (!cartData || !allProducts) return [];
+        return cartData.map(cartItem => {
+            const product = allProducts.find(p => p.id === cartItem.productId);
+            return product ? { ...product, quantity: cartItem.quantity, cartItemId: cartItem.id } : null;
+        }).filter((item): item is CartItem => item !== null);
+    }, [cartData, allProducts]);
+
+    const updateCartItemQuantity = (cartItemId: string, newQuantity: number) => {
+        // This is a placeholder. The actual logic is in the Header component's scope or passed down.
+    };
+
+    const storesQuery = useMemoFirebase(() => collection(firestore, 'stores'), [firestore]);
+    const { data: stores } = useCollection<Store>(storesQuery);
+
     const pendingOrdersCount = useMemo(() => {
         if (!orders) return 0;
         return orders.filter(order => order.status === 'pending' || order.status === 'pending-payment-approval').length;
@@ -65,6 +92,13 @@ export default function AdminLayout({
         return returnRequests.filter(req => req.status === 'pending-review').length;
     }, [returnRequests]);
 
+    const adminActionCounts = useMemo(() => {
+        return {
+            pendingOrders: pendingOrdersCount,
+            outOfStockProducts: outOfStockCount,
+            pendingReturns: pendingReturnsCount,
+        };
+    }, [pendingOrdersCount, outOfStockCount, pendingReturnsCount]);
 
     useEffect(() => {
         const checkAuth = () => {
@@ -171,15 +205,15 @@ export default function AdminLayout({
     );
 
     return (
-        <div className="grid min-h-screen w-full md:grid-cols-[320px_1fr]">
-            <aside className="hidden border-r bg-background md:block">
+        <div className="grid min-h-screen w-full md:grid-cols-[320px_1fr] bg-muted/40">
+             <aside className="hidden border-r bg-background md:block">
                 <div className="flex h-full max-h-screen flex-col gap-2">
-                    <div className="flex h-14 items-center border-b px-6">
-                        <Link href="/" className="flex items-center gap-2 font-semibold">
-                             <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
-                                <span className="text-lg font-bold">P</span>
+                    <div className="flex h-24 items-center border-b px-6">
+                         <Link href="/" className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
+                                <span className="text-2xl font-bold">P</span>
                             </div>
-                            <span className="text-lg">Hasta Udyog Admin</span>
+                            <span className="text-lg font-semibold">Hasta Udyog Admin</span>
                         </Link>
                     </div>
                     <div className="flex-1 overflow-y-auto py-4">
@@ -196,41 +230,15 @@ export default function AdminLayout({
                 </div>
             </aside>
             <div className="flex flex-col">
-                <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
-                     <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-                        <SheetTrigger asChild>
-                            <Button variant="outline" size="icon" className="shrink-0 md:hidden">
-                                <Menu className="h-5 w-5" />
-                                <span className="sr-only">Toggle navigation menu</span>
-                            </Button>
-                        </SheetTrigger>
-                        <SheetContent side="left" className="flex flex-col p-0">
-                           <div className="flex h-14 items-center border-b px-6">
-                                <Link href="/" className="flex items-center gap-2 font-semibold">
-                                    <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
-                                        <span className="text-lg font-bold">P</span>
-                                    </div>
-                                    <span className="text-lg">Admin</span>
-                                </Link>
-                            </div>
-                             <div className="flex-1 overflow-y-auto py-4">
-                                {navContent}
-                            </div>
-                             <div className="mt-auto p-4 border-t">
-                                <Link href="/">
-                                    <Button variant="ghost" className="w-full justify-start text-base">
-                                        <Home className="mr-2 h-5 w-5" />
-                                        Back to Store
-                                    </Button>
-                                </Link>
-                            </div>
-                        </SheetContent>
-                    </Sheet>
-                    <div className="w-full flex-1">
-                        {/* Can add a search bar here if needed */}
-                    </div>
-                </header>
-                <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 overflow-auto">
+                 <Header
+                    userData={userData}
+                    cartItems={cartItems}
+                    updateCartItemQuantity={updateCartItemQuantity}
+                    stores={stores || []}
+                    products={allProducts || []}
+                    adminActionCounts={adminActionCounts}
+                />
+                <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 overflow-auto bg-background">
                     {children}
                 </main>
             </div>
