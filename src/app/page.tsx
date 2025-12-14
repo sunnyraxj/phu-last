@@ -3,7 +3,7 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
-import { collection, doc, query, where, getDocs, writeBatch, setDoc, deleteDoc, addDoc } from "firebase/firestore";
+import { collection, doc, query, where, writeBatch, setDoc, deleteDoc, addDoc } from "firebase/firestore";
 import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon, MapPin, Phone, ExternalLink, Sparkles, Wand2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -330,7 +330,7 @@ export default function ProductPage() {
   const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
 
   const ordersQuery = useMemoFirebase(() =>
-    (userData?.role === 'admin' && user && !user.isAnonymous) ? collection(firestore, 'orders') : null,
+    (userData?.role === 'admin' && user && !user.isAnonymous) ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval'])) : null,
     [firestore, userData, user]
   );
   const { data: orders } = useCollection<Order>(ordersQuery);
@@ -355,6 +355,18 @@ export default function ProductPage() {
   const teamMembersQuery = useMemoFirebase(() => collection(firestore, 'teamMembers'), [firestore]);
   const { data: teamMembers, isLoading: teamMembersLoading } = useCollection<TeamMember>(teamMembersQuery);
 
+  const outOfStockQuery = useMemoFirebase(() => 
+    (userData?.role === 'admin') ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null,
+    [firestore, userData]
+  );
+  const { data: outOfStockProducts } = useCollection<Product>(outOfStockQuery);
+
+  const returnsQuery = useMemoFirebase(() => 
+      (userData?.role === 'admin') ? query(collection(firestore, 'returnRequests'), where('status', '==', 'pending-review')) : null,
+      [firestore, userData]
+  );
+  const { data: returnRequests } = useCollection<any>(returnsQuery);
+
   const { founder, managementMembers } = useMemo(() => {
     if (!teamMembers) return { founder: null, managementMembers: [] };
     const founderMember = teamMembers.find(member => member.role === 'Founder');
@@ -364,14 +376,15 @@ export default function ProductPage() {
 
 
   const adminActionCounts = useMemo(() => {
-    if (userData?.role !== 'admin' || !allProducts) {
+    if (userData?.role !== 'admin') {
       return { pendingOrders: 0, outOfStockProducts: 0, pendingReturns: 0 };
     }
-    const pendingOrders = orders?.filter(order => order.status === 'pending' || order.status === 'pending-payment-approval').length || 0;
-    const outOfStockProducts = allProducts.filter(p => !p.inStock).length;
-    const pendingReturns = 0; // Assuming this needs to be implemented
-    return { pendingOrders, outOfStockProducts, pendingReturns };
-  }, [orders, allProducts, userData]);
+    return { 
+        pendingOrders: orders?.length || 0,
+        outOfStockProducts: outOfStockProducts?.length || 0,
+        pendingReturns: returnRequests?.length || 0
+    };
+  }, [orders, outOfStockProducts, returnRequests, userData]);
 
   const handleCategoryChange = (categoryName: string) => {
     setSelectedCategories(prev =>
@@ -763,6 +776,7 @@ export default function ProductPage() {
 }
     
     
+
 
 
 

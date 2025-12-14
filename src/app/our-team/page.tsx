@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { collection, doc, query, where } from 'firebase/firestore';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Header } from "@/components/shared/Header";
 import { useMemo } from "react";
@@ -35,7 +35,7 @@ type Product = {
 };
 
 type Order = {
-    status: 'pending' | 'shipped' | 'delivered';
+    status: 'pending' | 'shipped' | 'delivered' | 'pending-payment-approval';
 };
 
 type CartItem = Product & { quantity: number; cartItemId: string; };
@@ -59,10 +59,22 @@ export default function OurTeamPage() {
     const { data: allProducts } = useCollection<Product>(productsQuery);
     
     const ordersQuery = useMemoFirebase(() => 
-      (userData?.role === 'admin') ? collection(firestore, 'orders') : null,
+      (userData?.role === 'admin') ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval'])) : null,
       [firestore, userData]
     );
     const { data: orders } = useCollection<Order>(ordersQuery);
+
+    const outOfStockQuery = useMemoFirebase(() => 
+        (userData?.role === 'admin') ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null,
+        [firestore, userData]
+    );
+    const { data: outOfStockProducts } = useCollection<Product>(outOfStockQuery);
+
+    const returnsQuery = useMemoFirebase(() => 
+        (userData?.role === 'admin') ? query(collection(firestore, 'returnRequests'), where('status', '==', 'pending-review')) : null,
+        [firestore, userData]
+    );
+    const { data: returnRequests } = useCollection<any>(returnsQuery);
 
     const cartItemsQuery = useMemoFirebase(() =>
       user ? collection(firestore, 'users', user.uid, 'cart') : null,
@@ -82,13 +94,15 @@ export default function OurTeamPage() {
     const { data: stores } = useCollection<Store>(storesQuery);
     
     const adminActionCounts = useMemo(() => {
-        if (userData?.role !== 'admin' || !orders || !allProducts) {
-            return { pendingOrders: 0, outOfStockProducts: 0 };
+        if (userData?.role !== 'admin') {
+            return { pendingOrders: 0, outOfStockProducts: 0, pendingReturns: 0 };
         }
-        const pendingOrders = orders.filter(order => order.status === 'pending').length;
-        const outOfStockProducts = allProducts.filter(p => !p.inStock).length;
-        return { pendingOrders, outOfStockProducts };
-    }, [orders, allProducts, userData]);
+        return { 
+            pendingOrders: orders?.length || 0,
+            outOfStockProducts: outOfStockProducts?.length || 0,
+            pendingReturns: returnRequests?.length || 0
+        };
+    }, [orders, outOfStockProducts, returnRequests, userData]);
 
     const updateCartItemQuantity = (cartItemId: string, newQuantity: number) => {
       // Dummy function, as cart management is handled elsewhere.
@@ -110,6 +124,7 @@ export default function OurTeamPage() {
         cartItems={cartItems}
         updateCartItemQuantity={updateCartItemQuantity}
         stores={stores || []}
+        products={allProducts || []}
         adminActionCounts={adminActionCounts}
       />
 

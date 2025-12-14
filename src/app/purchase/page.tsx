@@ -3,7 +3,7 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
-import { collection, doc, query, where, getDocs, writeBatch, setDoc, deleteDoc, addDoc } from "firebase/firestore";
+import { collection, doc, query, where, writeBatch, setDoc, deleteDoc } from "firebase/firestore";
 import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -39,7 +39,7 @@ type Product = {
 };
 
 type Order = {
-    status: 'pending' | 'shipped' | 'delivered';
+    status: 'pending' | 'shipped' | 'delivered' | 'pending-payment-approval';
 };
 
 type CartItem = Product & { quantity: number; cartItemId: string; };
@@ -213,6 +213,7 @@ export default function PurchasePage() {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const router = useRouter();
+  const { addDocumentNonBlocking } = useFirebase();
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -239,7 +240,7 @@ export default function PurchasePage() {
   const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
   
  const ordersQuery = useMemoFirebase(() => 
-    (userData?.role === 'admin' && user && !user.isAnonymous) ? collection(firestore, 'orders') : null,
+    (userData?.role === 'admin' && user && !user.isAnonymous) ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval'])) : null,
     [firestore, userData, user]
   );
   const { data: orders } = useCollection<Order>(ordersQuery);
@@ -260,15 +261,29 @@ export default function PurchasePage() {
 
   const storesQuery = useMemoFirebase(() => collection(firestore, 'stores'), [firestore]);
   const { data: stores } = useCollection<Store>(storesQuery);
+  
+  const outOfStockQuery = useMemoFirebase(() => 
+    (userData?.role === 'admin') ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null,
+    [firestore, userData]
+  );
+  const { data: outOfStockProducts } = useCollection<Product>(outOfStockQuery);
+
+  const returnsQuery = useMemoFirebase(() => 
+      (userData?.role === 'admin') ? query(collection(firestore, 'returnRequests'), where('status', '==', 'pending-review')) : null,
+      [firestore, userData]
+  );
+  const { data: returnRequests } = useCollection<any>(returnsQuery);
 
   const adminActionCounts = useMemo(() => {
-      if (userData?.role !== 'admin' || !orders || !allProducts) {
+      if (userData?.role !== 'admin') {
           return { pendingOrders: 0, outOfStockProducts: 0, pendingReturns: 0 };
       }
-      const pendingOrders = orders.filter(order => order.status === 'pending').length;
-      const outOfStockProducts = allProducts.filter(p => !p.inStock).length;
-      return { pendingOrders, outOfStockProducts, pendingReturns: 0 };
-  }, [orders, allProducts, userData]);
+      return { 
+          pendingOrders: orders?.length || 0,
+          outOfStockProducts: outOfStockProducts?.length || 0,
+          pendingReturns: returnRequests?.length || 0
+      };
+  }, [orders, outOfStockProducts, returnRequests, userData]);
 
   const handleCategoryChange = (categoryName: string) => {
     setSelectedCategories(prev => 
@@ -311,7 +326,7 @@ export default function PurchasePage() {
       updateCartItemQuantity(existingItem.cartItemId, existingItem.quantity + 1);
     } else {
       const cartCollection = collection(firestore, 'users', user.uid, 'cart');
-      addDoc(cartCollection, {
+      addDocumentNonBlocking(cartCollection, {
         productId: product.id,
         quantity: 1,
       });

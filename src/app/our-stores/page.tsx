@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { collection, doc, query, where } from 'firebase/firestore';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Header } from "@/components/shared/Header";
 import { useMemo } from "react";
@@ -54,11 +54,24 @@ export default function OurStoresPage() {
     const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
     const { data: allProducts } = useCollection<Product>(productsQuery);
 
-    const ordersQuery = useMemoFirebase(() => 
-      (userData?.role === 'admin') ? collection(firestore, 'orders') : null,
-      [firestore, userData]
+    const ordersQuery = useMemoFirebase(() =>
+        (userData?.role === 'admin') ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval'])) : null,
+        [firestore, userData]
     );
     const { data: orders } = useCollection<Order>(ordersQuery);
+    
+    const outOfStockQuery = useMemoFirebase(() => 
+        (userData?.role === 'admin') ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null,
+        [firestore, userData]
+    );
+    const { data: outOfStockProducts } = useCollection<Product>(outOfStockQuery);
+
+    const returnsQuery = useMemoFirebase(() => 
+        (userData?.role === 'admin') ? query(collection(firestore, 'returnRequests'), where('status', '==', 'pending-review')) : null,
+        [firestore, userData]
+    );
+    const { data: returnRequests } = useCollection<any>(returnsQuery);
+
 
     const cartItemsQuery = useMemoFirebase(() =>
       user ? collection(firestore, 'users', user.uid, 'cart') : null,
@@ -75,14 +88,15 @@ export default function OurStoresPage() {
     }, [cartData, allProducts]);
     
     const adminActionCounts = useMemo(() => {
-        if (userData?.role !== 'admin' || !orders || !allProducts) {
+        if (userData?.role !== 'admin') {
             return { pendingOrders: 0, outOfStockProducts: 0, pendingReturns: 0 };
         }
-        const pendingOrders = orders.filter(order => order.status === 'pending' || order.status === 'pending-payment-approval').length;
-        const outOfStockProducts = allProducts.filter(p => !p.inStock).length;
-        const pendingReturns = 0; // Assuming this needs to be implemented
-        return { pendingOrders, outOfStockProducts, pendingReturns };
-    }, [orders, allProducts, userData]);
+        return { 
+            pendingOrders: orders?.length || 0,
+            outOfStockProducts: outOfStockProducts?.length || 0,
+            pendingReturns: returnRequests?.length || 0
+        };
+    }, [orders, outOfStockProducts, returnRequests, userData]);
 
     const updateCartItemQuantity = (cartItemId: string, newQuantity: number) => {
       // Dummy function, as this is handled elsewhere.
@@ -127,17 +141,17 @@ export default function OurStoresPage() {
                             </div>
                         )}
                         <CardHeader className="p-3 sm:p-4">
-                            <CardTitle className="text-sm sm:text-base font-bold truncate">{store.name}</CardTitle>
+                            <CardTitle className="text-base sm:text-lg font-bold truncate">{store.name}</CardTitle>
                         </CardHeader>
                         <CardContent className="p-3 sm:p-4 pt-0 flex-grow space-y-2">
                             <div className="flex items-start gap-2 text-muted-foreground">
                                 <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
-                                <p className="text-xs">{store.address}</p>
+                                <p className="text-sm">{store.address}</p>
                             </div>
                              {store.phone && (
                                 <div className="flex items-center gap-2 text-muted-foreground">
                                     <Phone className="h-4 w-4 shrink-0" />
-                                    <p className="text-xs">{store.phone}</p>
+                                    <p className="text-sm">{store.phone}</p>
                                 </div>
                             )}
                         </CardContent>
