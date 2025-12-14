@@ -138,7 +138,9 @@ service cloud.firestore {
      * @principle Order data is open to any authenticated user.
      */
     match /orders/{orderId} {
-      allow get, list, create, update: if isSignedIn();
+      allow get, update: if isSignedIn();
+      allow list: if isAdmin();
+      allow create: if isNotAnonymous() && request.resource.data.customerId == request.auth.uid;
       allow delete: if false; // Orders should generally not be deletable by users.
     }
 
@@ -152,7 +154,7 @@ service cloud.firestore {
     match /orderItems/{orderItemId} {
       allow get: if (get(/databases/$(database)/documents/orders/$(resource.data.orderId)).data.customerId == request.auth.uid && isNotAnonymous()) || isAdmin();
       allow list: if (request.query.get('orderId') != null && get(/databases/$(database)/documents/orders/$(request.query.get('orderId'))).data.customerId == request.auth.uid && isNotAnonymous()) || isAdmin();
-      allow create: if (get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.customerId == request.auth.uid && isNotAnonymous()) || isAdmin();
+      allow create: if (isNotAnonymous() && request.resource.data.orderId != null) || isAdmin();
       allow update: if (isExistingDoc() && get(/databases/$(database)/documents/orders/$(resource.data.orderId)).data.customerId == request.auth.uid && isNotAnonymous()) || isAdmin();
       allow delete: if false; // Order items should not be deletable by users.
     }
