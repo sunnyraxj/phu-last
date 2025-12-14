@@ -16,17 +16,16 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useEffect, useState, useRef, DragEvent } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { PlusCircle, Wand2, Sparkles, UploadCloud } from 'lucide-react';
+import { PlusCircle, Wand2, Sparkles } from 'lucide-react';
 import { AddOptionDialog } from './AddOptionDialog';
 import { GenerateProductDetailsOutput } from '@/ai/flows/generate-product-details';
 import { useToast } from '@/hooks/use-toast';
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
 
 const productSchema = z.object({
   name: z.string().min(1, { message: 'Product name is required' }),
@@ -35,7 +34,7 @@ const productSchema = z.object({
     z.number().positive({ message: 'MRP must be a positive number' })),
   category: z.string().min(1, { message: 'Category is required' }),
   material: z.string().min(1, { message: 'Material is required' }),
-  image: z.string().min(1, { message: 'Please provide an image URL or upload an image.' }),
+  image: z.string().url({ message: 'Please provide a valid image URL.' }),
   'data-ai-hint': z.string().optional(),
   inStock: z.boolean(),
   hsn: z.string().optional(),
@@ -74,11 +73,8 @@ export function ProductForm({
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [isMaterialDialogOpen, setIsMaterialDialogOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [aiNotes, setAiNotes] = useState('');
-  const [isDragging, setIsDragging] = useState(false);
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -146,64 +142,6 @@ export function ProductForm({
     setValue('material', newMaterial, { shouldValidate: true });
     setIsMaterialDialogOpen(false);
   }
-  
-  const handleFileUpload = async (file: File) => {
-    if (!file) return;
-
-    setIsUploading(true);
-    try {
-      const response = await fetch(`/api/upload?filename=${file.name}`, {
-        method: 'POST',
-        body: file,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Upload failed');
-      }
-
-      const newBlob = await response.json();
-      setValue('image', newBlob.url, { shouldValidate: true });
-      toast({
-        title: 'Image Uploaded',
-        description: 'The image has been successfully uploaded and the URL is set.',
-      });
-
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Upload Failed',
-        description: error.message,
-      });
-    } finally {
-      setIsUploading(false);
-       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) handleFileUpload(file);
-  };
-  
-  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    setIsDragging(false);
-  };
-
-  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    setIsDragging(false);
-    const file = event.dataTransfer.files[0];
-    if (file) handleFileUpload(file);
-  };
 
   const handleGenerateDetails = async () => {
     const imageDataUri = getValues('image');
@@ -211,7 +149,7 @@ export function ProductForm({
       toast({
         variant: 'destructive',
         title: 'Image required',
-        description: 'Please provide an image URL or upload an image to generate details.',
+        description: 'Please provide an image URL to generate details.',
       });
       return;
     }
@@ -271,47 +209,22 @@ export function ProductForm({
                        <div className="p-4 rounded-lg bg-muted/50 border border-dashed space-y-4">
                             <Label className="flex items-center gap-2 font-semibold">
                                 <Sparkles className="h-5 w-5 text-primary" />
-                                AI Content Generation & Image
+                                AI Content Generation
                             </Label>
                              <div className="space-y-1">
-                                <Label htmlFor="image">Image</Label>
-                                <div 
-                                    className={cn("relative flex justify-center items-center w-full h-48 border-2 border-dashed rounded-md cursor-pointer hover:bg-muted transition-colors", isDragging && "bg-muted border-primary")}
-                                    onClick={() => fileInputRef.current?.click()}
-                                    onDragOver={handleDragOver}
-                                    onDragLeave={handleDragLeave}
-                                    onDrop={handleDrop}
-                                >
-                                    {isUploading ? (
-                                        <div className="flex flex-col items-center gap-2">
-                                            <PottersWheelSpinner />
-                                            <p className="text-sm text-muted-foreground">Uploading...</p>
-                                        </div>
-                                    ) : imageValue ? (
-                                        <Image src={imageValue} alt="Image preview" fill className="object-cover rounded-md" />
-                                    ) : (
-                                        <div className="flex flex-col items-center gap-2 text-muted-foreground text-center">
-                                            <UploadCloud className="h-8 w-8" />
-                                            <p className="font-semibold">Click or drag & drop to upload</p>
-                                            <p className="text-xs">PNG, JPG, GIF up to 10MB</p>
-                                        </div>
-                                    )}
-                                </div>
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    onChange={handleFileChange}
-                                    className="hidden"
-                                    accept="image/*"
-                                    disabled={isUploading}
+                                <Label htmlFor="image">Image URL</Label>
+                                {imageValue && (
+                                  <div className="relative h-48 w-full rounded-md overflow-hidden bg-muted mt-2">
+                                      <Image src={imageValue} alt="Image preview" fill className="object-cover" />
+                                  </div>
+                                )}
+                                <Input 
+                                    id="image"
+                                    {...register('image')}
+                                    placeholder="https://picsum.photos/seed/..."
+                                    className="mt-2"
                                 />
                                 {errors.image && <p className="text-xs text-destructive mt-1">{errors.image.message}</p>}
-                                <Input 
-                                    {...register('image')}
-                                    placeholder="Or paste an image URL here"
-                                    className="mt-2"
-                                    readOnly={isUploading}
-                                />
                              </div>
 
                             <div className="space-y-1">
@@ -327,7 +240,7 @@ export function ProductForm({
                             <Button 
                                 type="button" 
                                 onClick={handleGenerateDetails} 
-                                disabled={isGenerating || !imageValue || isUploading}
+                                disabled={isGenerating || !imageValue}
                             >
                                 {isGenerating ? <PottersWheelSpinner className="h-5 w-5" /> : <Wand2 className="mr-2 h-4 w-4" />}
                                 {isGenerating ? 'Generating...' : 'Generate Name & Description'}
@@ -453,7 +366,7 @@ export function ProductForm({
                       Cancel
                       </Button>
                   </DialogClose>
-                  <Button type="submit" disabled={isSubmitting || isGenerating || isUploading}>
+                  <Button type="submit" disabled={isSubmitting || isGenerating}>
                   {isSubmitting ? 'Saving...' : 'Save Product'}
                   </Button>
               </DialogFooter>

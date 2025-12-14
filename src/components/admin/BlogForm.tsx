@@ -16,17 +16,16 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useEffect, useRef, useState, DragEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Separator } from '../ui/separator';
-import { PlusCircle, Trash2, UploadCloud, Wand2, Sparkles, RefreshCw } from 'lucide-react';
+import { PlusCircle, Trash2, Wand2, Sparkles, RefreshCw } from 'lucide-react';
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { GenerateBlogPostOutput } from '@/ai/flows/generate-blog-post';
-import { cn } from '@/lib/utils';
 
 
 const faqSchema = z.object({
@@ -38,7 +37,7 @@ const blogSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   slug: z.string().min(1, 'Slug is required').regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase and contain only letters, numbers, and hyphens'),
   content: z.string().min(1, 'Content is required'),
-  featuredImage: z.string().min(1, 'A featured image is required.'),
+  featuredImage: z.string().url('A valid image URL is required.'),
   status: z.enum(['draft', 'published']),
   faqs: z.array(faqSchema).optional(),
 });
@@ -53,11 +52,8 @@ interface BlogFormProps {
 }
 
 export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isUploading, setIsUploading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiNotes, setAiNotes] = useState('');
-  const [isDragging, setIsDragging] = useState(false);
   const { toast } = useToast();
   
   const {
@@ -82,7 +78,6 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
   });
   
   const imageValue = watch('featuredImage');
-  const titleValue = watch('title');
 
   const { fields, append, remove, replace } = useFieldArray({
       control,
@@ -112,70 +107,10 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
 
   const generateSlug = () => {
       const currentTitle = getValues('title');
-      const slug = currentTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-      setValue('slug', slug, { shouldValidate: true });
-  };
-
-  const handleFileUpload = async (file: File) => {
-    if (!file) return;
-
-    setIsUploading(true);
-    try {
-      const response = await fetch(`/api/upload?filename=${file.name}`, {
-        method: 'POST',
-        body: file,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Upload failed');
+      if (currentTitle) {
+        const slug = currentTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        setValue('slug', slug, { shouldValidate: true });
       }
-
-      const newBlob = await response.json();
-      setValue('featuredImage', newBlob.url, { shouldValidate: true });
-      toast({
-        title: 'Image Uploaded',
-        description: 'The featured image has been successfully uploaded.',
-      });
-
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Upload Failed',
-        description: error.message,
-      });
-    } finally {
-      setIsUploading(false);
-       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  }
-  
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if(file) {
-      handleFileUpload(file as File);
-    }
-  };
-
-  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    setIsDragging(false);
-  };
-
-  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    setIsDragging(false);
-    const file = event.dataTransfer.files[0];
-    if(file) {
-      handleFileUpload(file);
-    }
   };
 
   const handleGenerateContent = async () => {
@@ -184,7 +119,7 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
       toast({
         variant: 'destructive',
         title: 'Image required',
-        description: 'Please upload an image to generate blog content.',
+        description: 'Please provide an image URL to generate blog content.',
       });
       return;
     }
@@ -214,6 +149,8 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
       setValue('content', result.content, { shouldValidate: true });
       if (result.faqs) {
         replace(result.faqs);
+      } else {
+        replace([]);
       }
 
 
@@ -257,40 +194,19 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
                             AI Content Generation
                         </Label>
                         <div className="space-y-1">
-                            <Label htmlFor="featuredImage">Featured Image</Label>
-                            <div 
-                                className={cn("relative flex justify-center items-center w-full h-48 border-2 border-dashed rounded-md cursor-pointer hover:bg-muted/80 bg-muted/40 transition-colors",
-                                  isDragging && "bg-muted border-primary"
-                                )}
-                                onClick={() => fileInputRef.current?.click()}
-                                onDragOver={handleDragOver}
-                                onDragLeave={handleDragLeave}
-                                onDrop={handleDrop}
-                            >
-                                {isUploading ? (
-                                    <div className="flex flex-col items-center gap-2">
-                                        <PottersWheelSpinner />
-                                        <p className="text-sm text-muted-foreground">Uploading...</p>
-                                    </div>
-                                ) : imageValue ? (
-                                    <Image src={imageValue} alt="Featured image preview" fill className="object-cover rounded-md" />
-                                ) : (
-                                    <div className="flex flex-col items-center gap-2 text-muted-foreground text-center">
-                                        <UploadCloud className="h-8 w-8" />
-                                        <p className="font-semibold">Click or drag & drop to upload</p>
-                                        <p className="text-xs">PNG, JPG, GIF up to 10MB</p>
-                                    </div>
-                                )}
+                          <Label htmlFor="featuredImage">Featured Image URL</Label>
+                          {imageValue && (
+                            <div className="relative h-48 w-full rounded-md overflow-hidden bg-muted mt-2">
+                                <Image src={imageValue} alt="Featured image preview" fill className="object-cover" />
                             </div>
-                             <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handleFileChange}
-                                className="hidden"
-                                accept="image/*"
-                                disabled={isUploading}
-                            />
-                            {errors.featuredImage && <p className="text-xs text-destructive mt-1">{errors.featuredImage.message}</p>}
+                          )}
+                          <Input 
+                              id="featuredImage" 
+                              {...register('featuredImage')}
+                              placeholder="https://picsum.photos/seed/..."
+                              className="mt-2"
+                          />
+                          {errors.featuredImage && <p className="text-xs text-destructive mt-1">{errors.featuredImage.message}</p>}
                         </div>
                         <div className="space-y-1">
                             <Label htmlFor="ai-notes">AI Notes (Optional)</Label>
@@ -305,7 +221,7 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
                         <Button 
                             type="button" 
                             onClick={handleGenerateContent} 
-                            disabled={isGenerating || !imageValue || isUploading}
+                            disabled={isGenerating || !imageValue}
                         >
                             {isGenerating ? <PottersWheelSpinner className="h-5 w-5" /> : <Wand2 className="mr-2 h-4 w-4" />}
                             {isGenerating ? 'Generating...' : 'Generate Content & FAQs'}
@@ -327,7 +243,7 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
                                 <Label htmlFor="slug">Slug</Label>
                                 <div className="flex gap-2">
                                 <Input id="slug" {...register('slug')} />
-                                 <Button type="button" variant="outline" size="icon" onClick={generateSlug}>
+                                 <Button type="button" variant="outline" size="icon" onClick={generateSlug} title="Generate slug from title">
                                     <RefreshCw className="h-4 w-4" />
                                 </Button>
                                 </div>
@@ -419,7 +335,7 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
                     Cancel
                     </Button>
                 </DialogClose>
-                <Button type="submit" disabled={isSubmitting || isUploading || isGenerating}>
+                <Button type="submit" disabled={isSubmitting || isGenerating}>
                 {isSubmitting ? 'Saving...' : 'Save Post'}
                 </Button>
             </DialogFooter>
