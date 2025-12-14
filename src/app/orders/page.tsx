@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, Fragment } from 'react';
+import { useState, useMemo, Fragment, useEffect } from 'react';
 import { useFirestore, useCollection, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
@@ -69,6 +69,12 @@ export default function OrdersPage() {
     );
     const { data: orderItems, isLoading: itemsLoading } = useCollection<OrderItem>(orderItemsQuery);
 
+    useEffect(() => {
+        if (!isUserLoading && (!user || user.isAnonymous)) {
+            router.push('/login?redirect=/orders');
+        }
+    }, [user, isUserLoading, router]);
+
     const formatDate = (timestamp: { seconds: number }) => {
         if (!timestamp) return 'N/A';
         return format(new Date(timestamp.seconds * 1000), 'd MMMM yyyy');
@@ -105,15 +111,9 @@ export default function OrdersPage() {
         }
     };
     
-    if (isUserLoading || ordersLoading || itemsLoading) {
+    if (isUserLoading || ordersLoading || itemsLoading || !user || user.isAnonymous) {
         return <div className="flex h-screen items-center justify-center"><PottersWheelSpinner /></div>;
     }
-
-    if (!user || user.isAnonymous) {
-        router.push('/login?redirect=/orders');
-        return <div className="flex h-screen items-center justify-center"><PottersWheelSpinner /></div>;
-    }
-
 
     return (
         <div className="bg-background">
