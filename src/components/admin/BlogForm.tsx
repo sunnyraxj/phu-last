@@ -21,7 +21,7 @@ import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Separator } from '../ui/separator';
-import { PlusCircle, Trash2, UploadCloud, Wand2, Sparkles } from 'lucide-react';
+import { PlusCircle, Trash2, UploadCloud, Wand2, Sparkles, RefreshCw } from 'lucide-react';
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
@@ -110,13 +110,11 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
     }
   }, [post, reset, isOpen]);
 
-  useEffect(() => {
-      // Auto-generate slug only if it's a new post or slug is empty
-      if (!post || !getValues('slug')) {
-          const slug = titleValue.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-          setValue('slug', slug, { shouldValidate: true });
-      }
-  }, [titleValue, setValue, post, getValues]);
+  const generateSlug = () => {
+      const currentTitle = getValues('title');
+      const slug = currentTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      setValue('slug', slug, { shouldValidate: true });
+  };
 
   const handleFileUpload = async (file: File) => {
     if (!file) return;
@@ -252,12 +250,7 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
         <form onSubmit={handleSubmit(handleFormSubmit)}>
             <ScrollArea className="h-[70vh] pr-6 -mr-6">
                 <div className="space-y-6 my-4">
-                    <div className="space-y-1">
-                        <Label htmlFor="title">Title</Label>
-                        <Input id="title" {...register('title')} />
-                        {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
-                    </div>
-
+                    
                     <div className="p-4 rounded-lg bg-muted/50 border border-dashed space-y-4">
                         <Label className="flex items-center gap-2 font-semibold">
                             <Sparkles className="h-5 w-5 text-primary" />
@@ -325,10 +318,22 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
                         <h3 className="text-lg font-medium mb-2">Blog Details</h3>
                         <div className="space-y-4 p-4 border rounded-lg">
                             <div className="space-y-1">
+                                <Label htmlFor="title">Title</Label>
+                                <Input id="title" {...register('title')} />
+                                {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
+                            </div>
+
+                            <div className="space-y-1">
                                 <Label htmlFor="slug">Slug</Label>
+                                <div className="flex gap-2">
                                 <Input id="slug" {...register('slug')} />
+                                 <Button type="button" variant="outline" size="icon" onClick={generateSlug}>
+                                    <RefreshCw className="h-4 w-4" />
+                                </Button>
+                                </div>
                                 {errors.slug && <p className="text-xs text-destructive">{errors.slug.message}</p>}
                             </div>
+
                              <div className="space-y-1">
                                 <Label htmlFor="content">Content</Label>
                                 <Textarea id="content" {...register('content')} rows={10} />
