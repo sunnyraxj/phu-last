@@ -37,7 +37,7 @@ type Product = {
 };
 
 type Order = {
-    status: 'pending' | 'shipped' | 'delivered';
+    status: 'pending' | 'shipped' | 'delivered' | 'pending-payment-approval';
 };
 
 type CartItem = Product & { quantity: number; cartItemId: string; };
@@ -76,11 +76,11 @@ export default function OurStoresPage() {
     
     const adminActionCounts = useMemo(() => {
         if (userData?.role !== 'admin' || !orders || !allProducts) {
-            return { pendingOrders: 0, outOfStockProducts: 0 };
+            return { pendingOrders: 0, outOfStockProducts: 0, pendingReturns: 0 };
         }
-        const pendingOrders = orders.filter(order => order.status === 'pending').length;
+        const pendingOrders = orders.filter(order => order.status === 'pending' || order.status === 'pending-payment-approval').length;
         const outOfStockProducts = allProducts.filter(p => !p.inStock).length;
-        return { pendingOrders, outOfStockProducts };
+        return { pendingOrders, outOfStockProducts, pendingReturns: 0 };
     }, [orders, allProducts, userData]);
 
     const updateCartItemQuantity = (cartItemId: string, newQuantity: number) => {
@@ -114,7 +114,7 @@ export default function OurStoresPage() {
                 {stores.map((store) => (
                     <Card key={store.id} className="overflow-hidden flex flex-col">
                         {store.image && (
-                            <div className="relative h-56 w-full">
+                            <div className="relative h-48 sm:h-56 w-full">
                                 <Image
                                     src={store.image}
                                     alt={store.name}
@@ -125,24 +125,24 @@ export default function OurStoresPage() {
                             </div>
                         )}
                         <CardHeader className="p-4">
-                            <CardTitle className="text-lg font-bold truncate">{store.name}</CardTitle>
+                            <CardTitle className="text-base sm:text-lg font-bold truncate">{store.name}</CardTitle>
                         </CardHeader>
                         <CardContent className="p-4 pt-0 flex-grow space-y-3">
                             <div className="flex items-start gap-3 text-muted-foreground">
-                                <MapPin className="h-5 w-5 mt-0.5 shrink-0" />
-                                <p className="text-sm">{store.address}</p>
+                                <MapPin className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 shrink-0" />
+                                <p className="text-xs sm:text-sm">{store.address}</p>
                             </div>
                              {store.phone && (
                                 <div className="flex items-center gap-3 text-muted-foreground">
-                                    <Phone className="h-5 w-5 shrink-0" />
-                                    <p className="text-sm">{store.phone}</p>
+                                    <Phone className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                                    <p className="text-xs sm:text-sm">{store.phone}</p>
                                 </div>
                             )}
                         </CardContent>
                         <div className="p-4 pt-0 mt-auto">
                              <Link href={store.googleMapsLink} target="_blank" rel="noopener noreferrer">
-                                <Button className="w-full text-sm">
-                                    View on Google Maps <ExternalLink className="ml-2 h-4 w-4" />
+                                <Button className="w-full text-xs sm:text-sm">
+                                    View on Google Maps <ExternalLink className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />
                                 </Button>
                             </Link>
                         </div>
