@@ -2,8 +2,8 @@
 'use client';
 
 import { useState, Fragment, useMemo } from 'react';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { collection, doc, serverTimestamp, query } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -63,17 +63,25 @@ type OrderItem = {
 
 export default function OrdersPage() {
     const firestore = useFirestore();
+    const { user } = useUser();
     const { toast } = useToast();
     const [orderToApprove, setOrderToApprove] = useState<Order | null>(null);
     const [orderToUpdateStatus, setOrderToUpdateStatus] = useState<{order: Order, newStatus: OrderStatus} | null>(null);
     const [expandedOrderIds, setExpandedOrderIds] = useState<string[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
 
+    const userDocRef = useMemoFirebase(() => (user ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
+    const { data: userData } = useDoc<{ role: string }>(userDocRef);
+    const isAuthorizedAdmin = userData?.role === 'admin';
 
-    const ordersQuery = useMemoFirebase(() => collection(firestore, 'orders'), [firestore]);
+    const ordersQuery = useMemoFirebase(() => 
+        isAuthorizedAdmin ? query(collection(firestore, 'orders')) : null, 
+    [firestore, isAuthorizedAdmin]);
     const { data: allOrders, isLoading: ordersLoading } = useCollection<Order>(ordersQuery);
 
-    const orderItemsQuery = useMemoFirebase(() => collection(firestore, 'orderItems'), [firestore]);
+    const orderItemsQuery = useMemoFirebase(() => 
+        isAuthorizedAdmin ? query(collection(firestore, 'orderItems')) : null, 
+    [firestore, isAuthorizedAdmin]);
     const { data: orderItems, isLoading: itemsLoading } = useCollection<OrderItem>(orderItemsQuery);
     
     const filteredOrders = useMemo(() => {

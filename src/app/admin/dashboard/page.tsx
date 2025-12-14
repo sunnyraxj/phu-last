@@ -2,8 +2,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, limit } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { collection, query, orderBy, limit, doc, where } from 'firebase/firestore';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
@@ -27,11 +27,20 @@ type Order = {
 
 export default function DashboardPage() {
     const firestore = useFirestore();
+    const { user } = useUser();
 
-    const ordersQuery = useMemoFirebase(() => collection(firestore, 'orders'), [firestore]);
+    const userDocRef = useMemoFirebase(() => (user ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
+    const { data: userData } = useDoc<{ role: string }>(userDocRef);
+    const isAuthorizedAdmin = userData?.role === 'admin';
+    
+    const ordersQuery = useMemoFirebase(() => 
+        isAuthorizedAdmin ? query(collection(firestore, 'orders'), where('status', '==', 'delivered')) : null, 
+    [firestore, isAuthorizedAdmin]);
     const { data: orders, isLoading: ordersLoading } = useCollection<Order>(ordersQuery);
 
-    const recentOrdersQuery = useMemoFirebase(() => query(collection(firestore, 'orders'), orderBy('orderDate', 'desc'), limit(5)), [firestore]);
+    const recentOrdersQuery = useMemoFirebase(() => 
+        isAuthorizedAdmin ? query(collection(firestore, 'orders'), orderBy('orderDate', 'desc'), limit(5)) : null, 
+    [firestore, isAuthorizedAdmin]);
     const { data: recentOrders, isLoading: recentOrdersLoading } = useCollection<Order>(recentOrdersQuery);
     
     const { todayRevenue, monthRevenue, totalSales, salesByDay } = useMemo(() => {

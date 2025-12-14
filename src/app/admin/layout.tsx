@@ -1,11 +1,12 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, Fragment } from 'react';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { collection, doc } from 'firebase/firestore';
+import { collection, doc, query, where } from 'firebase/firestore';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Button } from '@/components/ui/button';
 import { Home, Package, ShoppingCart, Users, Store, Menu, Settings, Undo2, LayoutDashboard, FileText } from 'lucide-react';
@@ -44,13 +45,13 @@ export default function AdminLayout({
     const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
     const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
 
-    const ordersQuery = useMemoFirebase(() => (isAuthorized ? collection(firestore, 'orders') : null), [firestore, isAuthorized]);
+    const ordersQuery = useMemoFirebase(() => (isAuthorized ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval'])) : null), [firestore, isAuthorized]);
     const { data: orders } = useCollection<Order>(ordersQuery);
     
-    const productsQuery = useMemoFirebase(() => (isAuthorized ? collection(firestore, 'products') : null), [firestore, isAuthorized]);
+    const productsQuery = useMemoFirebase(() => (isAuthorized ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null), [firestore, isAuthorized]);
     const { data: products } = useCollection<Product>(productsQuery);
     
-    const returnsQuery = useMemoFirebase(() => (isAuthorized ? collection(firestore, 'returnRequests') : null), [firestore, isAuthorized]);
+    const returnsQuery = useMemoFirebase(() => (isAuthorized ? query(collection(firestore, 'returnRequests'), where('status', '==', 'pending-review')) : null), [firestore, isAuthorized]);
     const { data: returnRequests } = useCollection<ReturnRequest>(returnsQuery);
 
     const cartItemsQuery = useMemoFirebase(() =>
@@ -77,20 +78,9 @@ export default function AdminLayout({
     const storesQuery = useMemoFirebase(() => collection(firestore, 'stores'), [firestore]);
     const { data: stores } = useCollection<Store>(storesQuery);
 
-    const pendingOrdersCount = useMemo(() => {
-        if (!orders) return 0;
-        return orders.filter(order => order.status === 'pending' || order.status === 'pending-payment-approval').length;
-    }, [orders]);
-
-    const outOfStockCount = useMemo(() => {
-        if (!products) return 0;
-        return products.filter(product => !product.inStock).length;
-    }, [products]);
-    
-    const pendingReturnsCount = useMemo(() => {
-        if (!returnRequests) return 0;
-        return returnRequests.filter(req => req.status === 'pending-review').length;
-    }, [returnRequests]);
+    const pendingOrdersCount = useMemo(() => orders?.length || 0, [orders]);
+    const outOfStockCount = useMemo(() => products?.length || 0, [products]);
+    const pendingReturnsCount = useMemo(() => returnRequests?.length || 0, [returnRequests]);
 
     const adminActionCounts = useMemo(() => {
         return {
