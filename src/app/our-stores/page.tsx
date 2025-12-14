@@ -124,25 +124,25 @@ export default function OurStoresPage() {
                                 />
                             </div>
                         )}
-                        <CardHeader className="p-4">
-                            <CardTitle className="text-base sm:text-lg font-bold truncate">{store.name}</CardTitle>
+                        <CardHeader className="p-3 sm:p-4">
+                            <CardTitle className="text-sm sm:text-base font-bold truncate">{store.name}</CardTitle>
                         </CardHeader>
-                        <CardContent className="p-4 pt-0 flex-grow space-y-3">
-                            <div className="flex items-start gap-3 text-muted-foreground">
-                                <MapPin className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 shrink-0" />
-                                <p className="text-xs sm:text-sm">{store.address}</p>
+                        <CardContent className="p-3 sm:p-4 pt-0 flex-grow space-y-2">
+                            <div className="flex items-start gap-2 text-muted-foreground">
+                                <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
+                                <p className="text-xs">{store.address}</p>
                             </div>
                              {store.phone && (
-                                <div className="flex items-center gap-3 text-muted-foreground">
-                                    <Phone className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                                    <p className="text-xs sm:text-sm">{store.phone}</p>
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                    <Phone className="h-4 w-4 shrink-0" />
+                                    <p className="text-xs">{store.phone}</p>
                                 </div>
                             )}
                         </CardContent>
-                        <div className="p-4 pt-0 mt-auto">
+                        <div className="p-3 sm:p-4 pt-0 mt-auto">
                              <Link href={store.googleMapsLink} target="_blank" rel="noopener noreferrer">
-                                <Button className="w-full text-xs sm:text-sm">
-                                    View on Google Maps <ExternalLink className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />
+                                <Button className="w-full text-xs">
+                                    View on Google Maps <ExternalLink className="ml-2 h-3 w-3" />
                                 </Button>
                             </Link>
                         </div>
