@@ -252,6 +252,12 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
         <form onSubmit={handleSubmit(handleFormSubmit)}>
             <ScrollArea className="h-[70vh] pr-6 -mr-6">
                 <div className="space-y-6 my-4">
+                    <div className="space-y-1">
+                        <Label htmlFor="title">Title</Label>
+                        <Input id="title" {...register('title')} />
+                        {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
+                    </div>
+
                     <div className="p-4 rounded-lg bg-muted/50 border border-dashed space-y-4">
                         <Label className="flex items-center gap-2 font-semibold">
                             <Sparkles className="h-5 w-5 text-primary" />
@@ -309,7 +315,7 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
                             disabled={isGenerating || !imageValue || isUploading}
                         >
                             {isGenerating ? <PottersWheelSpinner className="h-5 w-5" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                            {isGenerating ? 'Generating...' : 'Generate Blog Content'}
+                            {isGenerating ? 'Generating...' : 'Generate Content & FAQs'}
                         </Button>
                     </div>
 
@@ -318,11 +324,6 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
                     <div>
                         <h3 className="text-lg font-medium mb-2">Blog Details</h3>
                         <div className="space-y-4 p-4 border rounded-lg">
-                            <div className="space-y-1">
-                                <Label htmlFor="title">Title</Label>
-                                <Input id="title" {...register('title')} />
-                                {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
-                            </div>
                             <div className="space-y-1">
                                 <Label htmlFor="slug">Slug</Label>
                                 <Input id="slug" {...register('slug')} />
