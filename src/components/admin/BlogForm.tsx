@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useForm, SubmitHandler, Controller, useFieldArray } from 'react-hook-form';
@@ -21,12 +20,14 @@ import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Separator } from '../ui/separator';
-import { PlusCircle, Trash2, Wand2, Sparkles, RefreshCw } from 'lucide-react';
+import { PlusCircle, Trash2, Wand2, Sparkles, RefreshCw, UploadCloud, X } from 'lucide-react';
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { GenerateBlogPostOutput } from '@/ai/flows/generate-blog-post';
-
+import { useImageUploader } from '@/hooks/useImageUploader';
+import { Progress } from '../ui/progress';
+import { cn } from '@/lib/utils';
 
 const faqSchema = z.object({
     question: z.string().min(1, 'Question is required'),
@@ -56,6 +57,16 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
   const [aiNotes, setAiNotes] = useState('');
   const { toast } = useToast();
   
+   const {
+    uploadFile,
+    isUploading,
+    uploadProgress,
+    uploadedUrl,
+    setUploadedUrl,
+    error: uploadError,
+    clearUpload
+  } = useImageUploader('blog_images');
+
   const {
     register,
     handleSubmit,
@@ -64,6 +75,8 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
     setValue,
     watch,
     getValues,
+    setError,
+    clearErrors,
     formState: { errors, isSubmitting },
   } = useForm<BlogFormValues>({
     resolver: zodResolver(blogSchema),
@@ -102,8 +115,17 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
           });
         }
         setAiNotes('');
+        clearUpload();
     }
-  }, [post, reset, isOpen]);
+  }, [post, reset, isOpen, clearUpload]);
+
+  useEffect(() => {
+    if (uploadedUrl) {
+      setValue('featuredImage', uploadedUrl, { shouldValidate: true });
+      clearErrors('featuredImage');
+    }
+  }, [uploadedUrl, setValue, clearErrors]);
+
 
   const generateSlug = () => {
       const currentTitle = getValues('title');
@@ -116,11 +138,7 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
   const handleGenerateContent = async () => {
     const imageDataUri = getValues('featuredImage');
     if (!imageDataUri) {
-      toast({
-        variant: 'destructive',
-        title: 'Image required',
-        description: 'Please provide an image URL to generate blog content.',
-      });
+      setError('featuredImage', { type: 'manual', message: 'An image is required for AI generation.' });
       return;
     }
 
@@ -172,6 +190,10 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
 
 
   const handleFormSubmit: SubmitHandler<BlogFormValues> = (data) => {
+    if (!data.featuredImage) {
+      setError('featuredImage', { type: 'manual', message: 'A featured image is required.' });
+      return;
+    }
     onSubmit(data);
   };
 
@@ -193,21 +215,20 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
                             <Sparkles className="h-5 w-5 text-primary" />
                             AI Content Generation
                         </Label>
-                        <div className="space-y-1">
-                          <Label htmlFor="featuredImage">Featured Image URL</Label>
-                          {imageValue && (
-                            <div className="relative h-48 w-full rounded-md overflow-hidden bg-muted mt-2">
-                                <Image src={imageValue} alt="Featured image preview" fill className="object-cover" />
-                            </div>
-                          )}
-                          <Input 
-                              id="featuredImage" 
-                              {...register('featuredImage')}
-                              placeholder="https://picsum.photos/seed/..."
-                              className="mt-2"
-                          />
-                          {errors.featuredImage && <p className="text-xs text-destructive mt-1">{errors.featuredImage.message}</p>}
-                        </div>
+                        
+                        <ImageUploader
+                          imageUrl={imageValue}
+                          isUploading={isUploading}
+                          uploadProgress={uploadProgress}
+                          onFileUpload={uploadFile}
+                          onUrlChange={(url) => setValue('featuredImage', url, { shouldValidate: true })}
+                          onClear={() => {
+                            clearUpload();
+                            setValue('featuredImage', '', { shouldValidate: true });
+                          }}
+                          error={errors.featuredImage?.message || uploadError}
+                        />
+
                         <div className="space-y-1">
                             <Label htmlFor="ai-notes">AI Notes (Optional)</Label>
                             <Textarea 
@@ -221,7 +242,7 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
                         <Button 
                             type="button" 
                             onClick={handleGenerateContent} 
-                            disabled={isGenerating || !imageValue}
+                            disabled={isGenerating || !imageValue || isUploading}
                         >
                             {isGenerating ? <PottersWheelSpinner className="h-5 w-5" /> : <Wand2 className="mr-2 h-4 w-4" />}
                             {isGenerating ? 'Generating...' : 'Generate Content & FAQs'}
@@ -335,7 +356,7 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
                     Cancel
                     </Button>
                 </DialogClose>
-                <Button type="submit" disabled={isSubmitting || isGenerating}>
+                <Button type="submit" disabled={isSubmitting || isGenerating || isUploading}>
                 {isSubmitting ? 'Saving...' : 'Save Post'}
                 </Button>
             </DialogFooter>
@@ -343,4 +364,106 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
       </DialogContent>
     </Dialog>
   );
+}
+
+// Reusable ImageUploader component
+interface ImageUploaderProps {
+    imageUrl: string;
+    isUploading: boolean;
+    uploadProgress: number;
+    onFileUpload: (file: File) => void;
+    onUrlChange: (url: string) => void;
+    onClear: () => void;
+    error?: string | null;
+}
+
+function ImageUploader({
+    imageUrl,
+    isUploading,
+    uploadProgress,
+    onFileUpload,
+    onUrlChange,
+    onClear,
+    error
+}: ImageUploaderProps) {
+    const [isDragging, setIsDragging] = useState(false);
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            onFileUpload(file);
+        }
+    };
+
+    const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setIsDragging(false);
+        const file = event.dataTransfer.files?.[0];
+        if (file) {
+            onFileUpload(file);
+        }
+    };
+
+    const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setIsDragging(false);
+    };
+
+    return (
+        <div className="space-y-2">
+            <Label htmlFor="featuredImage">Featured Image</Label>
+            {imageUrl && !isUploading ? (
+                <div className="relative h-48 w-full rounded-md overflow-hidden bg-muted">
+                    <Image src={imageUrl} alt="Featured image preview" fill className="object-cover" />
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2 h-7 w-7"
+                        onClick={onClear}
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
+                </div>
+            ) : isUploading ? (
+                <div className="h-48 w-full rounded-md border border-dashed flex flex-col items-center justify-center p-4">
+                    <PottersWheelSpinner />
+                    <p className="text-sm text-muted-foreground mt-2">Uploading...</p>
+                    <Progress value={uploadProgress} className="w-full mt-2" />
+                </div>
+            ) : (
+                <div
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    className={cn(
+                        "h-48 w-full rounded-md border-2 border-dashed flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:border-primary transition-colors",
+                        isDragging && "border-primary bg-primary/10"
+                    )}
+                    onClick={() => document.getElementById('image-upload-input')?.click()}
+                >
+                    <UploadCloud className="h-8 w-8 text-muted-foreground" />
+                    <p className="mt-2 text-sm text-muted-foreground">
+                        Drag & drop an image here, or click to select a file
+                    </p>
+                    <input
+                        id="image-upload-input"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                    />
+                </div>
+            )}
+            {error && <p className="text-xs text-destructive mt-1">{error}</p>}
+        </div>
+    );
 }
