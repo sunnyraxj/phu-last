@@ -138,7 +138,7 @@ service cloud.firestore {
      */
     match /orders/{orderId} {
       allow get: if (isOwner(resource.data.customerId) && isNotAnonymous()) || isAdmin();
-      allow list: if ((request.query.get('customerId') == request.auth.uid) && isNotAnonymous()) || isAdmin();
+      allow list: if (isOwner(request.query.resource.data.customerId) && isNotAnonymous()) || isAdmin();
       allow create: if (isSignedIn() && request.resource.data.customerId == request.auth.uid && isNotAnonymous());
       allow update: if (isExistingOwner(resource.data.customerId) && isNotAnonymous()) || isAdmin();
       allow delete: if false; // Orders should generally not be deletable by users.
