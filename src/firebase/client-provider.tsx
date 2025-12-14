@@ -1,18 +1,27 @@
+
 'use client';
 
-import React, { useMemo, type ReactNode } from 'react';
+import React, { useMemo, type ReactNode, useState, useEffect } from 'react';
 import { FirebaseProvider } from '@/firebase/provider';
 import { initializeFirebase } from '@/firebase';
+import { FirebaseMessagingProvider } from '@/firebase/messaging-provider';
 
 interface FirebaseClientProviderProps {
   children: ReactNode;
 }
 
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
-  const firebaseServices = useMemo(() => {
+  const [firebaseServices, setFirebaseServices] = useState<ReturnType<typeof initializeFirebase> | null>(null);
+
+  useEffect(() => {
     // Initialize Firebase on the client side, once per component mount.
-    return initializeFirebase();
+    setFirebaseServices(initializeFirebase());
   }, []); // Empty dependency array ensures this runs only once on mount
+
+  if (!firebaseServices) {
+    // You can return a loading spinner or null here
+    return null;
+  }
 
   return (
     <FirebaseProvider
@@ -20,8 +29,11 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
       auth={firebaseServices.auth}
       firestore={firebaseServices.firestore}
       storage={firebaseServices.storage}
+      messaging={firebaseServices.messaging}
     >
-      {children}
+      <FirebaseMessagingProvider>
+        {children}
+      </FirebaseMessagingProvider>
     </FirebaseProvider>
   );
 }
