@@ -258,7 +258,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                 </nav>
 
                 <div className="flex items-center gap-4 sm:gap-6">
-                    {!isUserLoading && user?.isAnonymous && (
+                    {!isUserLoading && (!user || user.isAnonymous) && (
                         <Link href="/login" className="hidden sm:block">
                             <Button variant="secondary" size="sm">Login</Button>
                         </Link>
@@ -435,7 +435,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                         )}
                                     </Accordion>
                                 </div>
-                                {!isUserLoading && user?.isAnonymous && (
+                                {!isUserLoading && (!user || user.isAnonymous) && (
                                     <div className="p-4 border-t border-white/20">
                                         <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
                                             <Button variant="secondary" className="w-full">Login</Button>
