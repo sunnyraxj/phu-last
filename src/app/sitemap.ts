@@ -1,73 +1,10 @@
 import { MetadataRoute } from 'next';
-import { getDocs, collection, getFirestore } from 'firebase/firestore';
-import { initializeFirebase } from '@/firebase';
-
-// Initialize Firebase outside of the component to avoid re-initialization
-const { firestore } = initializeFirebase();
-
-type Product = {
-  id: string;
-};
-
-type Store = {
-  id: string;
-}
-
-type TeamMember = {
-    id: string;
-}
-
-type Blog = {
-    slug: string;
-    status: 'published' | 'draft';
-}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://purbanchal-hasta-udyog.com'; // Replace with your actual domain
 
-  // Get all products
-  const productsSnapshot = await getDocs(collection(firestore, 'products'));
-  const products = productsSnapshot.docs.map(doc => doc.data() as Product);
-  const productUrls = products.map(product => ({
-    url: `${baseUrl}/product/${product.id}`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly' as const,
-    priority: 0.8,
-  }));
-  
-  // Get all stores
-  const storesSnapshot = await getDocs(collection(firestore, 'stores'));
-  const stores = storesSnapshot.docs.map(doc => doc.data() as Store);
-  const storeUrls = stores.map(store => ({
-    url: `${baseUrl}/store/${store.id}`,
-    lastModified: new Date(),
-    changeFrequency: 'monthly' as const,
-    priority: 0.6,
-  }));
-  
-  // Get all team members
-  const teamMembersSnapshot = await getDocs(collection(firestore, 'teamMembers'));
-  const teamMembers = teamMembersSnapshot.docs.map(doc => doc.data() as TeamMember);
-  const teamMemberUrls = teamMembers.map(member => ({
-      url: `${baseUrl}/team/${member.id}`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.5,
-  }));
-
-  // Get all blog posts
-  const blogsSnapshot = await getDocs(collection(firestore, 'blogs'));
-  const blogs = blogsSnapshot.docs.map(doc => doc.data() as Blog);
-  const blogUrls = blogs
-    .filter(blog => blog.status === 'published' && blog.slug)
-    .map(blog => ({
-        url: `${baseUrl}/blog/${blog.slug}`,
-        lastModified: new Date(),
-        changeFrequency: 'weekly' as const,
-        priority: 0.7,
-    }));
-
-
+  // Static URLs are more reliable for build processes.
+  // Dynamic sitemaps that fetch data should be handled carefully to avoid build failures.
   const staticUrls: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
@@ -113,5 +50,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  return [...staticUrls, ...productUrls, ...storeUrls, ...teamMemberUrls, ...blogUrls];
+  return staticUrls;
 }

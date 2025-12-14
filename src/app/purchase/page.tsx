@@ -216,7 +216,7 @@ export default function PurchasePage() {
 
   useEffect(() => {
     if (!isUserLoading && !user) {
-      addDocumentNonBlocking(collection(firestore, 'users'), { isAnonymous: true });
+      // Logic for anonymous user handled in useUser/FirebaseProvider
     }
   }, [user, isUserLoading, auth, firestore]);
 
@@ -263,11 +263,11 @@ export default function PurchasePage() {
 
   const adminActionCounts = useMemo(() => {
       if (userData?.role !== 'admin' || !orders || !allProducts) {
-          return { pendingOrders: 0, outOfStockProducts: 0 };
+          return { pendingOrders: 0, outOfStockProducts: 0, pendingReturns: 0 };
       }
       const pendingOrders = orders.filter(order => order.status === 'pending').length;
       const outOfStockProducts = allProducts.filter(p => !p.inStock).length;
-      return { pendingOrders, outOfStockProducts };
+      return { pendingOrders, outOfStockProducts, pendingReturns: 0 };
   }, [orders, allProducts, userData]);
 
   const handleCategoryChange = (categoryName: string) => {
@@ -298,9 +298,9 @@ export default function PurchasePage() {
     if (!user) return;
     const itemRef = doc(firestore, 'users', user.uid, 'cart', cartItemId);
     if (newQuantity > 0) {
-      setDocumentNonBlocking(itemRef, { quantity: newQuantity }, { merge: true });
+      setDoc(itemRef, { quantity: newQuantity }, { merge: true });
     } else {
-      deleteDocumentNonBlocking(itemRef);
+      deleteDoc(itemRef);
     }
   };
   
@@ -311,7 +311,7 @@ export default function PurchasePage() {
       updateCartItemQuantity(existingItem.cartItemId, existingItem.quantity + 1);
     } else {
       const cartCollection = collection(firestore, 'users', user.uid, 'cart');
-      addDocumentNonBlocking(cartCollection, {
+      addDoc(cartCollection, {
         productId: product.id,
         quantity: 1,
       });
