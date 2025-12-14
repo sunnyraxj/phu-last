@@ -3,7 +3,7 @@
 'use client';
 
 import Link from "next/link";
-import { ChevronDown, ShoppingBag, User, LogOut, Settings, Store, Package, Users, ShoppingCart, Menu, X as CloseIcon, UserCog } from "lucide-react";
+import { ChevronDown, ShoppingBag, User, LogOut, Settings, Store, Package, Users, ShoppingCart, Menu, X as CloseIcon, UserCog, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -50,10 +50,11 @@ interface HeaderProps {
     adminActionCounts?: {
         pendingOrders: number;
         outOfStockProducts: number;
+        pendingReturns: number;
     };
 }
 
-export function Header({ userData, cartItems, updateCartItemQuantity, stores = [], products = [], adminActionCounts = { pendingOrders: 0, outOfStockProducts: 0 } }: HeaderProps) {
+export function Header({ userData, cartItems, updateCartItemQuantity, stores = [], products = [], adminActionCounts = { pendingOrders: 0, outOfStockProducts: 0, pendingReturns: 0 } }: HeaderProps) {
     const { user, isUserLoading } = useUser();
     const auth = useAuth();
     const router = useRouter();
@@ -96,7 +97,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
     const cartSubtotal = useMemo(() => cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0), [cartItems]);
 
     const totalAdminActionCount = useMemo(() => {
-        return (adminActionCounts?.pendingOrders || 0) + (adminActionCounts?.outOfStockProducts || 0);
+        return (adminActionCounts?.pendingOrders || 0) + (adminActionCounts?.outOfStockProducts || 0) + (adminActionCounts?.pendingReturns || 0);
     }, [adminActionCounts]);
 
     return (
@@ -223,6 +224,13 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                                 <p className="font-semibold text-sm">Orders</p>
                                             </div>
                                             {(adminActionCounts?.pendingOrders || 0) > 0 && <Badge>{adminActionCounts?.pendingOrders}</Badge>}
+                                        </Link>
+                                        <Link href="/admin/returns" className="flex items-center justify-between gap-4 p-2 rounded-lg hover:bg-muted -m-2">
+                                            <div className="flex items-center gap-4">
+                                                <Undo2 className="h-5 w-5 mt-0.5 text-primary"/>
+                                                <p className="font-semibold text-sm">Returns</p>
+                                            </div>
+                                            {(adminActionCounts?.pendingReturns || 0) > 0 && <Badge variant="destructive">{adminActionCounts?.pendingReturns}</Badge>}
                                         </Link>
                                         <Link href="/admin/team" className="flex items-center justify-between gap-4 p-2 rounded-lg hover:bg-muted -m-2">
                                             <div className="flex items-center gap-4">
