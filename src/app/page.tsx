@@ -751,42 +751,39 @@ export default function ProductPage() {
                   </div>
                 )}
                 {managementMembers.length > 0 && (
-                  <div className="w-full">
-                    <Carousel opts={{ align: "start" }} className="w-full">
-                      <CarouselContent className="-ml-2 md:-ml-4">
-                        {managementMembers.map((member) => (
-                            <CarouselItem key={member.id} className="pl-2 md:pl-4 basis-4/5 sm:basis-1/2 md:basis-1/3">
-                               <div className="p-1">
-                                    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl group shadow-lg">
-                                        <Image
-                                            src={member.image}
-                                            alt={member.name}
-                                            fill
-                                            className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                            data-ai-hint={member['data-ai-hint']}
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                                        <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                                          <div className="p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20">
-                                            <div className="flex items-center justify-center gap-2">
-                                              <h3 className="text-xl font-bold">{member.name}</h3>
-                                              <CheckCircle className="h-5 w-5 text-green-400" />
-                                            </div>
-                                            <p className="text-sm mt-1 opacity-90 line-clamp-2 text-center">{member.bio}</p>
-                                            {member.socialLink && (
-                                                <Link href={member.socialLink} target="_blank" rel="noopener noreferrer" className="mt-3">
-                                                    <Button size="sm" className="w-full bg-white/20 hover:bg-white/30 text-white">Follow</Button>
-                                                </Link>
-                                            )}
-                                          </div>
-                                        </div>
-                                    </div>
-                               </div>
-                            </CarouselItem>
-                        ))}
-                      </CarouselContent>
-                    </Carousel>
-                  </div>
+                   <div className="w-full">
+                     <Carousel opts={{ align: "start" }} className="w-full">
+                       <CarouselContent className="-ml-2 md:-ml-4">
+                         {managementMembers.map((member) => (
+                          <CarouselItem key={member.id} className="pl-4 md:pl-6 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                              <Card className="w-full max-w-sm overflow-hidden rounded-2xl shadow-lg group">
+                                <div className="relative aspect-[3/4] w-full overflow-hidden">
+                                  <Image
+                                      src={member.image}
+                                      alt={member.name}
+                                      fill
+                                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                      data-ai-hint={member['data-ai-hint']}
+                                  />
+                                </div>
+                                <div className="p-4 text-center bg-white">
+                                  <div className="flex items-center justify-center gap-2">
+                                    <h3 className="text-lg font-bold">{member.name}</h3>
+                                    <CheckCircle className="h-5 w-5 text-green-500" />
+                                  </div>
+                                  <p className="text-xs text-muted-foreground mt-1 mb-3 line-clamp-2 h-[2.5em]">{member.bio}</p>
+                                  {member.socialLink && (
+                                      <Link href={member.socialLink} target="_blank" rel="noopener noreferrer">
+                                          <Button size="sm" className="w-full rounded-full">Follow +</Button>
+                                      </Link>
+                                  )}
+                                </div>
+                              </Card>
+                          </CarouselItem>
+                         ))}
+                       </CarouselContent>
+                     </Carousel>
+                   </div>
                 )}
               </div>
               <div className="text-center mt-12">
