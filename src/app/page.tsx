@@ -4,7 +4,7 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { collection, doc, query, where, writeBatch, setDoc, deleteDoc } from "firebase/firestore";
-import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon, MapPin, Phone, ExternalLink, Sparkles, Wand2 } from "lucide-react"
+import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon, MapPin, Phone, ExternalLink, Sparkles, Wand2, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
@@ -366,7 +366,7 @@ export default function ProductPage() {
   const { founder, managementMembers } = useMemo(() => {
     if (!teamMembers) return { founder: null, managementMembers: [] };
     const founderMember = teamMembers.find(member => member.role === 'Founder');
-    const management = teamMembers.filter(member => member.role === 'Management').slice(0, 3);
+    const management = teamMembers.filter(member => member.role === 'Management');
     return { founder: founderMember, managementMembers: management };
   }, [teamMembers]);
 
@@ -739,11 +739,10 @@ export default function ProductPage() {
                   <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 mb-12 md:mb-16">
                      <div className="relative h-56 w-56 md:h-64 md:w-64 rounded-lg overflow-hidden shadow-lg group">
                         <Image src={founder.image} alt={founder.name} fill className="object-cover transition-transform duration-300 group-hover:scale-110" data-ai-hint={founder['data-ai-hint']} />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                        <div className="absolute bottom-0 left-0 p-4 text-white">
+                         <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent text-white">
                            <h3 className="text-xl font-bold">{founder.name}</h3>
                            <p className="text-sm opacity-90">{founder.role}</p>
-                        </div>
+                         </div>
                      </div>
                     <div className="text-center md:text-left max-w-md">
                       <p className="mt-3 text-muted-foreground">{founder.bio}</p>
@@ -751,17 +750,36 @@ export default function ProductPage() {
                   </div>
                 )}
                 {managementMembers.length > 0 && (
-                  <div className="w-full max-w-5xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-                    {managementMembers.map((member) => (
-                      <div key={member.id} className="relative aspect-[4/5] rounded-lg overflow-hidden group shadow-md">
-                        <Image src={member.image} alt={member.name} fill className="object-cover transition-transform duration-300 group-hover:scale-110" data-ai-hint={member['data-ai-hint']} />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                         <div className="absolute bottom-0 left-0 p-4 text-white">
-                           <h3 className="font-semibold text-lg">{member.name}</h3>
-                           <p className="text-xs opacity-90">{member.role}</p>
-                         </div>
-                      </div>
-                    ))}
+                  <div className="w-full">
+                    <Carousel opts={{ align: "start" }} className="w-full">
+                      <CarouselContent className="-ml-2 md:-ml-4">
+                        {managementMembers.map((member) => (
+                            <CarouselItem key={member.id} className="pl-2 md:pl-4 basis-4/5 sm:basis-1/2 md:basis-1/3">
+                               <div className="p-1">
+                                    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl group shadow-lg">
+                                        <Image
+                                            src={member.image}
+                                            alt={member.name}
+                                            fill
+                                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                            data-ai-hint={member['data-ai-hint']}
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                                        <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                                          <div className="p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20">
+                                            <div className="flex items-center gap-2">
+                                              <h3 className="text-xl font-bold">{member.name}</h3>
+                                              <CheckCircle className="h-5 w-5 text-green-400" />
+                                            </div>
+                                            <p className="text-sm mt-1 opacity-90 line-clamp-2">{member.bio}</p>
+                                          </div>
+                                        </div>
+                                    </div>
+                               </div>
+                            </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                    </Carousel>
                   </div>
                 )}
               </div>
@@ -780,6 +798,7 @@ export default function ProductPage() {
 }
     
     
+
 
 
 

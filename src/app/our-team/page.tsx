@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import Image from "next/image";
@@ -11,6 +10,8 @@ import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Header } from "@/components/shared/Header";
 import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { CheckCircle } from "lucide-react";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 
 type TeamMember = {
     id: string;
@@ -155,8 +156,7 @@ export default function OurTeamPage() {
                         className="object-cover transition-transform duration-300 group-hover:scale-110"
                         data-ai-hint={founder['data-ai-hint']}
                       />
-                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                       <div className="absolute bottom-0 left-0 p-4 text-white">
+                       <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/80 to-transparent text-white">
                            <h3 className="text-2xl font-bold">{founder.name}</h3>
                            <p className="text-sm opacity-90">{founder.role}</p>
                        </div>
@@ -173,25 +173,35 @@ export default function OurTeamPage() {
                     <div className="text-center mb-8">
                         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Management</h2>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                     <Carousel opts={{ align: "start" }} className="w-full">
+                      <CarouselContent className="-ml-2 md:-ml-4">
                         {managementMembers.map((member) => (
-                           <div key={member.id} className="relative aspect-[4/5] rounded-lg overflow-hidden group shadow-lg">
-                                <Image
-                                    src={member.image}
-                                    alt={member.name}
-                                    fill
-                                    className="object-cover transition-transform duration-300 group-hover:scale-110"
-                                    data-ai-hint={member['data-ai-hint']}
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
-                                <div className="absolute bottom-0 left-0 p-4 text-white transition-all duration-300 group-hover:bottom-4">
-                                   <h3 className="text-xl font-bold">{member.name}</h3>
-                                   <p className="text-xs opacity-90">{member.role}</p>
-                                   <p className="text-sm mt-2 opacity-0 max-h-0 group-hover:opacity-100 group-hover:max-h-40 transition-all duration-300 overflow-hidden">{member.bio}</p>
+                            <CarouselItem key={member.id} className="pl-2 md:pl-4 basis-4/5 sm:basis-1/2 md:basis-1/3">
+                               <div className="p-1">
+                                    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl group shadow-lg">
+                                        <Image
+                                            src={member.image}
+                                            alt={member.name}
+                                            fill
+                                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                            data-ai-hint={member['data-ai-hint']}
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                                        <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                                          <div className="p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20">
+                                            <div className="flex items-center gap-2">
+                                              <h3 className="text-xl font-bold">{member.name}</h3>
+                                              <CheckCircle className="h-5 w-5 text-green-400" />
+                                            </div>
+                                            <p className="text-sm mt-1 opacity-90 line-clamp-2">{member.bio}</p>
+                                          </div>
+                                        </div>
+                                    </div>
                                </div>
-                           </div>
+                            </CarouselItem>
                         ))}
-                    </div>
+                      </CarouselContent>
+                    </Carousel>
                 </div>
             )}
 
