@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import emailjs from '@emailjs/browser';
@@ -39,6 +37,10 @@ const sendEmail = (templateId: string, params: TemplateParams) => {
     if (!templateId || templateId.includes('YOUR_')) {
         console.warn(`EmailJS Template ID '${templateId}' is not configured; skipping this email.`);
         return; // Skip this specific email but don't block others.
+    }
+    if (!params.to_email) {
+        console.error(`Email recipient is missing for template ${templateId}. Aborting send.`);
+        return;
     }
 
     emailjs.send(EMAILJS_SERVICE_ID, templateId, params, EMAILJS_PUBLIC_KEY)
