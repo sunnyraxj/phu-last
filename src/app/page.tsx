@@ -798,21 +798,3 @@ export default function ProductPage() {
 }
     
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
