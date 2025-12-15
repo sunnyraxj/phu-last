@@ -410,11 +410,7 @@ export default function ProductPage() {
 
   const addToCart = (product: Product) => {
     if (!user) {
-        toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Could not add item to cart. Please try again.",
-        });
+        router.push('/login');
         return;
     }
     const existingItem = cartItems.find(item => item.id === product.id);
@@ -739,7 +735,7 @@ export default function ProductPage() {
             <>
               <div className="flex flex-col items-center">
                 {founder && (
-                  <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 mb-16">
+                  <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 mb-8">
                     <div className="relative h-56 w-56 md:h-64 md:w-64 rounded-full overflow-hidden shadow-lg border-4 border-background">
                       <Image src={founder.image} alt={founder.name} fill className="object-cover" data-ai-hint={founder['data-ai-hint']} />
                     </div>
@@ -751,7 +747,7 @@ export default function ProductPage() {
                   </div>
                 )}
                 {managementMembers.length > 0 && (
-                  <div className="w-full max-w-4xl grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                  <div className="w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
                     {managementMembers.map((member) => (
                       <div key={member.id} className="text-center flex flex-col items-center group">
                         <div className="relative h-32 w-32 rounded-full overflow-hidden mb-4 shadow-lg transition-transform duration-300 group-hover:scale-105 border-4 border-background">
@@ -779,6 +775,7 @@ export default function ProductPage() {
 }
     
     
+
 
 
 

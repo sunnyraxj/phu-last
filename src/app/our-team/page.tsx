@@ -145,7 +145,7 @@ export default function OurTeamPage() {
         ) : teamMembers && teamMembers.length > 0 ? (
           <>
             {founder && (
-              <div className="mb-12 md:mb-20">
+              <div className="mb-12 md:mb-16">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
                   <div className="relative h-80 w-80 sm:h-96 sm:w-96 mx-auto rounded-lg overflow-hidden shadow-2xl">
                      <Image
@@ -166,7 +166,7 @@ export default function OurTeamPage() {
             )}
             
             {managementMembers.length > 0 && (
-                <div className="mb-12 md:mb-20">
+                <div className="mb-12 md:mb-16">
                     <div className="text-center mb-12">
                         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Management</h2>
                         <p className="mt-3 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -201,7 +201,7 @@ export default function OurTeamPage() {
                      <div className="text-center mb-12">
                         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Our Dedicated Team</h2>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
                     {otherTeamMembers.map((member) => (
                         <div key={member.id} className="text-center">
                         <div className="relative h-56 w-56 sm:h-64 sm:w-64 mx-auto rounded-full overflow-hidden mb-4 shadow-lg">
