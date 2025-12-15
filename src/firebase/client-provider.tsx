@@ -4,7 +4,6 @@
 import React, { useMemo, type ReactNode, useState, useEffect } from 'react';
 import { FirebaseProvider } from '@/firebase/provider';
 import { initializeFirebase } from '@/firebase';
-import { FirebaseMessagingProvider } from '@/firebase/messaging-provider';
 
 interface FirebaseClientProviderProps {
   children: ReactNode;
@@ -29,11 +28,8 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
       auth={firebaseServices.auth}
       firestore={firebaseServices.firestore}
       storage={firebaseServices.storage}
-      messaging={firebaseServices.messaging}
     >
-      <FirebaseMessagingProvider>
-        {children}
-      </FirebaseMessagingProvider>
+      {children}
     </FirebaseProvider>
   );
 }

@@ -6,7 +6,6 @@ import { FirebaseApp } from 'firebase/app';
 import { Firestore, collection, doc, getDocs, writeBatch } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { FirebaseStorage } from 'firebase/storage';
-import { Messaging } from 'firebase/messaging';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
 import { addDocumentNonBlocking } from './non-blocking-updates';
 
@@ -16,7 +15,6 @@ interface FirebaseProviderProps {
   firestore: Firestore;
   auth: Auth;
   storage: FirebaseStorage;
-  messaging: Messaging | null;
 }
 
 // Internal state for user authentication
@@ -33,7 +31,6 @@ export interface FirebaseContextState {
   firestore: Firestore | null;
   auth: Auth | null; // The Auth service instance
   storage: FirebaseStorage | null;
-  messaging: Messaging | null;
   // User authentication state
   user: User | null;
   isUserLoading: boolean; // True during initial auth check
@@ -46,7 +43,6 @@ export interface FirebaseServicesAndUser {
   firestore: Firestore;
   auth: Auth;
   storage: FirebaseStorage;
-  messaging: Messaging | null;
   user: User | null;
   isUserLoading: boolean;
   userError: Error | null;
@@ -109,7 +105,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   firestore,
   auth,
   storage,
-  messaging,
 }) => {
   const [userAuthState, setUserAuthState] = useState<UserAuthState>({
     user: null,
@@ -159,12 +154,11 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       firestore: servicesAvailable ? firestore : null,
       auth: servicesAvailable ? auth : null,
       storage: servicesAvailable ? storage : null,
-      messaging: messaging, // Can be null
       user: userAuthState.user,
       isUserLoading: userAuthState.isUserLoading,
       userError: userAuthState.userError,
     };
-  }, [firebaseApp, firestore, auth, storage, messaging, userAuthState]);
+  }, [firebaseApp, firestore, auth, storage, userAuthState]);
 
   return (
     <FirebaseContext.Provider value={contextValue}>
@@ -200,7 +194,6 @@ export const useFirebase = (): FirebaseServicesAndUser & { addDocumentNonBlockin
     firestore: context.firestore,
     auth: context.auth,
     storage: context.storage,
-    messaging: context.messaging,
     user: context.user,
     isUserLoading: context.isUserLoading,
     userError: context.userError,
@@ -225,12 +218,6 @@ export const useFirestore = (): Firestore => {
 export const useStorage = (): FirebaseStorage => {
   const { storage } = useFirebase();
   return storage;
-};
-
-/** Hook to access Firebase Messaging instance. */
-export const useMessaging = (): Messaging | null => {
-  const { messaging } = useFirebase();
-  return messaging;
 };
 
 
