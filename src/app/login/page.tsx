@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -15,10 +16,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth, useFirestore } from '@/firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { useFirebase } from '@/firebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, User } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
 import { Eye, EyeOff } from 'lucide-react';
@@ -72,9 +73,9 @@ export default function LoginPage() {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const auth = useAuth();
-  const firestore = useFirestore();
+  const { auth, firestore, user: anonymousUser, mergeCarts } = useFirebase();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
 
   const {
@@ -92,6 +93,19 @@ export default function LoginPage() {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   });
+  
+  const redirectTo = searchParams.get('redirect') || '/';
+
+  const handleSuccessfulLogin = async (permanentUser: User) => {
+      if (anonymousUser?.isAnonymous && permanentUser.uid !== anonymousUser.uid) {
+        await mergeCarts(anonymousUser.uid, permanentUser.uid);
+      }
+      router.push(redirectTo);
+      toast({
+        title: 'Logged In',
+        description: "Welcome!",
+      });
+  };
 
   const onSignUpSubmit: SubmitHandler<SignUpFormValues> = async (data) => {
     setIsSubmitting(true);
@@ -108,11 +122,8 @@ export default function LoginPage() {
         role: 'user' // Assign default role
       });
 
-      router.push('/');
-      toast({
-        title: 'Account Created',
-        description: "You've been successfully signed up!",
-      });
+      await handleSuccessfulLogin(user);
+
     } catch (error) {
       if (error instanceof FirebaseError) {
         toast({
@@ -129,12 +140,8 @@ export default function LoginPage() {
   const onLoginSubmit: SubmitHandler<LoginFormValues> = async (data) => {
     setIsSubmitting(true);
     try {
-      await signInWithEmailAndPassword(auth, data.email, data.password);
-      router.push('/');
-      toast({
-        title: 'Logged In',
-        description: "Welcome back!",
-      });
+      const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
+      await handleSuccessfulLogin(userCredential.user);
     } catch (error) {
        if (error instanceof FirebaseError) {
         toast({
@@ -174,11 +181,7 @@ export default function LoginPage() {
         });
       }
       
-      router.push('/');
-      toast({
-        title: 'Logged In',
-        description: 'Welcome!',
-      });
+      await handleSuccessfulLogin(user);
 
     } catch (error) {
       if (error instanceof FirebaseError) {
@@ -196,7 +199,7 @@ export default function LoginPage() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-background p-4">
        <div className="absolute top-4 left-4">
-          <Button variant="outline" onClick={() => router.back()}>Back</Button>
+          <Button variant="outline" onClick={() => router.push(redirectTo)}>Back</Button>
       </div>
       <Tabs defaultValue="login" className="w-full max-w-sm sm:max-w-md">
         <TabsList className="grid w-full grid-cols-2">

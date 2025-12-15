@@ -3,8 +3,8 @@
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
-import { Firestore } from 'firebase/firestore';
-import { Auth, User, onAuthStateChanged } from 'firebase/auth';
+import { Firestore, collection, doc, getDocs, writeBatch } from 'firebase/firestore';
+import { Auth, User, onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { FirebaseStorage } from 'firebase/storage';
 import { Messaging } from 'firebase/messaging';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
@@ -63,6 +63,44 @@ export interface UserHookResult { // Renamed from UserAuthHookResult for consist
 export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
 
 /**
+ * Merges the cart from an anonymous user to a permanent user.
+ * @param firestore - The Firestore instance.
+ * @param anonymousUid - The UID of the anonymous user.
+ * @param permanentUid - The UID of the permanent user.
+ */
+const mergeCarts = async (firestore: Firestore, anonymousUid: string, permanentUid: string) => {
+    const anonCartRef = collection(firestore, 'users', anonymousUid, 'cart');
+    const permanentCartRef = collection(firestore, 'users', permanentUid, 'cart');
+
+    const anonCartSnapshot = await getDocs(anonCartRef);
+    const permanentCartSnapshot = await getDocs(permanentCartRef);
+
+    const permanentCartItems = new Map(permanentCartSnapshot.docs.map(doc => [doc.data().productId, doc]));
+
+    const batch = writeBatch(firestore);
+
+    anonCartSnapshot.docs.forEach(anonDoc => {
+        const anonItem = anonDoc.data();
+        const existingPermanentItemDoc = permanentCartItems.get(anonItem.productId);
+
+        if (existingPermanentItemDoc) {
+            // Item exists, update quantity
+            const newQuantity = existingPermanentItemDoc.data().quantity + anonItem.quantity;
+            batch.update(existingPermanentItemDoc.ref, { quantity: newQuantity });
+        } else {
+            // Item does not exist, add it to the permanent cart
+            const newPermanentItemRef = doc(permanentCartRef);
+            batch.set(newPermanentItemRef, anonItem);
+        }
+        // Delete the item from the anonymous cart
+        batch.delete(anonDoc.ref);
+    });
+
+    await batch.commit();
+};
+
+
+/**
  * FirebaseProvider manages and provides Firebase services and user authentication state.
  */
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
@@ -90,8 +128,19 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
     const unsubscribe = onAuthStateChanged(
       auth,
-      (firebaseUser) => { // Auth state determined
-        setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
+      async (firebaseUser) => { // Auth state determined
+        if (!firebaseUser) {
+           try {
+              // If no user, sign in anonymously
+              const anonUserCredential = await signInAnonymously(auth);
+              setUserAuthState({ user: anonUserCredential.user, isUserLoading: false, userError: null });
+            } catch (error) {
+              console.error("Anonymous sign-in failed:", error);
+              setUserAuthState({ user: null, isUserLoading: false, userError: error as Error });
+            }
+        } else {
+            setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
+        }
       },
       (error) => { // Auth listener error
         console.error("FirebaseProvider: onAuthStateChanged error:", error);
@@ -129,7 +178,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
  * Hook to access core Firebase services and user authentication state.
  * Throws error if core services are not available or used outside provider.
  */
-export const useFirebase = (): FirebaseServicesAndUser & { addDocumentNonBlocking: typeof addDocumentNonBlocking } => {
+export const useFirebase = (): FirebaseServicesAndUser & { addDocumentNonBlocking: typeof addDocumentNonBlocking, mergeCarts: (anonymousUid: string, permanentUid: string) => Promise<void> } => {
   const context = useContext(FirebaseContext);
 
   if (context === undefined) {
@@ -141,6 +190,10 @@ export const useFirebase = (): FirebaseServicesAndUser & { addDocumentNonBlockin
   }
   
   const memoizedAddDoc = useMemo(() => addDocumentNonBlocking, []);
+  
+  const memoizedMergeCarts = useMemo(() => {
+    return (anonymousUid: string, permanentUid: string) => mergeCarts(context.firestore!, anonymousUid, permanentUid);
+  }, [context.firestore]);
 
   return {
     firebaseApp: context.firebaseApp,
@@ -152,6 +205,7 @@ export const useFirebase = (): FirebaseServicesAndUser & { addDocumentNonBlockin
     isUserLoading: context.isUserLoading,
     userError: context.userError,
     addDocumentNonBlocking: memoizedAddDoc,
+    mergeCarts: memoizedMergeCarts,
   };
 };
 

@@ -208,18 +208,11 @@ export default function PurchasePage() {
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  const firestore = useFirestore();
-  const auth = useAuth();
+  const { firestore, addDocumentNonBlocking } = useFirebase();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const router = useRouter();
-  const { addDocumentNonBlocking } = useFirebase();
 
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      // Logic for anonymous user handled in useUser/FirebaseProvider
-    }
-  }, [user, isUserLoading, auth, firestore]);
 
   const productsQuery = useMemoFirebase(() =>
     query(collection(firestore, 'products')),
@@ -320,7 +313,14 @@ export default function PurchasePage() {
   };
   
   const addToCart = (product: Product) => {
-    if (!user) return;
+    if (!user) {
+       toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not add item to cart. Please try again.",
+        });
+        return;
+    }
     const existingItem = cartItems.find(item => item.id === product.id);
     if (existingItem) {
       updateCartItemQuantity(existingItem.cartItemId, existingItem.quantity + 1);
@@ -487,7 +487,7 @@ export default function PurchasePage() {
             <Breadcrumbs categories={selectedCategories} onClear={handleBreadcrumbClear} />
           </div>
             
-          {productsLoading ? (
+          {productsLoading || isUserLoading ? (
             <div className="flex justify-center items-center h-96">
                 <PottersWheelSpinner />
             </div>

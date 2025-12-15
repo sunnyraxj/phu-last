@@ -298,18 +298,11 @@ export default function ProductPage() {
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  const firestore = useFirestore();
-  const auth = useAuth();
+  const { firestore, addDocumentNonBlocking } = useFirebase();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const router = useRouter();
-  const { addDocumentNonBlocking } = useFirebase();
 
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      // Use non-blocking anonymous sign-in if needed, or handle redirection
-    }
-  }, [user, isUserLoading, auth, firestore]);
 
   const productsQuery = useMemoFirebase(() =>
     query(collection(firestore, 'products')),
@@ -416,7 +409,14 @@ export default function ProductPage() {
   };
 
   const addToCart = (product: Product) => {
-    if (!user) return;
+    if (!user) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not add item to cart. Please try again.",
+        });
+        return;
+    }
     const existingItem = cartItems.find(item => item.id === product.id);
     if (existingItem) {
       updateCartItemQuantity(existingItem.cartItemId, existingItem.quantity + 1);
@@ -593,7 +593,7 @@ export default function ProductPage() {
                 </div>
               </div>
 
-              {productsLoading ? (
+              {productsLoading || isUserLoading ? (
                 <div className="flex justify-center items-center h-96">
                   <PottersWheelSpinner />
                 </div>
@@ -779,6 +779,7 @@ export default function ProductPage() {
 }
     
     
+
 
 
 
