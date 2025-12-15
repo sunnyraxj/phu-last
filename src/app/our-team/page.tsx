@@ -189,8 +189,8 @@ export default function OurTeamPage() {
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                                         <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                                          <div className="p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20">
-                                            <div className="flex items-center gap-2">
+                                          <div className="p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-center">
+                                            <div className="flex items-center justify-center gap-2">
                                               <h3 className="text-xl font-bold">{member.name}</h3>
                                               <CheckCircle className="h-5 w-5 text-green-400" />
                                             </div>
