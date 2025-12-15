@@ -22,6 +22,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
+import { triggerStatusUpdateEmail } from '@/lib/email';
 
 type OrderStatus = 'pending-payment-approval' | 'pending' | 'shipped' | 'delivered' | 'cancelled'|'order-confirmed';
 
@@ -160,50 +161,17 @@ export default function OrdersPage() {
                 return 'secondary';
         }
     }
-    
-    const triggerEmail = (order: Order, newStatus: OrderStatus) => {
-        if (!firestore) return;
-        
-        const customerEmail = order.shippingDetails.email;
-        if (!customerEmail) {
-            console.error("No email found for customer");
-            return;
-        }
-
-        const mailCollection = collection(firestore, 'mail');
-        let emailContent = {
-            to: customerEmail,
-            message: {
-                subject: '',
-                html: '',
-            }
-        };
-
-        switch (newStatus) {
-            case 'order-confirmed':
-                emailContent.message.subject = `Order Confirmed - #${order.id.substring(0,8)}`;
-                emailContent.message.html = `<h1>Your Order is Confirmed!</h1><p>Hi ${order.shippingDetails.name},</p><p>We're happy to let you know that your order #${order.id.substring(0,8)} has been confirmed and is being processed.</p><p>You can view your invoice here: <a href="https://purbanchal-hasta-udyog.com/order-confirmation/${order.id}">View Invoice</a></p><p>Thank you for shopping with us!</p>`;
-                break;
-            case 'shipped':
-                 emailContent.message.subject = `Your Order has Shipped! - #${order.id.substring(0,8)}`;
-                 emailContent.message.html = `<h1>Your Order is on its way!</h1><p>Hi ${order.shippingDetails.name},</p><p>Your order #${order.id.substring(0,8)} has been shipped. You can expect it to arrive soon.</p><p>Thank you for your patience!</p>`;
-                 break;
-            case 'delivered':
-                 emailContent.message.subject = `Your Order has been Delivered! - #${order.id.substring(0,8)}`;
-                 emailContent.message.html = `<h1>Your Order has Arrived!</h1><p>Hi ${order.shippingDetails.name},</p><p>Your order #${order.id.substring(0,8)} has been delivered. We hope you enjoy your products!</p><p>Thank you for shopping with us!</p>`;
-                 break;
-            default:
-                return; // Don't send email for other statuses from admin panel
-        }
-        addDocumentNonBlocking(mailCollection, emailContent);
-    }
 
     const handleApprovePayment = () => {
         if (!orderToApprove) return;
         const orderRef = doc(firestore, 'orders', orderToApprove.id);
         const newStatus = 'order-confirmed';
         setDocumentNonBlocking(orderRef, { status: newStatus }, { merge: true });
-        triggerEmail(orderToApprove, newStatus);
+        
+        if (orderToApprove.shippingDetails.email) {
+            triggerStatusUpdateEmail('order-confirmed', orderToApprove);
+        }
+
         toast({
             title: 'Payment Approved',
             description: `Order ${orderToApprove.id.substring(0,8)} has been moved to 'order-confirmed'.`
@@ -223,7 +191,11 @@ export default function OrdersPage() {
         }
 
         setDocumentNonBlocking(orderRef, updateData, { merge: true });
-        triggerEmail(order, newStatus);
+        
+        if (order.shippingDetails.email && (newStatus === 'shipped' || newStatus === 'delivered' || newStatus === 'order-confirmed')) {
+            triggerStatusUpdateEmail(newStatus, order);
+        }
+
         toast({
             title: 'Order Status Updated',
             description: `Order ${order.id.substring(0,8)} has been updated to '${newStatus.replace(/-/g, ' ')}'.`
@@ -551,3 +523,4 @@ export default function OrdersPage() {
     
 
     
+

@@ -235,16 +235,5 @@ service cloud.firestore {
       allow list: if isAdmin(); // Public list may need a different rule based on queries
       allow create, update, delete: if isAdmin();
     }
-
-    /**
-     * @description Rules for the Mail collection, used by the Trigger Email extension.
-     * @path /mail/{mailId}
-     * @allow (create) Any authenticated user can create an email request.
-     * @principle The client needs to be able to add documents to this collection to trigger emails. The extension's backend function handles the actual sending.
-     */
-    match /mail/{mailId} {
-      allow create: if isSignedIn();
-      allow read, update, delete: if false;
-    }
   }
 }

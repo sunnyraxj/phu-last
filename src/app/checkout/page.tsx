@@ -22,6 +22,7 @@ import { AddressForm, AddressFormValues } from '@/components/account/AddressForm
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { PlusCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { triggerNewOrderEmails } from '@/lib/email';
 
 type ShippingAddress = AddressFormValues & { id: string, email?: string };
 
@@ -38,7 +39,6 @@ type CartItem = Product & { quantity: number; cartItemId: string; };
 
 const UPI_ID = 'gpay-12190144290@okbizaxis';
 const PAYEE_NAME = 'Purbanchal Hasta Udyog';
-const ADMIN_EMAIL = 'purbanchalhastaudyog@gmail.com';
 
 export default function CheckoutPage() {
   const firestore = useFirestore();
@@ -183,8 +183,8 @@ export default function CheckoutPage() {
     }
     
     const selectedAddress = addresses?.find(a => a.id === selectedAddressId);
-    if (!selectedAddress) {
-        toast({ variant: "destructive", title: 'Error', description: "Selected address not found." });
+    if (!selectedAddress || !user.email) {
+        toast({ variant: "destructive", title: 'Error', description: "Selected address not found or user email is missing." });
         return;
     }
     
@@ -196,11 +196,12 @@ export default function CheckoutPage() {
       const batch = writeBatch(firestore);
       const orderRef = doc(collection(firestore, 'orders'));
 
-      batch.set(orderRef, {
+      const orderData = {
+        id: orderRef.id,
         customerId: user.uid,
         orderDate: serverTimestamp(),
         totalAmount: totalAmount,
-        status: 'pending-payment-approval',
+        status: 'pending-payment-approval' as const,
         shippingDetails: addressWithEmail,
         subtotal: subtotal,
         shippingFee: shippingFee,
@@ -208,7 +209,7 @@ export default function CheckoutPage() {
         cgstAmount: cgst,
         sgstAmount: sgst,
         igstAmount: igst,
-        paymentMethod: selectedPaymentPercentage === 1 ? 'UPI_FULL' : 'UPI_PARTIAL',
+        paymentMethod: selectedPaymentPercentage === 1 ? ('UPI_FULL' as const) : ('UPI_PARTIAL' as const),
         paymentDetails: {
             advanceAmount: advanceAmount,
             remainingAmount: remainingAmount,
@@ -216,33 +217,10 @@ export default function CheckoutPage() {
             paymentPercentage: selectedPaymentPercentage,
             transactionId: transactionId,
         }
-      });
-      
-      const adminMailRef = doc(collection(firestore, 'mail'));
-      batch.set(adminMailRef, {
-        to: ADMIN_EMAIL,
-        message: {
-            subject: `New Order Received - #${orderRef.id.substring(0,8)}`,
-            html: `
-                <h1>You've received a new order!</h1>
-                <p><strong>Order ID:</strong> ${orderRef.id}</p>
-                <p><strong>Customer:</strong> ${addressWithEmail.name}</p>
-                <p><strong>Total Amount:</strong> ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalAmount)}</p>
-                <p>Review the order in your admin panel:</p>
-                <a href="https://purbanchal-hasta-udyog.com/admin/orders">View Orders</a>
-            `,
-        }
-      });
-      
-      const userMailRef = doc(collection(firestore, 'mail'));
-      batch.set(userMailRef, {
-        to: addressWithEmail.email,
-        message: {
-          subject: `We've Received Your Order - #${orderRef.id.substring(0,8)}`,
-          html: `<h1>Thank You For Your Order!</h1><p>Hi ${addressWithEmail.name},</p><p>We have received your order #${orderRef.id.substring(0,8)} and it is now being reviewed. We will notify you again once the payment is confirmed and the order is processed.</p><p>Thank you for shopping with us!</p>`,
-        }
-      });
+      };
 
+      batch.set(orderRef, orderData);
+      
       for (const item of cartItems) {
         const orderItemRef = doc(collection(firestore, 'orderItems'));
         batch.set(orderItemRef, {
@@ -259,6 +237,15 @@ export default function CheckoutPage() {
       }
 
       await batch.commit();
+
+      // Trigger EmailJS emails
+      triggerNewOrderEmails({
+          id: orderRef.id,
+          shippingDetails: addressWithEmail,
+          orderDate: new Date(),
+          totalAmount: totalAmount,
+      });
+
       toast({ title: 'Order Placed!', description: 'Your order has been placed and is pending payment approval.' });
       router.push(`/receipt/${orderRef.id}`);
 
