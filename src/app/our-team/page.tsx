@@ -149,8 +149,8 @@ export default function OurTeamPage() {
           <>
             {founder && (
               <div className="mb-12 md:mb-16">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
-                   <div className="relative h-80 w-80 sm:h-96 sm:w-96 mx-auto rounded-lg overflow-hidden shadow-2xl group">
+                <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+                   <div className="relative h-64 w-64 mx-auto rounded-lg overflow-hidden shadow-2xl group">
                      <Image
                         src={founder.image}
                         alt={founder.name}
@@ -158,13 +158,11 @@ export default function OurTeamPage() {
                         className="object-cover transition-transform duration-300 group-hover:scale-110"
                         data-ai-hint={founder['data-ai-hint']}
                       />
-                       <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/80 to-transparent text-white">
-                           <h3 className="text-2xl font-bold">{founder.name}</h3>
-                           <p className="text-sm opacity-90">{founder.role}</p>
-                       </div>
                   </div>
-                  <div className="text-center md:text-left">
-                    <p className="mt-4 text-base sm:text-lg text-muted-foreground max-w-lg mx-auto md:mx-0">{founder.bio}</p>
+                  <div className="text-center md:text-left flex-1">
+                    <h3 className="text-2xl font-bold">{founder.name}</h3>
+                    <p className="text-sm text-muted-foreground mb-4">{founder.role}</p>
+                    <p className="text-base sm:text-lg text-muted-foreground max-w-lg mx-auto md:mx-0">{founder.bio}</p>
                   </div>
                 </div>
               </div>
@@ -179,7 +177,7 @@ export default function OurTeamPage() {
                       <CarouselContent className="-ml-2 md:-ml-4">
                         {managementMembers.map((member) => (
                           <CarouselItem key={member.id} className="pl-4 md:pl-6 basis-1/2 md:basis-1/3 lg:basis-1/4">
-                              <Card className="w-full max-w-sm overflow-hidden rounded-2xl shadow-lg group text-left">
+                              <Card className="w-full max-w-sm overflow-hidden rounded-2xl shadow-lg group">
                                 <div className="relative aspect-[3/4] w-full overflow-hidden rounded-[30%]">
                                   <Image
                                       src={member.image}
@@ -188,12 +186,10 @@ export default function OurTeamPage() {
                                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                                       data-ai-hint={member['data-ai-hint']}
                                   />
-                                   <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
-                                    <h3 className="text-lg font-bold text-white text-center">{member.name}</h3>
-                                   </div>
                                 </div>
                                 <div className="p-4 bg-white">
-                                  <p className="text-xs text-muted-foreground mt-1 mb-3 line-clamp-2 h-[2.5em]">{member.bio}</p>
+                                  <h3 className="text-lg font-bold text-slate-900">{member.name}</h3>
+                                  <p className="text-xs text-muted-foreground mt-1 mb-3">{member.bio}</p>
                                   {member.socialLink && (
                                       <Link href={member.socialLink} target="_blank" rel="noopener noreferrer">
                                           <Button size="sm" className="w-full rounded-[30%]">Follow +</Button>
