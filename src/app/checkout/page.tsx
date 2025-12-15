@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -22,7 +23,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { PlusCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-type ShippingAddress = AddressFormValues & { id: string };
+type ShippingAddress = AddressFormValues & { id: string, email?: string };
 
 type Product = {
   id: string;
@@ -151,7 +152,13 @@ export default function CheckoutPage() {
     if (!user) return;
     const addressesCollection = collection(firestore, 'users', user.uid, 'shippingAddresses');
     const newAddressRef = doc(addressesCollection);
-    setDoc(newAddressRef, { ...formData, userId: user.uid, id: newAddressRef.id }).then(() => {
+    const newAddressData = { 
+        ...formData, 
+        userId: user.uid, 
+        id: newAddressRef.id,
+        email: user.email // Also save user's email with address for notifications
+    };
+    setDoc(newAddressRef, newAddressData).then(() => {
         setSelectedAddressId(newAddressRef.id);
         setShowNewAddressForm(false);
         reset();
@@ -179,6 +186,9 @@ export default function CheckoutPage() {
         toast({ variant: "destructive", title: 'Error', description: "Selected address not found." });
         return;
     }
+    
+    // Ensure email is present on the selected address for notifications
+    const addressWithEmail = { ...selectedAddress, email: user.email };
 
     setIsSubmitting(true);
 
@@ -190,7 +200,7 @@ export default function CheckoutPage() {
         orderDate: serverTimestamp(),
         totalAmount: totalAmount,
         status: 'pending-payment-approval',
-        shippingDetails: selectedAddress,
+        shippingDetails: addressWithEmail,
         subtotal: subtotal,
         shippingFee: shippingFee,
         gstAmount: totalGST,
@@ -426,5 +436,7 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
+    
 
     

@@ -5,7 +5,7 @@
 import { useState, Fragment, useMemo, useEffect } from 'react';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, doc, query, where } from 'firebase/firestore';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
@@ -32,6 +32,7 @@ type ShippingDetails = {
     state: string;
     pincode: string;
     phone: string;
+    email?: string;
 }
 
 type Order = {
@@ -159,11 +160,44 @@ export default function OrdersPage() {
                 return 'secondary';
         }
     }
+    
+    const triggerEmail = (order: Order, newStatus: OrderStatus) => {
+        if (!firestore) return;
+        const mailCollection = collection(firestore, 'mail');
+        
+        const customerEmail = order.shippingDetails.email;
+        if (!customerEmail) {
+            console.error("No email found for customer");
+            return;
+        }
+
+        let emailContent = {
+            to: customerEmail,
+            message: {
+                subject: '',
+                html: '',
+            }
+        };
+
+        if (newStatus === 'order-confirmed') {
+            emailContent.message.subject = `Order Confirmed - #${order.id.substring(0,8)}`;
+            emailContent.message.html = `<h1>Your Order is Confirmed!</h1><p>Hi ${order.shippingDetails.name},</p><p>We're happy to let you know that your order #${order.id.substring(0,8)} has been confirmed and is being processed.</p><p>You can view your invoice here: <a href="https://purbanchal-hasta-udyog.com/order-confirmation/${order.id}">View Invoice</a></p><p>Thank you for shopping with us!</p>`;
+        } else if (newStatus === 'shipped') {
+             emailContent.message.subject = `Your Order has Shipped! - #${order.id.substring(0,8)}`;
+             emailContent.message.html = `<h1>Your Order is on its way!</h1><p>Hi ${order.shippingDetails.name},</p><p>Your order #${order.id.substring(0,8)} has been shipped. You can expect it to arrive soon.</p><p>Thank you for your patience!</p>`;
+        } else {
+            return; // Don't send email for other statuses
+        }
+
+        addDocumentNonBlocking(mailCollection, emailContent);
+    }
 
     const handleApprovePayment = () => {
         if (!orderToApprove) return;
         const orderRef = doc(firestore, 'orders', orderToApprove.id);
-        setDocumentNonBlocking(orderRef, { status: 'order-confirmed' }, { merge: true });
+        const newStatus = 'order-confirmed';
+        setDocumentNonBlocking(orderRef, { status: newStatus }, { merge: true });
+        triggerEmail(orderToApprove, newStatus);
         toast({
             title: 'Payment Approved',
             description: `Order ${orderToApprove.id} has been moved to 'order-confirmed'.`
@@ -183,6 +217,7 @@ export default function OrdersPage() {
         }
 
         setDocumentNonBlocking(orderRef, updateData, { merge: true });
+        triggerEmail(order, newStatus);
         toast({
             title: 'Order Status Updated',
             description: `Order ${order.id} has been updated to '${newStatus.replace(/-/g, ' ')}'.`
@@ -276,7 +311,7 @@ export default function OrdersPage() {
                                                         <>
                                                             <DropdownMenuSeparator />
                                                             <DropdownMenuItem onClick={() => setOrderToApprove(order)}>
-                                                                Approve Payment
+                                                                Confirm
                                                             </DropdownMenuItem>
                                                         </>
                                                     )}
@@ -475,7 +510,7 @@ export default function OrdersPage() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Approve Payment?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will confirm the advance payment and move the order to "Pending" status for processing. This action cannot be undone.
+                            This will confirm the advance payment and move the order to "Confirmed" status for processing. An email will be sent to the customer. This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -492,6 +527,7 @@ export default function OrdersPage() {
                         <AlertDialogTitle>Confirm Status Change</AlertDialogTitle>
                         <AlertDialogDescription>
                             Are you sure you want to change the status of this order to "{orderToUpdateStatus?.newStatus.replace(/-/g, ' ')}"?
+                            {orderToUpdateStatus?.newStatus === 'shipped' && ' An email notification will be sent to the customer.'}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -503,6 +539,8 @@ export default function OrdersPage() {
         </div>
     );
 }
+
+    
 
     
 
