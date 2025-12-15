@@ -156,7 +156,7 @@ export default function CheckoutPage() {
         ...formData, 
         userId: user.uid, 
         id: newAddressRef.id,
-        email: user.email // Also save user's email with address for notifications
+        email: user.email // Also save user's email with address
     };
     setDoc(newAddressRef, newAddressData).then(() => {
         setSelectedAddressId(newAddressRef.id);
@@ -436,7 +436,3 @@ export default function CheckoutPage() {
     </div>
   );
 }
-
-    
-
-    

@@ -24,6 +24,7 @@ const addressSchema = z.object({
   state: z.string().min(1, 'State is required'),
   pincode: z.string().length(6, 'Pincode must be 6 digits'),
   phone: z.string().min(10, 'Phone number must be at least 10 digits'),
+  email: z.string().email('Invalid email address').optional(),
 });
 
 export type AddressFormValues = z.infer<typeof addressSchema>;
@@ -57,6 +58,7 @@ export function AddressForm({ isOpen, onClose, onSubmit, address }: AddressFormP
           state: '',
           pincode: '',
           phone: '',
+          email: '',
         });
       }
     }
