@@ -755,8 +755,8 @@ export default function ProductPage() {
                      <Carousel opts={{ align: "start" }} className="w-full">
                        <CarouselContent className="-ml-2 md:-ml-4">
                          {managementMembers.map((member) => (
-                          <CarouselItem key={member.id} className="pl-4 md:pl-6 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
-                              <Card className="w-full max-w-sm overflow-hidden rounded-2xl shadow-lg group">
+                          <CarouselItem key={member.id} className="pl-4 md:pl-6 basis-1/2 md:basis-1/3 lg:basis-1/4">
+                              <Card className="w-full max-w-sm overflow-hidden rounded-2xl shadow-lg group text-left">
                                 <div className="relative aspect-[3/4] w-full overflow-hidden rounded-[30%]">
                                   <Image
                                       src={member.image}
@@ -769,7 +769,7 @@ export default function ProductPage() {
                                     <h3 className="text-lg font-bold text-white text-center">{member.name}</h3>
                                    </div>
                                 </div>
-                                <div className="p-4 bg-white text-center">
+                                <div className="p-4 bg-white">
                                   <p className="text-xs text-muted-foreground mt-1 mb-3 line-clamp-2 h-[2.5em]">{member.bio}</p>
                                   {member.socialLink && (
                                       <Link href={member.socialLink} target="_blank" rel="noopener noreferrer">
