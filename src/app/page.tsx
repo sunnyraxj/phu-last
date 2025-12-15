@@ -212,14 +212,14 @@ function ProductGrid({ productsToShow, addToCart, setSelectedProduct }: { produc
             </div>
           </div>
 
-          <div className="mt-2 sm:mt-4 flex flex-col items-start w-full">
+          <div className="mt-2 sm:mt-4 flex flex-col items-start">
             <h3 className="text-sm sm:text-base text-foreground font-bold truncate w-full">{product.name}</h3>
             <p className="font-bold text-sm sm:text-base text-foreground">
               {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
             </p>
             <Button
               variant="ghost"
-              className="w-full mt-2 text-white bg-black hover:bg-black/80 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold text-sm h-auto justify-center"
+              className="w-full sm:w-auto mt-2 text-white bg-black hover:bg-black/80 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold text-sm h-auto justify-center"
               onClick={() => addToCart(product)}
               disabled={!product.inStock}
             >
@@ -779,6 +779,7 @@ export default function ProductPage() {
 }
     
     
+
 
 
 
