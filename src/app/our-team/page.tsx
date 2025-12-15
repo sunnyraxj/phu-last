@@ -189,8 +189,8 @@ export default function OurTeamPage() {
                                       data-ai-hint={member['data-ai-hint']}
                                   />
                                 </div>
-                                <div className="p-4 text-center bg-white">
-                                  <div className="flex items-center justify-center gap-2">
+                                <div className="p-4 bg-white">
+                                  <div className="flex items-center gap-2">
                                     <h3 className="text-lg font-bold">{member.name}</h3>
                                     <CheckCircle className="h-5 w-5 text-green-500" />
                                   </div>
