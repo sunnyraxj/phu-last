@@ -737,11 +737,11 @@ export default function ProductPage() {
             <>
               <div className="flex flex-col items-center">
                 {founder && (
-                  <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 mb-12 md:mb-16">
-                     <div className="relative h-40 w-40 md:h-48 md:w-48 mx-auto rounded-lg overflow-hidden shadow-lg group">
+                  <div className="flex flex-row items-center gap-8 md:gap-12 mb-12 md:mb-16">
+                     <div className="relative h-32 w-32 md:h-48 md:w-48 rounded-lg overflow-hidden shadow-lg group">
                         <Image src={founder.image} alt={founder.name} fill className="object-cover transition-transform duration-300 group-hover:scale-110" data-ai-hint={founder['data-ai-hint']} />
                      </div>
-                    <div className="text-center md:text-left max-w-md">
+                    <div className="text-left max-w-md">
                       <h3 className="text-2xl font-bold">{founder.name}</h3>
                       <p className="text-sm text-muted-foreground mb-4">{founder.role}</p>
                       <p className="mt-3 text-muted-foreground">{founder.bio}</p>
@@ -753,7 +753,7 @@ export default function ProductPage() {
                      <Carousel opts={{ align: "start" }} className="w-full">
                        <CarouselContent className="-ml-2 md:-ml-4">
                          {managementMembers.map((member) => (
-                          <CarouselItem key={member.id} className="pl-4 md:pl-6 basis-1/2 md:basis-1/3 lg:basis-1/4">
+                          <CarouselItem key={member.id} className="pl-4 md:pl-6 basis-1/2 sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                               <Card className="w-full max-w-sm overflow-hidden rounded-2xl shadow-lg group">
                                 <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-2xl">
                                   <Image
@@ -764,7 +764,7 @@ export default function ProductPage() {
                                       data-ai-hint={member['data-ai-hint']}
                                   />
                                 </div>
-                                <div className="p-4 bg-white text-left">
+                                <div className="p-4 text-left bg-white">
                                   <h3 className="text-lg font-bold text-slate-900">{member.name}</h3>
                                   <p className="text-sm text-muted-foreground mt-1 mb-3">{member.role}</p>
                                   {member.socialLink && (
