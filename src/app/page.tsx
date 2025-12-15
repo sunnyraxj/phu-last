@@ -723,9 +723,9 @@ export default function ProductPage() {
           </div>
       </section>
 
-      <section className="py-8 bg-muted/30">
+      <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
+          <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Meet Our Team</h2>
           </div>
           {teamMembersLoading ? (
@@ -736,28 +736,30 @@ export default function ProductPage() {
             <>
               <div className="flex flex-col items-center">
                 {founder && (
-                  <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 mb-12">
-                    <div className="relative h-56 w-56 md:h-64 md:w-64 rounded-full overflow-hidden shadow-lg border-4 border-background">
-                      <Image src={founder.image} alt={founder.name} fill className="object-cover" data-ai-hint={founder['data-ai-hint']} />
-                    </div>
+                  <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 mb-12 md:mb-16">
+                     <div className="relative h-56 w-56 md:h-64 md:w-64 rounded-lg overflow-hidden shadow-lg group">
+                        <Image src={founder.image} alt={founder.name} fill className="object-cover transition-transform duration-300 group-hover:scale-110" data-ai-hint={founder['data-ai-hint']} />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                        <div className="absolute bottom-0 left-0 p-4 text-white">
+                           <h3 className="text-xl font-bold">{founder.name}</h3>
+                           <p className="text-sm opacity-90">{founder.role}</p>
+                        </div>
+                     </div>
                     <div className="text-center md:text-left max-w-md">
-                      <p className="text-primary font-semibold tracking-wide">{founder.role}</p>
-                      <h3 className="text-3xl md:text-4xl font-bold text-foreground mt-1">{founder.name}</h3>
                       <p className="mt-3 text-muted-foreground">{founder.bio}</p>
                     </div>
                   </div>
                 )}
                 {managementMembers.length > 0 && (
-                  <div className="w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
+                  <div className="w-full max-w-5xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
                     {managementMembers.map((member) => (
-                      <div key={member.id} className="text-center flex flex-col items-center group">
-                        <div className="relative h-32 w-32 rounded-full overflow-hidden mb-4 shadow-lg transition-transform duration-300 group-hover:scale-105 border-4 border-background">
-                          <Image src={member.image} alt={member.name} fill className="object-cover" data-ai-hint={member['data-ai-hint']} />
-                        </div>
-                        <div className="flex items-baseline justify-center gap-2">
-                           <h3 className="font-semibold text-foreground text-lg">{member.name}</h3>
-                           <p className="text-muted-foreground font-medium text-sm">({member.role})</p>
-                        </div>
+                      <div key={member.id} className="relative aspect-[4/5] rounded-lg overflow-hidden group shadow-md">
+                        <Image src={member.image} alt={member.name} fill className="object-cover transition-transform duration-300 group-hover:scale-110" data-ai-hint={member['data-ai-hint']} />
+                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                         <div className="absolute bottom-0 left-0 p-4 text-white">
+                           <h3 className="font-semibold text-lg">{member.name}</h3>
+                           <p className="text-xs opacity-90">{member.role}</p>
+                         </div>
                       </div>
                     ))}
                   </div>
@@ -778,6 +780,7 @@ export default function ProductPage() {
 }
     
     
+
 
 
 

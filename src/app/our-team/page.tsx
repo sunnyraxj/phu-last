@@ -147,18 +147,21 @@ export default function OurTeamPage() {
             {founder && (
               <div className="mb-12 md:mb-16">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
-                  <div className="relative h-80 w-80 sm:h-96 sm:w-96 mx-auto rounded-lg overflow-hidden shadow-2xl">
+                   <div className="relative h-80 w-80 sm:h-96 sm:w-96 mx-auto rounded-lg overflow-hidden shadow-2xl group">
                      <Image
                         src={founder.image}
                         alt={founder.name}
                         fill
-                        className="object-cover"
+                        className="object-cover transition-transform duration-300 group-hover:scale-110"
                         data-ai-hint={founder['data-ai-hint']}
                       />
+                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                       <div className="absolute bottom-0 left-0 p-4 text-white">
+                           <h3 className="text-2xl font-bold">{founder.name}</h3>
+                           <p className="text-sm opacity-90">{founder.role}</p>
+                       </div>
                   </div>
                   <div className="text-center md:text-left">
-                    <p className="text-lg font-semibold text-primary">{founder.role}</p>
-                    <h2 className="text-4xl sm:text-5xl font-bold text-foreground mt-2">{founder.name}</h2>
                     <p className="mt-4 text-base sm:text-lg text-muted-foreground max-w-lg mx-auto md:mx-0">{founder.bio}</p>
                   </div>
                 </div>
@@ -167,32 +170,26 @@ export default function OurTeamPage() {
             
             {managementMembers.length > 0 && (
                 <div className="mb-12 md:mb-16">
-                    <div className="text-center mb-12">
+                    <div className="text-center mb-8">
                         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Management</h2>
-                        <p className="mt-3 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-                            The leaders guiding our vision and strategy.
-                        </p>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                         {managementMembers.map((member) => (
-                           <Card key={member.id} className="flex flex-col sm:flex-row items-center gap-6 p-6">
-                               <div className="relative h-32 w-32 sm:h-40 sm:w-40 shrink-0 rounded-full overflow-hidden shadow-lg">
-                                   <Image
-                                       src={member.image}
-                                       alt={member.name}
-                                       fill
-                                       className="object-cover"
-                                       data-ai-hint={member['data-ai-hint']}
-                                   />
+                           <div key={member.id} className="relative aspect-[4/5] rounded-lg overflow-hidden group shadow-lg">
+                                <Image
+                                    src={member.image}
+                                    alt={member.name}
+                                    fill
+                                    className="object-cover transition-transform duration-300 group-hover:scale-110"
+                                    data-ai-hint={member['data-ai-hint']}
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+                                <div className="absolute bottom-0 left-0 p-4 text-white transition-all duration-300 group-hover:bottom-4">
+                                   <h3 className="text-xl font-bold">{member.name}</h3>
+                                   <p className="text-xs opacity-90">{member.role}</p>
+                                   <p className="text-sm mt-2 opacity-0 max-h-0 group-hover:opacity-100 group-hover:max-h-40 transition-all duration-300 overflow-hidden">{member.bio}</p>
                                </div>
-                               <div className="text-center sm:text-left">
-                                   <div className="flex flex-col sm:flex-row items-baseline gap-2">
-                                       <h3 className="text-2xl font-semibold text-foreground">{member.name}</h3>
-                                       <p className="text-primary font-medium">({member.role})</p>
-                                   </div>
-                                   <p className="mt-2 text-muted-foreground text-sm max-w-xs mx-auto sm:mx-0">{member.bio}</p>
-                               </div>
-                           </Card>
+                           </div>
                         ))}
                     </div>
                 </div>
@@ -200,26 +197,25 @@ export default function OurTeamPage() {
 
             {otherTeamMembers.length > 0 && (
                 <div>
-                     <div className="text-center mb-12">
+                     <div className="text-center mb-8">
                         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Our Dedicated Team</h2>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
                     {otherTeamMembers.map((member) => (
-                        <div key={member.id} className="text-center">
-                        <div className="relative h-56 w-56 sm:h-64 sm:w-64 mx-auto rounded-full overflow-hidden mb-4 shadow-lg">
+                        <div key={member.id} className="relative aspect-square rounded-full overflow-hidden group shadow-lg">
                             <Image
-                            src={member.image}
-                            alt={member.name}
-                            fill
-                            className="object-cover"
-                            data-ai-hint={member['data-ai-hint']}
+                                src={member.image}
+                                alt={member.name}
+                                fill
+                                className="object-cover transition-transform duration-300 group-hover:scale-110"
+                                data-ai-hint={member['data-ai-hint']}
                             />
-                        </div>
-                        <div className="flex items-baseline justify-center gap-2">
-                            <h2 className="text-xl font-semibold text-foreground">{member.name}</h2>
-                            <p className="text-primary font-medium">({member.role})</p>
-                        </div>
-                        <p className="mt-2 text-muted-foreground text-sm max-w-xs mx-auto">{member.bio}</p>
+                             <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-center p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                               <div className="text-white">
+                                 <h3 className="font-bold text-sm sm:text-base">{member.name}</h3>
+                                 <p className="text-xs sm:text-sm opacity-90">{member.role}</p>
+                               </div>
+                            </div>
                         </div>
                     ))}
                     </div>
