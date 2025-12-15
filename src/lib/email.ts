@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import emailjs from '@emailjs/browser';
@@ -102,3 +103,4 @@ export const triggerStatusUpdateEmail = (status: 'order-confirmed' | 'shipped' |
 
     sendEmail(templateId, params);
 };
+
