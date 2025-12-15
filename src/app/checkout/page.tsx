@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -38,6 +37,7 @@ type CartItem = Product & { quantity: number; cartItemId: string; };
 
 const UPI_ID = 'gpay-12190144290@okbizaxis';
 const PAYEE_NAME = 'Purbanchal Hasta Udyog';
+const ADMIN_EMAIL = 'purbanchalhastaudyog@gmail.com';
 
 export default function CheckoutPage() {
   const firestore = useFirestore();
@@ -187,7 +187,6 @@ export default function CheckoutPage() {
         return;
     }
     
-    // Ensure email is present on the selected address for notifications
     const addressWithEmail = { ...selectedAddress, email: user.email };
 
     setIsSubmitting(true);
@@ -195,6 +194,7 @@ export default function CheckoutPage() {
     try {
       const batch = writeBatch(firestore);
       const orderRef = doc(collection(firestore, 'orders'));
+
       batch.set(orderRef, {
         customerId: user.uid,
         orderDate: serverTimestamp(),
@@ -214,6 +214,22 @@ export default function CheckoutPage() {
             utr: utr,
             paymentPercentage: selectedPaymentPercentage,
             transactionId: transactionId,
+        }
+      });
+      
+      const adminMailRef = doc(collection(firestore, 'mail'));
+      batch.set(adminMailRef, {
+        to: ADMIN_EMAIL,
+        message: {
+            subject: `New Order Received - #${orderRef.id.substring(0,8)}`,
+            html: `
+                <h1>You've received a new order!</h1>
+                <p><strong>Order ID:</strong> ${orderRef.id}</p>
+                <p><strong>Customer:</strong> ${addressWithEmail.name}</p>
+                <p><strong>Total Amount:</strong> ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalAmount)}</p>
+                <p>Review the order in your admin panel:</p>
+                <a href="https://purbanchal-hasta-udyog.com/admin/orders">View Orders</a>
+            `,
         }
       });
 
