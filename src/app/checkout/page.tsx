@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -230,6 +231,15 @@ export default function CheckoutPage() {
                 <p>Review the order in your admin panel:</p>
                 <a href="https://purbanchal-hasta-udyog.com/admin/orders">View Orders</a>
             `,
+        }
+      });
+      
+      const userMailRef = doc(collection(firestore, 'mail'));
+      batch.set(userMailRef, {
+        to: addressWithEmail.email,
+        message: {
+          subject: `We've Received Your Order - #${orderRef.id.substring(0,8)}`,
+          html: `<h1>Thank You For Your Order!</h1><p>Hi ${addressWithEmail.name},</p><p>We have received your order #${orderRef.id.substring(0,8)} and it is now being reviewed. We will notify you again once the payment is confirmed and the order is processed.</p><p>Thank you for shopping with us!</p>`,
         }
       });
 

@@ -163,7 +163,6 @@ export default function OrdersPage() {
     
     const triggerEmail = (order: Order, newStatus: OrderStatus) => {
         if (!firestore) return;
-        const mailCollection = collection(firestore, 'mail');
         
         const customerEmail = order.shippingDetails.email;
         if (!customerEmail) {
@@ -171,6 +170,7 @@ export default function OrdersPage() {
             return;
         }
 
+        const mailCollection = collection(firestore, 'mail');
         let emailContent = {
             to: customerEmail,
             message: {
@@ -179,16 +179,22 @@ export default function OrdersPage() {
             }
         };
 
-        if (newStatus === 'order-confirmed') {
-            emailContent.message.subject = `Order Confirmed - #${order.id.substring(0,8)}`;
-            emailContent.message.html = `<h1>Your Order is Confirmed!</h1><p>Hi ${order.shippingDetails.name},</p><p>We're happy to let you know that your order #${order.id.substring(0,8)} has been confirmed and is being processed.</p><p>You can view your invoice here: <a href="https://purbanchal-hasta-udyog.com/order-confirmation/${order.id}">View Invoice</a></p><p>Thank you for shopping with us!</p>`;
-        } else if (newStatus === 'shipped') {
-             emailContent.message.subject = `Your Order has Shipped! - #${order.id.substring(0,8)}`;
-             emailContent.message.html = `<h1>Your Order is on its way!</h1><p>Hi ${order.shippingDetails.name},</p><p>Your order #${order.id.substring(0,8)} has been shipped. You can expect it to arrive soon.</p><p>Thank you for your patience!</p>`;
-        } else {
-            return; // Don't send email for other statuses
+        switch (newStatus) {
+            case 'order-confirmed':
+                emailContent.message.subject = `Order Confirmed - #${order.id.substring(0,8)}`;
+                emailContent.message.html = `<h1>Your Order is Confirmed!</h1><p>Hi ${order.shippingDetails.name},</p><p>We're happy to let you know that your order #${order.id.substring(0,8)} has been confirmed and is being processed.</p><p>You can view your invoice here: <a href="https://purbanchal-hasta-udyog.com/order-confirmation/${order.id}">View Invoice</a></p><p>Thank you for shopping with us!</p>`;
+                break;
+            case 'shipped':
+                 emailContent.message.subject = `Your Order has Shipped! - #${order.id.substring(0,8)}`;
+                 emailContent.message.html = `<h1>Your Order is on its way!</h1><p>Hi ${order.shippingDetails.name},</p><p>Your order #${order.id.substring(0,8)} has been shipped. You can expect it to arrive soon.</p><p>Thank you for your patience!</p>`;
+                 break;
+            case 'delivered':
+                 emailContent.message.subject = `Your Order has been Delivered! - #${order.id.substring(0,8)}`;
+                 emailContent.message.html = `<h1>Your Order has Arrived!</h1><p>Hi ${order.shippingDetails.name},</p><p>Your order #${order.id.substring(0,8)} has been delivered. We hope you enjoy your products!</p><p>Thank you for shopping with us!</p>`;
+                 break;
+            default:
+                return; // Don't send email for other statuses from admin panel
         }
-
         addDocumentNonBlocking(mailCollection, emailContent);
     }
 
@@ -200,7 +206,7 @@ export default function OrdersPage() {
         triggerEmail(orderToApprove, newStatus);
         toast({
             title: 'Payment Approved',
-            description: `Order ${orderToApprove.id} has been moved to 'order-confirmed'.`
+            description: `Order ${orderToApprove.id.substring(0,8)} has been moved to 'order-confirmed'.`
         });
         setOrderToApprove(null);
     }
@@ -220,7 +226,7 @@ export default function OrdersPage() {
         triggerEmail(order, newStatus);
         toast({
             title: 'Order Status Updated',
-            description: `Order ${order.id} has been updated to '${newStatus.replace(/-/g, ' ')}'.`
+            description: `Order ${order.id.substring(0,8)} has been updated to '${newStatus.replace(/-/g, ' ')}'.`
         });
         setOrderToUpdateStatus(null);
     }
@@ -231,7 +237,7 @@ export default function OrdersPage() {
         setDocumentNonBlocking(orderRef, { deliveryDate: date }, { merge: true });
         toast({
             title: "Delivery Date Updated",
-            description: `Delivery date for order ${order.id} set to ${formatDate({ seconds: date.getTime() / 1000 })}.`
+            description: `Delivery date for order ${order.id.substring(0,8)} set to ${formatDate({ seconds: date.getTime() / 1000 })}.`
         });
     }
 
@@ -239,7 +245,7 @@ export default function OrdersPage() {
         setExpandedOrderIds(prev => prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]);
     }
 
-    const statusChangeOptions: OrderStatus[] = ['shipped', 'delivered', 'cancelled'];
+    const statusChangeOptions: OrderStatus[] = ['order-confirmed', 'shipped', 'delivered', 'cancelled'];
     
     const isLoading = ordersLoading;
 
@@ -311,7 +317,7 @@ export default function OrdersPage() {
                                                         <>
                                                             <DropdownMenuSeparator />
                                                             <DropdownMenuItem onClick={() => setOrderToApprove(order)}>
-                                                                Confirm
+                                                                Confirm Payment
                                                             </DropdownMenuItem>
                                                         </>
                                                     )}
@@ -323,7 +329,7 @@ export default function OrdersPage() {
                                                             disabled={order.status === status}
                                                             className="capitalize"
                                                         >
-                                                            Mark as {status}
+                                                            Mark as {status.replace(/-/g, ' ')}
                                                          </DropdownMenuItem>
                                                     ))}
                                                 </DropdownMenuContent>
@@ -527,7 +533,7 @@ export default function OrdersPage() {
                         <AlertDialogTitle>Confirm Status Change</AlertDialogTitle>
                         <AlertDialogDescription>
                             Are you sure you want to change the status of this order to "{orderToUpdateStatus?.newStatus.replace(/-/g, ' ')}"?
-                            {orderToUpdateStatus?.newStatus === 'shipped' && ' An email notification will be sent to the customer.'}
+                            {(orderToUpdateStatus?.newStatus === 'shipped' || orderToUpdateStatus?.newStatus === 'delivered' || orderToUpdateStatus?.newStatus === 'order-confirmed') && ' An email notification will be sent to the customer.'}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
