@@ -18,7 +18,7 @@ import Link from 'next/link';
 import { addDays, format, isBefore } from 'date-fns';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-type OrderStatus = 'pending-payment-approval' | 'pending' | 'shipped' | 'delivered' | 'cancelled';
+type OrderStatus = 'pending-payment-approval' | 'pending' | 'shipped' | 'delivered' | 'cancelled' | 'order-confirmed';
 type ReturnStatus = 'none' | 'requested' | 'approved' | 'rejected' | 'refunded';
 
 
@@ -92,6 +92,7 @@ export default function OrdersPage() {
     const getStatusVariant = (status: Order['status']) => {
         switch (status) {
             case 'pending':
+            case 'order-confirmed':
                 return 'secondary';
             case 'pending-payment-approval':
                 return 'destructive';
@@ -156,6 +157,15 @@ export default function OrdersPage() {
                                         </CollapsibleTrigger>
                                         <CollapsibleContent>
                                             <div className="p-4 border-t">
+                                                {order.status === 'order-confirmed' && (
+                                                    <Alert className="mb-4" variant="default">
+                                                        <Info className="h-4 w-4" />
+                                                        <AlertTitle>Order Confirmed!</AlertTitle>
+                                                        <AlertDescription>
+                                                          Your order is confirmed and will be ready to ship today or tomorrow.
+                                                        </AlertDescription>
+                                                    </Alert>
+                                                )}
                                                 {order.returnStatus === 'approved' && (
                                                     <Alert className="mb-4">
                                                         <Info className="h-4 w-4" />
