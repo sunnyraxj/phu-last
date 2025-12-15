@@ -22,7 +22,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
-import { triggerStatusUpdateEmail } from '@/lib/email';
 
 type OrderStatus = 'pending-payment-approval' | 'pending' | 'shipped' | 'delivered' | 'cancelled'|'order-confirmed';
 
@@ -168,10 +167,6 @@ export default function OrdersPage() {
         const newStatus = 'order-confirmed';
         setDocumentNonBlocking(orderRef, { status: newStatus }, { merge: true });
         
-        if (orderToApprove.shippingDetails.email) {
-            triggerStatusUpdateEmail('order-confirmed', orderToApprove);
-        }
-
         toast({
             title: 'Payment Approved',
             description: `Order ${orderToApprove.id.substring(0,8)} has been moved to 'order-confirmed'.`
@@ -192,10 +187,6 @@ export default function OrdersPage() {
 
         setDocumentNonBlocking(orderRef, updateData, { merge: true });
         
-        if (order.shippingDetails.email && (newStatus === 'shipped' || newStatus === 'delivered' || newStatus === 'order-confirmed')) {
-            triggerStatusUpdateEmail(newStatus, order);
-        }
-
         toast({
             title: 'Order Status Updated',
             description: `Order ${order.id.substring(0,8)} has been updated to '${newStatus.replace(/-/g, ' ')}'.`
@@ -523,4 +514,3 @@ export default function OrdersPage() {
     
 
     
-

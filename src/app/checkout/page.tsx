@@ -22,7 +22,6 @@ import { AddressForm, AddressFormValues } from '@/components/account/AddressForm
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { PlusCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { triggerNewOrderEmails } from '@/lib/email';
 
 type ShippingAddress = AddressFormValues & { id: string, email?: string };
 
@@ -188,10 +187,7 @@ export default function CheckoutPage() {
         return;
     }
     
-    // ** FIX STARTS HERE **
-    // Ensure the customer's email is always included in the shipping details.
     const finalShippingDetails = { ...selectedAddress, email: user.email };
-    // ** FIX ENDS HERE **
 
     setIsSubmitting(true);
 
@@ -205,7 +201,7 @@ export default function CheckoutPage() {
         orderDate: serverTimestamp(),
         totalAmount: totalAmount,
         status: 'pending-payment-approval' as const,
-        shippingDetails: finalShippingDetails, // Use the corrected shipping details
+        shippingDetails: finalShippingDetails,
         subtotal: subtotal,
         shippingFee: shippingFee,
         gstAmount: totalGST,
@@ -240,14 +236,6 @@ export default function CheckoutPage() {
       }
 
       await batch.commit();
-
-      // Trigger EmailJS emails
-      triggerNewOrderEmails({
-          id: orderRef.id,
-          shippingDetails: finalShippingDetails, // Use the corrected shipping details
-          orderDate: new Date(),
-          totalAmount: totalAmount,
-      });
 
       toast({ title: 'Order Placed!', description: 'Your order has been placed and is pending payment approval.' });
       router.push(`/receipt/${orderRef.id}`);
