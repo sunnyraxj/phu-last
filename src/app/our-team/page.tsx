@@ -180,7 +180,7 @@ export default function OurTeamPage() {
                         {managementMembers.map((member) => (
                           <CarouselItem key={member.id} className="pl-4 md:pl-6 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                               <Card className="w-full max-w-sm overflow-hidden rounded-2xl shadow-lg group">
-                                <div className="relative aspect-[3/4] w-full overflow-hidden">
+                                <div className="relative aspect-[3/4] w-full overflow-hidden rounded-[30%]">
                                   <Image
                                       src={member.image}
                                       alt={member.name}
@@ -197,7 +197,7 @@ export default function OurTeamPage() {
                                   <p className="text-xs text-muted-foreground mt-1 mb-3 line-clamp-2 h-[2.5em]">{member.bio}</p>
                                   {member.socialLink && (
                                       <Link href={member.socialLink} target="_blank" rel="noopener noreferrer">
-                                          <Button size="sm" className="w-full rounded-full">Follow +</Button>
+                                          <Button size="sm" className="w-full rounded-[30%]">Follow +</Button>
                                       </Link>
                                   )}
                                 </div>
