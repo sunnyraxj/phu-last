@@ -186,8 +186,10 @@ export default function OurTeamPage() {
                                    />
                                </div>
                                <div className="text-center sm:text-left">
-                                   <h3 className="text-2xl font-semibold text-foreground">{member.name}</h3>
-                                   <p className="text-primary font-medium">{member.role}</p>
+                                   <div className="flex flex-col sm:flex-row items-baseline gap-2">
+                                       <h3 className="text-2xl font-semibold text-foreground">{member.name}</h3>
+                                       <p className="text-primary font-medium">({member.role})</p>
+                                   </div>
                                    <p className="mt-2 text-muted-foreground text-sm max-w-xs mx-auto sm:mx-0">{member.bio}</p>
                                </div>
                            </Card>
@@ -213,8 +215,10 @@ export default function OurTeamPage() {
                             data-ai-hint={member['data-ai-hint']}
                             />
                         </div>
-                        <h2 className="text-xl font-semibold text-foreground">{member.name}</h2>
-                        <p className="text-primary font-medium">{member.role}</p>
+                        <div className="flex items-baseline justify-center gap-2">
+                            <h2 className="text-xl font-semibold text-foreground">{member.name}</h2>
+                            <p className="text-primary font-medium">({member.role})</p>
+                        </div>
                         <p className="mt-2 text-muted-foreground text-sm max-w-xs mx-auto">{member.bio}</p>
                         </div>
                     ))}

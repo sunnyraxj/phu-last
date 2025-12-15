@@ -298,7 +298,7 @@ export default function ProductPage() {
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  const { firestore, addDocumentNonBlocking } = useFirebase();
+  const { firestore } = useFirebase();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const router = useRouter();
@@ -418,7 +418,8 @@ export default function ProductPage() {
       updateCartItemQuantity(existingItem.cartItemId, existingItem.quantity + 1);
     } else {
       const cartCollection = collection(firestore, 'users', user.uid, 'cart');
-      addDocumentNonBlocking(cartCollection, {
+      const newCartItemRef = doc(cartCollection);
+      setDoc(newCartItemRef, {
         productId: product.id,
         quantity: 1,
       });
@@ -724,7 +725,7 @@ export default function ProductPage() {
 
       <section className="py-8 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Meet Our Team</h2>
           </div>
           {teamMembersLoading ? (
@@ -735,7 +736,7 @@ export default function ProductPage() {
             <>
               <div className="flex flex-col items-center">
                 {founder && (
-                  <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 mb-8">
+                  <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 mb-12">
                     <div className="relative h-56 w-56 md:h-64 md:w-64 rounded-full overflow-hidden shadow-lg border-4 border-background">
                       <Image src={founder.image} alt={founder.name} fill className="object-cover" data-ai-hint={founder['data-ai-hint']} />
                     </div>
@@ -753,8 +754,10 @@ export default function ProductPage() {
                         <div className="relative h-32 w-32 rounded-full overflow-hidden mb-4 shadow-lg transition-transform duration-300 group-hover:scale-105 border-4 border-background">
                           <Image src={member.image} alt={member.name} fill className="object-cover" data-ai-hint={member['data-ai-hint']} />
                         </div>
-                        <h3 className="font-semibold text-foreground text-lg">{member.name}</h3>
-                        <p className="text-muted-foreground font-medium text-sm">{member.role}</p>
+                        <div className="flex items-baseline justify-center gap-2">
+                           <h3 className="font-semibold text-foreground text-lg">{member.name}</h3>
+                           <p className="text-muted-foreground font-medium text-sm">({member.role})</p>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -775,6 +778,7 @@ export default function ProductPage() {
 }
     
     
+
 
 
 
