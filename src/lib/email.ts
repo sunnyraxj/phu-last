@@ -33,6 +33,7 @@ export type TemplateParams = {
 const sendEmail = (templateId: string, params: TemplateParams) => {
     if (!EMAILJS_PUBLIC_KEY || EMAILJS_PUBLIC_KEY === 'L0h_Kneyxaq62URRV') {
         console.error("EmailJS Public Key is not configured in src/lib/email.ts. Using placeholder.");
+        return; // Stop if public key is not set.
     }
     if (!templateId || templateId.includes('YOUR_')) {
         console.warn(`EmailJS Template ID '${templateId}' is not configured; skipping this email.`);
@@ -79,6 +80,11 @@ export const triggerNewOrderEmails = (orderData: { id: string; shippingDetails: 
 };
 
 export const triggerStatusUpdateEmail = (status: 'order-confirmed' | 'shipped' | 'delivered', orderData: { id: string; shippingDetails: { name: string, email: string }; totalAmount: number; }) => {
+    // This function is temporarily disabled as per user request.
+    // To re-enable, uncomment the code below and ensure Template IDs are set.
+    return;
+
+    /*
     let templateId = '';
     switch (status) {
         case 'order-confirmed':
@@ -105,4 +111,5 @@ export const triggerStatusUpdateEmail = (status: 'order-confirmed' | 'shipped' |
     };
 
     sendEmail(templateId, params);
+    */
 };
