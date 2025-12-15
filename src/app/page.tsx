@@ -765,12 +765,11 @@ export default function ProductPage() {
                                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                                       data-ai-hint={member['data-ai-hint']}
                                   />
+                                   <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
+                                    <h3 className="text-lg font-bold text-white text-center">{member.name}</h3>
+                                   </div>
                                 </div>
-                                <div className="p-4 bg-white">
-                                  <div className="flex items-center gap-2">
-                                    <h3 className="text-lg font-bold">{member.name}</h3>
-                                    <CheckCircle className="h-5 w-5 text-green-500" />
-                                  </div>
+                                <div className="p-4 bg-white text-center">
                                   <p className="text-xs text-muted-foreground mt-1 mb-3 line-clamp-2 h-[2.5em]">{member.bio}</p>
                                   {member.socialLink && (
                                       <Link href={member.socialLink} target="_blank" rel="noopener noreferrer">
