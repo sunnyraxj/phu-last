@@ -188,7 +188,10 @@ export default function CheckoutPage() {
         return;
     }
     
-    const addressWithEmail = { ...selectedAddress, email: user.email };
+    // ** FIX STARTS HERE **
+    // Ensure the customer's email is always included in the shipping details.
+    const finalShippingDetails = { ...selectedAddress, email: user.email };
+    // ** FIX ENDS HERE **
 
     setIsSubmitting(true);
 
@@ -202,7 +205,7 @@ export default function CheckoutPage() {
         orderDate: serverTimestamp(),
         totalAmount: totalAmount,
         status: 'pending-payment-approval' as const,
-        shippingDetails: addressWithEmail,
+        shippingDetails: finalShippingDetails, // Use the corrected shipping details
         subtotal: subtotal,
         shippingFee: shippingFee,
         gstAmount: totalGST,
@@ -241,7 +244,7 @@ export default function CheckoutPage() {
       // Trigger EmailJS emails
       triggerNewOrderEmails({
           id: orderRef.id,
-          shippingDetails: addressWithEmail,
+          shippingDetails: finalShippingDetails, // Use the corrected shipping details
           orderDate: new Date(),
           totalAmount: totalAmount,
       });
