@@ -63,6 +63,7 @@ type TeamMember = {
     bio: string;
     image: string;
     'data-ai-hint'?: string;
+    socialLink?: string;
 };
 
 
@@ -766,12 +767,17 @@ export default function ProductPage() {
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                                         <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                                          <div className="p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-center">
+                                          <div className="p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/20">
                                             <div className="flex items-center justify-center gap-2">
                                               <h3 className="text-xl font-bold">{member.name}</h3>
                                               <CheckCircle className="h-5 w-5 text-green-400" />
                                             </div>
-                                            <p className="text-sm mt-1 opacity-90 line-clamp-2">{member.bio}</p>
+                                            <p className="text-sm mt-1 opacity-90 line-clamp-2 text-center">{member.bio}</p>
+                                            {member.socialLink && (
+                                                <Link href={member.socialLink} target="_blank" rel="noopener noreferrer" className="mt-3">
+                                                    <Button size="sm" className="w-full bg-white/20 hover:bg-white/30 text-white">Follow</Button>
+                                                </Link>
+                                            )}
                                           </div>
                                         </div>
                                     </div>

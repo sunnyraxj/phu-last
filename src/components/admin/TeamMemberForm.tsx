@@ -28,6 +28,7 @@ const teamMemberSchema = z.object({
   }),
   bio: z.string().min(1, { message: 'Bio is required' }),
   image: z.string().url({ message: 'Please enter a valid image URL' }),
+  socialLink: z.string().url({ message: 'Please enter a valid URL' }).optional().or(z.literal('')),
 });
 
 type TeamMemberFormValues = z.infer<typeof teamMemberSchema>;
@@ -53,6 +54,7 @@ export function TeamMemberForm({ isOpen, onClose, onSubmit, member }: TeamMember
       role: 'Team Member',
       bio: '',
       image: '',
+      socialLink: '',
     },
   });
 
@@ -66,6 +68,7 @@ export function TeamMemberForm({ isOpen, onClose, onSubmit, member }: TeamMember
             role: 'Team Member',
             bio: '',
             image: '',
+            socialLink: '',
           });
         }
     }
@@ -121,6 +124,11 @@ export function TeamMemberForm({ isOpen, onClose, onSubmit, member }: TeamMember
                         <Label htmlFor="image">Image URL</Label>
                         <Input id="image" {...register('image')} placeholder="https://picsum.photos/seed/..." />
                         {errors.image && <p className="text-xs text-destructive">{errors.image.message}</p>}
+                    </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="socialLink">Social Media Link (e.g., Instagram)</Label>
+                        <Input id="socialLink" {...register('socialLink')} placeholder="https://instagram.com/..." />
+                        {errors.socialLink && <p className="text-xs text-destructive">{errors.socialLink.message}</p>}
                     </div>
                 </div>
             </ScrollArea>
