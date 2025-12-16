@@ -69,7 +69,7 @@ export default function AdminProductsPage() {
         setMaterials(prev => [...new Set([...prev, material])]);
     }, []);
 
-    const handleEditProduct = (product: Product) => {
+    const handleEditClick = (product: Product) => {
         setSelectedProduct(product);
         setIsEditFormOpen(true);
     };
@@ -223,7 +223,7 @@ export default function AdminProductsPage() {
                            Update the details of this product.
                         </DialogDescription>
                     </DialogHeader>
-                    <ProductForm 
+                     <ProductForm 
                         onSuccess={handleEditSubmit}
                         onClose={() => setIsEditFormOpen(false)}
                         product={selectedProduct}
@@ -304,7 +304,7 @@ export default function AdminProductsPage() {
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem onClick={() => handleEditProduct(product)}>
+                                                        <DropdownMenuItem onClick={() => handleEditClick(product)}>
                                                             <Edit className="mr-2 h-4 w-4" />
                                                             Edit
                                                         </DropdownMenuItem>
@@ -366,5 +366,3 @@ export default function AdminProductsPage() {
         </div>
     );
 }
-
-    

@@ -5,10 +5,7 @@ import { useForm, SubmitHandler, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import {
-  DialogFooter,
-  DialogClose,
-} from '@/components/ui/dialog';
+import { DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -236,9 +233,9 @@ export function ProductForm({
                         />
 
                         <div className="space-y-1">
-                            <Label htmlFor="ai-notes-product">AI Notes (Optional)</Label>
+                            <Label htmlFor="ai-notes-product-form">AI Notes (Optional)</Label>
                             <Textarea 
-                                id="ai-notes-product"
+                                id="ai-notes-product-form"
                                 placeholder="e.g., 'handmade clay vase, blue glaze, from Rajasthan'. The AI will use this with the image to generate a name and description."
                                 value={aiNotes}
                                 onChange={(e) => setAiNotes(e.target.value)}
@@ -255,25 +252,25 @@ export function ProductForm({
                         </Button>
                     </div>
                   <div className="space-y-1">
-                      <Label htmlFor="name">Product Name</Label>
-                      <Input id="name" {...register('name')} />
+                      <Label htmlFor="product-name">Product Name</Label>
+                      <Input id="product-name" {...register('name')} />
                       {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
                   </div>
                   <div className="space-y-1">
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea id="description" {...register('description')} rows={4} />
+                      <Label htmlFor="product-description">Description</Label>
+                      <Textarea id="product-description" {...register('description')} rows={4} />
                       {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
-                          <Label htmlFor="mrp">MRP (INR)</Label>
-                          <Input id="mrp" type="number" step="0.01" {...register('mrp')} />
+                          <Label htmlFor="product-mrp">MRP (INR)</Label>
+                          <Input id="product-mrp" type="number" step="0.01" {...register('mrp')} />
                           {errors.mrp && <p className="text-xs text-destructive">{errors.mrp.message}</p>}
                       </div>
                       <div className="space-y-1">
-                          <Label htmlFor="gst">GST %</Label>
-                          <Input id="gst" type="number" step="0.01" {...register('gst')} />
+                          <Label htmlFor="product-gst">GST %</Label>
+                          <Input id="product-gst" type="number" step="0.01" {...register('gst')} />
                           {errors.gst && <p className="text-xs text-destructive">{errors.gst.message}</p>}
                       </div>
                   </div>
@@ -329,8 +326,8 @@ export function ProductForm({
 
                   <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
-                          <Label htmlFor="hsn">HSN Code (Optional)</Label>
-                          <Input id="hsn" {...register('hsn')} />
+                          <Label htmlFor="product-hsn">HSN Code (Optional)</Label>
+                          <Input id="product-hsn" {...register('hsn')} />
                           {errors.hsn && <p className="text-xs text-destructive">{errors.hsn.message}</p>}
                       </div>
                       <div className="space-y-1">
@@ -344,8 +341,8 @@ export function ProductForm({
                   </div>
                   
                   <div className="space-y-1">
-                      <Label htmlFor="data-ai-hint">AI Hint (Optional)</Label>
-                      <Input id="data-ai-hint" {...register('data-ai-hint')} placeholder="e.g. clay pot" />
+                      <Label htmlFor="product-ai-hint">AI Hint (Optional)</Label>
+                      <Input id="product-ai-hint" {...register('data-ai-hint')} placeholder="e.g. clay pot" />
                       {errors['data-ai-hint'] && <p className="text-xs text-destructive">{errors['data-ai-hint'].message}</p>}
                   </div>
 
@@ -355,13 +352,13 @@ export function ProductForm({
                         name="inStock"
                         render={({ field }) => (
                           <Checkbox 
-                            id="inStock" 
+                            id="product-inStock" 
                             checked={field.value} 
                             onCheckedChange={field.onChange} 
                           />
                         )}
                       />
-                      <Label htmlFor="inStock" className="cursor-pointer text-sm">
+                      <Label htmlFor="product-inStock" className="cursor-pointer text-sm">
                         Product is in stock and available for purchase
                       </Label>
                   </div>
@@ -496,5 +493,3 @@ function ImageUploader({
         </div>
     );
 }
-
-    
