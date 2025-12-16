@@ -27,10 +27,10 @@ type Order = {
 
 export default function DashboardPage() {
     const firestore = useFirestore();
-    const { user } = useUser();
+    const { user, isUserLoading } = useUser();
 
-    const userDocRef = useMemoFirebase(() => (user ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
-    const { data: userData } = useDoc<{ role: string }>(userDocRef);
+    const userDocRef = useMemoFirebase(() => (user && !user.isAnonymous ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
+    const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
     const isAuthorizedAdmin = userData?.role === 'admin';
     
     const ordersQuery = useMemoFirebase(() => 
@@ -112,7 +112,7 @@ export default function DashboardPage() {
         }
     }
 
-    if (ordersLoading || recentOrdersLoading) {
+    if (isUserLoading || isUserDocLoading || (isAuthorizedAdmin && (ordersLoading || recentOrdersLoading))) {
         return (
              <div className="flex h-[calc(100vh-60px)] items-center justify-center">
                 <PottersWheelSpinner />

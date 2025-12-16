@@ -65,7 +65,7 @@ type OrderItem = {
 
 export default function OrdersPage() {
     const firestore = useFirestore();
-    const { user } = useUser();
+    const { user, isUserLoading } = useUser();
     const { toast } = useToast();
     const [orderToApprove, setOrderToApprove] = useState<Order | null>(null);
     const [orderToUpdateStatus, setOrderToUpdateStatus] = useState<{order: Order, newStatus: OrderStatus} | null>(null);
@@ -105,8 +105,8 @@ export default function OrdersPage() {
     }, [fetchedItems, itemsByOrder]);
 
 
-    const userDocRef = useMemoFirebase(() => (user ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
-    const { data: userData } = useDoc<{ role: string }>(userDocRef);
+    const userDocRef = useMemoFirebase(() => (user && !user.isAnonymous ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
+    const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
     const isAuthorizedAdmin = userData?.role === 'admin';
 
     const ordersQuery = useMemoFirebase(() => 
@@ -210,7 +210,7 @@ export default function OrdersPage() {
 
     const statusChangeOptions: OrderStatus[] = ['order-confirmed', 'shipped', 'delivered', 'cancelled'];
     
-    const isLoading = ordersLoading;
+    const isLoading = isUserLoading || isUserDocLoading || (isAuthorizedAdmin && ordersLoading);
 
     const OrderTable = ({ orders, emptyMessage }: { orders: Order[] | undefined, emptyMessage: string }) => (
         <div className="rounded-md border">
@@ -522,4 +522,5 @@ export default function OrdersPage() {
     
 
     
+
 
