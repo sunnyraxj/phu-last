@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import Link from "next/link";
@@ -13,9 +12,9 @@ import { useMemo, useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Separator } from "../ui/separator";
 import { Input } from "../ui/input";
-import { Plus, Minus, X, Sprout, Palette, Wind } from "lucide-react";
+import { Plus, Minus, X } from "lucide-react";
 import { Badge } from "../ui/badge";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "../ui/accordion";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
@@ -83,6 +82,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
 
     const handleSignOut = async () => {
         await signOut(auth);
+        router.push('/');
     };
 
     const handleCheckout = () => {
@@ -109,10 +109,12 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
 
                 <nav className="hidden lg:flex items-center gap-6 text-base font-semibold">
                      <Popover open={purchaseMenuOpen} onOpenChange={setPurchaseMenuOpen}>
-                        <PopoverTrigger asChild onMouseEnter={() => setPurchaseMenuOpen(true)} onMouseLeave={() => setPurchaseMenuOpen(false)}>
-                            <button className="flex items-center gap-1 hover:opacity-80">
-                                PURCHASE <ChevronDown size={16} />
-                            </button>
+                        <PopoverTrigger asChild>
+                            <Link href="/purchase" onMouseEnter={() => setPurchaseMenuOpen(true)} onMouseLeave={() => setPurchaseMenuOpen(false)}>
+                                <button className="flex items-center gap-1 hover:opacity-80">
+                                    PURCHASE <ChevronDown size={16} />
+                                </button>
+                            </Link>
                         </PopoverTrigger>
                          <PopoverContent 
                             className="w-96"
@@ -139,10 +141,12 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                         </PopoverContent>
                     </Popover>
                     <Popover open={storesMenuOpen} onOpenChange={setStoresMenuOpen}>
-                        <PopoverTrigger asChild onMouseEnter={() => setStoresMenuOpen(true)} onMouseLeave={() => setStoresMenuOpen(false)}>
-                            <button className="flex items-center gap-1 hover:opacity-80">
-                                OUR STORES <ChevronDown size={16} />
-                            </button>
+                        <PopoverTrigger asChild>
+                             <Link href="/our-stores" onMouseEnter={() => setStoresMenuOpen(true)} onMouseLeave={() => setStoresMenuOpen(false)}>
+                                <button className="flex items-center gap-1 hover:opacity-80">
+                                    OUR STORES <ChevronDown size={16} />
+                                </button>
+                            </Link>
                         </PopoverTrigger>
                          <PopoverContent 
                             className="w-80"
@@ -187,17 +191,19 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                     </Link>
                      {user && !user.isAnonymous && userData?.role === 'admin' && (
                         <Popover open={adminMenuOpen} onOpenChange={setAdminMenuOpen}>
-                            <PopoverTrigger asChild onMouseEnter={() => setAdminMenuOpen(true)} onMouseLeave={() => setAdminMenuOpen(false)}>
-                                <div className="flex items-center relative">
-                                    <button className="flex items-center gap-1 hover:opacity-80">
-                                        ADMIN <ChevronDown size={16} />
-                                    </button>
-                                    {totalAdminActionCount > 0 && (
-                                        <Badge variant="destructive" className="absolute -top-2 -right-3 z-10 px-1.5 py-0 h-4 leading-none text-xs">
-                                            {totalAdminActionCount}
-                                        </Badge>
-                                    )}
-                                </div>
+                            <PopoverTrigger asChild>
+                                <Link href="/admin" onMouseEnter={() => setAdminMenuOpen(true)} onMouseLeave={() => setAdminMenuOpen(false)}>
+                                    <div className="flex items-center relative">
+                                        <button className="flex items-center gap-1 hover:opacity-80">
+                                            ADMIN <ChevronDown size={16} />
+                                        </button>
+                                        {totalAdminActionCount > 0 && (
+                                            <Badge variant="destructive" className="absolute -top-2 -right-3 z-10 px-1.5 py-0 h-4 leading-none text-xs">
+                                                {totalAdminActionCount}
+                                            </Badge>
+                                        )}
+                                    </div>
+                                </Link>
                             </PopoverTrigger>
                             <PopoverContent 
                                 className="w-auto"
@@ -236,14 +242,14 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                     )}
                     {!isUserLoading && user && !user.isAnonymous && (
                         <Popover open={userMenuOpen} onOpenChange={setUserMenuOpen}>
-                            <PopoverTrigger asChild onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)}>
-                                <Button variant="ghost" className="hover:opacity-80 p-0 rounded-full">
+                            <PopoverTrigger asChild>
+                                <Button variant="ghost" onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)} className="hover:opacity-80 p-0 rounded-full">
                                     <User size={24} />
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-48" onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)}>
                                 <div className="flex flex-col gap-1">
-                                    <p className="font-semibold text-sm p-2">{user.email}</p>
+                                    <p className="font-semibold text-sm p-2 truncate">{user.email}</p>
                                     <Link href="/account">
                                         <Button variant="ghost" className="w-full justify-start p-2 h-auto">
                                             <UserCog className="mr-2 h-4 w-4" />
@@ -256,7 +262,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                             My Orders
                                         </Button>
                                     </Link>
-                                    <Button variant="ghost" onClick={handleSignOut} className="justify-start p-2 h-auto">
+                                    <Button variant="ghost" onClick={handleSignOut} className="justify-start p-2 h-auto text-destructive">
                                         <LogOut className="mr-2 h-4 w-4" />
                                         Logout
                                     </Button>
@@ -341,7 +347,9 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                     <h3 className="text-xl font-semibold">Your cart is empty</h3>
                                     <p className="text-muted-foreground">Looks like you haven't added anything to your cart yet.</p>
                                     <SheetClose asChild>
+                                      <Link href="/purchase">
                                         <Button>Continue Shopping</Button>
+                                      </Link>
                                     </SheetClose>
                                 </div>
                             )}
@@ -357,6 +365,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                         <SheetContent side="left" className="w-full max-w-xs bg-black text-white p-0">
                              <SheetHeader className="p-4 flex flex-row items-center justify-between border-b border-white/20">
                                 <Link href="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
+                                    <p className="font-bold">Purbanchal Hasta Udyog</p>
                                 </Link>
                                 <SheetTitle className="sr-only">Main Menu</SheetTitle>
                                 <SheetClose asChild>

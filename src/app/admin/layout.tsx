@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, Fragment } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Home, Package, ShoppingCart, Users, Store, Menu, Settings, Undo2, LayoutDashboard, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Header } from '@/components/shared/Header';
 
 type Order = {
@@ -19,6 +19,7 @@ type Order = {
 };
 
 type Product = {
+    id: string;
     inStock: boolean;
 };
 
@@ -39,42 +40,25 @@ export default function AdminLayout({
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
-    // Authorization State: 'loading', 'authorized', 'unauthorized'
     const [authStatus, setAuthStatus] = useState<'loading' | 'authorized' | 'unauthorized'>('loading');
 
     const userDocRef = useMemoFirebase(() => (user && !user.isAnonymous) ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
     const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
-
+    
     useEffect(() => {
-        // This effect will determine the final authorization status.
-        // It waits for all loading to complete before making a decision.
-
-        // If Firebase auth is still loading, or we have a user but their doc is still loading, we are in a 'loading' state.
         if (isUserLoading || (user && !user.isAnonymous && isUserDocLoading)) {
             setAuthStatus('loading');
             return;
         }
 
-        // If there's no user, or the user is anonymous, they are unauthorized.
-        if (!user || user.isAnonymous) {
+        if (!user || user.isAnonymous || userData?.role !== 'admin') {
             setAuthStatus('unauthorized');
-            return;
-        }
-        
-        // At this point, all data is loaded for a non-anonymous user. We can make a final decision.
-        const isAdmin = userData?.role === 'admin';
-        
-        if (isAdmin) {
-            setAuthStatus('authorized');
         } else {
-            setAuthStatus('unauthorized');
+            setAuthStatus('authorized');
         }
-
     }, [user, userData, isUserLoading, isUserDocLoading]);
     
     useEffect(() => {
-        // This effect handles the redirection based on the final authStatus.
-        // It only runs when authStatus changes from 'loading'.
         if (authStatus === 'unauthorized') {
             router.push('/');
         }
@@ -90,28 +74,7 @@ export default function AdminLayout({
     
     const returnsQuery = useMemoFirebase(() => (isAuthorizedAdmin ? query(collection(firestore, 'returnRequests'), where('status', '==', 'pending-review')) : null), [firestore, isAuthorizedAdmin]);
     const { data: returnRequests } = useCollection<ReturnRequest>(returnsQuery);
-
-    const cartItemsQuery = useMemoFirebase(() =>
-        user ? collection(firestore, 'users', user.uid, 'cart') : null,
-        [firestore, user]
-    );
-    const { data: cartData } = useCollection<{ productId: string; quantity: number }>(cartItemsQuery);
-
-    const allProductsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
-    const { data: allProducts } = useCollection<Product>(allProductsQuery);
-
-    const cartItems = useMemo(() => {
-        if (!cartData || !allProducts) return [];
-        return cartData.map(cartItem => {
-            const product = allProducts.find(p => p.id === cartItem.productId);
-            return product ? { ...product, quantity: cartItem.quantity, cartItemId: cartItem.id } : null;
-        }).filter((item): item is CartItem => item !== null);
-    }, [cartData, allProducts]);
-
-    const updateCartItemQuantity = (cartItemId: string, newQuantity: number) => {
-        // This is a placeholder. The actual logic is in the Header component's scope or passed down.
-    };
-
+    
     const storesQuery = useMemoFirebase(() => collection(firestore, 'stores'), [firestore]);
     const { data: stores } = useCollection<Store>(storesQuery);
 
@@ -128,10 +91,9 @@ export default function AdminLayout({
     }, [pendingOrdersCount, outOfStockCount, pendingReturnsCount]);
     
     useEffect(() => {
-        setIsMobileMenuOpen(false);
+        if(isMobileMenuOpen) setIsMobileMenuOpen(false);
     }, [pathname])
 
-    // While authorization is being determined, show a full-screen spinner.
     if (authStatus !== 'authorized') {
         return (
             <div className="flex h-screen items-center justify-center">
@@ -140,7 +102,6 @@ export default function AdminLayout({
         );
     }
     
-    // Only render the layout if authorized
     const navGroups = [
         {
             items: [
@@ -226,10 +187,10 @@ export default function AdminLayout({
             <div className="flex flex-col">
                  <Header
                     userData={userData}
-                    cartItems={cartItems}
-                    updateCartItemQuantity={updateCartItemQuantity}
+                    cartItems={[]} // Cart is handled outside admin
+                    updateCartItemQuantity={() => {}}
                     stores={stores || []}
-                    products={allProducts || []}
+                    products={[]}
                     adminActionCounts={adminActionCounts}
                 />
                 <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 overflow-auto bg-background">

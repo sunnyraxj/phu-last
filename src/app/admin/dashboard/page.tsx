@@ -2,14 +2,14 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, query, orderBy, limit, doc, where } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy, limit, where } from 'firebase/firestore';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Badge } from '@/components/ui/badge';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
-import { IndianRupee, ShoppingCart, Users, ArrowUpRight } from 'lucide-react';
+import { IndianRupee, ShoppingCart, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
@@ -27,20 +27,17 @@ type Order = {
 
 export default function DashboardPage() {
     const firestore = useFirestore();
-    const { user, isUserLoading } = useUser();
 
-    const userDocRef = useMemoFirebase(() => (user && !user.isAnonymous ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
-    const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
-    const isAuthorizedAdmin = userData?.role === 'admin';
-    
     const ordersQuery = useMemoFirebase(() => 
-        isAuthorizedAdmin ? query(collection(firestore, 'orders'), where('status', '==', 'delivered')) : null, 
-    [firestore, isAuthorizedAdmin]);
+        query(collection(firestore, 'orders'), where('status', '==', 'delivered')), 
+        [firestore]
+    );
     const { data: orders, isLoading: ordersLoading } = useCollection<Order>(ordersQuery);
 
     const recentOrdersQuery = useMemoFirebase(() => 
-        isAuthorizedAdmin ? query(collection(firestore, 'orders'), orderBy('orderDate', 'desc'), limit(5)) : null, 
-    [firestore, isAuthorizedAdmin]);
+        query(collection(firestore, 'orders'), orderBy('orderDate', 'desc'), limit(5)),
+        [firestore]
+    );
     const { data: recentOrders, isLoading: recentOrdersLoading } = useCollection<Order>(recentOrdersQuery);
     
     const { todayRevenue, monthRevenue, totalSales, salesByDay } = useMemo(() => {
@@ -88,7 +85,6 @@ export default function DashboardPage() {
             total: salesByDayData[day]
         })).reverse();
 
-
         return { todayRevenue, monthRevenue, totalSales: deliveredOrders.length, salesByDay };
     }, [orders]);
 
@@ -112,7 +108,7 @@ export default function DashboardPage() {
         }
     }
 
-    if (isUserLoading || isUserDocLoading || (isAuthorizedAdmin && (ordersLoading || recentOrdersLoading))) {
+    if (ordersLoading || recentOrdersLoading) {
         return (
              <div className="flex h-[calc(100vh-60px)] items-center justify-center">
                 <PottersWheelSpinner />

@@ -3,9 +3,9 @@
 'use client';
 
 import { useState, Fragment, useMemo, useEffect } from 'react';
-import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, query, where } from 'firebase/firestore';
-import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
@@ -65,7 +65,6 @@ type OrderItem = {
 
 export default function OrdersPage() {
     const firestore = useFirestore();
-    const { user, isUserLoading } = useUser();
     const { toast } = useToast();
     const [orderToApprove, setOrderToApprove] = useState<Order | null>(null);
     const [orderToUpdateStatus, setOrderToUpdateStatus] = useState<{order: Order, newStatus: OrderStatus} | null>(null);
@@ -74,7 +73,13 @@ export default function OrdersPage() {
     
     const [itemsByOrder, setItemsByOrder] = useState<{[key: string]: OrderItem[]}>({});
     
-    const orderIdsToFetch = useMemo(() => expandedOrderIds.filter(id => !itemsByOrder[id]), [expandedOrderIds, itemsByOrder]);
+    const ordersQuery = useMemoFirebase(() => query(collection(firestore, 'orders')), [firestore]);
+    const { data: allOrders, isLoading: ordersLoading } = useCollection<Order>(ordersQuery);
+
+    const orderIdsToFetch = useMemo(() => {
+        if (!allOrders) return [];
+        return expandedOrderIds.filter(id => !itemsByOrder[id]);
+    }, [expandedOrderIds, itemsByOrder, allOrders]);
 
     const itemsQuery = useMemoFirebase(
       () =>
@@ -104,16 +109,6 @@ export default function OrdersPage() {
         }
     }, [fetchedItems, itemsByOrder]);
 
-
-    const userDocRef = useMemoFirebase(() => (user && !user.isAnonymous ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
-    const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
-    const isAuthorizedAdmin = userData?.role === 'admin';
-
-    const ordersQuery = useMemoFirebase(() => 
-        isAuthorizedAdmin ? query(collection(firestore, 'orders')) : null, 
-    [firestore, isAuthorizedAdmin]);
-    const { data: allOrders, isLoading: ordersLoading } = useCollection<Order>(ordersQuery);
-    
     const filteredOrders = useMemo(() => {
         if (!allOrders) return [];
         if (!searchTerm) return allOrders;
@@ -210,7 +205,7 @@ export default function OrdersPage() {
 
     const statusChangeOptions: OrderStatus[] = ['order-confirmed', 'shipped', 'delivered', 'cancelled'];
     
-    const isLoading = isUserLoading || isUserDocLoading || (isAuthorizedAdmin && ordersLoading);
+    const isLoading = ordersLoading;
 
     const OrderTable = ({ orders, emptyMessage }: { orders: Order[] | undefined, emptyMessage: string }) => (
         <div className="rounded-md border">
@@ -516,11 +511,3 @@ export default function OrdersPage() {
         </div>
     );
 }
-
-    
-
-    
-
-    
-
-
