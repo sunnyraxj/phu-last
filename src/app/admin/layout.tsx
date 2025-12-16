@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { collection, doc, query, where } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Header } from '@/components/shared/Header';
+import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 
 type Order = {
     status: 'pending' | 'shipped' | 'delivered' | 'pending-payment-approval' | 'order-confirmed';
@@ -31,23 +32,19 @@ export default function AdminLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const { user } = useUser();
+    const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
+    const router = useRouter();
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
-    const userDocRef = useMemoFirebase(() => (user && !user.isAnonymous) ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
-    const { data: userData } = useDoc<{ role: string }>(userDocRef);
-    
-    const isAuthorizedAdmin = userData?.role === 'admin';
-
-    const ordersQuery = useMemoFirebase(() => (isAuthorizedAdmin ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval', 'order-confirmed'])) : null), [firestore, isAuthorizedAdmin]);
+    const ordersQuery = useMemoFirebase(() => (user ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval', 'order-confirmed'])) : null), [firestore, user]);
     const { data: orders } = useCollection<Order>(ordersQuery);
     
-    const productsQuery = useMemoFirebase(() => (isAuthorizedAdmin ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null), [firestore, isAuthorizedAdmin]);
+    const productsQuery = useMemoFirebase(() => (user ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null), [firestore, user]);
     const { data: products } = useCollection<Product>(productsQuery);
     
-    const returnsQuery = useMemoFirebase(() => (isAuthorizedAdmin ? query(collection(firestore, 'returnRequests'), where('status', '==', 'pending-review')) : null), [firestore, isAuthorizedAdmin]);
+    const returnsQuery = useMemoFirebase(() => (user ? query(collection(firestore, 'returnRequests'), where('status', '==', 'pending-review')) : null), [firestore, user]);
     const { data: returnRequests } = useCollection<ReturnRequest>(returnsQuery);
     
     const storesQuery = useMemoFirebase(() => collection(firestore, 'stores'), [firestore]);
@@ -65,9 +62,14 @@ export default function AdminLayout({
         };
     }, [pendingOrdersCount, outOfStockCount, pendingReturnsCount]);
     
+    const handleCloseMobileMenu = useCallback(() => {
+        setIsMobileMenuOpen(false);
+    }, []);
+
     useEffect(() => {
-        if(isMobileMenuOpen) setIsMobileMenuOpen(false);
-    }, [pathname])
+        handleCloseMobileMenu();
+    }, [pathname, handleCloseMobileMenu]);
+
 
     const navGroups = [
         {
@@ -86,7 +88,6 @@ export default function AdminLayout({
         {
             title: 'Content',
             items: [
-                { href: '/admin/blog', label: 'Blog', icon: FileText },
                 { href: '/admin/team', label: 'Our Team', icon: Users },
                 { href: '/admin/store', label: 'Our Store', icon: Store },
             ]
@@ -98,6 +99,15 @@ export default function AdminLayout({
             ]
         }
     ];
+    
+    if (isUserLoading) {
+        return (
+            <div className="flex h-screen w-full items-center justify-center bg-background">
+                <PottersWheelSpinner />
+            </div>
+        );
+    }
+
 
     const navContent = (
         <nav className="flex flex-col gap-4">
@@ -107,18 +117,16 @@ export default function AdminLayout({
                     <ul className="space-y-1">
                         {group.items.map((item) => (
                             <li key={item.href}>
-                                <Link href={item.href}>
+                                <Link href={item.href} onClick={handleCloseMobileMenu}>
                                     <span className={cn(
                                         "flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-base text-foreground transition-all hover:text-primary hover:bg-muted",
-                                        pathname.startsWith(item.href) && item.href !== '/admin' && "bg-muted text-primary font-semibold",
-                                        pathname === '/admin' && item.href === '/admin' && "bg-muted text-primary font-semibold",
-                                        pathname === item.href && "bg-muted text-primary font-semibold"
+                                        pathname === item.href ? "bg-muted text-primary font-semibold" : ""
                                     )}>
                                         <div className="flex items-center gap-3">
                                             <item.icon className="h-5 w-5" />
                                             {item.label}
                                         </div>
-                                        {item.badge != null && userData?.role === 'admin' && <Badge variant={item.badgeVariant} className="h-5">{item.badge}</Badge>}
+                                        {item.badge != null && <Badge variant={item.badgeVariant} className="h-5">{item.badge}</Badge>}
                                     </span>
                                 </Link>
                             </li>
@@ -153,7 +161,7 @@ export default function AdminLayout({
             </aside>
             <div className="flex flex-col">
                  <Header
-                    userData={userData}
+                    userData={null}
                     cartItems={[]} // Cart is handled outside admin
                     updateCartItemQuantity={() => {}}
                     stores={stores || []}

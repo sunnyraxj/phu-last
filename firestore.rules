@@ -212,17 +212,5 @@ service cloud.firestore {
       allow update: if isAdmin();
       allow delete: if false; // Returns should not be deleted
     }
-
-    /**
-     * @description Rules for the Blogs collection.
-     * @path /blogs/{blogId}
-     * @allow (read) Published blogs are public. Drafts are admin-only.
-     * @principle Content creation is restricted to admins. Published content is public.
-     */
-    match /blogs/{blogId} {
-      allow get: if resource.data.status == 'published' || isAdmin();
-      allow list: if true; // Public list access is needed
-      allow create, update, delete: if isAdmin();
-    }
   }
 }

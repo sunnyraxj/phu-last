@@ -186,9 +186,6 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                     <Link href="/our-team">
                         <button className="hover:opacity-80">OUR TEAM</button>
                     </Link>
-                    <Link href="/blog">
-                        <button className="hover:opacity-80">BLOG</button>
-                    </Link>
                      {user && !user.isAnonymous && userData?.role === 'admin' && (
                         <Popover open={adminMenuOpen} onOpenChange={setAdminMenuOpen}>
                             <PopoverTrigger asChild>
@@ -385,9 +382,6 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                         </Link>
                                         <Link href="/our-team" className="block py-4 border-b border-white/20 text-lg" onClick={() => setIsMobileMenuOpen(false)}>
                                             OUR TEAM
-                                        </Link>
-                                        <Link href="/blog" className="block py-4 border-b border-white/20 text-lg" onClick={() => setIsMobileMenuOpen(false)}>
-                                            BLOG
                                         </Link>
 
                                         {userData?.role === 'admin' && (
