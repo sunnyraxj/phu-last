@@ -8,13 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PlusCircle, Edit, Trash2, MoreHorizontal } from 'lucide-react';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
-import { BlogForm } from '@/components/admin/BlogForm';
+import { BlogForm, type BlogFormValues } from '@/components/admin/BlogForm';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 type Blog = {
     id: string;
@@ -27,27 +28,20 @@ type Blog = {
     faqs?: { question: string, answer: string }[];
 };
 
-type BlogFormData = Omit<Blog, 'id' | 'createdAt'>;
-
-
 export default function BlogPage() {
     const firestore = useFirestore();
     
-    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [isAddFormOpen, setIsAddFormOpen] = useState(false);
+    const [isEditFormOpen, setIsEditFormOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState<Blog | null>(null);
     const [postToDelete, setPostToDelete] = useState<Blog | null>(null);
 
     const blogsQuery = useMemoFirebase(() => collection(firestore, 'blogs'), [firestore]);
     const { data: blogs, isLoading: blogsLoading } = useCollection<Blog>(blogsQuery);
 
-    const handleAddPost = () => {
-        setSelectedPost(null);
-        setIsFormOpen(true);
-    };
-
-    const handleEditPost = (post: Blog) => {
+    const handleEditClick = (post: Blog) => {
         setSelectedPost(post);
-        setIsFormOpen(true);
+        setIsEditFormOpen(true);
     };
 
     const handleDeletePost = async () => {
@@ -58,22 +52,24 @@ export default function BlogPage() {
         }
     };
     
-    const handleFormSubmit = useCallback((formData: BlogFormData) => {
+    const handleAddSubmit = (formData: BlogFormValues) => {
+        const blogsCollection = collection(firestore, "blogs");
+        const dataWithTimestamp = { ...formData, createdAt: serverTimestamp() };
+        addDocumentNonBlocking(blogsCollection, dataWithTimestamp);
+        setIsAddFormOpen(false);
+    };
+    
+    const handleEditSubmit = (formData: BlogFormValues) => {
         if (selectedPost) {
             const postRef = doc(firestore, "blogs", selectedPost.id);
-            setDocumentNonBlocking(postRef, formData, { merge: true });
-        } else {
-            const blogsCollection = collection(firestore, "blogs");
-            addDocumentNonBlocking(blogsCollection, { ...formData, createdAt: serverTimestamp() });
+            // Ensure createdAt is not part of the update data
+            const { createdAt, ...updateData } = formData as Partial<Blog>;
+            setDocumentNonBlocking(postRef, updateData, { merge: true });
         }
-        setIsFormOpen(false);
+        setIsEditFormOpen(false);
         setSelectedPost(null);
-    }, [firestore, selectedPost]);
-
-    const handleCloseForm = useCallback(() => {
-        setIsFormOpen(false);
-    }, []);
-
+    };
+    
     const formatDate = (timestamp?: Timestamp) => {
         if (!timestamp) return 'N/A';
         return new Date(timestamp.seconds * 1000).toLocaleDateString('en-US', {
@@ -85,17 +81,42 @@ export default function BlogPage() {
         <div className="flex-1 space-y-4 p-2 sm:p-4 md:p-8 pt-6">
             <div className="flex items-center justify-between space-y-2">
                 <h2 className="text-3xl font-bold tracking-tight">Blog</h2>
-                <Button onClick={handleAddPost}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Blog Post
-                </Button>
+                <Dialog open={isAddFormOpen} onOpenChange={setIsAddFormOpen}>
+                    <DialogTrigger asChild>
+                        <Button>
+                            <PlusCircle className="mr-2 h-4 w-4" /> Add Blog Post
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-3xl">
+                        <DialogHeader>
+                            <DialogTitle>Add New Post</DialogTitle>
+                            <DialogDescription>
+                                Fill out the form to add a new post.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <BlogForm
+                            onSuccess={handleAddSubmit}
+                            post={null}
+                        />
+                    </DialogContent>
+                </Dialog>
             </div>
 
-            <BlogForm
-                isOpen={isFormOpen}
-                onClose={handleCloseForm}
-                onSubmit={handleFormSubmit}
-                post={selectedPost}
-            />
+            {/* Edit Dialog - not triggered by button, controlled by state */}
+            <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
+                <DialogContent className="sm:max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle>Edit Post</DialogTitle>
+                        <DialogDescription>
+                            Update the details of this blog post.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <BlogForm
+                        onSuccess={handleEditSubmit}
+                        post={selectedPost}
+                    />
+                </DialogContent>
+            </Dialog>
             
             <Card>
                 <CardHeader>
@@ -142,7 +163,7 @@ export default function BlogPage() {
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem onClick={() => handleEditPost(post)}>
+                                                        <DropdownMenuItem onClick={() => handleEditClick(post)}>
                                                             <Edit className="mr-2 h-4 w-4" />
                                                             Edit
                                                         </DropdownMenuItem>

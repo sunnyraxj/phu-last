@@ -1,14 +1,14 @@
 
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, writeBatch } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PlusCircle, Edit, Trash2, MoreHorizontal, ChevronDown, FilePenLine } from 'lucide-react';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
-import { ProductForm } from '@/components/admin/ProductForm';
+import { ProductForm, type ProductFormValues } from '@/components/admin/ProductForm';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -16,6 +16,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { BulkEditForm, type BulkEditFormValues } from '@/components/admin/BulkEditForm';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 type Product = {
     id: string;
@@ -39,7 +40,8 @@ type Product = {
 export default function AdminProductsPage() {
     const firestore = useFirestore();
     
-    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [isAddFormOpen, setIsAddFormOpen] = useState(false);
+    const [isEditFormOpen, setIsEditFormOpen] = useState(false);
     const [isBulkEditFormOpen, setIsBulkEditFormOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [productToDelete, setProductToDelete] = useState<Product | null>(null);
@@ -59,22 +61,17 @@ export default function AdminProductsPage() {
         }
     }, [products]);
 
-    const handleNewCategory = useCallback((category: string) => {
+    const handleNewCategory = (category: string) => {
         setCategories(prev => [...new Set([...prev, category])]);
-    }, []);
+    };
 
-    const handleNewMaterial = useCallback((material: string) => {
+    const handleNewMaterial = (material: string) => {
         setMaterials(prev => [...new Set([...prev, material])]);
-    }, []);
-
-    const handleAddProduct = () => {
-        setSelectedProduct(null);
-        setIsFormOpen(true);
     };
 
     const handleEditProduct = (product: Product) => {
         setSelectedProduct(product);
-        setIsFormOpen(true);
+        setIsEditFormOpen(true);
     };
 
     const handleDeleteProduct = async () => {
@@ -99,19 +96,20 @@ export default function AdminProductsPage() {
         });
     };
     
-    const handleFormSubmit = (formData: Omit<Product, 'id'>) => {
+    const handleAddSubmit = (formData: ProductFormValues) => {
         const dataWithGST = { ...formData, gst: formData.gst || 5 };
+        const productsCollection = collection(firestore, "products");
+        addDocumentNonBlocking(productsCollection, dataWithGST);
+        setIsAddFormOpen(false);
+    };
+
+    const handleEditSubmit = (formData: ProductFormValues) => {
         if (selectedProduct) {
-            // Update existing product
             const productRef = doc(firestore, "products", selectedProduct.id);
+            const dataWithGST = { ...formData, gst: formData.gst || 5 };
             setDocumentNonBlocking(productRef, dataWithGST, { merge: true });
-        } else {
-            // Add new product
-            const productsCollection = collection(firestore, "products");
-            addDocumentNonBlocking(productsCollection, dataWithGST);
         }
-        setIsFormOpen(false);
-        setSelectedProduct(null);
+        setIsEditFormOpen(false);
     };
 
     const handleBulkEditSubmit = (formData: BulkEditFormValues) => {
@@ -120,7 +118,6 @@ export default function AdminProductsPage() {
         const batch = writeBatch(firestore);
         const updates: Partial<Product> = {};
 
-        // Build the update object only with the fields that were actually changed
         if (formData.category) updates.category = formData.category;
         if (formData.material) updates.material = formData.material;
         if (formData.mrp !== undefined && !isNaN(formData.mrp)) updates.mrp = formData.mrp;
@@ -192,22 +189,49 @@ export default function AdminProductsPage() {
                          <h2 className="text-3xl font-bold tracking-tight">Products</h2>
                     )}
                 </div>
-
-                <Button onClick={handleAddProduct}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Product
-                </Button>
+                <Dialog open={isAddFormOpen} onOpenChange={setIsAddFormOpen}>
+                    <DialogTrigger asChild>
+                        <Button>
+                            <PlusCircle className="mr-2 h-4 w-4" /> Add Product
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-2xl">
+                        <DialogHeader>
+                            <DialogTitle>Add New Product</DialogTitle>
+                            <DialogDescription>
+                                Fill out the form to add a new product to the store.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <ProductForm 
+                            onSuccess={handleAddSubmit}
+                            product={null}
+                            existingMaterials={materials}
+                            existingCategories={categories}
+                            onNewCategory={handleNewCategory}
+                            onNewMaterial={handleNewMaterial}
+                        />
+                    </DialogContent>
+                </Dialog>
             </div>
 
-            <ProductForm 
-                isOpen={isFormOpen}
-                onClose={() => setIsFormOpen(false)}
-                onSubmit={handleFormSubmit}
-                product={selectedProduct}
-                existingMaterials={materials}
-                existingCategories={categories}
-                onNewCategory={handleNewCategory}
-                onNewMaterial={handleNewMaterial}
-            />
+            <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
+                <DialogContent className="sm:max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Edit Product</DialogTitle>
+                        <DialogDescription>
+                           Update the details of this product.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <ProductForm 
+                        onSuccess={handleEditSubmit}
+                        product={selectedProduct}
+                        existingMaterials={materials}
+                        existingCategories={categories}
+                        onNewCategory={handleNewCategory}
+                        onNewMaterial={handleNewMaterial}
+                    />
+                </DialogContent>
+            </Dialog>
 
             <BulkEditForm
                 isOpen={isBulkEditFormOpen}
@@ -340,5 +364,3 @@ export default function AdminProductsPage() {
         </div>
     );
 }
-
-    

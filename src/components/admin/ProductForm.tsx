@@ -6,18 +6,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogFooter,
-  DialogDescription,
   DialogClose,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -51,12 +46,10 @@ const productSchema = z.object({
   }).optional(),
 });
 
-type ProductFormValues = z.infer<typeof productSchema>;
+export type ProductFormValues = z.infer<typeof productSchema>;
 
 interface ProductFormProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: ProductFormValues) => void;
+  onSuccess: (data: ProductFormValues) => void;
   product: ProductFormValues & { id?: string } | null;
   existingMaterials: string[];
   existingCategories: string[];
@@ -65,9 +58,7 @@ interface ProductFormProps {
 }
 
 export function ProductForm({ 
-  isOpen, 
-  onClose, 
-  onSubmit, 
+  onSuccess,
   product, 
   existingMaterials, 
   existingCategories,
@@ -85,7 +76,6 @@ export function ProductForm({
     isUploading,
     uploadProgress,
     uploadedUrl,
-    setUploadedUrl,
     error: uploadError,
     clearUpload
   } = useImageUploader('product_images');
@@ -120,35 +110,27 @@ export function ProductForm({
 
   const imageValue = watch('image');
 
-  const handleOpenChange = useCallback((open: boolean) => {
-    if (!open) {
-      onClose();
-    }
-  }, [onClose]);
-
   useEffect(() => {
-    if (isOpen) {
-        if (product) {
-          reset(product);
-        } else {
-          reset({
-            name: '',
-            description: '',
-            mrp: 0,
-            category: '',
-            material: '',
-            image: '',
-            'data-ai-hint': '',
-            inStock: true,
-            hsn: '',
-            gst: 0,
-            size: { height: undefined, length: undefined, width: undefined },
-          });
-        }
-        setAiNotes('');
-        clearUpload();
+    if (product) {
+      reset(product);
+    } else {
+      reset({
+        name: '',
+        description: '',
+        mrp: 0,
+        category: '',
+        material: '',
+        image: '',
+        'data-ai-hint': '',
+        inStock: true,
+        hsn: '',
+        gst: 0,
+        size: { height: undefined, length: undefined, width: undefined },
+      });
     }
-  }, [product, reset, isOpen, clearUpload]);
+    setAiNotes('');
+    clearUpload();
+  }, [product, reset, clearUpload]);
 
   useEffect(() => {
     if (uploadedUrl) {
@@ -162,7 +144,7 @@ export function ProductForm({
       setError('image', { type: 'manual', message: 'An image is required.' });
       return;
     }
-    onSubmit(data);
+    onSuccess(data);
   };
 
   const handleAddCategory = (newCategory: string) => {
@@ -229,182 +211,172 @@ export function ProductForm({
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{product ? 'Edit Product' : 'Add New Product'}</DialogTitle>
-            <DialogDescription>
-              {product ? "Update the details of this product." : "Fill out the form to add a new product to the store."}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmit(handleFormSubmit)}>
-              <ScrollArea className="h-[60vh] pr-6 -mr-6">
-                  <div className="space-y-4 my-4">
-                       <div className="p-4 rounded-lg bg-muted/50 border border-dashed space-y-4">
-                            <Label className="flex items-center gap-2 font-semibold">
-                                <Sparkles className="h-5 w-5 text-primary" />
-                                AI Content Generation
-                            </Label>
-                            
-                            <ImageUploader
-                              imageUrl={imageValue}
-                              isUploading={isUploading}
-                              uploadProgress={uploadProgress}
-                              onFileUpload={uploadFile}
-                              onUrlChange={(url) => setValue('image', url, { shouldValidate: true })}
-                              onClear={() => {
-                                clearUpload();
-                                setValue('image', '', { shouldValidate: true });
-                              }}
-                              error={errors.image?.message || uploadError}
+      <form onSubmit={handleSubmit(handleFormSubmit)}>
+          <ScrollArea className="h-[60vh] pr-6 -mr-6">
+              <div className="space-y-4 my-4">
+                   <div className="p-4 rounded-lg bg-muted/50 border border-dashed space-y-4">
+                        <Label className="flex items-center gap-2 font-semibold">
+                            <Sparkles className="h-5 w-5 text-primary" />
+                            AI Content Generation
+                        </Label>
+                        
+                        <ImageUploader
+                          imageUrl={imageValue}
+                          isUploading={isUploading}
+                          uploadProgress={uploadProgress}
+                          onFileUpload={uploadFile}
+                          onUrlChange={(url) => setValue('image', url, { shouldValidate: true })}
+                          onClear={() => {
+                            clearUpload();
+                            setValue('image', '', { shouldValidate: true });
+                          }}
+                          error={errors.image?.message || uploadError}
+                        />
+
+                        <div className="space-y-1">
+                            <Label htmlFor="ai-notes-product">AI Notes (Optional)</Label>
+                            <Textarea 
+                                id="ai-notes-product"
+                                placeholder="e.g., 'handmade clay vase, blue glaze, from Rajasthan'. The AI will use this with the image to generate a name and description."
+                                value={aiNotes}
+                                onChange={(e) => setAiNotes(e.target.value)}
+                                rows={2}
                             />
-
-                            <div className="space-y-1">
-                                <Label htmlFor="ai-notes-product">AI Notes (Optional)</Label>
-                                <Textarea 
-                                    id="ai-notes-product"
-                                    placeholder="e.g., 'handmade clay vase, blue glaze, from Rajasthan'. The AI will use this with the image to generate a name and description."
-                                    value={aiNotes}
-                                    onChange={(e) => setAiNotes(e.target.value)}
-                                    rows={2}
-                                />
-                            </div>
-                            <Button 
-                                type="button" 
-                                onClick={handleGenerateDetails} 
-                                disabled={isGenerating || !imageValue || isUploading}
-                            >
-                                {isGenerating ? <PottersWheelSpinner className="h-5 w-5" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                                {isGenerating ? 'Generating...' : 'Generate Name & Description'}
-                            </Button>
                         </div>
+                        <Button 
+                            type="button" 
+                            onClick={handleGenerateDetails} 
+                            disabled={isGenerating || !imageValue || isUploading}
+                        >
+                            {isGenerating ? <PottersWheelSpinner className="h-5 w-5" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                            {isGenerating ? 'Generating...' : 'Generate Name & Description'}
+                        </Button>
+                    </div>
+                  <div className="space-y-1">
+                      <Label htmlFor="name">Product Name</Label>
+                      <Input id="name" {...register('name')} />
+                      {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+                  </div>
+                  <div className="space-y-1">
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea id="description" {...register('description')} rows={4} />
+                      {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
-                          <Label htmlFor="name">Product Name</Label>
-                          <Input id="name" {...register('name')} />
-                          {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+                          <Label htmlFor="mrp">MRP (INR)</Label>
+                          <Input id="mrp" type="number" step="0.01" {...register('mrp')} />
+                          {errors.mrp && <p className="text-xs text-destructive">{errors.mrp.message}</p>}
                       </div>
                       <div className="space-y-1">
-                          <Label htmlFor="description">Description</Label>
-                          <Textarea id="description" {...register('description')} rows={4} />
-                          {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1">
-                              <Label htmlFor="mrp">MRP (INR)</Label>
-                              <Input id="mrp" type="number" step="0.01" {...register('mrp')} />
-                              {errors.mrp && <p className="text-xs text-destructive">{errors.mrp.message}</p>}
-                          </div>
-                          <div className="space-y-1">
-                              <Label htmlFor="gst">GST %</Label>
-                              <Input id="gst" type="number" step="0.01" {...register('gst')} />
-                              {errors.gst && <p className="text-xs text-destructive">{errors.gst.message}</p>}
-                          </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <Label>Category</Label>
-                            <div className="flex gap-2">
-                                <Controller
-                                    control={control}
-                                    name="category"
-                                    render={({ field }) => (
-                                        <Select onValueChange={field.onChange} value={field.value}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select a category" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {existingCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
-                                    )}
-                                />
-                                <Button type="button" variant="outline" size="icon" onClick={() => setIsCategoryDialogOpen(true)}>
-                                    <PlusCircle className="h-4 w-4" />
-                                </Button>
-                            </div>
-                            {errors.category && <p className="text-xs text-destructive">{errors.category.message}</p>}
-                        </div>
-                        <div className="space-y-1">
-                            <Label>Material</Label>
-                             <div className="flex gap-2">
-                                <Controller
-                                    control={control}
-                                    name="material"
-                                    render={({ field }) => (
-                                        <Select onValueChange={field.onChange} value={field.value}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select a material" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {existingMaterials.map(mat => <SelectItem key={mat} value={mat}>{mat}</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
-                                    )}
-                                />
-                                <Button type="button" variant="outline" size="icon" onClick={() => setIsMaterialDialogOpen(true)}>
-                                    <PlusCircle className="h-4 w-4" />
-                                </Button>
-                            </div>
-                            {errors.material && <p className="text-xs text-destructive">{errors.material.message}</p>}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1">
-                              <Label htmlFor="hsn">HSN Code (Optional)</Label>
-                              <Input id="hsn" {...register('hsn')} />
-                              {errors.hsn && <p className="text-xs text-destructive">{errors.hsn.message}</p>}
-                          </div>
-                          <div className="space-y-1">
-                              <Label>Size (H x L x W) (Optional)</Label>
-                              <div className="flex gap-2">
-                                  <Input placeholder="H" {...register('size.height')} />
-                                  <Input placeholder="L" {...register('size.length')} />
-                                  <Input placeholder="W" {...register('size.width')} />
-                              </div>
-                          </div>
-                      </div>
-                      
-                      <div className="space-y-1">
-                          <Label htmlFor="data-ai-hint">AI Hint (Optional)</Label>
-                          <Input id="data-ai-hint" {...register('data-ai-hint')} placeholder="e.g. clay pot" />
-                          {errors['data-ai-hint'] && <p className="text-xs text-destructive">{errors['data-ai-hint'].message}</p>}
-                      </div>
-
-                      <div className="flex items-center space-x-2 pt-2">
-                          <Controller
-                            control={control}
-                            name="inStock"
-                            render={({ field }) => (
-                              <Checkbox 
-                                id="inStock" 
-                                checked={field.value} 
-                                onCheckedChange={field.onChange} 
-                              />
-                            )}
-                          />
-                          <Label htmlFor="inStock" className="cursor-pointer text-sm">
-                            Product is in stock and available for purchase
-                          </Label>
+                          <Label htmlFor="gst">GST %</Label>
+                          <Input id="gst" type="number" step="0.01" {...register('gst')} />
+                          {errors.gst && <p className="text-xs text-destructive">{errors.gst.message}</p>}
                       </div>
                   </div>
-              </ScrollArea>
 
-              <DialogFooter className="mt-4 pt-4 border-t">
-                  <DialogClose asChild>
-                      <Button type="button" variant="outline">
-                      Cancel
-                      </Button>
-                  </DialogClose>
-                  <Button type="submit" disabled={isSubmitting || isGenerating || isUploading}>
-                  {isSubmitting ? 'Saving...' : 'Save Product'}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                        <Label>Category</Label>
+                        <div className="flex gap-2">
+                            <Controller
+                                control={control}
+                                name="category"
+                                render={({ field }) => (
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a category" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {existingCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
+                            <Button type="button" variant="outline" size="icon" onClick={() => setIsCategoryDialogOpen(true)}>
+                                <PlusCircle className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        {errors.category && <p className="text-xs text-destructive">{errors.category.message}</p>}
+                    </div>
+                    <div className="space-y-1">
+                        <Label>Material</Label>
+                         <div className="flex gap-2">
+                            <Controller
+                                control={control}
+                                name="material"
+                                render={({ field }) => (
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a material" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {existingMaterials.map(mat => <SelectItem key={mat} value={mat}>{mat}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
+                            <Button type="button" variant="outline" size="icon" onClick={() => setIsMaterialDialogOpen(true)}>
+                                <PlusCircle className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        {errors.material && <p className="text-xs text-destructive">{errors.material.message}</p>}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                          <Label htmlFor="hsn">HSN Code (Optional)</Label>
+                          <Input id="hsn" {...register('hsn')} />
+                          {errors.hsn && <p className="text-xs text-destructive">{errors.hsn.message}</p>}
+                      </div>
+                      <div className="space-y-1">
+                          <Label>Size (H x L x W) (Optional)</Label>
+                          <div className="flex gap-2">
+                              <Input placeholder="H" {...register('size.height')} />
+                              <Input placeholder="L" {...register('size.length')} />
+                              <Input placeholder="W" {...register('size.width')} />
+                          </div>
+                      </div>
+                  </div>
+                  
+                  <div className="space-y-1">
+                      <Label htmlFor="data-ai-hint">AI Hint (Optional)</Label>
+                      <Input id="data-ai-hint" {...register('data-ai-hint')} placeholder="e.g. clay pot" />
+                      {errors['data-ai-hint'] && <p className="text-xs text-destructive">{errors['data-ai-hint'].message}</p>}
+                  </div>
+
+                  <div className="flex items-center space-x-2 pt-2">
+                      <Controller
+                        control={control}
+                        name="inStock"
+                        render={({ field }) => (
+                          <Checkbox 
+                            id="inStock" 
+                            checked={field.value} 
+                            onCheckedChange={field.onChange} 
+                          />
+                        )}
+                      />
+                      <Label htmlFor="inStock" className="cursor-pointer text-sm">
+                        Product is in stock and available for purchase
+                      </Label>
+                  </div>
+              </div>
+          </ScrollArea>
+
+          <DialogFooter className="mt-4 pt-4 border-t">
+              <DialogClose asChild>
+                  <Button type="button" variant="outline">
+                  Cancel
                   </Button>
-              </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+              </DialogClose>
+              <Button type="submit" disabled={isSubmitting || isGenerating || isUploading}>
+              {isSubmitting ? 'Saving...' : 'Save Product'}
+              </Button>
+          </DialogFooter>
+      </form>
       <AddOptionDialog
         isOpen={isCategoryDialogOpen}
         onClose={() => setIsCategoryDialogOpen(false)}

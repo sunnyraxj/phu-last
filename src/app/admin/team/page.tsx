@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -13,33 +14,33 @@ import { setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocki
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import Image from 'next/image';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 type TeamMember = {
     id: string;
     name: string;
-    role: string;
+    role: 'Founder' | 'Management' | 'Team Member';
     bio: string;
     image: string;
+    socialLink?: string;
 };
+
+type TeamMemberFormValues = Omit<TeamMember, 'id'>;
 
 export default function TeamPage() {
     const firestore = useFirestore();
     
-    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [isAddFormOpen, setIsAddFormOpen] = useState(false);
+    const [isEditFormOpen, setIsEditFormOpen] = useState(false);
     const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
     const [memberToDelete, setMemberToDelete] = useState<TeamMember | null>(null);
 
     const teamMembersQuery = useMemoFirebase(() => collection(firestore, 'teamMembers'), [firestore]);
     const { data: teamMembers, isLoading: teamMembersLoading } = useCollection<TeamMember>(teamMembersQuery);
-
-    const handleAddMember = () => {
-        setSelectedMember(null);
-        setIsFormOpen(true);
-    };
-
-    const handleEditMember = (member: TeamMember) => {
+    
+    const handleEditClick = (member: TeamMember) => {
         setSelectedMember(member);
-        setIsFormOpen(true);
+        setIsEditFormOpen(true);
     };
 
     const handleDeleteMember = async () => {
@@ -50,33 +51,58 @@ export default function TeamPage() {
         }
     };
     
-    const handleFormSubmit = (formData: Omit<TeamMember, 'id'>) => {
+    const handleAddSubmit = (formData: TeamMemberFormValues) => {
+        const membersCollection = collection(firestore, "teamMembers");
+        addDocumentNonBlocking(membersCollection, formData);
+        setIsAddFormOpen(false);
+    };
+    
+    const handleEditSubmit = (formData: TeamMemberFormValues) => {
         if (selectedMember) {
             const memberRef = doc(firestore, "teamMembers", selectedMember.id);
             setDocumentNonBlocking(memberRef, formData, { merge: true });
-        } else {
-            const membersCollection = collection(firestore, "teamMembers");
-            addDocumentNonBlocking(membersCollection, formData);
         }
-        setIsFormOpen(false);
-        setSelectedMember(null);
+        setIsEditFormOpen(false);
     };
 
     return (
         <div className="flex-1 space-y-4 p-2 sm:p-4 md:p-8 pt-6">
             <div className="flex items-center justify-between space-y-2">
                 <h2 className="text-3xl font-bold tracking-tight">Our Team</h2>
-                <Button onClick={handleAddMember}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Team Member
-                </Button>
+                <Dialog open={isAddFormOpen} onOpenChange={setIsAddFormOpen}>
+                    <DialogTrigger asChild>
+                        <Button>
+                            <PlusCircle className="mr-2 h-4 w-4" /> Add Team Member
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Add New Team Member</DialogTitle>
+                            <DialogDescription>Fill out the form to add a new member to the team.</DialogDescription>
+                        </DialogHeader>
+                        <TeamMemberForm
+                            onSuccess={handleAddSubmit}
+                            onCancel={() => setIsAddFormOpen(false)}
+                            member={null}
+                        />
+                    </DialogContent>
+                </Dialog>
             </div>
 
-            <TeamMemberForm 
-                isOpen={isFormOpen}
-                onClose={() => setIsFormOpen(false)}
-                onSubmit={handleFormSubmit}
-                member={selectedMember}
-            />
+            <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit Team Member</DialogTitle>
+                        <DialogDescription>Update this team member's details.</DialogDescription>
+                    </DialogHeader>
+                    <TeamMemberForm
+                        onSuccess={handleEditSubmit}
+                        onCancel={() => setIsEditFormOpen(false)}
+                        member={selectedMember}
+                    />
+                </DialogContent>
+            </Dialog>
+
             
             <Card>
                 <CardHeader>
@@ -118,7 +144,7 @@ export default function TeamPage() {
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem onClick={() => handleEditMember(member)}>
+                                                        <DropdownMenuItem onClick={() => handleEditClick(member)}>
                                                             <Edit className="mr-2 h-4 w-4" />
                                                             Edit
                                                         </DropdownMenuItem>

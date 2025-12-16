@@ -22,6 +22,8 @@ import { AddressForm, AddressFormValues } from '@/components/account/AddressForm
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { PlusCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+
 
 type ShippingAddress = AddressFormValues & { id: string, email?: string };
 
@@ -318,22 +320,25 @@ export default function CheckoutPage() {
                           
                           <Separator className="my-6" />
 
-                          {showNewAddressForm ? (
-                          <div>
-                              <h3 className="text-lg font-semibold mb-4">Add a New Address</h3>
-                              <AddressForm 
-                                  isOpen={true} 
-                                  onClose={() => setShowNewAddressForm(false)} 
-                                  onSubmit={handleNewAddressSubmit} 
-                                  address={null}
-                              />
-                          </div>
-                          ) : (
-                              <Button variant="outline" onClick={() => setShowNewAddressForm(true)}>
-                                  <PlusCircle className="mr-2 h-4 w-4" />
-                                  Add New Address
-                              </Button>
-                          )}
+                            <Dialog open={showNewAddressForm} onOpenChange={setShowNewAddressForm}>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline">
+                                        <PlusCircle className="mr-2 h-4 w-4" />
+                                        Add New Address
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>Add a New Address</DialogTitle>
+                                        <DialogDescription>Enter the details for your new shipping address.</DialogDescription>
+                                    </DialogHeader>
+                                    <AddressForm 
+                                        onSuccess={handleNewAddressSubmit} 
+                                        onCancel={() => setShowNewAddressForm(false)}
+                                        address={null}
+                                    />
+                                </DialogContent>
+                            </Dialog>
                       </CardContent>
                   </Card>
                    <Card>

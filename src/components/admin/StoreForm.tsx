@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import {
-  Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -30,13 +29,12 @@ const storeSchema = z.object({
 type StoreFormValues = z.infer<typeof storeSchema>;
 
 interface StoreFormProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: StoreFormValues) => void;
+  onSuccess: (data: StoreFormValues) => void;
+  onCancel: () => void;
   store: StoreFormValues & { id?: string } | null;
 }
 
-export function StoreForm({ isOpen, onClose, onSubmit, store }: StoreFormProps) {
+export function StoreForm({ onSuccess, onCancel, store }: StoreFormProps) {
   const {
     register,
     handleSubmit,
@@ -54,77 +52,61 @@ export function StoreForm({ isOpen, onClose, onSubmit, store }: StoreFormProps) 
   });
 
   useEffect(() => {
-    if (isOpen) {
-        if (store) {
-          reset(store);
-        } else {
-          reset({
-            name: '',
-            address: '',
-            phone: '',
-            image: '',
-            googleMapsLink: '',
-          });
-        }
+    if (store) {
+      reset(store);
+    } else {
+      reset({
+        name: '',
+        address: '',
+        phone: '',
+        image: '',
+        googleMapsLink: '',
+      });
     }
-  }, [store, reset, isOpen]);
+  }, [store, reset]);
 
   const handleFormSubmit: SubmitHandler<StoreFormValues> = (data) => {
-    onSubmit(data);
+    onSuccess(data);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{store ? 'Edit Store' : 'Add New Store'}</DialogTitle>
-          <DialogDescription>
-            {store ? "Update this store's details." : "Fill out the form to add a new store location."}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit(handleFormSubmit)}>
-            <div className="space-y-4 my-4">
-                <div className="space-y-1">
-                    <Label htmlFor="name">Store Name</Label>
-                    <Input id="name" {...register('name')} />
-                    {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
-                </div>
-                <div className="space-y-1">
-                    <Label htmlFor="address">Address</Label>
-                    <Textarea id="address" {...register('address')} rows={3} />
-                    {errors.address && <p className="text-xs text-destructive">{errors.address.message}</p>}
-                </div>
-                 <div className="space-y-1">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" {...register('phone')} />
-                    {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
-                </div>
-                 <div className="space-y-1">
-                    <Label htmlFor="googleMapsLink">Google Maps URL</Label>
-                    <Input id="googleMapsLink" {...register('googleMapsLink')} placeholder="https://maps.app.goo.gl/..." />
-                    {errors.googleMapsLink && <p className="text-xs text-destructive">{errors.googleMapsLink.message}</p>}
-                </div>
-                <div className="space-y-1">
-                    <Label htmlFor="image">Store Image URL</Label>
-                    <Input id="image" {...register('image')} placeholder="https://picsum.photos/seed/..." />
-                    {errors.image && <p className="text-xs text-destructive">{errors.image.message}</p>}
-                </div>
+    <form onSubmit={handleSubmit(handleFormSubmit)}>
+        <div className="space-y-4 my-4">
+            <div className="space-y-1">
+                <Label htmlFor="name">Store Name</Label>
+                <Input id="name" {...register('name')} />
+                {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
             </div>
+            <div className="space-y-1">
+                <Label htmlFor="address">Address</Label>
+                <Textarea id="address" {...register('address')} rows={3} />
+                {errors.address && <p className="text-xs text-destructive">{errors.address.message}</p>}
+            </div>
+             <div className="space-y-1">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input id="phone" {...register('phone')} />
+                {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
+            </div>
+             <div className="space-y-1">
+                <Label htmlFor="googleMapsLink">Google Maps URL</Label>
+                <Input id="googleMapsLink" {...register('googleMapsLink')} placeholder="https://maps.app.goo.gl/..." />
+                {errors.googleMapsLink && <p className="text-xs text-destructive">{errors.googleMapsLink.message}</p>}
+            </div>
+            <div className="space-y-1">
+                <Label htmlFor="image">Store Image URL</Label>
+                <Input id="image" {...register('image')} placeholder="https://picsum.photos/seed/..." />
+                {errors.image && <p className="text-xs text-destructive">{errors.image.message}</p>}
+            </div>
+        </div>
 
-            <DialogFooter className="mt-6">
-                <DialogClose asChild>
-                    <Button type="button" variant="outline">
-                    Cancel
-                    </Button>
-                </DialogClose>
-                <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Saving...' : 'Save Store'}
-                </Button>
-            </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <DialogFooter className="mt-6">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : 'Save Store'}
+            </Button>
+        </DialogFooter>
+    </form>
   );
 }
-
-    

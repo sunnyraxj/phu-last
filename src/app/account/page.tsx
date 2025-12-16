@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
@@ -12,6 +13,7 @@ import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { AddressForm, AddressFormValues } from '@/components/account/AddressForm';
 import { addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 type ShippingAddress = AddressFormValues & { id: string };
 
@@ -20,7 +22,8 @@ export default function AccountPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
 
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isAddFormOpen, setIsAddFormOpen] = useState(false);
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<ShippingAddress | null>(null);
   const [addressToDelete, setAddressToDelete] = useState<ShippingAddress | null>(null);
 
@@ -30,16 +33,11 @@ export default function AccountPage() {
   );
   const { data: addresses, isLoading: addressesLoading } = useCollection<ShippingAddress>(addressesQuery);
 
-  const handleAddAddress = () => {
-    setSelectedAddress(null);
-    setIsFormOpen(true);
-  };
-
-  const handleEditAddress = (address: ShippingAddress) => {
+  const handleEditClick = (address: ShippingAddress) => {
     setSelectedAddress(address);
-    setIsFormOpen(true);
+    setIsEditFormOpen(true);
   };
-
+  
   const handleDeleteAddress = async () => {
     if (user && addressToDelete) {
       const addressRef = doc(firestore, 'users', user.uid, 'shippingAddresses', addressToDelete.id);
@@ -48,18 +46,19 @@ export default function AccountPage() {
     }
   };
 
-  const handleFormSubmit = (formData: AddressFormValues) => {
+  const handleAddSubmit = (formData: AddressFormValues) => {
     if (!user) return;
     const addressesCollection = collection(firestore, 'users', user.uid, 'shippingAddresses');
-
-    if (selectedAddress) {
-      const addressRef = doc(addressesCollection, selectedAddress.id);
+    addDocumentNonBlocking(addressesCollection, { ...formData, userId: user.uid });
+    setIsAddFormOpen(false);
+  };
+  
+  const handleEditSubmit = (formData: AddressFormValues) => {
+      if (!user || !selectedAddress) return;
+      const addressRef = doc(firestore, 'users', user.uid, 'shippingAddresses', selectedAddress.id);
       setDocumentNonBlocking(addressRef, { ...formData, userId: user.uid }, { merge: true });
-    } else {
-      addDocumentNonBlocking(addressesCollection, { ...formData, userId: user.uid });
-    }
-    setIsFormOpen(false);
-    setSelectedAddress(null);
+      setIsEditFormOpen(false);
+      setSelectedAddress(null);
   };
 
   if (isUserLoading) {
@@ -99,9 +98,9 @@ export default function AccountPage() {
                       <p className="text-sm text-muted-foreground">Phone: {address.phone}</p>
                     </div>
                     <div className="flex items-center gap-2 mt-4">
-                      <Button variant="ghost" size="sm" onClick={() => handleEditAddress(address)}>
-                        <Edit className="mr-2 h-4 w-4" /> Edit
-                      </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleEditClick(address)}>
+                            <Edit className="mr-2 h-4 w-4" /> Edit
+                        </Button>
                       <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setAddressToDelete(address)}>
                         <Trash2 className="mr-2 h-4 w-4" /> Delete
                       </Button>
@@ -114,18 +113,44 @@ export default function AccountPage() {
             )}
           </CardContent>
           <CardFooter>
-            <Button onClick={handleAddAddress}>
-              <PlusCircle className="mr-2 h-4 w-4" /> Add New Address
-            </Button>
+            <Dialog open={isAddFormOpen} onOpenChange={setIsAddFormOpen}>
+                <DialogTrigger asChild>
+                    <Button><PlusCircle className="mr-2 h-4 w-4" /> Add New Address</Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Add New Address</DialogTitle>
+                        <DialogDescription>
+                            Enter the details for your new shipping address.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <AddressForm
+                        onSuccess={handleAddSubmit}
+                        onCancel={() => setIsAddFormOpen(false)}
+                        address={null}
+                    />
+                </DialogContent>
+            </Dialog>
           </CardFooter>
         </Card>
 
-        <AddressForm
-          isOpen={isFormOpen}
-          onClose={() => setIsFormOpen(false)}
-          onSubmit={handleFormSubmit}
-          address={selectedAddress}
-        />
+        {/* Edit Dialog */}
+        <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Edit Address</DialogTitle>
+                     <DialogDescription>
+                        Update your shipping address details.
+                    </DialogDescription>
+                </DialogHeader>
+                <AddressForm
+                    onSuccess={handleEditSubmit}
+                    onCancel={() => setIsEditFormOpen(false)}
+                    address={selectedAddress}
+                />
+            </DialogContent>
+        </Dialog>
+
 
         <AlertDialog open={!!addressToDelete} onOpenChange={(isOpen) => !isOpen && setAddressToDelete(null)}>
             <AlertDialogContent>
@@ -141,7 +166,6 @@ export default function AccountPage() {
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
-
       </main>
     </div>
   );

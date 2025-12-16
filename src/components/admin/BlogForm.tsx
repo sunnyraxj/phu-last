@@ -5,15 +5,6 @@ import { useForm, SubmitHandler, Controller, useFieldArray } from 'react-hook-fo
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-  DialogClose,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useEffect, useState, useCallback } from 'react';
@@ -29,6 +20,7 @@ import { GenerateBlogPostOutput } from '@/ai/flows/generate-blog-post';
 import { useImageUploader } from '@/hooks/useImageUploader';
 import { Progress } from '../ui/progress';
 import { cn } from '@/lib/utils';
+import { DialogFooter, DialogClose } from '../ui/dialog';
 
 const faqSchema = z.object({
     question: z.string().min(1, 'Question is required'),
@@ -44,16 +36,14 @@ const blogSchema = z.object({
   faqs: z.array(faqSchema).optional(),
 });
 
-type BlogFormValues = z.infer<typeof blogSchema>;
+export type BlogFormValues = z.infer<typeof blogSchema>;
 
 interface BlogFormProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: BlogFormValues) => void;
-  post: (BlogFormValues & { id?: string, faqs?: { question: string, answer: string }[] }) | null;
+  onSuccess: (data: BlogFormValues) => void;
+  post: (BlogFormValues & { id?: string, createdAt?: any, faqs?: { question: string, answer: string }[] }) | null;
 }
 
-export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
+export function BlogForm({ onSuccess, post }: BlogFormProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiNotes, setAiNotes] = useState('');
   const { toast } = useToast();
@@ -98,33 +88,25 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
       name: "faqs",
   });
 
-  const handleOpenChange = useCallback((open: boolean) => {
-    if (!open) {
-      onClose();
-    }
-  }, [onClose]);
-
   useEffect(() => {
-    if (isOpen) {
-        if (post) {
-          reset({
-              ...post,
-              faqs: post.faqs || [],
-          });
-        } else {
-          reset({
-            title: '',
-            slug: '',
-            content: '',
-            featuredImage: '',
-            status: 'draft',
-            faqs: [],
-          });
-        }
-        setAiNotes('');
-        clearUpload();
+    if (post) {
+      reset({
+          ...post,
+          faqs: post.faqs || [],
+      });
+    } else {
+      reset({
+        title: '',
+        slug: '',
+        content: '',
+        featuredImage: '',
+        status: 'draft',
+        faqs: [],
+      });
     }
-  }, [post, reset, isOpen, clearUpload]);
+    setAiNotes('');
+    clearUpload();
+  }, [post, reset, clearUpload]);
 
   useEffect(() => {
     if (uploadedUrl) {
@@ -197,181 +179,174 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
 
 
   const handleFormSubmit: SubmitHandler<BlogFormValues> = (data) => {
-    if (!data.image) {
+    if (!data.featuredImage) {
       setError('featuredImage', { type: 'manual', message: 'A featured image is required.' });
       return;
     }
-    const slug = data.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    
+    // Ensure slug is generated if not already
+    const slug = data.slug || data.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     const dataWithSlug = { ...data, slug };
-    onSubmit(dataWithSlug);
+    
+    onSuccess(dataWithSlug);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>{post ? 'Edit Post' : 'Add New Post'}</DialogTitle>
-          <DialogDescription>
-            {post ? "Update the details of this blog post." : "Fill out the form to add a new post."}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit(handleFormSubmit)}>
-            <ScrollArea className="h-[70vh] pr-6 -mr-6">
-                <div className="space-y-6 my-4">
+    <form onSubmit={handleSubmit(handleFormSubmit)}>
+        <ScrollArea className="h-[70vh] pr-6 -mr-6">
+            <div className="space-y-6 my-4">
+                
+                <div className="p-4 rounded-lg bg-muted/50 border border-dashed space-y-4">
+                    <Label className="flex items-center gap-2 font-semibold">
+                        <Sparkles className="h-5 w-5 text-primary" />
+                        AI Content Generation
+                    </Label>
                     
-                    <div className="p-4 rounded-lg bg-muted/50 border border-dashed space-y-4">
-                        <Label className="flex items-center gap-2 font-semibold">
-                            <Sparkles className="h-5 w-5 text-primary" />
-                            AI Content Generation
-                        </Label>
-                        
-                        <ImageUploader
-                          imageUrl={imageValue}
-                          isUploading={isUploading}
-                          uploadProgress={uploadProgress}
-                          onFileUpload={uploadFile}
-                          onUrlChange={(url) => setValue('featuredImage', url, { shouldValidate: true })}
-                          onClear={() => {
-                            clearUpload();
-                            setValue('featuredImage', '', { shouldValidate: true });
-                          }}
-                          error={errors.featuredImage?.message || uploadError}
+                    <ImageUploader
+                      imageUrl={imageValue}
+                      isUploading={isUploading}
+                      uploadProgress={uploadProgress}
+                      onFileUpload={uploadFile}
+                      onUrlChange={(url) => setValue('featuredImage', url, { shouldValidate: true })}
+                      onClear={() => {
+                        clearUpload();
+                        setValue('featuredImage', '', { shouldValidate: true });
+                      }}
+                      error={errors.featuredImage?.message || uploadError}
+                    />
+
+                    <div className="space-y-1">
+                        <Label htmlFor="ai-notes">AI Notes (Optional)</Label>
+                        <Textarea 
+                            id="ai-notes"
+                            placeholder="e.g., 'A blog post about traditional bamboo weaving techniques'."
+                            value={aiNotes}
+                            onChange={(e) => setAiNotes(e.target.value)}
+                            rows={2}
                         />
+                    </div>
+                    <Button 
+                        type="button" 
+                        onClick={handleGenerateContent} 
+                        disabled={isGenerating || !imageValue || isUploading}
+                    >
+                        {isGenerating ? <PottersWheelSpinner className="h-5 w-5" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                        {isGenerating ? 'Generating...' : 'Generate Content & FAQs'}
+                    </Button>
+                </div>
+
+                <Separator />
+                
+                <div>
+                    <h3 className="text-lg font-medium mb-2">Blog Details</h3>
+                    <div className="space-y-4 p-4 border rounded-lg">
+                        <div className="space-y-1">
+                            <Label htmlFor="title">Title</Label>
+                            <Input id="title" {...register('title')} />
+                            {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
+                        </div>
 
                         <div className="space-y-1">
-                            <Label htmlFor="ai-notes">AI Notes (Optional)</Label>
-                            <Textarea 
-                                id="ai-notes"
-                                placeholder="e.g., 'A blog post about traditional bamboo weaving techniques'."
-                                value={aiNotes}
-                                onChange={(e) => setAiNotes(e.target.value)}
-                                rows={2}
-                            />
-                        </div>
-                        <Button 
-                            type="button" 
-                            onClick={handleGenerateContent} 
-                            disabled={isGenerating || !imageValue || isUploading}
-                        >
-                            {isGenerating ? <PottersWheelSpinner className="h-5 w-5" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                            {isGenerating ? 'Generating...' : 'Generate Content & FAQs'}
-                        </Button>
-                    </div>
-
-                    <Separator />
-                    
-                    <div>
-                        <h3 className="text-lg font-medium mb-2">Blog Details</h3>
-                        <div className="space-y-4 p-4 border rounded-lg">
-                            <div className="space-y-1">
-                                <Label htmlFor="title">Title</Label>
-                                <Input id="title" {...register('title')} />
-                                {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label htmlFor="slug">Slug</Label>
-                                <div className="flex gap-2">
-                                <Input id="slug" {...register('slug')} />
-                                 <Button type="button" variant="outline" size="icon" onClick={generateSlug} title="Generate slug from title">
-                                    <RefreshCw className="h-4 w-4" />
-                                </Button>
-                                </div>
-                                {errors.slug && <p className="text-xs text-destructive">{errors.slug.message}</p>}
-                            </div>
-
-                             <div className="space-y-1">
-                                <Label htmlFor="content">Content</Label>
-                                <Textarea id="content" {...register('content')} rows={10} />
-                                {errors.content && <p className="text-xs text-destructive">{errors.content.message}</p>}
-                            </div>
-                            <div className="space-y-1">
-                                <Label>Status</Label>
-                                <Controller
-                                    control={control}
-                                    name="status"
-                                    render={({ field }) => (
-                                        <Select onValueChange={field.onChange} value={field.value}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select a status" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="draft">Draft</SelectItem>
-                                                <SelectItem value="published">Published</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    )}
-                                />
-                                {errors.status && <p className="text-xs text-destructive">{errors.status.message}</p>}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <Separator />
-
-                    <div>
-                        <h3 className="text-lg font-medium mb-2">Frequently Asked Questions</h3>
-                         <div className="space-y-4 p-4 border rounded-lg">
-                            {fields.map((field, index) => (
-                                <div key={field.id} className="p-4 border rounded-md relative space-y-2 bg-muted/30">
-                                     <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        className="absolute top-2 right-2 h-6 w-6 text-destructive"
-                                        onClick={() => remove(index)}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                    <div className="space-y-1">
-                                        <Label htmlFor={`faqs.${index}.question`}>Question</Label>
-                                        <Input
-                                            id={`faqs.${index}.question`}
-                                            {...register(`faqs.${index}.question`)}
-                                        />
-                                        {errors.faqs?.[index]?.question && (
-                                            <p className="text-xs text-destructive">{errors.faqs[index]?.question?.message}</p>
-                                        )}
-                                    </div>
-                                    <div className="space-y-1">
-                                        <Label htmlFor={`faqs.${index}.answer`}>Answer</Label>
-                                        <Textarea
-                                            id={`faqs.${index}.answer`}
-                                            {...register(`faqs.${index}.answer`)}
-                                            rows={3}
-                                        />
-                                         {errors.faqs?.[index]?.answer && (
-                                            <p className="text-xs text-destructive">{errors.faqs[index]?.answer?.message}</p>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => append({ question: '', answer: '' })}
-                            >
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                Add FAQ
+                            <Label htmlFor="slug">Slug</Label>
+                            <div className="flex gap-2">
+                            <Input id="slug" {...register('slug')} />
+                             <Button type="button" variant="outline" size="icon" onClick={generateSlug} title="Generate slug from title">
+                                <RefreshCw className="h-4 w-4" />
                             </Button>
-                         </div>
+                            </div>
+                            {errors.slug && <p className="text-xs text-destructive">{errors.slug.message}</p>}
+                        </div>
+
+                         <div className="space-y-1">
+                            <Label htmlFor="content">Content</Label>
+                            <Textarea id="content" {...register('content')} rows={10} />
+                            {errors.content && <p className="text-xs text-destructive">{errors.content.message}</p>}
+                        </div>
+                        <div className="space-y-1">
+                            <Label>Status</Label>
+                            <Controller
+                                control={control}
+                                name="status"
+                                render={({ field }) => (
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="draft">Draft</SelectItem>
+                                            <SelectItem value="published">Published</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
+                            {errors.status && <p className="text-xs text-destructive">{errors.status.message}</p>}
+                        </div>
                     </div>
                 </div>
-            </ScrollArea>
+                
+                <Separator />
 
-            <DialogFooter className="mt-4 pt-4 border-t">
-                <DialogClose asChild>
-                    <Button type="button" variant="outline">
-                    Cancel
-                    </Button>
-                </DialogClose>
-                <Button type="submit" disabled={isSubmitting || isGenerating || isUploading}>
-                {isSubmitting ? 'Saving...' : 'Save Post'}
+                <div>
+                    <h3 className="text-lg font-medium mb-2">Frequently Asked Questions</h3>
+                     <div className="space-y-4 p-4 border rounded-lg">
+                        {fields.map((field, index) => (
+                            <div key={field.id} className="p-4 border rounded-md relative space-y-2 bg-muted/30">
+                                 <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute top-2 right-2 h-6 w-6 text-destructive"
+                                    onClick={() => remove(index)}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                                <div className="space-y-1">
+                                    <Label htmlFor={`faqs.${index}.question`}>Question</Label>
+                                    <Input
+                                        id={`faqs.${index}.question`}
+                                        {...register(`faqs.${index}.question`)}
+                                    />
+                                    {errors.faqs?.[index]?.question && (
+                                        <p className="text-xs text-destructive">{errors.faqs[index]?.question?.message}</p>
+                                    )}
+                                </div>
+                                <div className="space-y-1">
+                                    <Label htmlFor={`faqs.${index}.answer`}>Answer</Label>
+                                    <Textarea
+                                        id={`faqs.${index}.answer`}
+                                        {...register(`faqs.${index}.answer`)}
+                                        rows={3}
+                                    />
+                                     {errors.faqs?.[index]?.answer && (
+                                        <p className="text-xs text-destructive">{errors.faqs[index]?.answer?.message}</p>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => append({ question: '', answer: '' })}
+                        >
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Add FAQ
+                        </Button>
+                     </div>
+                </div>
+            </div>
+        </ScrollArea>
+
+        <DialogFooter className="mt-4 pt-4 border-t">
+            <DialogClose asChild>
+                <Button type="button" variant="outline">
+                Cancel
                 </Button>
-            </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            </DialogClose>
+            <Button type="submit" disabled={isSubmitting || isGenerating || isUploading}>
+            {isSubmitting ? 'Saving...' : 'Save Post'}
+            </Button>
+        </DialogFooter>
+    </form>
   );
 }
 
