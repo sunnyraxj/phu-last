@@ -74,6 +74,7 @@ export default function AdminLayout({
         {
             title: 'Store Management',
             items: [
+                { href: '/admin/items', label: 'Items', icon: Package },
                 { href: '/admin/orders', label: 'Orders', icon: ShoppingCart, badge: pendingOrdersCount > 0 ? pendingOrdersCount : null, badgeVariant: 'default' as const },
                 { href: '/admin/returns', label: 'Returns', icon: Undo2, badge: pendingReturnsCount > 0 ? pendingReturnsCount : null, badgeVariant: 'destructive' as const },
             ]
@@ -97,7 +98,7 @@ export default function AdminLayout({
     useEffect(() => {
         // Redirect to login if not authenticated after loading has finished
         if (!isUserLoading && !user) {
-            router.push('/login?redirect=/admin');
+            router.push('/login?redirect=/admin/dashboard');
         }
     }, [isUserLoading, user, router]);
     

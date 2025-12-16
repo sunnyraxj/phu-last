@@ -27,7 +27,7 @@ type Product = {
   id: string;
   name: string;
   price: number;
-  image: string;
+  images: string[];
   "data-ai-hint": string;
   category: string;
   material: string;
@@ -499,7 +499,7 @@ export default function PurchasePage() {
                     onClick={() => setSelectedProduct(product)}
                   >
                     <Image
-                      src={product.image}
+                      src={product.images?.[0] || 'https://picsum.photos/seed/placeholder/300'}
                       alt={product.name}
                       fill
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -533,7 +533,7 @@ export default function PurchasePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-2">
                   <div className="relative aspect-square bg-muted rounded-lg">
                     <Image
-                      src={selectedProduct.image}
+                      src={selectedProduct.images?.[0] || 'https://picsum.photos/seed/placeholder/300'}
                       alt={selectedProduct.name}
                       fill
                       className="object-cover rounded-lg"

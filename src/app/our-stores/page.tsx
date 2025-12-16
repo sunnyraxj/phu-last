@@ -29,7 +29,7 @@ type Product = {
   id: string;
   name: string;
   price: number;
-  image: string;
+  images: string[];
   "data-ai-hint": string;
   collection: string;
   material: string;

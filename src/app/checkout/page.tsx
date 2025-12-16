@@ -32,7 +32,7 @@ type Product = {
   name: string;
   mrp: number;
   gst: number;
-  image: string;
+  images: string[];
   inStock: boolean;
 };
 
@@ -235,7 +235,7 @@ export default function CheckoutPage() {
           quantity: item.quantity,
           price: item.mrp,
           productName: item.name,
-          productImage: item.image,
+          productImage: item.images?.[0] || null,
         });
 
         const cartItemRef = doc(firestore, 'users', user.uid, 'cart', item.cartItemId);
@@ -407,7 +407,7 @@ export default function CheckoutPage() {
                         <div key={item.cartItemId} className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <div className="relative h-16 w-16 rounded-md overflow-hidden bg-muted">
-                            <Image src={item.image} alt={item.name} fill className="object-cover" />
+                            <Image src={item.images?.[0] || 'https://picsum.photos/seed/placeholder/200'} alt={item.name} fill className="object-cover" />
                             </div>
                             <div>
                             <p className="font-semibold">{item.name}</p>

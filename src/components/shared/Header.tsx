@@ -126,7 +126,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                     {featuredProducts.map((product) => (
                                         <Link href="/purchase" key={product.id} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted -m-2">
                                             <div className="relative h-20 w-20 rounded-md overflow-hidden">
-                                                <Image src={product.image} alt={product.name} fill className="object-cover" />
+                                                <Image src={product.images?.[0] || 'https://picsum.photos/seed/placeholder/200'} alt={product.name} fill className="object-cover" />
                                             </div>
                                             <div>
                                                 <p className="font-semibold text-xs truncate w-20 text-center">{product.name}</p>
@@ -213,6 +213,12 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                         {(adminActionCounts?.pendingOrders || 0) > 0 && <Badge className="ml-auto">{adminActionCounts?.pendingOrders}</Badge>}
                                     </Button>
                                 </Link>
+                                <Link href="/admin/items">
+                                     <Button variant="ghost" className="w-full justify-start">
+                                        <Package className="mr-2 h-4 w-4" />
+                                        Items
+                                    </Button>
+                                </Link>
                                 <Link href="/admin/dashboard">
                                     <Button variant="ghost" className="w-full justify-start">
                                         <LayoutDashboard className="mr-2 h-4 w-4" />
@@ -285,7 +291,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                                 <div key={item.id} className="flex items-center gap-4">
                                                     <div className="relative h-20 w-20 rounded-md overflow-hidden bg-muted">
                                                         <Image
-                                                            src={item.image}
+                                                            src={item.images?.[0] || 'https://picsum.photos/seed/placeholder/200'}
                                                             alt={item.name}
                                                             fill
                                                             className="object-cover"
@@ -382,6 +388,8 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                                 <AccordionTrigger className="py-4">ADMIN</AccordionTrigger>
                                                 <AccordionContent className="pl-4">
                                                     <div className="grid gap-2 mt-2">
+                                                        <Link href="/admin/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="block p-2 rounded-lg hover:bg-white/10 -m-2">Dashboard</Link>
+                                                        <Link href="/admin/items" onClick={() => setIsMobileMenuOpen(false)} className="block p-2 rounded-lg hover:bg-white/10 -m-2">Items</Link>
                                                         <Link href="/admin/orders" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-2 rounded-lg hover:bg-white/10 -m-2">
                                                             <p>Orders</p>
                                                             {(adminActionCounts?.pendingOrders || 0) > 0 && <Badge>{adminActionCounts?.pendingOrders}</Badge>}
