@@ -85,6 +85,7 @@ export function ItemForm({
     control,
     setValue,
     watch,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<ItemFormValues>({
     resolver: zodResolver(itemSchema),
@@ -114,10 +115,12 @@ export function ItemForm({
   
   useEffect(() => {
     if (uploadedUrl) {
-      setValue('images', [...images, uploadedUrl], { shouldValidate: true });
+      const currentImages = getValues('images');
+      setValue('images', [...currentImages, uploadedUrl], { shouldValidate: true });
       clearUpload();
     }
-  }, [uploadedUrl, images, setValue, clearUpload]);
+  }, [uploadedUrl, setValue, clearUpload, getValues]);
+
 
   const handleFormSubmit: SubmitHandler<ItemFormValues> = (data) => {
     const finalData = {
