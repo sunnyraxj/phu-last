@@ -2,7 +2,7 @@
 
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import { collection, doc, query, where, writeBatch, setDoc, deleteDoc } from "firebase/firestore";
 import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon, MapPin, Phone, ExternalLink, Sparkles, Wand2, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -25,6 +25,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { Label } from "@/components/ui/label";
+import Autoplay from "embla-carousel-autoplay"
 
 
 type Product = {
@@ -303,6 +304,7 @@ export default function ProductPage() {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const router = useRouter();
+  const autoplay = useRef(Autoplay({ delay: 3000, stopOnInteraction: false }));
 
 
   const productsQuery = useMemoFirebase(() =>
@@ -369,7 +371,7 @@ export default function ProductPage() {
     const founderMember = teamMembers.find(member => member.role === 'Founder');
     const others = teamMembers.filter(member => member.role !== 'Founder');
     return { founder: founderMember, allOtherMembers: others };
-  }, [teamMembers]);
+}, [teamMembers]);
 
 
   const adminActionCounts = useMemo(() => {
@@ -751,7 +753,13 @@ export default function ProductPage() {
                      <div className="text-center mb-8">
                         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Our Team</h2>
                     </div>
-                     <Carousel opts={{ align: "start" }} className="w-full">
+                     <Carousel 
+                        opts={{ align: "start", loop: true }}
+                        plugins={[autoplay.current]}
+                        onMouseEnter={autoplay.current.stop}
+                        onMouseLeave={autoplay.current.reset}
+                        className="w-full"
+                    >
                        <CarouselContent className="-ml-2 md:-ml-4">
                          {allOtherMembers.map((member) => (
                           <CarouselItem key={member.id} className="pl-4 md:pl-6 basis-1/2 sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
@@ -797,4 +805,5 @@ export default function ProductPage() {
 }
     
     
+
 
