@@ -97,7 +97,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
     const cartSubtotal = useMemo(() => cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0), [cartItems]);
 
     const totalAdminActionCount = useMemo(() => {
-        return (adminActionCounts?.pendingOrders || 0) + (adminActionCounts?.outOfStockProducts || 0) + (adminActionCounts?.pendingReturns || 0);
+        return (adminActionCounts?.pendingOrders || 0) + (adminActionCounts?.pendingReturns || 0);
     }, [adminActionCounts]);
 
     return (
