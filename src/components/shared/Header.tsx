@@ -104,7 +104,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
         <header className="bg-black text-white sticky top-0 z-40">
             <div className="container mx-auto flex items-center justify-between px-4 sm:px-8 py-4">
                 <Link href="/" className="flex items-center gap-3">
-                    <span className="text-lg font-semibold">Purbanchal Hasta Udyog</span>
+                    <span className="text-lg font-semibold whitespace-nowrap">Purbanchal Hasta Udyog</span>
                 </Link>
 
                 <nav className="hidden lg:flex items-center gap-6 text-base font-semibold">
@@ -383,9 +383,6 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                         <SheetContent side="left" className="w-full max-w-xs bg-black text-white p-0">
                              <SheetHeader className="p-4 flex flex-row items-center justify-between border-b border-white/20">
                                 <Link href="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
-                                    <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                                        <span className="text-xl font-bold">P</span>
-                                    </div>
                                 </Link>
                                 <SheetTitle className="sr-only">Main Menu</SheetTitle>
                                 <SheetClose asChild>
