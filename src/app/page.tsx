@@ -364,11 +364,12 @@ export default function ProductPage() {
   );
   const { data: returnRequests } = useCollection<any>(returnsQuery);
 
-  const { founder, managementMembers } = useMemo(() => {
-    if (!teamMembers) return { founder: null, managementMembers: [] };
+  const { founder, managementMembers, otherTeamMembers } = useMemo(() => {
+    if (!teamMembers) return { founder: null, managementMembers: [], otherTeamMembers: [] };
     const founderMember = teamMembers.find(member => member.role === 'Founder');
     const management = teamMembers.filter(member => member.role === 'Management');
-    return { founder: founderMember, managementMembers: management };
+    const others = teamMembers.filter(member => member.role === 'Team Member');
+    return { founder: founderMember, managementMembers: management, otherTeamMembers: others };
   }, [teamMembers]);
 
 
@@ -779,6 +780,37 @@ export default function ProductPage() {
                        </CarouselContent>
                      </Carousel>
                    </div>
+                )}
+
+                {otherTeamMembers && otherTeamMembers.length > 0 && (
+                    <div className="mt-16 w-full">
+                        <div className="text-center mb-8">
+                            <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Our Dedicated Team</h2>
+                        </div>
+                        <Carousel opts={{ align: "start" }} className="w-full">
+                            <CarouselContent className="-ml-2 md:-ml-4">
+                                {otherTeamMembers.map((member) => (
+                                <CarouselItem key={member.id} className="pl-4 md:pl-6 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
+                                    <div className="relative aspect-square rounded-full overflow-hidden group shadow-lg">
+                                        <Image
+                                            src={member.image}
+                                            alt={member.name}
+                                            fill
+                                            className="object-cover transition-transform duration-300 group-hover:scale-110"
+                                            data-ai-hint={member['data-ai-hint']}
+                                        />
+                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-center p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                            <div className="text-white">
+                                                <h3 className="font-bold text-sm sm:text-base">{member.name}</h3>
+                                                <p className="text-xs sm:text-sm opacity-90">{member.role}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CarouselItem>
+                                ))}
+                            </CarouselContent>
+                        </Carousel>
+                    </div>
                 )}
               </div>
               <div className="text-center mt-12">
