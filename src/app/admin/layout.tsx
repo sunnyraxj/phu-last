@@ -38,19 +38,22 @@ export default function AdminLayout({
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
+    // This state will manage the authorization flow: loading -> authorized | unauthorized
     const [authStatus, setAuthStatus] = useState<'loading' | 'authorized' | 'unauthorized'>('loading');
 
     const userDocRef = useMemoFirebase(() => (user && !user.isAnonymous) ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
     const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
     
     useEffect(() => {
-        // We are in a loading state until both the Firebase Auth user and the Firestore user document are resolved.
-        if (isUserLoading || (user && !user.isAnonymous && isUserDocLoading)) {
+        // This effect determines the final authorization status.
+        // It only runs when the loading states of the user or user document change.
+        if (isUserLoading || isUserDocLoading) {
+            // If either is still loading, we are in a loading state.
             setAuthStatus('loading');
             return;
         }
 
-        // Once loading is complete, we can make a definitive decision.
+        // Once all loading is complete, we can make a definitive decision.
         if (user && !user.isAnonymous && userData?.role === 'admin') {
             setAuthStatus('authorized');
         } else {
@@ -95,16 +98,19 @@ export default function AdminLayout({
         if(isMobileMenuOpen) setIsMobileMenuOpen(false);
     }, [pathname])
 
-    // The main guard: Render a spinner while loading, or if unauthorized (before redirect effect runs).
-    // This prevents any child components from rendering and firing off their own effects prematurely.
+    // The main authorization guard.
+    // If the status is not 'authorized' yet, we show a full-screen spinner.
+    // This prevents any child components (like the order page) from rendering and
+    // firing off their own effects or database queries prematurely.
     if (authStatus !== 'authorized') {
         return (
-            <div className="flex h-screen items-center justify-center">
+            <div className="flex h-screen w-full items-center justify-center bg-background">
                 <PottersWheelSpinner />
             </div>
         );
     }
     
+    // If we reach here, it means authStatus IS 'authorized'. We can safely render the admin panel.
     const navGroups = [
         {
             items: [
