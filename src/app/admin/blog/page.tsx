@@ -20,9 +20,15 @@ type Blog = {
     id: string;
     title: string;
     slug: string;
+    content: string;
+    featuredImage: string;
     status: 'draft' | 'published';
     createdAt: Timestamp;
+    faqs?: { question: string, answer: string }[];
 };
+
+type BlogFormData = Omit<Blog, 'id' | 'createdAt'>;
+
 
 export default function BlogPage() {
     const firestore = useFirestore();
@@ -52,7 +58,7 @@ export default function BlogPage() {
         }
     };
     
-    const handleFormSubmit = (formData: Omit<Blog, 'id' | 'createdAt'>) => {
+    const handleFormSubmit = useCallback((formData: BlogFormData) => {
         if (selectedPost) {
             const postRef = doc(firestore, "blogs", selectedPost.id);
             setDocumentNonBlocking(postRef, formData, { merge: true });
@@ -62,7 +68,7 @@ export default function BlogPage() {
         }
         setIsFormOpen(false);
         setSelectedPost(null);
-    };
+    }, [firestore, selectedPost]);
 
     const handleCloseForm = useCallback(() => {
         setIsFormOpen(false);
