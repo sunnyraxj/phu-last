@@ -189,7 +189,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                      {user && !user.isAnonymous && userData?.role === 'admin' && (
                         <Popover open={adminMenuOpen} onOpenChange={setAdminMenuOpen}>
                             <PopoverTrigger asChild>
-                                <Link href="/admin" onMouseEnter={() => setAdminMenuOpen(true)} onMouseLeave={() => setAdminMenuOpen(false)}>
+                                <Link href="/admin/dashboard" onMouseEnter={() => setAdminMenuOpen(true)} onMouseLeave={() => setAdminMenuOpen(false)}>
                                     <div className="flex items-center relative">
                                         <button className="flex items-center gap-1 hover:opacity-80">
                                             ADMIN <ChevronDown size={16} />
@@ -211,13 +211,6 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                         <ShoppingCart className="mr-2 h-4 w-4" />
                                         Orders
                                         {(adminActionCounts?.pendingOrders || 0) > 0 && <Badge className="ml-auto">{adminActionCounts?.pendingOrders}</Badge>}
-                                    </Button>
-                                </Link>
-                                 <Link href="/admin">
-                                    <Button variant="ghost" className="w-full justify-start">
-                                        <Package className="mr-2 h-4 w-4" />
-                                        Products
-                                        {(adminActionCounts?.outOfStockProducts || 0) > 0 && <Badge variant="destructive" className="ml-auto">{adminActionCounts?.outOfStockProducts}</Badge>}
                                     </Button>
                                 </Link>
                                 <Link href="/admin/dashboard">
@@ -389,10 +382,6 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                                 <AccordionTrigger className="py-4">ADMIN</AccordionTrigger>
                                                 <AccordionContent className="pl-4">
                                                     <div className="grid gap-2 mt-2">
-                                                        <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-2 rounded-lg hover:bg-white/10 -m-2">
-                                                            <p>Products</p>
-                                                            {(adminActionCounts?.outOfStockProducts || 0) > 0 && <Badge variant="destructive">{adminActionCounts?.outOfStockProducts}</Badge>}
-                                                        </Link>
                                                         <Link href="/admin/orders" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-2 rounded-lg hover:bg-white/10 -m-2">
                                                             <p>Orders</p>
                                                             {(adminActionCounts?.pendingOrders || 0) > 0 && <Badge>{adminActionCounts?.pendingOrders}</Badge>}

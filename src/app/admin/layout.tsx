@@ -17,11 +17,6 @@ type Order = {
     status: 'pending' | 'shipped' | 'delivered' | 'pending-payment-approval' | 'order-confirmed';
 };
 
-type Product = {
-    id: string;
-    inStock: boolean;
-};
-
 type ReturnRequest = {
     status: 'pending-review';
 }
@@ -43,9 +38,6 @@ export default function AdminLayout({
     const ordersQuery = useMemoFirebase(() => (user ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval', 'order-confirmed'])) : null), [firestore, user]);
     const { data: orders } = useCollection<Order>(ordersQuery);
     
-    const productsQuery = useMemoFirebase(() => (user ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null), [firestore, user]);
-    const { data: products } = useCollection<Product>(productsQuery);
-    
     const returnsQuery = useMemoFirebase(() => (user ? query(collection(firestore, 'returnRequests'), where('status', '==', 'pending-review')) : null), [firestore, user]);
     const { data: returnRequests } = useCollection<ReturnRequest>(returnsQuery);
     
@@ -53,16 +45,15 @@ export default function AdminLayout({
     const { data: stores } = useCollection<Store>(storesQuery);
 
     const pendingOrdersCount = useMemo(() => orders?.length || 0, [orders]);
-    const outOfStockCount = useMemo(() => products?.length || 0, [products]);
     const pendingReturnsCount = useMemo(() => returnRequests?.length || 0, [returnRequests]);
 
     const adminActionCounts = useMemo(() => {
         return {
             pendingOrders: pendingOrdersCount,
-            outOfStockProducts: outOfStockCount,
+            outOfStockProducts: 0,
             pendingReturns: pendingReturnsCount,
         };
-    }, [pendingOrdersCount, outOfStockCount, pendingReturnsCount]);
+    }, [pendingOrdersCount, pendingReturnsCount]);
     
     const handleCloseMobileMenu = useCallback(() => {
         setIsMobileMenuOpen(false);
@@ -82,7 +73,6 @@ export default function AdminLayout({
         {
             title: 'Store Management',
             items: [
-                { href: '/admin', label: 'Products', icon: Package, badge: outOfStockCount > 0 ? outOfStockCount : null, badgeVariant: 'destructive' as const },
                 { href: '/admin/orders', label: 'Orders', icon: ShoppingCart, badge: pendingOrdersCount > 0 ? pendingOrdersCount : null, badgeVariant: 'default' as const },
                 { href: '/admin/returns', label: 'Returns', icon: Undo2, badge: pendingReturnsCount > 0 ? pendingReturnsCount : null, badgeVariant: 'destructive' as const },
             ]
