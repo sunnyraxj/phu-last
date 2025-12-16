@@ -65,7 +65,7 @@ export default function AdminLayout({
 
     useEffect(() => {
         if (authStatus === 'unauthorized') {
-            router.push('/login?redirect=/admin/dashboard');
+            router.push('/');
         }
     }, [authStatus, router]);
     
