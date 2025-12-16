@@ -189,11 +189,9 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                         <Popover open={adminMenuOpen} onOpenChange={setAdminMenuOpen}>
                             <PopoverTrigger asChild onMouseEnter={() => setAdminMenuOpen(true)} onMouseLeave={() => setAdminMenuOpen(false)}>
                                 <div className="flex items-center relative">
-                                    <Link href="/admin">
-                                        <button className="flex items-center gap-1 hover:opacity-80">
-                                            ADMIN <ChevronDown size={16} />
-                                        </button>
-                                    </Link>
+                                    <button className="flex items-center gap-1 hover:opacity-80">
+                                        ADMIN <ChevronDown size={16} />
+                                    </button>
                                     {totalAdminActionCount > 0 && (
                                         <Badge variant="destructive" className="absolute -top-2 -right-3 z-10 px-1.5 py-0 h-4 leading-none text-xs">
                                             {totalAdminActionCount}
@@ -202,53 +200,16 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                 </div>
                             </PopoverTrigger>
                             <PopoverContent 
-                                className="w-64"
+                                className="w-auto"
                                 onMouseEnter={() => setAdminMenuOpen(true)} onMouseLeave={() => setAdminMenuOpen(false)}
                             >
-                                <div className="grid gap-4">
-                                    <p className="font-semibold">Admin Panel</p>
-                                    <div className="grid gap-1">
-                                        <Link href="/admin" className="flex items-center justify-between gap-4 p-2 rounded-lg hover:bg-muted -m-2">
-                                            <div className="flex items-center gap-4">
-                                                <Package className="h-5 w-5 mt-0.5 text-primary"/>
-                                                <p className="font-semibold text-sm">Products</p>
-                                            </div>
-                                            {(adminActionCounts?.outOfStockProducts || 0) > 0 && <Badge variant="destructive">{adminActionCounts?.outOfStockProducts}</Badge>}
-                                        </Link>
-                                        <Link href="/admin/orders" className="flex items-center justify-between gap-4 p-2 rounded-lg hover:bg-muted -m-2">
-                                            <div className="flex items-center gap-4">
-                                                <ShoppingCart className="h-5 w-5 mt-0.5 text-primary"/>
-                                                <p className="font-semibold text-sm">Orders</p>
-                                            </div>
-                                            {(adminActionCounts?.pendingOrders || 0) > 0 && <Badge>{adminActionCounts?.pendingOrders}</Badge>}
-                                        </Link>
-                                        <Link href="/admin/returns" className="flex items-center justify-between gap-4 p-2 rounded-lg hover:bg-muted -m-2">
-                                            <div className="flex items-center gap-4">
-                                                <Undo2 className="h-5 w-5 mt-0.5 text-primary"/>
-                                                <p className="font-semibold text-sm">Returns</p>
-                                            </div>
-                                            {(adminActionCounts?.pendingReturns || 0) > 0 && <Badge variant="destructive">{adminActionCounts?.pendingReturns}</Badge>}
-                                        </Link>
-                                        <Link href="/admin/team" className="flex items-center justify-between gap-4 p-2 rounded-lg hover:bg-muted -m-2">
-                                            <div className="flex items-center gap-4">
-                                                <Users className="h-5 w-5 mt-0.5 text-primary"/>
-                                                <p className="font-semibold text-sm">Our Team</p>
-                                            </div>
-                                        </Link>
-                                        <Link href="/admin/store" className="flex items-center justify-between gap-4 p-2 rounded-lg hover:bg-muted -m-2">
-                                            <div className="flex items-center gap-4">
-                                                <Store className="h-5 w-5 mt-0.5 text-primary"/>
-                                                <p className="font-semibold text-sm">Our Store</p>
-                                            </div>
-                                        </Link>
-                                        <Link href="/admin/settings" className="flex items-center justify-between gap-4 p-2 rounded-lg hover:bg-muted -m-2">
-                                            <div className="flex items-center gap-4">
-                                                <Settings className="h-5 w-5 mt-0.5 text-primary"/>
-                                                <p className="font-semibold text-sm">Settings</p>
-                                            </div>
-                                        </Link>
-                                    </div>
-                                </div>
+                                <Link href="/admin/orders">
+                                    <Button variant="ghost" className="w-full justify-start">
+                                        <ShoppingCart className="mr-2 h-4 w-4" />
+                                        Orders
+                                        {(adminActionCounts?.pendingOrders || 0) > 0 && <Badge className="ml-auto">{adminActionCounts?.pendingOrders}</Badge>}
+                                    </Button>
+                                </Link>
                             </PopoverContent>
                         </Popover>
                     )}
