@@ -202,7 +202,7 @@ export default function AdminLayout({
                 <div className="flex h-full max-h-screen flex-col gap-2">
                     <div className="flex h-24 items-center border-b px-6">
                          <Link href="/" className="flex items-center gap-3">
-                            <span className="text-lg font-semibold">Hasta Udyog Admin</span>
+                            <span className="text-lg font-semibold whitespace-nowrap">Purbanchal Hasta Udyog</span>
                         </Link>
                     </div>
                     <div className="flex-1 overflow-y-auto py-4">
@@ -237,3 +237,4 @@ export default function AdminLayout({
 
 
     
+
