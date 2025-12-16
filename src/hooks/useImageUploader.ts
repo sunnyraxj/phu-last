@@ -70,7 +70,7 @@ export function useImageUploader(uploadPath: string) {
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const uploadFile = (file: File) => {
+  const uploadFile = async (file: File) => {
     if (!file) return;
 
     setIsUploading(true);
@@ -78,35 +78,35 @@ export function useImageUploader(uploadPath: string) {
     setError(null);
     setUploadedUrl(null);
     
-    compressImage(file)
-        .then(compressedFile => {
-            const storageRef = ref(storage, `${uploadPath}/${Date.now()}_${compressedFile.name}`);
-            const uploadTask = uploadBytesResumable(storageRef, compressedFile);
+    try {
+        const compressedFile = await compressImage(file);
+        
+        const storageRef = ref(storage, `${uploadPath}/${Date.now()}_${compressedFile.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, compressedFile);
 
-            uploadTask.on(
-              'state_changed',
-              (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                setUploadProgress(progress);
-              },
-              (uploadError) => {
-                console.error("Upload failed:", uploadError);
-                setError('Image upload failed. Please try again.');
-                setIsUploading(false);
-              },
-              () => {
-                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                  setUploadedUrl(downloadURL);
-                  setIsUploading(false);
-                });
-              }
-            );
-        })
-        .catch(compressionError => {
-            console.error("Image compression failed:", compressionError);
-            setError('Could not process image. Please try a different file.');
+        uploadTask.on(
+          'state_changed',
+          (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            setUploadProgress(progress);
+          },
+          (uploadError) => {
+            console.error("Upload failed:", uploadError);
+            setError('Image upload failed. Please try again.');
             setIsUploading(false);
-        });
+          },
+          () => {
+            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+              setUploadedUrl(downloadURL);
+              setIsUploading(false);
+            });
+          }
+        );
+    } catch(compressionError) {
+        console.error("Image compression failed:", compressionError);
+        setError('Could not process image. Please try a different file.');
+        setIsUploading(false);
+    }
   };
 
   const clearUpload = () => {
