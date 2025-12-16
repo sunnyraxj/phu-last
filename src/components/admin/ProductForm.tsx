@@ -1,14 +1,11 @@
 
 'use client';
 
-import { useForm, SubmitHandler, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useEffect, useState } from 'react';
 import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -21,42 +18,63 @@ import Image from 'next/image';
 import { useImageUploader } from '@/hooks/useImageUploader';
 import { Progress } from '../ui/progress';
 import { cn } from '@/lib/utils';
+import { Checkbox } from '../ui/checkbox';
 
-const productSchema = z.object({
-  name: z.string().min(1, { message: 'Product name is required' }),
-  description: z.string().min(1, { message: 'Description is required' }),
-  mrp: z.preprocess((a) => parseFloat(z.string().parse(a)), 
-    z.number().positive({ message: 'MRP must be a positive number' })),
-  image: z.string().url({ message: 'Please provide a valid image URL.' }),
-  'data-ai-hint': z.string().optional(),
-  inStock: z.boolean(),
-  hsn: z.string().optional(),
-  gst: z.preprocess((a) => (a ? parseFloat(z.string().parse(a)) : undefined), 
-    z.number().min(0, { message: 'GST must be a non-negative number' }).optional()),
-  size: z.object({
-      height: z.preprocess((a) => a ? parseFloat(z.string().parse(a)) : undefined, z.number().optional()),
-      length: z.preprocess((a) => a ? parseFloat(z.string().parse(a)) : undefined, z.number().optional()),
-      width: z.preprocess((a) => a ? parseFloat(z.string().parse(a)) : undefined, z.number().optional()),
-  }).optional(),
-});
 
-// We separate the form values from the select values to manage them differently
-type ProductFormSchemaValues = z.infer<typeof productSchema>;
-export type ProductFormValues = ProductFormSchemaValues & {
-    category: string;
-    material: string;
+// Define the shape of the form data
+export type ProductFormValues = {
+  name: string;
+  description: string;
+  mrp: string;
+  image: string;
+  'data-ai-hint'?: string;
+  inStock: boolean;
+  hsn?: string;
+  gst?: string;
+  size?: {
+      height?: string;
+      length?: string;
+      width?: string;
+  };
+  category: string;
+  material: string;
 };
 
+// Define the shape of the product prop, which might have numbers
+type ProductProp = Omit<ProductFormValues, 'mrp' | 'gst' | 'size'> & {
+    id?: string;
+    mrp: number;
+    gst?: number;
+    size?: {
+        height?: number;
+        length?: number;
+        width?: number;
+    }
+};
 
 interface ProductFormProps {
   onSuccess: (data: ProductFormValues) => void;
   onClose: () => void;
-  product: ProductFormValues & { id?: string } | null;
+  product: ProductProp | null;
   existingMaterials: string[];
   existingCategories: string[];
   onNewCategory: (category: string) => void;
   onNewMaterial: (material: string) => void;
 }
+
+const initialFormData: ProductFormValues = {
+    name: '',
+    description: '',
+    mrp: '',
+    image: '',
+    'data-ai-hint': '',
+    inStock: true,
+    hsn: '',
+    gst: '5',
+    size: { height: '', length: '', width: '' },
+    category: '',
+    material: '',
+};
 
 export function ProductForm({ 
   onSuccess,
@@ -67,152 +85,177 @@ export function ProductForm({
   onNewCategory,
   onNewMaterial
 }: ProductFormProps) {
-  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
-  const [isMaterialDialogOpen, setIsMaterialDialogOpen] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [aiNotes, setAiNotes] = useState('');
-  const { toast } = useToast();
+    const [formData, setFormData] = useState<ProductFormValues>(initialFormData);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+    const [isMaterialDialogOpen, setIsMaterialDialogOpen] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [aiNotes, setAiNotes] = useState('');
+    const { toast } = useToast();
 
-  // Local state for uncontrolled Select components
-  const [category, setCategory] = useState<string | undefined>(product?.category);
-  const [material, setMaterial] = useState<string | undefined>(product?.material);
+    const {
+        uploadFile,
+        isUploading,
+        uploadProgress,
+        uploadedUrl,
+        error: uploadError,
+        clearUpload,
+    } = useImageUploader('product_images');
 
-  const {
-    uploadFile,
-    isUploading,
-    uploadProgress,
-    uploadedUrl,
-    error: uploadError,
-    clearUpload
-  } = useImageUploader('product_images');
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-    setValue,
-    getValues,
-    watch,
-    control, // Use Controller for the checkbox
-  } = useForm<ProductFormSchemaValues>({
-    resolver: zodResolver(productSchema),
-    defaultValues: product || {
-      name: '',
-      description: '',
-      mrp: 0,
-      image: '',
-      inStock: true,
-    },
-  });
-
-  const imageValue = watch('image');
-
-  useEffect(() => {
-    if (product) {
-      reset(product);
-      setCategory(product.category);
-      setMaterial(product.material);
-    } else {
-      reset({
-        name: '', description: '', mrp: 0, image: '', inStock: true
-      });
-      setCategory(undefined);
-      setMaterial(undefined);
-    }
-    setAiNotes('');
-    clearUpload();
-  }, [product, reset, clearUpload]);
-
-  useEffect(() => {
-    if (uploadedUrl) {
-      setValue('image', uploadedUrl, { shouldValidate: true });
-    }
-  }, [uploadedUrl, setValue]);
-
-  const handleFormSubmit: SubmitHandler<ProductFormSchemaValues> = (data) => {
-    const finalCategory = category;
-    const finalMaterial = material;
+    // Populate formData ONLY ONCE when an existing product is being edited.
+    useEffect(() => {
+        if (product) {
+            setFormData({
+                name: product.name || '',
+                description: product.description || '',
+                mrp: String(product.mrp || ''),
+                image: product.image || '',
+                'data-ai-hint': product['data-ai-hint'] || '',
+                inStock: product.inStock,
+                hsn: product.hsn || '',
+                gst: String(product.gst || '5'),
+                size: {
+                    height: String(product.size?.height || ''),
+                    length: String(product.size?.length || ''),
+                    width: String(product.size?.width || ''),
+                },
+                category: product.category || '',
+                material: product.material || '',
+            });
+        } else {
+            setFormData(initialFormData); // Reset for new product
+        }
+        setAiNotes('');
+        clearUpload();
+    }, [product, clearUpload]);
     
-    if (!finalCategory) {
-        toast({variant: 'destructive', title: 'Category is required'});
-        return;
-    }
-    if (!finalMaterial) {
-        toast({variant: 'destructive', title: 'Material is required'});
-        return;
-    }
+    useEffect(() => {
+      if (uploadedUrl) {
+          setFormData((prev) => ({ ...prev, image: uploadedUrl }));
+      }
+    }, [uploadedUrl]);
+
+    // Generic handler to update formData state for standard inputs
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { id, value } = e.target;
+        setFormData(prev => ({ ...prev, [id]: value }));
+    };
     
-    const completeFormData: ProductFormValues = {
-        ...data,
-        gst: data.gst,
-        category: finalCategory,
-        material: finalMaterial,
+    // Handler for nested size object
+    const handleSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { id, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            size: {
+                ...prev.size,
+                [id]: value
+            }
+        }));
     };
 
-    onSuccess(completeFormData);
-  };
+    const handleFormSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        
+        // Basic validation
+        if (!formData.name) {
+            toast({ variant: 'destructive', title: 'Name is required' });
+            setIsSubmitting(false);
+            return;
+        }
+        if (!formData.description) {
+            toast({ variant: 'destructive', title: 'Description is required' });
+            setIsSubmitting(false);
+            return;
+        }
+        if (!formData.mrp || isNaN(parseFloat(formData.mrp)) || parseFloat(formData.mrp) <= 0) {
+            toast({ variant: 'destructive', title: 'Valid MRP is required' });
+            setIsSubmitting(false);
+            return;
+        }
+        if (!formData.image) {
+            toast({ variant: 'destructive', title: 'Image is required' });
+            setIsSubmitting(false);
+            return;
+        }
+         if (!formData.category) {
+            toast({variant: 'destructive', title: 'Category is required'});
+            setIsSubmitting(false);
+            return;
+        }
+        if (!formData.material) {
+            toast({variant: 'destructive', title: 'Material is required'});
+            setIsSubmitting(false);
+            return;
+        }
+        
+        onSuccess(formData);
+        setIsSubmitting(false);
+    };
 
-  const handleAddCategory = (newCategory: string) => {
-    onNewCategory(newCategory);
-    setCategory(newCategory);
-    setIsCategoryDialogOpen(false);
-  }
+    const handleAddCategory = (newCategory: string) => {
+        onNewCategory(newCategory);
+        setFormData(prev => ({ ...prev, category: newCategory }));
+        setIsCategoryDialogOpen(false);
+    };
 
-  const handleAddMaterial = (newMaterial: string) => {
-    onNewMaterial(newMaterial);
-    setMaterial(newMaterial);
-    setIsMaterialDialogOpen(false);
-  }
+    const handleAddMaterial = (newMaterial: string) => {
+        onNewMaterial(newMaterial);
+        setFormData(prev => ({ ...prev, material: newMaterial }));
+        setIsMaterialDialogOpen(false);
+    };
 
-  const handleGenerateDetails = async () => {
-    const imageDataUri = getValues('image');
-    if (!imageDataUri) {
-      toast({
-        variant: 'destructive',
-        title: 'Image required',
-        description: 'Please provide an image URL to generate details.',
-      });
-      return;
-    }
+    const handleGenerateDetails = async () => {
+        if (!formData.image) {
+          toast({
+            variant: 'destructive',
+            title: 'Image required',
+            description: 'Please provide an image to generate details.',
+          });
+          return;
+        }
 
-    setIsGenerating(true);
-    try {
-      const response = await fetch('/api/generate-product-details', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageDataUri, productInfo: aiNotes }),
-      });
+        setIsGenerating(true);
+        try {
+          const response = await fetch('/api/generate-product-details', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageDataUri: formData.image, productInfo: aiNotes }),
+          });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate details.');
-      }
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to generate details.');
+          }
 
-      const result: GenerateProductDetailsOutput = await response.json();
+          const result: GenerateProductDetailsOutput = await response.json();
 
-      setValue('name', result.name, { shouldValidate: true });
-      setValue('description', result.description, { shouldValidate: true });
+          setFormData(prev => ({
+              ...prev,
+              name: result.name,
+              description: result.description
+          }));
 
-      toast({
-        title: 'Details Generated!',
-        description: 'The product name and description have been populated.',
-      });
-    } catch (error: any) {
-      console.error(error);
-      toast({
-        variant: 'destructive',
-        title: 'Generation Failed',
-        description: error.message || 'Could not generate details. Please check the image and try again.',
-      });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+          toast({
+            title: 'Details Generated!',
+            description: 'The product name and description have been populated.',
+          });
+        } catch (error: any) {
+          console.error(error);
+          toast({
+            variant: 'destructive',
+            title: 'Generation Failed',
+            description: error.message || 'Could not generate details. Please check the image and try again.',
+          });
+        } finally {
+          setIsGenerating(false);
+        }
+    };
+
 
   return (
     <>
-      <form onSubmit={handleSubmit(handleFormSubmit)}>
+      <form onSubmit={handleFormSubmit}>
           <ScrollArea className="h-[60vh] pr-6 -mr-6">
               <div className="space-y-4 my-4">
                    <div className="p-4 rounded-lg bg-muted/50 border border-dashed space-y-4">
@@ -222,12 +265,12 @@ export function ProductForm({
                         </Label>
                         
                         <ImageUploader
-                          imageUrl={imageValue}
+                          imageUrl={formData.image}
                           isUploading={isUploading}
                           uploadProgress={uploadProgress}
                           onFileUpload={uploadFile}
-                          onClear={() => setValue('image', '', { shouldValidate: true })}
-                          error={errors.image?.message || uploadError}
+                          onClear={() => setFormData(prev => ({ ...prev, image: '' }))}
+                          error={uploadError}
                         />
 
                         <div className="space-y-1">
@@ -243,33 +286,29 @@ export function ProductForm({
                         <Button 
                             type="button" 
                             onClick={handleGenerateDetails} 
-                            disabled={isGenerating || !imageValue || isUploading}
+                            disabled={isGenerating || !formData.image || isUploading}
                         >
                             {isGenerating ? <PottersWheelSpinner className="h-5 w-5" /> : <Wand2 className="mr-2 h-4 w-4" />}
                             {isGenerating ? 'Generating...' : 'Generate Name & Description'}
                         </Button>
                     </div>
                   <div className="space-y-1">
-                      <Label htmlFor="product-name">Product Name</Label>
-                      <Input id="product-name" {...register('name')} />
-                      {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+                      <Label htmlFor="name">Product Name</Label>
+                      <Input id="name" value={formData.name} onChange={handleInputChange} />
                   </div>
                   <div className="space-y-1">
-                      <Label htmlFor="product-description">Description</Label>
-                      <Textarea id="product-description" {...register('description')} rows={4} />
-                      {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea id="description" value={formData.description} onChange={handleInputChange} rows={4} />
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
-                          <Label htmlFor="product-mrp">MRP (INR)</Label>
-                          <Input id="product-mrp" type="number" step="0.01" {...register('mrp')} />
-                          {errors.mrp && <p className="text-xs text-destructive">{errors.mrp.message}</p>}
+                          <Label htmlFor="mrp">MRP (INR)</Label>
+                          <Input id="mrp" type="number" step="0.01" value={formData.mrp} onChange={handleInputChange} />
                       </div>
                        <div className="space-y-1">
-                          <Label htmlFor="product-gst">GST % (Optional)</Label>
-                          <Input id="product-gst" type="number" step="0.01" {...register('gst')} />
-                          {errors.gst && <p className="text-xs text-destructive">{errors.gst.message}</p>}
+                          <Label htmlFor="gst">GST % (Optional)</Label>
+                          <Input id="gst" type="number" step="0.01" value={formData.gst} onChange={handleInputChange} />
                       </div>
                   </div>
 
@@ -277,7 +316,11 @@ export function ProductForm({
                     <div className="space-y-1">
                         <Label>Category</Label>
                         <div className="flex gap-2">
-                           <Select defaultValue={product?.category} onValueChange={setCategory}>
+                           <Select 
+                                key={product?.id} // Re-mounts the component when product changes
+                                defaultValue={formData.category || undefined}
+                                onValueChange={(value) => setFormData(prev => ({...prev, category: value}))}
+                            >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select a category" />
                                 </SelectTrigger>
@@ -293,7 +336,11 @@ export function ProductForm({
                     <div className="space-y-1">
                         <Label>Material</Label>
                          <div className="flex gap-2">
-                            <Select defaultValue={product?.material} onValueChange={setMaterial}>
+                            <Select 
+                                key={`${product?.id}-material`}
+                                defaultValue={formData.material || undefined}
+                                onValueChange={(value) => setFormData(prev => ({...prev, material: value}))}
+                            >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select a material" />
                                 </SelectTrigger>
@@ -310,44 +357,34 @@ export function ProductForm({
 
                   <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
-                          <Label htmlFor="product-hsn">HSN Code (Optional)</Label>
-                          <Input id="product-hsn" {...register('hsn')} />
-                          {errors.hsn && <p className="text-xs text-destructive">{errors.hsn.message}</p>}
+                          <Label htmlFor="hsn">HSN Code (Optional)</Label>
+                          <Input id="hsn" value={formData.hsn} onChange={handleInputChange} />
                       </div>
                       <div className="space-y-1">
                           <Label>Size (H x L x W) (Optional)</Label>
                           <div className="flex gap-2">
-                              <Input placeholder="H" {...register('size.height')} />
-                              <Input placeholder="L" {...register('size.length')} />
-                              <Input placeholder="W" {...register('size.width')} />
+                              <Input id="height" placeholder="H" value={formData.size?.height} onChange={handleSizeChange} />
+                              <Input id="length" placeholder="L" value={formData.size?.length} onChange={handleSizeChange} />
+                              <Input id="width" placeholder="W" value={formData.size?.width} onChange={handleSizeChange} />
                           </div>
                       </div>
                   </div>
                   
                   <div className="space-y-1">
-                      <Label htmlFor="product-ai-hint">AI Hint (Optional)</Label>
-                      <Input id="product-ai-hint" {...register('data-ai-hint')} placeholder="e.g. clay pot" />
-                      {errors['data-ai-hint'] && <p className="text-xs text-destructive">{errors['data-ai-hint'].message}</p>}
+                      <Label htmlFor="data-ai-hint">AI Hint (Optional)</Label>
+                      <Input id="data-ai-hint" value={formData['data-ai-hint']} onChange={handleInputChange} placeholder="e.g. clay pot" />
                   </div>
 
-                    <Controller
-                        name="inStock"
-                        control={control}
-                        render={({ field }) => (
-                            <div className="flex items-center space-x-2 pt-2">
-                                <input
-                                    type="checkbox"
-                                    id="product-inStock"
-                                    checked={field.value}
-                                    onChange={field.onChange}
-                                    className="h-4 w-4 rounded border-primary text-primary focus:ring-primary"
-                                />
-                                <Label htmlFor="product-inStock" className="cursor-pointer text-sm">
-                                    Product is in stock and available for purchase
-                                </Label>
-                            </div>
-                        )}
-                    />
+                  <div className="flex items-center space-x-2 pt-2">
+                      <Checkbox
+                          id="inStock"
+                          checked={formData.inStock}
+                          onCheckedChange={(checked) => setFormData(prev => ({...prev, inStock: !!checked}))}
+                      />
+                      <Label htmlFor="inStock" className="cursor-pointer text-sm">
+                          Product is in stock and available for purchase
+                      </Label>
+                  </div>
               </div>
           </ScrollArea>
 
