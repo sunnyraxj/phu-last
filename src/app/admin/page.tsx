@@ -63,6 +63,12 @@ export default function AdminProductsPage() {
     const handleNewMaterial = useCallback((material: string) => {
         setMaterials(prev => [...new Set([...prev, material])]);
     }, []);
+    
+    const handleCloseDialog = useCallback(() => {
+        setIsAddFormOpen(false);
+        setIsEditFormOpen(false);
+        setSelectedProduct(null);
+    }, []);
 
     const handleEditClick = (product: Product) => {
         setSelectedProduct(product);
@@ -91,6 +97,7 @@ export default function AdminProductsPage() {
             setDocumentNonBlocking(productRef, dataWithGST, { merge: true });
         }
         setIsEditFormOpen(false);
+        setSelectedProduct(null);
     };
 
     return (
@@ -112,7 +119,7 @@ export default function AdminProductsPage() {
                         </DialogHeader>
                         <ProductForm 
                             onSuccess={handleAddSubmit}
-                            onClose={() => setIsAddFormOpen(false)}
+                            onClose={handleCloseDialog}
                             product={null}
                             existingMaterials={materials}
                             existingCategories={categories}
@@ -133,7 +140,7 @@ export default function AdminProductsPage() {
                     </DialogHeader>
                      <ProductForm 
                         onSuccess={handleEditSubmit}
-                        onClose={() => setIsEditFormOpen(false)}
+                        onClose={handleCloseDialog}
                         product={selectedProduct}
                         existingMaterials={materials}
                         existingCategories={categories}
