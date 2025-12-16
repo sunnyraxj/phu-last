@@ -256,7 +256,7 @@ export function ProductForm({
                             <div className="space-y-1">
                                 <Label htmlFor="ai-notes">AI Notes (Optional)</Label>
                                 <Textarea 
-                                    id="ai-notes"
+                                    id="ai-notes-product"
                                     placeholder="e.g., 'handmade clay vase, blue glaze, from Rajasthan'. The AI will use this with the image to generate a name and description."
                                     value={aiNotes}
                                     onChange={(e) => setAiNotes(e.target.value)}
@@ -499,14 +499,14 @@ function ImageUploader({
                         "h-48 w-full rounded-md border-2 border-dashed flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:border-primary transition-colors",
                         isDragging && "border-primary bg-primary/10"
                     )}
-                    onClick={() => document.getElementById('image-upload-input')?.click()}
+                    onClick={() => document.getElementById('image-upload-input-product')?.click()}
                 >
                     <UploadCloud className="h-8 w-8 text-muted-foreground" />
                     <p className="mt-2 text-sm text-muted-foreground">
                         Drag & drop an image here, or click to select a file
                     </p>
                     <input
-                        id="image-upload-input"
+                        id="image-upload-input-product"
                         type="file"
                         accept="image/*"
                         onChange={handleFileChange}
@@ -518,5 +518,3 @@ function ImageUploader({
         </div>
     );
 }
-
-    

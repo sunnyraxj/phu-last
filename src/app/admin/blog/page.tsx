@@ -23,7 +23,7 @@ type Blog = {
     content: string;
     featuredImage: string;
     status: 'draft' | 'published';
-    createdAt: Timestamp;
+    createdAt?: Timestamp;
     faqs?: { question: string, answer: string }[];
 };
 

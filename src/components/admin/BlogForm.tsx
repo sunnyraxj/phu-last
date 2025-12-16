@@ -449,14 +449,14 @@ function ImageUploader({
                         "h-48 w-full rounded-md border-2 border-dashed flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:border-primary transition-colors",
                         isDragging && "border-primary bg-primary/10"
                     )}
-                    onClick={() => document.getElementById('image-upload-input')?.click()}
+                    onClick={() => document.getElementById('image-upload-input-blog')?.click()}
                 >
                     <UploadCloud className="h-8 w-8 text-muted-foreground" />
                     <p className="mt-2 text-sm text-muted-foreground">
                         Drag & drop an image here, or click to select a file
                     </p>
                     <input
-                        id="image-upload-input"
+                        id="image-upload-input-blog"
                         type="file"
                         accept="image/*"
                         onChange={handleFileChange}
@@ -468,5 +468,3 @@ function ImageUploader({
         </div>
     );
 }
-
-    
