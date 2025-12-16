@@ -38,7 +38,6 @@ export default function AdminLayout({
     const firestore = useFirestore();
     const router = useRouter();
     const pathname = usePathname();
-    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const userDocRef = useMemoFirebase(() => (user && !user.isAnonymous) ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
@@ -92,31 +91,28 @@ export default function AdminLayout({
     }, [pendingOrdersCount, outOfStockCount, pendingReturnsCount]);
 
     useEffect(() => {
-        const checkAuth = () => {
-            if (isUserLoading || isUserDocLoading) {
-                return;
-            }
+        // Wait until both user and user document loading states are resolved.
+        if (isUserLoading || isUserDocLoading) {
+            return;
+        }
 
-            if (!user || user.isAnonymous) {
-                router.push('/login?redirect=/admin');
-                return;
-            }
+        // If not logged in or is an anonymous user, redirect to login.
+        if (!user || user.isAnonymous) {
+            router.push('/login?redirect=/admin');
+            return;
+        }
 
-            if (userData?.role !== 'admin') {
-                router.push('/');
-            }
-            
-            setIsCheckingAuth(false);
-        };
-
-        checkAuth();
+        // After loading is complete, if the user is not an admin, redirect to the homepage.
+        if (userData?.role !== 'admin') {
+            router.push('/');
+        }
     }, [user, userData, isUserLoading, isUserDocLoading, router]);
     
     useEffect(() => {
         setIsMobileMenuOpen(false);
     }, [pathname])
 
-    if (isCheckingAuth || isUserLoading || isUserDocLoading) {
+    if (isUserLoading || isUserDocLoading) {
         return (
             <div className="flex h-screen items-center justify-center">
                 <PottersWheelSpinner />
@@ -126,10 +122,8 @@ export default function AdminLayout({
     
     if (!isAuthorizedAdmin) {
         return (
-            <div className="flex h-screen flex-col items-center justify-center bg-background text-center p-4">
-                <h1 className="text-3xl sm:text-4xl font-bold text-destructive">Access Denied</h1>
-                <p className="mt-4 text-base sm:text-lg text-muted-foreground">You do not have permission to view this page.</p>
-                <Button onClick={() => router.push('/')} className="mt-8">Go to Homepage</Button>
+             <div className="flex h-screen items-center justify-center">
+                <PottersWheelSpinner />
             </div>
         );
     }
@@ -235,3 +229,4 @@ export default function AdminLayout({
 
 
     
+
