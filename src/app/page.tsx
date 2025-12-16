@@ -369,8 +369,9 @@ export default function ProductPage() {
   const { founder, allOtherMembers } = useMemo(() => {
     if (!teamMembers) return { founder: null, allOtherMembers: [] };
     const founderMember = teamMembers.find(member => member.role === 'Founder');
-    const others = teamMembers.filter(member => member.role !== 'Founder');
-    return { founder: founderMember, allOtherMembers: others };
+    const managementMembers = teamMembers.filter(member => member.role === 'Management');
+    const otherTeamMembers = teamMembers.filter(member => member.role === 'Team Member');
+    return { founder: founderMember, allOtherMembers: [...managementMembers, ...otherTeamMembers] };
 }, [teamMembers]);
 
 
@@ -482,6 +483,20 @@ export default function ProductPage() {
     "Support Local Artisans",
     "Unique Decor for Your Home"
   ];
+
+  const teamMembersToDisplay = useMemo(() => {
+    if (!allOtherMembers || allOtherMembers.length === 0) return [];
+    // Duplicate members if there are too few to create a seamless loop
+    const minMembersForLoop = 8; 
+    if (allOtherMembers.length > 0 && allOtherMembers.length < minMembersForLoop) {
+      let duplicated = [];
+      while (duplicated.length < minMembersForLoop) {
+        duplicated.push(...allOtherMembers);
+      }
+      return duplicated;
+    }
+    return allOtherMembers;
+  }, [allOtherMembers]);
 
   return (
     <div className="min-h-screen bg-background font-sans">
@@ -748,21 +763,14 @@ export default function ProductPage() {
                     </div>
                   </div>
                 )}
-                {allOtherMembers && allOtherMembers.length > 0 && (
-                   <div className="w-full">
+                {teamMembersToDisplay && teamMembersToDisplay.length > 0 && (
+                   <div className="w-full overflow-hidden">
                      <div className="text-center mb-8">
                         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Our Team</h2>
                     </div>
-                     <Carousel 
-                        opts={{ align: "start", loop: true }}
-                        plugins={[autoplay.current]}
-                        onMouseEnter={autoplay.current.stop}
-                        onMouseLeave={autoplay.current.reset}
-                        className="w-full"
-                    >
-                       <CarouselContent className="-ml-2 md:-ml-4">
-                         {allOtherMembers.map((member) => (
-                          <CarouselItem key={member.id} className="pl-4 md:pl-6 basis-1/2 sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                     <div className="flex animate-marquee hover:[animation-play-state:paused]">
+                        {[...teamMembersToDisplay, ...teamMembersToDisplay].map((member, index) => (
+                          <div key={`${member.id}-${index}`} className="flex-shrink-0 w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5 px-2 md:px-4">
                               <Card className="w-full max-w-sm overflow-hidden rounded-2xl shadow-lg group">
                                 <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-2xl">
                                   <Image
@@ -783,10 +791,9 @@ export default function ProductPage() {
                                   )}
                                 </div>
                               </Card>
-                          </CarouselItem>
+                          </div>
                          ))}
-                       </CarouselContent>
-                     </Carousel>
+                     </div>
                    </div>
                 )}
 
@@ -805,5 +812,6 @@ export default function ProductPage() {
 }
     
     
+
 
 
