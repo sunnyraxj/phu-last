@@ -22,7 +22,6 @@ import { useImageUploader } from '@/hooks/useImageUploader';
 import { Progress } from '../ui/progress';
 import { cn } from '@/lib/utils';
 
-// Schema without category and material, as they are handled by local state
 const productSchema = z.object({
   name: z.string().min(1, { message: 'Product name is required' }),
   description: z.string().min(1, { message: 'Description is required' }),
@@ -41,7 +40,6 @@ const productSchema = z.object({
   }).optional(),
 });
 
-// Form values include category and material for submission, but they are not part of the Zod schema for validation.
 export type ProductFormValues = z.infer<typeof productSchema> & {
     category: string;
     material: string;
@@ -74,7 +72,6 @@ export function ProductForm({
 
   const [category, setCategory] = useState<string | undefined>(undefined);
   const [material, setMaterial] = useState<string | undefined>(undefined);
-
 
   const {
     uploadFile,
@@ -116,31 +113,26 @@ export function ProductForm({
 
   const imageValue = watch('image');
 
-  // Reset form when product prop changes
   useEffect(() => {
     if (product) {
       reset(product);
-      setCategory(product.category);
-      setMaterial(product.material);
     } else {
       reset({
         name: '', description: '', mrp: 0, image: '', 'data-ai-hint': '', inStock: true, hsn: '', gst: 0, size: { height: undefined, length: undefined, width: undefined },
       });
-      setCategory(undefined);
-      setMaterial(undefined);
     }
+    setCategory(product?.category);
+    setMaterial(product?.material);
     setAiNotes('');
     clearUpload();
   }, [product, reset, clearUpload]);
 
-  // Handle image upload completion
   useEffect(() => {
     if (uploadedUrl) {
       setValue('image', uploadedUrl, { shouldValidate: true });
       clearErrors('image');
     }
   }, [uploadedUrl, setValue, clearErrors]);
-
 
   const handleFormSubmit: SubmitHandler<Omit<ProductFormValues, 'category' | 'material'>> = (data) => {
     const finalCategory = category ?? product?.category;
@@ -499,3 +491,5 @@ function ImageUploader({
     );
 }
 
+
+    
