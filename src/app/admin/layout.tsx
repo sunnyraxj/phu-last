@@ -38,10 +38,35 @@ export default function AdminLayout({
     const router = useRouter();
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    
+    // State to track overall authorization status
+    const [isAuthorized, setIsAuthorized] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     const userDocRef = useMemoFirebase(() => (user && !user.isAnonymous) ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
     const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
 
+    useEffect(() => {
+        // Don't run authorization logic until both auth and user doc loading are complete
+        if (isUserLoading || isUserDocLoading) {
+            return;
+        }
+
+        const isAdmin = userData?.role === 'admin';
+
+        // If there's no user, user is anonymous, or user is not an admin, redirect
+        if (!user || user.isAnonymous || !isAdmin) {
+            router.push('/login?redirect=/admin/dashboard');
+        } else {
+            // Only if all checks pass, set authorized and stop loading
+            setIsAuthorized(true);
+        }
+        
+        // Mark loading as complete regardless of outcome
+        setIsLoading(false);
+
+    }, [user, userData, isUserLoading, isUserDocLoading, router]);
+    
     const isAuthorizedAdmin = userData?.role === 'admin';
 
     const ordersQuery = useMemoFirebase(() => (isAuthorizedAdmin ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval', 'order-confirmed'])) : null), [firestore, isAuthorizedAdmin]);
@@ -88,31 +113,13 @@ export default function AdminLayout({
             pendingReturns: pendingReturnsCount,
         };
     }, [pendingOrdersCount, outOfStockCount, pendingReturnsCount]);
-
-    useEffect(() => {
-        // We only want to check for redirection after all loading is complete.
-        if (isUserLoading || isUserDocLoading) {
-            return;
-        }
-
-        // If loading is done, and there's no user, or the user is anonymous, redirect to login.
-        if (!user || user.isAnonymous) {
-            router.push('/login?redirect=/admin/dashboard');
-            return;
-        }
-
-        // If loading is done, there is a user, but they are not an admin, redirect to homepage.
-        if (!isAuthorizedAdmin) {
-            router.push('/');
-        }
-    }, [isUserLoading, isUserDocLoading, user, isAuthorizedAdmin, router]);
     
     useEffect(() => {
         setIsMobileMenuOpen(false);
     }, [pathname])
 
-    // While initial auth state or user role is loading, show a full-screen spinner.
-    if (isUserLoading || isUserDocLoading) {
+    // While authorization is being determined, show a full-screen spinner.
+    if (isLoading) {
         return (
             <div className="flex h-screen items-center justify-center">
                 <PottersWheelSpinner />
@@ -120,9 +127,9 @@ export default function AdminLayout({
         );
     }
     
-    // If, after loading, the user is still not an authorized admin, show the spinner.
-    // The useEffect will handle the redirection. This prevents rendering the layout for non-admins.
-    if (!isAuthorizedAdmin) {
+    // If, after loading, the user is not authorized, show a spinner while redirecting.
+    // The useEffect above handles the redirection itself.
+    if (!isAuthorized) {
         return (
              <div className="flex h-screen items-center justify-center">
                 <PottersWheelSpinner />
