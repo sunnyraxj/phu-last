@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useFirebase } from '@/firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, User } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithRedirect, getRedirectResult, GoogleAuthProvider, User } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -107,6 +107,48 @@ export default function LoginPage() {
       });
   };
 
+  useEffect(() => {
+    const handleRedirectResult = async () => {
+      setIsSubmitting(true);
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          const user = result.user;
+          const userDocRef = doc(firestore, "users", user.uid);
+          const userDocSnap = await getDoc(userDocRef);
+
+          if (!userDocSnap.exists()) {
+            const nameParts = user.displayName?.split(' ') || [];
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join(' ');
+            
+            await setDoc(userDocRef, {
+              id: user.uid,
+              firstName: firstName,
+              lastName: lastName,
+              email: user.email,
+              role: 'user'
+            });
+          }
+          
+          await handleSuccessfulLogin(user);
+        }
+      } catch (error) {
+        if (error instanceof FirebaseError) {
+          toast({
+            variant: "destructive",
+            title: 'Sign In Failed',
+            description: error.message,
+          });
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+    
+    handleRedirectResult();
+  }, [auth, firestore, handleSuccessfulLogin]);
+
   const onSignUpSubmit: SubmitHandler<SignUpFormValues> = async (data) => {
     setIsSubmitting(true);
     try {
@@ -159,30 +201,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
     const provider = new GoogleAuthProvider();
     try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      // Check if user document already exists
-      const userDocRef = doc(firestore, "users", user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-
-      if (!userDocSnap.exists()) {
-        // Create user document for new user
-        const nameParts = user.displayName?.split(' ') || [];
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ');
-        
-        await setDoc(doc(firestore, "users", user.uid), {
-          id: user.uid,
-          firstName: firstName,
-          lastName: lastName,
-          email: user.email,
-          role: 'user'
-        });
-      }
-      
-      await handleSuccessfulLogin(user);
-
+      await signInWithRedirect(auth, provider);
     } catch (error) {
       if (error instanceof FirebaseError) {
         toast({
@@ -191,7 +210,6 @@ export default function LoginPage() {
           description: error.message,
         });
       }
-    } finally {
       setIsSubmitting(false);
     }
   };
