@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -97,6 +97,12 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
       control,
       name: "faqs",
   });
+
+  const handleOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      onClose();
+    }
+  }, [onClose]);
 
   useEffect(() => {
     if (isOpen) {
@@ -191,15 +197,17 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
 
 
   const handleFormSubmit: SubmitHandler<BlogFormValues> = (data) => {
-    if (!data.featuredImage) {
+    if (!data.image) {
       setError('featuredImage', { type: 'manual', message: 'A featured image is required.' });
       return;
     }
-    onSubmit(data);
+    const slug = data.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const dataWithSlug = { ...data, slug };
+    onSubmit(dataWithSlug);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>{post ? 'Edit Post' : 'Add New Post'}</DialogTitle>

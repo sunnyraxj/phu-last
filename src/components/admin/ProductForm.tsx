@@ -17,7 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -119,6 +119,12 @@ export function ProductForm({
   });
 
   const imageValue = watch('image');
+
+  const handleOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      onClose();
+    }
+  }, [onClose]);
 
   useEffect(() => {
     if (isOpen) {
@@ -223,7 +229,7 @@ export function ProductForm({
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{product ? 'Edit Product' : 'Add New Product'}</DialogTitle>
@@ -254,7 +260,7 @@ export function ProductForm({
                             />
 
                             <div className="space-y-1">
-                                <Label htmlFor="ai-notes">AI Notes (Optional)</Label>
+                                <Label htmlFor="ai-notes-product">AI Notes (Optional)</Label>
                                 <Textarea 
                                     id="ai-notes-product"
                                     placeholder="e.g., 'handmade clay vase, blue glaze, from Rajasthan'. The AI will use this with the image to generate a name and description."
