@@ -49,8 +49,8 @@ export default function AdminLayout({
         // This effect will determine the final authorization status.
         // It waits for all loading to complete before making a decision.
 
-        // If Firebase auth is still loading, we are in a 'loading' state.
-        if (isUserLoading || isUserDocLoading) {
+        // If Firebase auth is still loading, or we have a user but their doc is still loading, we are in a 'loading' state.
+        if (isUserLoading || (user && !user.isAnonymous && isUserDocLoading)) {
             setAuthStatus('loading');
             return;
         }
@@ -61,7 +61,7 @@ export default function AdminLayout({
             return;
         }
         
-        // At this point, all data is loaded. We can make a final decision.
+        // At this point, all data is loaded for a non-anonymous user. We can make a final decision.
         const isAdmin = userData?.role === 'admin';
         
         if (isAdmin) {
