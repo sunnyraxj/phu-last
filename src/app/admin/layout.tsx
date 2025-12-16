@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo, Fragment } from 'react';
@@ -44,7 +43,6 @@ export default function AdminLayout({
     const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
 
     const isAuthorizedAdmin = userData?.role === 'admin';
-    const isAuthResolved = !isUserLoading && !isUserDocLoading;
 
     const ordersQuery = useMemoFirebase(() => (isAuthorizedAdmin ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval', 'order-confirmed'])) : null), [firestore, isAuthorizedAdmin]);
     const { data: orders } = useCollection<Order>(ordersQuery);
@@ -92,20 +90,29 @@ export default function AdminLayout({
     }, [pendingOrdersCount, outOfStockCount, pendingReturnsCount]);
 
     useEffect(() => {
-        if (isAuthResolved) {
-            if (!user || user.isAnonymous) {
-                router.push('/login?redirect=/admin');
-            } else if (!isAuthorizedAdmin) {
-                router.push('/');
-            }
+        // We only want to check for redirection after all loading is complete.
+        if (isUserLoading || isUserDocLoading) {
+            return;
         }
-    }, [isAuthResolved, user, isAuthorizedAdmin, router]);
+
+        // If loading is done, and there's no user, or the user is anonymous, redirect to login.
+        if (!user || user.isAnonymous) {
+            router.push('/login?redirect=/admin/dashboard');
+            return;
+        }
+
+        // If loading is done, there is a user, but they are not an admin, redirect to homepage.
+        if (!isAuthorizedAdmin) {
+            router.push('/');
+        }
+    }, [isUserLoading, isUserDocLoading, user, isAuthorizedAdmin, router]);
     
     useEffect(() => {
         setIsMobileMenuOpen(false);
     }, [pathname])
 
-    if (!isAuthResolved) {
+    // While initial auth state or user role is loading, show a full-screen spinner.
+    if (isUserLoading || isUserDocLoading) {
         return (
             <div className="flex h-screen items-center justify-center">
                 <PottersWheelSpinner />
@@ -113,9 +120,9 @@ export default function AdminLayout({
         );
     }
     
+    // If, after loading, the user is still not an authorized admin, show the spinner.
+    // The useEffect will handle the redirection. This prevents rendering the layout for non-admins.
     if (!isAuthorizedAdmin) {
-        // This will be briefly rendered before the useEffect redirect kicks in.
-        // It prevents rendering the admin layout for non-admins.
         return (
              <div className="flex h-screen items-center justify-center">
                 <PottersWheelSpinner />
@@ -221,8 +228,3 @@ export default function AdminLayout({
         </div>
     );
 }
-
-
-    
-
-
