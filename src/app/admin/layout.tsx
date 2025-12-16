@@ -3,10 +3,9 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { collection, doc, query, where } from 'firebase/firestore';
-import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Button } from '@/components/ui/button';
 import { Home, Package, ShoppingCart, Users, Store, Menu, Settings, Undo2, LayoutDashboard, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -32,43 +31,15 @@ export default function AdminLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const { user, isUserLoading } = useUser();
+    const { user } = useUser();
     const firestore = useFirestore();
-    const router = useRouter();
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
-    // This state will manage the authorization flow: loading -> authorized | unauthorized
-    const [authStatus, setAuthStatus] = useState<'loading' | 'authorized' | 'unauthorized'>('loading');
-
     const userDocRef = useMemoFirebase(() => (user && !user.isAnonymous) ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
-    const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
+    const { data: userData } = useDoc<{ role: string }>(userDocRef);
     
-    useEffect(() => {
-        // This effect determines the final authorization status.
-        // It only runs when the loading states of the user or user document change.
-        if (isUserLoading || isUserDocLoading) {
-            // If either is still loading, we are in a loading state.
-            setAuthStatus('loading');
-            return;
-        }
-
-        // Once all loading is complete, we can make a definitive decision.
-        if (user && !user.isAnonymous && userData?.role === 'admin') {
-            setAuthStatus('authorized');
-        } else {
-            setAuthStatus('unauthorized');
-        }
-    }, [user, userData, isUserLoading, isUserDocLoading]);
-    
-    useEffect(() => {
-        // This effect ONLY handles redirection once a final 'unauthorized' status is determined.
-        if (authStatus === 'unauthorized') {
-            router.push('/');
-        }
-    }, [authStatus, router]);
-    
-    const isAuthorizedAdmin = authStatus === 'authorized';
+    const isAuthorizedAdmin = userData?.role === 'admin';
 
     const ordersQuery = useMemoFirebase(() => (isAuthorizedAdmin ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval', 'order-confirmed'])) : null), [firestore, isAuthorizedAdmin]);
     const { data: orders } = useCollection<Order>(ordersQuery);
@@ -98,19 +69,6 @@ export default function AdminLayout({
         if(isMobileMenuOpen) setIsMobileMenuOpen(false);
     }, [pathname])
 
-    // The main authorization guard.
-    // If the status is not 'authorized' yet, we show a full-screen spinner.
-    // This prevents any child components (like the order page) from rendering and
-    // firing off their own effects or database queries prematurely.
-    if (authStatus !== 'authorized') {
-        return (
-            <div className="flex h-screen w-full items-center justify-center bg-background">
-                <PottersWheelSpinner />
-            </div>
-        );
-    }
-    
-    // If we reach here, it means authStatus IS 'authorized'. We can safely render the admin panel.
     const navGroups = [
         {
             items: [
@@ -160,7 +118,7 @@ export default function AdminLayout({
                                             <item.icon className="h-5 w-5" />
                                             {item.label}
                                         </div>
-                                        {item.badge != null && <Badge variant={item.badgeVariant} className="h-5">{item.badge}</Badge>}
+                                        {item.badge != null && userData?.role === 'admin' && <Badge variant={item.badgeVariant} className="h-5">{item.badge}</Badge>}
                                     </span>
                                 </Link>
                             </li>
