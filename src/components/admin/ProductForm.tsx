@@ -50,6 +50,7 @@ export type ProductFormValues = z.infer<typeof productSchema>;
 
 interface ProductFormProps {
   onSuccess: (data: ProductFormValues) => void;
+  onClose: () => void;
   product: ProductFormValues & { id?: string } | null;
   existingMaterials: string[];
   existingCategories: string[];
@@ -59,6 +60,7 @@ interface ProductFormProps {
 
 export function ProductForm({ 
   onSuccess,
+  onClose,
   product, 
   existingMaterials, 
   existingCategories,
@@ -367,11 +369,9 @@ export function ProductForm({
           </ScrollArea>
 
           <DialogFooter className="mt-4 pt-4 border-t">
-              <DialogClose asChild>
-                  <Button type="button" variant="outline">
-                  Cancel
-                  </Button>
-              </DialogClose>
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
               <Button type="submit" disabled={isSubmitting || isGenerating || isUploading}>
               {isSubmitting ? 'Saving...' : 'Save Product'}
               </Button>
@@ -496,3 +496,5 @@ function ImageUploader({
         </div>
     );
 }
+
+    

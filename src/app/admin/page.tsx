@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, writeBatch } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
@@ -61,13 +61,13 @@ export default function AdminProductsPage() {
         }
     }, [products]);
 
-    const handleNewCategory = (category: string) => {
+    const handleNewCategory = useCallback((category: string) => {
         setCategories(prev => [...new Set([...prev, category])]);
-    };
+    }, []);
 
-    const handleNewMaterial = (material: string) => {
+    const handleNewMaterial = useCallback((material: string) => {
         setMaterials(prev => [...new Set([...prev, material])]);
-    };
+    }, []);
 
     const handleEditProduct = (product: Product) => {
         setSelectedProduct(product);
@@ -203,7 +203,11 @@ export default function AdminProductsPage() {
                             </DialogDescription>
                         </DialogHeader>
                         <ProductForm 
-                            onSuccess={handleAddSubmit}
+                            onSuccess={() => {
+                                handleAddSubmit;
+                                setIsAddFormOpen(false);
+                            }}
+                            onClose={() => setIsAddFormOpen(false)}
                             product={null}
                             existingMaterials={materials}
                             existingCategories={categories}
@@ -223,7 +227,11 @@ export default function AdminProductsPage() {
                         </DialogDescription>
                     </DialogHeader>
                     <ProductForm 
-                        onSuccess={handleEditSubmit}
+                        onSuccess={() => {
+                            handleEditSubmit;
+                            setIsEditFormOpen(false);
+                        }}
+                        onClose={() => setIsEditFormOpen(false)}
                         product={selectedProduct}
                         existingMaterials={materials}
                         existingCategories={categories}
@@ -364,3 +372,5 @@ export default function AdminProductsPage() {
         </div>
     );
 }
+
+    
