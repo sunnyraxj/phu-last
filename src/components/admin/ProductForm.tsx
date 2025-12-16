@@ -8,8 +8,7 @@ import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -33,8 +32,8 @@ const productSchema = z.object({
   'data-ai-hint': z.string().optional(),
   inStock: z.boolean(),
   hsn: z.string().optional(),
-  gst: z.preprocess((a) => parseFloat(z.string().parse(a) || '0'), 
-    z.number().min(0, { message: 'GST must be a non-negative number' })),
+  gst: z.preprocess((a) => a ? parseFloat(z.string().parse(a)) : 0, 
+    z.number().min(0, { message: 'GST must be a non-negative number' }).optional()),
   size: z.object({
       height: z.preprocess((a) => a ? parseFloat(z.string().parse(a)) : undefined, z.number().optional()),
       length: z.preprocess((a) => a ? parseFloat(z.string().parse(a)) : undefined, z.number().optional()),
@@ -73,8 +72,8 @@ export function ProductForm({
   const [aiNotes, setAiNotes] = useState('');
   const { toast } = useToast();
 
-  const [category, setCategory] = useState<string>("");
-  const [material, setMaterial] = useState<string>("");
+  const [category, setCategory] = useState<string | undefined>(product?.category);
+  const [material, setMaterial] = useState<string | undefined>(product?.material);
 
   const {
     uploadFile,
@@ -97,7 +96,11 @@ export function ProductForm({
     clearErrors
   } = useForm<Omit<ProductFormValues, 'category' | 'material'>>({
     resolver: zodResolver(productSchema),
-    defaultValues: {
+    defaultValues: product ? {
+      ...product,
+      mrp: product.mrp || 0,
+      gst: product.gst || 0,
+    } : {
       name: '',
       description: '',
       mrp: 0,
@@ -112,30 +115,24 @@ export function ProductForm({
 
   const imageValue = watch('image');
 
+  // Reset form when product prop changes
   useEffect(() => {
     if (product) {
       reset(product);
-      setCategory(product.category || "");
-      setMaterial(product.material || "");
+      setCategory(product.category);
+      setMaterial(product.material);
     } else {
       reset({
-        name: '',
-        description: '',
-        mrp: 0,
-        image: '',
-        'data-ai-hint': '',
-        inStock: true,
-        hsn: '',
-        gst: 0,
-        size: { height: undefined, length: undefined, width: undefined },
+        name: '', description: '', mrp: 0, image: '', 'data-ai-hint': '', inStock: true, hsn: '', gst: 0, size: { height: undefined, length: undefined, width: undefined },
       });
-      setCategory("");
-      setMaterial("");
+      setCategory(undefined);
+      setMaterial(undefined);
     }
     setAiNotes('');
     clearUpload();
   }, [product, reset, clearUpload]);
 
+  // Handle image upload completion
   useEffect(() => {
     if (uploadedUrl) {
       setValue('image', uploadedUrl, { shouldValidate: true });
@@ -143,12 +140,16 @@ export function ProductForm({
     }
   }, [uploadedUrl, setValue, clearErrors]);
 
+
   const handleFormSubmit: SubmitHandler<Omit<ProductFormValues, 'category' | 'material'>> = (data) => {
-    if (!category) {
+    const finalCategory = category ?? product?.category;
+    const finalMaterial = material ?? product?.material;
+    
+    if (!finalCategory) {
         toast({variant: 'destructive', title: 'Category is required'});
         return;
     }
-    if (!material) {
+    if (!finalMaterial) {
         toast({variant: 'destructive', title: 'Material is required'});
         return;
     }
@@ -156,11 +157,12 @@ export function ProductForm({
       setError('image', { type: 'manual', message: 'An image is required.' });
       return;
     }
-
+    
     const completeFormData: ProductFormValues = {
         ...data,
-        category,
-        material
+        gst: data.gst || 0,
+        category: finalCategory,
+        material: finalMaterial,
     };
 
     onSuccess(completeFormData);
@@ -288,7 +290,7 @@ export function ProductForm({
                           <Input id="product-mrp" type="number" step="0.01" {...register('mrp')} />
                           {errors.mrp && <p className="text-xs text-destructive">{errors.mrp.message}</p>}
                       </div>
-                      <div className="space-y-1">
+                       <div className="space-y-1">
                           <Label htmlFor="product-gst">GST %</Label>
                           <Input id="product-gst" type="number" step="0.01" {...register('gst')} />
                           {errors.gst && <p className="text-xs text-destructive">{errors.gst.message}</p>}
@@ -299,7 +301,7 @@ export function ProductForm({
                     <div className="space-y-1">
                         <Label>Category</Label>
                         <div className="flex gap-2">
-                            <Select value={category} onValueChange={setCategory}>
+                           <Select defaultValue={product?.category} onValueChange={setCategory}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select a category" />
                                 </SelectTrigger>
@@ -315,7 +317,7 @@ export function ProductForm({
                     <div className="space-y-1">
                         <Label>Material</Label>
                          <div className="flex gap-2">
-                            <Select value={material} onValueChange={setMaterial}>
+                            <Select defaultValue={product?.material} onValueChange={setMaterial}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select a material" />
                                 </SelectTrigger>
@@ -352,11 +354,12 @@ export function ProductForm({
                       {errors['data-ai-hint'] && <p className="text-xs text-destructive">{errors['data-ai-hint'].message}</p>}
                   </div>
 
-                  <div className="flex items-center space-x-2 pt-2">
+                   <div className="flex items-center space-x-2 pt-2">
                       <input
                         type="checkbox"
                         id="product-inStock"
                         {...register('inStock')}
+                        defaultChecked={product ? product.inStock : true}
                         className="h-4 w-4 rounded border-primary text-primary focus:ring-primary"
                       />
                       <Label htmlFor="product-inStock" className="cursor-pointer text-sm">
