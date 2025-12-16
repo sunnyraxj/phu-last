@@ -78,8 +78,14 @@ export function TeamMemberForm({ isOpen, onClose, onSubmit, member }: TeamMember
     onSubmit(data);
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      onClose();
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{member ? 'Edit Team Member' : 'Add New Team Member'}</DialogTitle>

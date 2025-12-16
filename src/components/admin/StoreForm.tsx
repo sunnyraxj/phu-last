@@ -72,8 +72,14 @@ export function StoreForm({ isOpen, onClose, onSubmit, store }: StoreFormProps) 
     onSubmit(data);
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      onClose();
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{store ? 'Edit Store' : 'Add New Store'}</DialogTitle>
