@@ -369,9 +369,8 @@ export default function ProductPage() {
   const { founder, allOtherMembers } = useMemo(() => {
     if (!teamMembers) return { founder: null, allOtherMembers: [] };
     const founderMember = teamMembers.find(member => member.role === 'Founder');
-    const managementMembers = teamMembers.filter(member => member.role === 'Management');
-    const otherTeamMembers = teamMembers.filter(member => member.role === 'Team Member');
-    return { founder: founderMember, allOtherMembers: [...managementMembers, ...otherTeamMembers] };
+    const otherMembers = teamMembers.filter(member => member.role === 'Management' || member.role === 'Team Member');
+    return { founder: founderMember, allOtherMembers: otherMembers };
 }, [teamMembers]);
 
 
@@ -809,6 +808,7 @@ export default function ProductPage() {
 }
     
     
+
 
 
 
