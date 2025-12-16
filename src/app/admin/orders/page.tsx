@@ -12,7 +12,7 @@ import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, ChevronDown, ChevronUp, Calendar as CalendarIcon, Search, FileText } from 'lucide-react';
+import { MoreHorizontal, ChevronDown, ChevronUp, Calendar as CalendarIcon, Search, FileText, Printer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -276,6 +276,14 @@ export default function OrdersPage() {
                                                             View Invoice
                                                         </Link>
                                                     </DropdownMenuItem>
+                                                    {(order.status === 'order-confirmed' || order.status === 'shipped' || order.status === 'delivered') && (
+                                                         <DropdownMenuItem asChild>
+                                                            <Link href={`/admin/orders/label/${order.id}`} target="_blank">
+                                                                <Printer className="mr-2 h-4 w-4" />
+                                                                Print Label
+                                                            </Link>
+                                                        </DropdownMenuItem>
+                                                    )}
                                                     {order.status === 'pending-payment-approval' && (
                                                         <>
                                                             <DropdownMenuSeparator />
@@ -514,3 +522,4 @@ export default function OrdersPage() {
     
 
     
+
