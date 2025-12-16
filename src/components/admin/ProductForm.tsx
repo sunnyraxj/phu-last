@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useForm, SubmitHandler, Controller } from 'react-hook-form';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -22,13 +23,12 @@ import { useImageUploader } from '@/hooks/useImageUploader';
 import { Progress } from '../ui/progress';
 import { cn } from '@/lib/utils';
 
+// Schema without category and material, as they are handled by local state
 const productSchema = z.object({
   name: z.string().min(1, { message: 'Product name is required' }),
   description: z.string().min(1, { message: 'Description is required' }),
   mrp: z.preprocess((a) => parseFloat(z.string().parse(a)), 
     z.number().positive({ message: 'MRP must be a positive number' })),
-  category: z.string().min(1, { message: 'Category is required' }),
-  material: z.string().min(1, { message: 'Material is required' }),
   image: z.string().url({ message: 'Please provide a valid image URL.' }),
   'data-ai-hint': z.string().optional(),
   inStock: z.boolean(),
@@ -42,7 +42,11 @@ const productSchema = z.object({
   }).optional(),
 });
 
-export type ProductFormValues = z.infer<typeof productSchema>;
+// Form values include category and material for submission, but they are not part of the Zod schema for validation.
+export type ProductFormValues = z.infer<typeof productSchema> & {
+    category: string;
+    material: string;
+};
 
 interface ProductFormProps {
   onSuccess: (data: ProductFormValues) => void;
@@ -69,6 +73,9 @@ export function ProductForm({
   const [aiNotes, setAiNotes] = useState('');
   const { toast } = useToast();
 
+  const [category, setCategory] = useState<string>("");
+  const [material, setMaterial] = useState<string>("");
+
   const {
     uploadFile,
     isUploading,
@@ -83,20 +90,17 @@ export function ProductForm({
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-    control,
     setValue,
     getValues,
     watch,
     setError,
     clearErrors
-  } = useForm<ProductFormValues>({
+  } = useForm<Omit<ProductFormValues, 'category' | 'material'>>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: '',
       description: '',
       mrp: 0,
-      category: '',
-      material: '',
       image: '',
       'data-ai-hint': '',
       inStock: true,
@@ -111,13 +115,13 @@ export function ProductForm({
   useEffect(() => {
     if (product) {
       reset(product);
+      setCategory(product.category || "");
+      setMaterial(product.material || "");
     } else {
       reset({
         name: '',
         description: '',
         mrp: 0,
-        category: '',
-        material: '',
         image: '',
         'data-ai-hint': '',
         inStock: true,
@@ -125,6 +129,8 @@ export function ProductForm({
         gst: 0,
         size: { height: undefined, length: undefined, width: undefined },
       });
+      setCategory("");
+      setMaterial("");
     }
     setAiNotes('');
     clearUpload();
@@ -137,23 +143,38 @@ export function ProductForm({
     }
   }, [uploadedUrl, setValue, clearErrors]);
 
-  const handleFormSubmit: SubmitHandler<ProductFormValues> = (data) => {
+  const handleFormSubmit: SubmitHandler<Omit<ProductFormValues, 'category' | 'material'>> = (data) => {
+    if (!category) {
+        toast({variant: 'destructive', title: 'Category is required'});
+        return;
+    }
+    if (!material) {
+        toast({variant: 'destructive', title: 'Material is required'});
+        return;
+    }
     if (!data.image) {
       setError('image', { type: 'manual', message: 'An image is required.' });
       return;
     }
-    onSuccess(data);
+
+    const completeFormData: ProductFormValues = {
+        ...data,
+        category,
+        material
+    };
+
+    onSuccess(completeFormData);
   };
 
   const handleAddCategory = (newCategory: string) => {
     onNewCategory(newCategory);
-    setValue('category', newCategory, { shouldValidate: true });
+    setCategory(newCategory);
     setIsCategoryDialogOpen(false);
   }
 
   const handleAddMaterial = (newMaterial: string) => {
     onNewMaterial(newMaterial);
-    setValue('material', newMaterial, { shouldValidate: true });
+    setMaterial(newMaterial);
     setIsMaterialDialogOpen(false);
   }
 
@@ -278,48 +299,34 @@ export function ProductForm({
                     <div className="space-y-1">
                         <Label>Category</Label>
                         <div className="flex gap-2">
-                            <Controller
-                                name="category"
-                                control={control}
-                                render={({ field }) => (
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select a category" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {existingCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                )}
-                            />
+                            <Select value={category} onValueChange={setCategory}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {existingCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
                             <Button type="button" variant="outline" size="icon" onClick={() => setIsCategoryDialogOpen(true)}>
                                 <PlusCircle className="h-4 w-4" />
                             </Button>
                         </div>
-                        {errors.category && <p className="text-xs text-destructive">{errors.category.message}</p>}
                     </div>
                     <div className="space-y-1">
                         <Label>Material</Label>
                          <div className="flex gap-2">
-                             <Controller
-                                name="material"
-                                control={control}
-                                render={({ field }) => (
-                                     <Select onValueChange={field.onChange} value={field.value}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select a material" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {existingMaterials.map(mat => <SelectItem key={mat} value={mat}>{mat}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                )}
-                            />
+                            <Select value={material} onValueChange={setMaterial}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a material" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {existingMaterials.map(mat => <SelectItem key={mat} value={mat}>{mat}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
                             <Button type="button" variant="outline" size="icon" onClick={() => setIsMaterialDialogOpen(true)}>
                                 <PlusCircle className="h-4 w-4" />
                             </Button>
                         </div>
-                        {errors.material && <p className="text-xs text-destructive">{errors.material.message}</p>}
                     </div>
                   </div>
 
@@ -346,16 +353,11 @@ export function ProductForm({
                   </div>
 
                   <div className="flex items-center space-x-2 pt-2">
-                      <Controller
-                        control={control}
-                        name="inStock"
-                        render={({ field }) => (
-                          <Checkbox 
-                            id="product-inStock" 
-                            checked={field.value} 
-                            onCheckedChange={field.onChange} 
-                          />
-                        )}
+                      <input
+                        type="checkbox"
+                        id="product-inStock"
+                        {...register('inStock')}
+                        className="h-4 w-4 rounded border-primary text-primary focus:ring-primary"
                       />
                       <Label htmlFor="product-inStock" className="cursor-pointer text-sm">
                         Product is in stock and available for purchase
