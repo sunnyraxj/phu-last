@@ -97,14 +97,36 @@ export default function LoginPage() {
   const redirectTo = searchParams.get('redirect') || '/';
 
   const handleSuccessfulLogin = async (permanentUser: User) => {
-      if (anonymousUser?.isAnonymous && permanentUser.uid !== anonymousUser.uid) {
+    // Merge carts if needed
+    if (anonymousUser?.isAnonymous && permanentUser.uid !== anonymousUser.uid) {
         await mergeCarts(anonymousUser.uid, permanentUser.uid);
-      }
-      router.push(redirectTo);
-      toast({
+    }
+    
+    // Fetch user doc to check role
+    const userDocRef = doc(firestore, "users", permanentUser.uid);
+    const userDocSnap = await getDoc(userDocRef);
+    
+    let finalRedirect = redirectTo;
+
+    if (userDocSnap.exists()) {
+        const userData = userDocSnap.data();
+        if (userData.role === 'admin') {
+            finalRedirect = '/admin'; // Override redirect for admins
+        }
+    }
+    
+    // Fallback to original redirect if not admin, or if it's already /admin
+    if (finalRedirect === '/') {
+        // Avoid redirecting away from a deep link unless it's the homepage
+        finalRedirect = redirectTo;
+    }
+
+    router.push(finalRedirect);
+    
+    toast({
         title: 'Logged In',
         description: "Welcome!",
-      });
+    });
   };
 
   const onSignUpSubmit: SubmitHandler<SignUpFormValues> = async (data) => {
