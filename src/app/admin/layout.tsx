@@ -38,11 +38,10 @@ export default function AdminLayout({
     const firestore = useFirestore();
     const router = useRouter();
     const pathname = usePathname();
-    const [isAuthorized, setIsAuthorized] = useState(false);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
+    const userDocRef = useMemoFirebase(() => (user && !user.isAnonymous) ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
     const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
 
     const isAuthorizedAdmin = userData?.role === 'admin';
@@ -98,16 +97,15 @@ export default function AdminLayout({
                 return;
             }
 
-            if (!user) {
+            if (!user || user.isAnonymous) {
                 router.push('/login?redirect=/admin');
                 return;
             }
 
-            if (userData?.role === 'admin') {
-                setIsAuthorized(true);
-            } else {
-                setIsAuthorized(false);
+            if (userData?.role !== 'admin') {
+                router.push('/');
             }
+            
             setIsCheckingAuth(false);
         };
 
@@ -118,15 +116,15 @@ export default function AdminLayout({
         setIsMobileMenuOpen(false);
     }, [pathname])
 
-    if (isCheckingAuth) {
+    if (isCheckingAuth || isUserLoading || isUserDocLoading) {
         return (
             <div className="flex h-screen items-center justify-center">
                 <PottersWheelSpinner />
             </div>
         );
     }
-
-    if (!isAuthorized) {
+    
+    if (!isAuthorizedAdmin) {
         return (
             <div className="flex h-screen flex-col items-center justify-center bg-background text-center p-4">
                 <h1 className="text-3xl sm:text-4xl font-bold text-destructive">Access Denied</h1>
@@ -237,4 +235,3 @@ export default function AdminLayout({
 
 
     
-

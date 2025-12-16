@@ -64,7 +64,7 @@ export default function CheckoutPage() {
   const { data: cartData, isLoading: cartLoading } = useCollection<{ productId: string; quantity: number }>(cartItemsQuery);
 
   const addressesQuery = useMemoFirebase(
-    () => (user ? collection(firestore, 'users', user.uid, 'shippingAddresses') : null),
+    () => (user && !user.isAnonymous ? collection(firestore, 'users', user.uid, 'shippingAddresses') : null),
     [firestore, user]
   );
   const { data: addresses, isLoading: addressesLoading } = useCollection<ShippingAddress>(addressesQuery);
@@ -171,6 +171,11 @@ export default function CheckoutPage() {
       return;
     }
     
+    if (user.isAnonymous) {
+      router.push('/login?redirect=/checkout');
+      return;
+    }
+    
     if (!selectedAddressId) {
       toast({ variant: "destructive", title: 'Error', description: "Please select or add a shipping address." });
       return;
@@ -252,9 +257,13 @@ export default function CheckoutPage() {
     return <div className="flex h-screen items-center justify-center"><PottersWheelSpinner /></div>;
   }
 
-  if (!user || user.isAnonymous) {
-      router.push('/login?redirect=/checkout');
+  if (!user) {
+      // This case should be handled by the provider, but as a fallback
       return <div className="flex h-screen items-center justify-center"><PottersWheelSpinner /></div>;
+  }
+
+  if (user && !user.isAnonymous && addresses?.length === 0 && !showNewAddressForm) {
+      setShowNewAddressForm(true);
   }
 
   if (cartItems.length === 0 && !cartLoading) {
@@ -273,98 +282,114 @@ export default function CheckoutPage() {
         <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-8">Checkout</h1>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
             <div className="space-y-8">
-                <Card>
+                {user.isAnonymous ? (
+                  <Card>
                     <CardHeader>
-                        <CardTitle>Shipping Address</CardTitle>
-                        <CardDescription>Select a saved address or add a new one.</CardDescription>
+                      <CardTitle>Login to Continue</CardTitle>
+                      <CardDescription>Please log in or create an account to proceed with your order.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <RadioGroup value={selectedAddressId || undefined} onValueChange={setSelectedAddressId} className="space-y-4">
-                            {addresses && addresses.map(address => (
-                                <Label key={address.id} htmlFor={address.id} className="flex items-start gap-4 border rounded-md p-4 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary">
-                                    <RadioGroupItem value={address.id} id={address.id} />
-                                    <div className="text-sm">
-                                        <p className="font-semibold">{address.name}</p>
-                                        <p className="text-muted-foreground">{address.address}</p>
-                                        <p className="text-muted-foreground">{address.city}, {address.state} - {address.pincode}</p>
-                                        <p className="text-muted-foreground">Phone: {address.phone}</p>
-                                    </div>
-                                </Label>
-                            ))}
-                        </RadioGroup>
-                        
-                        <Separator className="my-6" />
-
-                        {showNewAddressForm ? (
-                        <div>
-                            <h3 className="text-lg font-semibold mb-4">Add a New Address</h3>
-                            <AddressForm 
-                                isOpen={true} 
-                                onClose={() => setShowNewAddressForm(false)} 
-                                onSubmit={handleNewAddressSubmit} 
-                                address={null}
-                            />
-                        </div>
-                        ) : (
-                            <Button variant="outline" onClick={() => setShowNewAddressForm(true)}>
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                Add New Address
-                            </Button>
-                        )}
+                      <Button onClick={() => router.push('/login?redirect=/checkout')} className="w-full">
+                        Login or Sign Up
+                      </Button>
                     </CardContent>
-                </Card>
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>Payment</CardTitle>
-                        <CardDescription>{totalAmount > 40000 ? 'An advance payment option is available for this order.' : 'Full payment is required for this order.'}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        {paymentPercentages.length > 1 && (
-                            <div>
-                                <Label className="font-semibold">Select Payment Option</Label>
-                                <RadioGroup value={String(selectedPaymentPercentage)} onValueChange={(val) => setSelectedPaymentPercentage(Number(val))} className="flex flex-wrap gap-2 mt-2">
-                                    {paymentPercentages.map(p => (
-                                        <Label key={p.value} htmlFor={`payment-${p.value}`} className="flex items-center gap-2 border rounded-md p-3 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary flex-1 justify-center min-w-[120px]">
-                                            <RadioGroupItem value={String(p.value)} id={`payment-${p.value}`} />
-                                            <span>{p.label}</span>
-                                        </Label>
-                                    ))}
-                                </RadioGroup>
-                            </div>
-                        )}
+                  </Card>
+                ) : (
+                <>
+                  <Card>
+                      <CardHeader>
+                          <CardTitle>Shipping Address</CardTitle>
+                          <CardDescription>Select a saved address or add a new one.</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                          <RadioGroup value={selectedAddressId || undefined} onValueChange={setSelectedAddressId} className="space-y-4">
+                              {addresses && addresses.map(address => (
+                                  <Label key={address.id} htmlFor={address.id} className="flex items-start gap-4 border rounded-md p-4 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary">
+                                      <RadioGroupItem value={address.id} id={address.id} />
+                                      <div className="text-sm">
+                                          <p className="font-semibold">{address.name}</p>
+                                          <p className="text-muted-foreground">{address.address}</p>
+                                          <p className="text-muted-foreground">{address.city}, {address.state} - {address.pincode}</p>
+                                          <p className="text-muted-foreground">Phone: {address.phone}</p>
+                                      </div>
+                                  </Label>
+                              ))}
+                          </RadioGroup>
+                          
+                          <Separator className="my-6" />
 
-                        <div className="flex flex-col md:flex-row items-center gap-6 p-4 border rounded-lg bg-muted/30">
-                            <div className="w-40 h-40 p-2 bg-white rounded-md flex items-center justify-center">
-                                {qrCodeUrl ? (
-                                    <Image src={qrCodeUrl} alt="UPI QR Code" width={150} height={150} unoptimized />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                                      <PottersWheelSpinner />
-                                    </div>
-                                )}
-                            </div>
-                            <div className="space-y-2 text-center md:text-left">
-                                <p className="font-semibold">Scan to pay with any UPI app</p>
-                                <p className="text-sm text-muted-foreground">You need to pay an amount of:</p>
-                                <p className="text-2xl font-bold text-primary">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(advanceAmount)}</p>
-                                <p className="text-xs text-muted-foreground">UPI ID: {UPI_ID}</p>
-                            </div>
-                        </div>
+                          {showNewAddressForm ? (
+                          <div>
+                              <h3 className="text-lg font-semibold mb-4">Add a New Address</h3>
+                              <AddressForm 
+                                  isOpen={true} 
+                                  onClose={() => setShowNewAddressForm(false)} 
+                                  onSubmit={handleNewAddressSubmit} 
+                                  address={null}
+                              />
+                          </div>
+                          ) : (
+                              <Button variant="outline" onClick={() => setShowNewAddressForm(true)}>
+                                  <PlusCircle className="mr-2 h-4 w-4" />
+                                  Add New Address
+                              </Button>
+                          )}
+                      </CardContent>
+                  </Card>
+                   <Card>
+                      <CardHeader>
+                          <CardTitle>Payment</CardTitle>
+                          <CardDescription>{totalAmount > 40000 ? 'An advance payment option is available for this order.' : 'Full payment is required for this order.'}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                          {paymentPercentages.length > 1 && (
+                              <div>
+                                  <Label className="font-semibold">Select Payment Option</Label>
+                                  <RadioGroup value={String(selectedPaymentPercentage)} onValueChange={(val) => setSelectedPaymentPercentage(Number(val))} className="flex flex-wrap gap-2 mt-2">
+                                      {paymentPercentages.map(p => (
+                                          <Label key={p.value} htmlFor={`payment-${p.value}`} className="flex items-center gap-2 border rounded-md p-3 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary flex-1 justify-center min-w-[120px]">
+                                              <RadioGroupItem value={String(p.value)} id={`payment-${p.value}`} />
+                                              <span>{p.label}</span>
+                                          </Label>
+                                      ))}
+                                  </RadioGroup>
+                              </div>
+                          )}
 
-                        <div>
-                            <Label htmlFor="utr" className="font-semibold">Enter UTR Number</Label>
-                             <p className="text-xs text-muted-foreground mb-2">
-                                After payment, find the 12-digit UTR/Transaction ID in your UPI app's history and enter it below.
-                            </p>
-                            <Input 
-                                id="utr" 
-                                value={utr}
-                                onChange={(e) => setUtr(e.target.value)}
-                                placeholder="12-digit UTR Number"
-                            />
-                        </div>
-                    </CardContent>
-                </Card>
+                          <div className="flex flex-col md:flex-row items-center gap-6 p-4 border rounded-lg bg-muted/30">
+                              <div className="w-40 h-40 p-2 bg-white rounded-md flex items-center justify-center">
+                                  {qrCodeUrl ? (
+                                      <Image src={qrCodeUrl} alt="UPI QR Code" width={150} height={150} unoptimized />
+                                  ) : (
+                                      <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                                        <PottersWheelSpinner />
+                                      </div>
+                                  )}
+                              </div>
+                              <div className="space-y-2 text-center md:text-left">
+                                  <p className="font-semibold">Scan to pay with any UPI app</p>
+                                  <p className="text-sm text-muted-foreground">You need to pay an amount of:</p>
+                                  <p className="text-2xl font-bold text-primary">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(advanceAmount)}</p>
+                                  <p className="text-xs text-muted-foreground">UPI ID: {UPI_ID}</p>
+                              </div>
+                          </div>
+
+                          <div>
+                              <Label htmlFor="utr" className="font-semibold">Enter UTR Number</Label>
+                               <p className="text-xs text-muted-foreground mb-2">
+                                  After payment, find the 12-digit UTR/Transaction ID in your UPI app's history and enter it below.
+                              </p>
+                              <Input 
+                                  id="utr" 
+                                  value={utr}
+                                  onChange={(e) => setUtr(e.target.value)}
+                                  placeholder="12-digit UTR Number"
+                              />
+                          </div>
+                      </CardContent>
+                  </Card>
+                </>
+              )}
             </div>
 
             <div className="space-y-8">
@@ -421,12 +446,12 @@ export default function CheckoutPage() {
                     </div>
                     </CardContent>
                     <CardFooter>
-                         <Button onClick={onSubmit} size="lg" className="w-full" disabled={isSubmitting || !selectedAddressId}>
+                         <Button onClick={onSubmit} size="lg" className="w-full" disabled={isSubmitting || !!user?.isAnonymous || !selectedAddressId}>
                             {isSubmitting ? <PottersWheelSpinner /> : 'Place Order'}
                         </Button>
                     </CardFooter>
                 </Card>
-                 {!selectedAddressId && (
+                 {!selectedAddressId && !user?.isAnonymous && (
                     <Alert variant="destructive">
                         <AlertTitle>Address Required</AlertTitle>
                         <AlertDescription>

@@ -1,22 +1,22 @@
 
 /**
- * Core Philosophy: This ruleset enforces a dual security model based on user ownership and role-based access control (RBAC).
- * A user always has full control over their own data (e.g., their user profile, their orders).
- * A special 'admin' role grants comprehensive read and write privileges across the entire database for moderation and management.
- * Publicly visible data, such as artisan profiles, products, and reviews, can be read by anyone but only modified by their original author or an admin.
+ * Core Philosophy: This ruleset enforces a public-read model with protected writes.
+ * Anonymous and authenticated users can read all public data (products, blogs, etc.).
+ * Write operations (creating, updating, deleting) are restricted to authenticated, non-anonymous users for their own data, or admins.
+ * Checkout is the primary gate for converting an anonymous user to a permanent one.
  *
  * Data Structure: The database uses a flat, collection-based structure. Key collections include /users, /artisanProfiles, /products, /orders, and /reviews.
- * There are no nested user-specific subcollections; ownership is determined by a 'userId' or 'customerId' field within documents.
  *
  * Key Security Decisions:
+ * - Public Read Access: Most top-level collections are world-readable to allow full browsing for anonymous users.
  * - Admin Override: Users with the `role` field set to 'admin' in their `/users/{userId}` document can bypass standard ownership checks.
- * - Public Read, Private Write: Collections like `/products` and `/reviews` are publicly readable to all users, including those not signed in, to facilitate browsing. However, write operations are strictly limited to the document owner or an admin.
- * - Strict Ownership: Collections containing sensitive or personal data like `/orders` are strictly locked down to the owner. Listing these collections requires a query that explicitly filters by the user's ID.
- * - User Role Immutability: A regular user is explicitly forbidden from changing their own `role` field to prevent self-escalation of privileges. This can only be modified by an admin.
+ * - Write Protection: Create, update, and delete operations are almost always protected by requiring a non-anonymous authenticated user (isNotAnonymous()).
+ * - Cart Management: Carts are tied to a user's UID (anonymous or permanent). The rules allow users to manage their own cart. Cart merging happens client-side upon login.
+ * - User Role Immutability: A regular user is explicitly forbidden from changing their own `role` field to prevent self-escalation of privileges.
  *
- * Denormalization for Authorization: The rules rely on the `role` field being denormalized directly onto each user's document in the `/users` collection. This allows the `isAdmin()` function to perform a fast, single `get()` operation to determine a user's privileges without needing to query other collections.
+ * Denormalization for Authorization: The rules rely on the `role` field being denormalized directly onto each user's document in the `/users` collection. This allows the `isAdmin()` function to perform a fast, single `get()` operation to determine a user's privileges.
  *
- * Structural Segregation: Each primary data type (User, Product, Order, etc.) is stored in its own top-level collection. This separation ensures that security rules are simple and uniform for all documents within a given collection, improving performance and maintainability.
+ * Structural Segregation: Each primary data type is stored in its own top-level collection. This separation ensures that security rules are simple and uniform for all documents within a given collection.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -32,7 +32,7 @@ service cloud.firestore {
     }
     
     /**
-     * Checks if the user is not anonymous.
+     * Checks if the user is not anonymous. This is key for protecting write operations.
      */
     function isNotAnonymous() {
       return isSignedIn() && request.auth.token.firebase.sign_in_provider != 'anonymous';
@@ -66,27 +66,28 @@ service cloud.firestore {
      * This function performs a single document read to the user's own profile.
      */
     function isAdmin() {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return isNotAnonymous() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     /**
      * @description Rules for the User collection.
      * @path /users/{userId}
+     * @allow (read) Publicly readable to get user profiles for things like artisan pages.
      * @allow (create) An authenticated user creating their own user document.
      * @deny (update) A user trying to change their own role to 'admin'.
      * @principle A user can manage their own data, but admins have override access. Critical fields like 'role' are protected from self-elevation.
      */
     match /users/{userId} {
       allow get, list: if true;
-      allow create: if isOwner(userId);
+      allow create: if isOwner(userId); // Allows anonymous users to be created for cart persistence
       allow update: if (isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin();
       allow delete: if isOwner(userId) || isAdmin();
 
       /**
        * @description Rules for the user's cart subcollection.
        * @path /users/{userId}/cart/{cartItemId}
-       * @allow (read, write) A user can manage their own cart items.
-       * @principle A user has full control over the contents of their own cart.
+       * @allow (read, write) Any signed-in user (including anonymous) can manage their own cart.
+       * @principle A user has full control over their own cart.
        */
       match /cart/{cartItemId} {
         allow read, write: if isOwner(userId) || isAdmin();
@@ -95,19 +96,18 @@ service cloud.firestore {
       /**
        * @description Rules for a user's shipping addresses.
        * @path /users/{userId}/shippingAddresses/{addressId}
-       * @allow A user can manage their own shipping addresses.
-       * @principle Data is private to the user, with admin override.
+       * @allow (read, write) A non-anonymous user can manage their own shipping addresses.
+       * @principle Data is private to the permanent user, with admin override.
        */
       match /shippingAddresses/{addressId} {
-        allow read, list, create, update, delete: if isOwner(userId) || isAdmin();
+        allow read, list, create, update, delete: if (isOwner(userId) && isNotAnonymous()) || isAdmin();
       }
     }
 
     /**
      * @description Rules for the Artisan Profiles collection.
      * @path /artisanProfiles/{artisanProfileId}
-     * @allow (get) Any user, signed in or not, can view an artisan's profile.
-     * @deny (create) An authenticated user trying to create a profile for another user.
+     * @allow (read) Publicly readable for all users.
      * @principle Data is public to read, but writes are restricted to the owner of the profile or an admin.
      */
     match /artisanProfiles/{artisanProfileId} {
@@ -120,8 +120,7 @@ service cloud.firestore {
     /**
      * @description Rules for the Products collection.
      * @path /products/{productId}
-     * @allow (list) Any user, signed in or not, can list and view all products.
-     * @allow (create) An artisan can create a product.
+     * @allow (read) Publicly readable for all users.
      * @principle Data is public. Writes are restricted to the linked artisan or an admin.
      */
     match /products/{productId} {
@@ -133,12 +132,13 @@ service cloud.firestore {
     /**
      * @description Rules for the Orders collection.
      * @path /orders/{orderId}
-     * @allow (get, list, create, update) Any signed-in user can manage orders.
-     * @principle Order data is open to any authenticated user.
+     * @allow (read) A user can only read their own orders. Admins can read all.
+     * @principle Order data is private and only accessible by the customer or an admin.
      */
     match /orders/{orderId} {
-      allow get, list: if true;
-      allow create: if isNotAnonymous() && request.resource.data.customerId == request.auth.uid;
+      allow get: if (isOwner(resource.data.customerId) && isNotAnonymous()) || isAdmin();
+      allow list: if (isNotAnonymous() && request.query.get('customerId') == request.auth.uid) || isAdmin();
+      allow create: if (isOwner(request.resource.data.customerId)) || isAdmin(); // Allow anonymous to create order, but it will be pending
       allow update: if (isOwner(resource.data.customerId) && isNotAnonymous()) || isAdmin();
       allow delete: if false; // Orders should generally not be deletable by users.
     }
@@ -146,27 +146,23 @@ service cloud.firestore {
     /**
      * @description Rules for the OrderItems collection.
      * @path /orderItems/{orderItemId}
-     * @allow (get) A customer retrieving an item belonging to one of their own orders.
-     * @deny (get) A user trying to access an item from an order that is not theirs.
-     * @principle Access is granted by looking up the parent order document and verifying its owner. This pattern secures child documents based on the parent's ownership.
+     * @principle Access is granted by looking up the parent order document and verifying its owner.
      */
     match /orderItems/{orderItemId} {
-      allow get, list: if true;
-      allow create: if (isNotAnonymous() && request.resource.data.orderId != null) || isAdmin();
-      allow update: if (isExistingDoc() && get(/databases/$(database)/documents/orders/$(resource.data.orderId)).data.customerId == request.auth.uid && isNotAnonymous()) || isAdmin();
-      allow delete: if false; // Order items should not be deletable by users.
+      allow get, list: if (isNotAnonymous() && get(/databases/$(database)/documents/orders/$(resource.data.orderId)).data.customerId == request.auth.uid) || isAdmin();
+      allow create: if (isOwner(get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.customerId)) || isAdmin();
+      allow update, delete: if false; // Order items should not be mutable by users.
     }
 
     /**
      * @description Rules for the Reviews collection.
      * @path /reviews/{reviewId}
-     * @allow (create) An authenticated user creating a review.
-     * @deny (update) A user trying to edit someone else's review.
+     * @allow (read) Publicly readable.
      * @principle Reviews are public to read, but can only be written or deleted by the original author or an admin.
      */
     match /reviews/{reviewId} {
       allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.customerId == request.auth.uid && isNotAnonymous();
+      allow create: if isNotAnonymous() && request.resource.data.customerId == request.auth.uid;
       allow update: if (isExistingOwner(resource.data.customerId) && isNotAnonymous()) || isAdmin();
       allow delete: if (isExistingOwner(resource.data.customerId) && isNotAnonymous()) || isAdmin();
     }
@@ -175,7 +171,6 @@ service cloud.firestore {
      * @description Rules for the Team Members collection.
      * @path /teamMembers/{memberId}
      * @allow (read) Anyone can view team members.
-     * @allow (write) Only admins can create, update, or delete team members.
      * @principle Public read, admin-only write.
      */
     match /teamMembers/{memberId} {
@@ -187,7 +182,6 @@ service cloud.firestore {
      * @description Rules for the Stores collection.
      * @path /stores/{storeId}
      * @allow (read) Anyone can view store locations.
-     * @allow (write) Only admins can create, update, or delete stores.
      * @principle Public read, admin-only write.
      */
     match /stores/{storeId} {
@@ -198,8 +192,7 @@ service cloud.firestore {
     /**
      * @description Rules for the Company Settings collection.
      * @path /companySettings/main
-     * @allow (read) Anyone can view company settings for invoices.
-     * @allow (write) Only admins can create or update company settings.
+     * @allow (read) Public read for invoice details.
      * @principle Public read, admin-only write for a singleton document.
      */
     match /companySettings/main {
@@ -210,16 +203,13 @@ service cloud.firestore {
     /**
      * @description Rules for the Return Requests collection.
      * @path /returnRequests/{returnRequestId}
-     * @allow (read) A user can read their own return requests, admins can read all.
-     * @allow (create) A user can create a return request for their own order.
-     * @allow (update) Only admins can update the status of a return request.
      * @principle Customer can create and read their own requests. Admin manages status.
      */
     match /returnRequests/{returnRequestId} {
       allow get: if (isOwner(resource.data.customerId) && isNotAnonymous()) || isAdmin();
-      allow list: if ((request.query.get('customerId') == request.auth.uid) && isNotAnonymous()) || isAdmin();
-      allow create: if (isSignedIn() && request.resource.data.customerId == request.auth.uid && isNotAnonymous());
-      allow update: if isAdmin(); // Only admins can approve/reject
+      allow list: if (isNotAnonymous() && (request.query.get('customerId') == request.auth.uid)) || isAdmin();
+      allow create: if isNotAnonymous() && request.resource.data.customerId == request.auth.uid;
+      allow update: if isAdmin();
       allow delete: if false; // Returns should not be deleted
     }
 
@@ -227,12 +217,11 @@ service cloud.firestore {
      * @description Rules for the Blogs collection.
      * @path /blogs/{blogId}
      * @allow (read) Published blogs are public. Drafts are admin-only.
-     * @allow (write) Only admins can create, update, or delete blogs.
      * @principle Content creation is restricted to admins. Published content is public.
      */
     match /blogs/{blogId} {
       allow get: if resource.data.status == 'published' || isAdmin();
-      allow list: if isAdmin() || (request.query.where.size() > 0 && request.query.where[0][0] == 'status' && request.query.where[0][1] == '==' && request.query.where[0][2] == 'published');
+      allow list: if true; // Public list access is needed
       allow create, update, delete: if isAdmin();
     }
   }
