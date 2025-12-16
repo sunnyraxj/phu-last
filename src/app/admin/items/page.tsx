@@ -91,7 +91,7 @@ export default function ItemsPage() {
                  <Dialog open={isFormOpen} onOpenChange={(open) => !open && handleCloseForm()}>
                     <DialogTrigger asChild>
                          <Button onClick={handleAddNewClick}>
-                            <PlusCircle className="mr-2 h-4 w-4" /> Add New Item
+                            <PlusCircle className="mr-2 h-4 w-4" /> Add New
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-4xl">
