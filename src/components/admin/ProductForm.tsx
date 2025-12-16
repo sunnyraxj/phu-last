@@ -72,8 +72,9 @@ export function ProductForm({
   const [aiNotes, setAiNotes] = useState('');
   const { toast } = useToast();
 
-  const [category, setCategory] = useState<string | undefined>(product?.category);
-  const [material, setMaterial] = useState<string | undefined>(product?.material);
+  const [category, setCategory] = useState<string | undefined>(undefined);
+  const [material, setMaterial] = useState<string | undefined>(undefined);
+
 
   const {
     uploadFile,
@@ -497,3 +498,6 @@ function ImageUploader({
         </div>
     );
 }
+
+
+    
