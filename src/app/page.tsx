@@ -486,14 +486,14 @@ export default function ProductPage() {
 
   const teamMembersToDisplay = useMemo(() => {
     if (!allOtherMembers || allOtherMembers.length === 0) return [];
-    // Duplicate members if there are too few to create a seamless loop
-    const minMembersForLoop = 8; 
-    if (allOtherMembers.length > 0 && allOtherMembers.length < minMembersForLoop) {
-      let duplicated = [];
-      while (duplicated.length < minMembersForLoop) {
-        duplicated.push(...allOtherMembers);
+    // Ensure at least 15 items for a smooth loop, duplicating if necessary
+    const minItems = 15;
+    if (allOtherMembers.length < minItems) {
+      let repeated = [];
+      while (repeated.length < minItems) {
+        repeated.push(...allOtherMembers);
       }
-      return duplicated;
+      return repeated;
     }
     return allOtherMembers;
   }, [allOtherMembers]);
@@ -769,7 +769,7 @@ export default function ProductPage() {
                         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Our Team</h2>
                     </div>
                      <div className="flex animate-marquee hover:[animation-play-state:paused]">
-                        {[...teamMembersToDisplay, ...teamMembersToDisplay].map((member, index) => (
+                        {teamMembersToDisplay.map((member, index) => (
                           <div key={`${member.id}-${index}`} className="flex-shrink-0 w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5 px-2 md:px-4">
                               <Card className="w-full max-w-sm overflow-hidden rounded-2xl shadow-lg group">
                                 <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-2xl">
@@ -812,6 +812,7 @@ export default function ProductPage() {
 }
     
     
+
 
 
 
