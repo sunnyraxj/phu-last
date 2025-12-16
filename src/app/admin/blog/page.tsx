@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
@@ -64,6 +64,10 @@ export default function BlogPage() {
         setSelectedPost(null);
     };
 
+    const handleCloseForm = useCallback(() => {
+        setIsFormOpen(false);
+    }, []);
+
     const formatDate = (timestamp?: Timestamp) => {
         if (!timestamp) return 'N/A';
         return new Date(timestamp.seconds * 1000).toLocaleDateString('en-US', {
@@ -82,7 +86,7 @@ export default function BlogPage() {
 
             <BlogForm
                 isOpen={isFormOpen}
-                onClose={() => setIsFormOpen(false)}
+                onClose={handleCloseForm}
                 onSubmit={handleFormSubmit}
                 post={selectedPost}
             />
