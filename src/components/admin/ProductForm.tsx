@@ -111,8 +111,6 @@ export function ProductForm({
   });
 
   const imageValue = watch('image');
-  const categoryValue = watch('category');
-  const materialValue = watch('material');
 
   useEffect(() => {
     if (product) {
@@ -284,14 +282,20 @@ export function ProductForm({
                     <div className="space-y-1">
                         <Label>Category</Label>
                         <div className="flex gap-2">
-                            <Select onValueChange={(value) => setValue('category', value, { shouldValidate: true })} value={categoryValue}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a category" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {existingCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
+                            <Controller
+                                name="category"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a category" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {existingCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
                             <Button type="button" variant="outline" size="icon" onClick={() => setIsCategoryDialogOpen(true)}>
                                 <PlusCircle className="h-4 w-4" />
                             </Button>
@@ -301,14 +305,20 @@ export function ProductForm({
                     <div className="space-y-1">
                         <Label>Material</Label>
                          <div className="flex gap-2">
-                             <Select onValueChange={(value) => setValue('material', value, { shouldValidate: true })} value={materialValue}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a material" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {existingMaterials.map(mat => <SelectItem key={mat} value={mat}>{mat}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
+                             <Controller
+                                name="material"
+                                control={control}
+                                render={({ field }) => (
+                                     <Select onValueChange={field.onChange} value={field.value}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a material" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {existingMaterials.map(mat => <SelectItem key={mat} value={mat}>{mat}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
                             <Button type="button" variant="outline" size="icon" onClick={() => setIsMaterialDialogOpen(true)}>
                                 <PlusCircle className="h-4 w-4" />
                             </Button>

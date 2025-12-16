@@ -203,10 +203,7 @@ export default function AdminProductsPage() {
                             </DialogDescription>
                         </DialogHeader>
                         <ProductForm 
-                            onSuccess={() => {
-                                handleAddSubmit;
-                                setIsAddFormOpen(false);
-                            }}
+                            onSuccess={handleAddSubmit}
                             onClose={() => setIsAddFormOpen(false)}
                             product={null}
                             existingMaterials={materials}
@@ -227,10 +224,7 @@ export default function AdminProductsPage() {
                         </DialogDescription>
                     </DialogHeader>
                     <ProductForm 
-                        onSuccess={() => {
-                            handleEditSubmit;
-                            setIsEditFormOpen(false);
-                        }}
+                        onSuccess={handleEditSubmit}
                         onClose={() => setIsEditFormOpen(false)}
                         product={selectedProduct}
                         existingMaterials={materials}

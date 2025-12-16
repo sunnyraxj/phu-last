@@ -84,9 +84,6 @@ export function BulkEditForm({
     },
   });
 
-  const categoryValue = watch('category');
-  const materialValue = watch('material');
-
   useEffect(() => {
     if (isOpen) {
         reset({
@@ -130,14 +127,20 @@ export function BulkEditForm({
                   <div className="space-y-1">
                       <Label>Category</Label>
                       <div className="flex gap-2">
-                          <Select onValueChange={(value) => setValue('category', value)} value={categoryValue}>
-                              <SelectTrigger>
-                                  <SelectValue placeholder="Keep original or select new" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                  {existingCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
-                              </SelectContent>
-                          </Select>
+                            <Controller
+                                name="category"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Keep original or select new" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {existingCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
                           <Button type="button" variant="outline" size="icon" onClick={() => setIsCategoryDialogOpen(true)}>
                               <PlusCircle className="h-4 w-4" />
                           </Button>
@@ -148,14 +151,20 @@ export function BulkEditForm({
                   <div className="space-y-1">
                       <Label>Material</Label>
                        <div className="flex gap-2">
-                          <Select onValueChange={(value) => setValue('material', value)} value={materialValue}>
-                              <SelectTrigger>
-                                  <SelectValue placeholder="Keep original or select new" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                  {existingMaterials.map(mat => <SelectItem key={mat} value={mat}>{mat}</SelectItem>)}
-                              </SelectContent>
-                          </Select>
+                          <Controller
+                                name="material"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Keep original or select new" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {existingMaterials.map(mat => <SelectItem key={mat} value={mat}>{mat}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
                           <Button type="button" variant="outline" size="icon" onClick={() => setIsMaterialDialogOpen(true)}>
                               <PlusCircle className="h-4 w-4" />
                           </Button>
@@ -183,6 +192,7 @@ export function BulkEditForm({
                         render={({ field }) => (
                             <RadioGroup
                                 onValueChange={field.onChange}
+                                value={field.value}
                                 className="flex space-x-4"
                             >
                                 <div className="flex items-center space-x-2">
@@ -230,3 +240,5 @@ export function BulkEditForm({
     </>
   );
 }
+
+    
