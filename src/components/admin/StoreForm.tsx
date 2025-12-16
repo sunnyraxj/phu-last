@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm, SubmitHandler } from 'react-hook-form';
@@ -72,14 +73,8 @@ export function StoreForm({ isOpen, onClose, onSubmit, store }: StoreFormProps) 
     onSubmit(data);
   };
 
-  const handleOpenChange = (open: boolean) => {
-    if (!open) {
-      onClose();
-    }
-  };
-
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{store ? 'Edit Store' : 'Add New Store'}</DialogTitle>
@@ -131,3 +126,5 @@ export function StoreForm({ isOpen, onClose, onSubmit, store }: StoreFormProps) 
     </Dialog>
   );
 }
+
+    

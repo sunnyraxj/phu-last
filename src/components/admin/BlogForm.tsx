@@ -197,15 +197,9 @@ export function BlogForm({ isOpen, onClose, onSubmit, post }: BlogFormProps) {
     }
     onSubmit(data);
   };
-  
-  const handleOpenChange = (open: boolean) => {
-    if (!open) {
-      onClose();
-    }
-  };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>{post ? 'Edit Post' : 'Add New Post'}</DialogTitle>
@@ -474,3 +468,5 @@ function ImageUploader({
         </div>
     );
 }
+
+    

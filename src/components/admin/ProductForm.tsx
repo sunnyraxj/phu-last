@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm, SubmitHandler, Controller } from 'react-hook-form';
@@ -220,15 +221,9 @@ export function ProductForm({
     }
   };
 
-  const handleOpenChange = (open: boolean) => {
-    if (!open) {
-      onClose();
-    }
-  };
-
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{product ? 'Edit Product' : 'Add New Product'}</DialogTitle>
@@ -523,3 +518,5 @@ function ImageUploader({
         </div>
     );
 }
+
+    

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm, SubmitHandler } from 'react-hook-form';
@@ -69,7 +70,7 @@ export function AddressForm({ isOpen, onClose, onSubmit, address }: AddressFormP
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{address ? 'Edit Address' : 'Add New Address'}</DialogTitle>
@@ -129,3 +130,5 @@ export function AddressForm({ isOpen, onClose, onSubmit, address }: AddressFormP
     </Dialog>
   );
 }
+
+    

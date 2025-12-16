@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm, SubmitHandler } from 'react-hook-form';
@@ -78,14 +79,8 @@ export function TeamMemberForm({ isOpen, onClose, onSubmit, member }: TeamMember
     onSubmit(data);
   };
 
-  const handleOpenChange = (open: boolean) => {
-    if (!open) {
-      onClose();
-    }
-  };
-
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{member ? 'Edit Team Member' : 'Add New Team Member'}</DialogTitle>
@@ -154,3 +149,5 @@ export function TeamMemberForm({ isOpen, onClose, onSubmit, member }: TeamMember
     </Dialog>
   );
 }
+
+    
