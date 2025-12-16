@@ -499,5 +499,3 @@ function ImageUploader({
     );
 }
 
-
-    
