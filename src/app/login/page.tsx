@@ -73,7 +73,7 @@ export default function LoginPage() {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { auth, firestore, user: anonymousUser, mergeCarts } = useFirebase();
+  const { auth, firestore, user: anonymousUser, mergeCarts, isUserLoading: isAuthReady } = useFirebase();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -108,10 +108,14 @@ export default function LoginPage() {
   };
 
   useEffect(() => {
-    const handleRedirectResult = async () => {
-      setIsSubmitting(true);
-      try {
-        const result = await getRedirectResult(auth);
+    // We only want to run this once the auth object is ready and not loading.
+    if (isAuthReady) {
+      return;
+    }
+    
+    setIsSubmitting(true);
+    getRedirectResult(auth)
+      .then(async (result) => {
         if (result) {
           const user = result.user;
           const userDocRef = doc(firestore, "users", user.uid);
@@ -130,10 +134,12 @@ export default function LoginPage() {
               role: 'user'
             });
           }
-          
           await handleSuccessfulLogin(user);
+        } else {
+            setIsSubmitting(false);
         }
-      } catch (error) {
+      })
+      .catch((error) => {
         if (error instanceof FirebaseError) {
           toast({
             variant: "destructive",
@@ -141,13 +147,9 @@ export default function LoginPage() {
             description: error.message,
           });
         }
-      } finally {
         setIsSubmitting(false);
-      }
-    };
-    
-    handleRedirectResult();
-  }, [auth, firestore]);
+      });
+  }, [isAuthReady, auth, firestore]);
 
   const onSignUpSubmit: SubmitHandler<SignUpFormValues> = async (data) => {
     setIsSubmitting(true);
