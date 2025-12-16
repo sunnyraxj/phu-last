@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { collection, doc, query, where } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
-import { Home, Package, ShoppingCart, Users, Store, Menu, Settings, Undo2, LayoutDashboard, FileText } from 'lucide-react';
+import { Home, Package, ShoppingCart, Users, Store, Menu, Settings, Undo2, LayoutDashboard, FileText, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -105,19 +105,34 @@ export default function AdminLayout({
 
     // Authorization Guard
     useEffect(() => {
-        if (!isUserLoading && !isUserDocLoading) {
-            if (!user) {
-                router.push('/login?redirect=/admin');
-            } else if (userData?.role !== 'admin') {
-                router.push('/');
-            }
+        // Redirect to login if not authenticated after loading has finished
+        if (!isUserLoading && !user) {
+            router.push('/login?redirect=/admin');
         }
-    }, [isUserLoading, isUserDocLoading, user, userData, router]);
+    }, [isUserLoading, user, router]);
     
-    if (isUserLoading || isUserDocLoading || !user || userData?.role !== 'admin') {
+    const isLoading = isUserLoading || isUserDocLoading;
+
+    if (isLoading) {
         return (
             <div className="flex h-screen w-full items-center justify-center bg-background">
                 <PottersWheelSpinner />
+            </div>
+        );
+    }
+    
+    // After loading, if user is not an admin, show access denied message
+    if (!isLoading && userData?.role !== 'admin') {
+         return (
+            <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-background p-4 text-center">
+                <ShieldAlert className="h-16 w-16 text-destructive" />
+                <h1 className="text-2xl font-bold">Access Denied</h1>
+                <p className="max-w-md text-muted-foreground">
+                    You do not have the necessary permissions to access this page. Please contact an administrator if you believe this is an error.
+                </p>
+                <Link href="/">
+                    <Button variant="outline">Go to Homepage</Button>
+                </Link>
             </div>
         );
     }
