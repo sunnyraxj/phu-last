@@ -38,6 +38,9 @@ export default function AdminLayout({
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
+    const userDocRef = useMemoFirebase(() => (user ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
+    const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
+
     const ordersQuery = useMemoFirebase(() => (user ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval', 'order-confirmed'])) : null), [firestore, user]);
     const { data: orders } = useCollection<Order>(ordersQuery);
     
@@ -99,8 +102,19 @@ export default function AdminLayout({
             ]
         }
     ];
+
+    // Authorization Guard
+    useEffect(() => {
+        if (!isUserLoading && !isUserDocLoading) {
+            if (!user) {
+                router.push('/login?redirect=/admin');
+            } else if (userData?.role !== 'admin') {
+                router.push('/');
+            }
+        }
+    }, [isUserLoading, isUserDocLoading, user, userData, router]);
     
-    if (isUserLoading) {
+    if (isUserLoading || isUserDocLoading || !user || userData?.role !== 'admin') {
         return (
             <div className="flex h-screen w-full items-center justify-center bg-background">
                 <PottersWheelSpinner />
