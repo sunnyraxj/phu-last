@@ -56,6 +56,19 @@ interface ItemFormProps {
   onNewMaterial: (material: string) => void;
 }
 
+const defaultFormValues: ItemFormValues = {
+  name: '',
+  description: '',
+  mrp: 0,
+  images: [],
+  category: '',
+  material: '',
+  inStock: true,
+  hsn: '',
+  gst: undefined,
+  size: { height: undefined, length: undefined, width: undefined },
+};
+
 export function ItemForm({
   onSuccess,
   onCancel,
@@ -75,18 +88,7 @@ export function ItemForm({
     formState: { errors, isSubmitting },
   } = useForm<ItemFormValues>({
     resolver: zodResolver(itemSchema),
-    defaultValues: {
-      name: '',
-      description: '',
-      mrp: 0,
-      images: [],
-      category: '',
-      material: '',
-      inStock: true,
-      hsn: '',
-      gst: undefined,
-      size: { height: undefined, length: undefined, width: undefined },
-    },
+    defaultValues: defaultFormValues,
   });
 
   const { uploadFile, isUploading, uploadProgress, uploadedUrl, error: uploadError, clearUpload } = useImageUploader('product_images');
@@ -104,7 +106,7 @@ export function ItemForm({
         size: product.size || { height: undefined, length: undefined, width: undefined },
       });
     } else {
-        reset();
+        reset(defaultFormValues);
     }
   }, [product, reset]);
   
@@ -130,7 +132,7 @@ export function ItemForm({
   };
 
   const handleRemoveImage = (index: number) => {
-    const newImages = [...images];
+    const newImages = [...(images || [])];
     newImages.splice(index, 1);
     setValue('images', newImages, { shouldValidate: true });
   };
@@ -165,7 +167,7 @@ export function ItemForm({
            <div className="space-y-1">
                 <Label>Images</Label>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                    {images.map((url, index) => (
+                    {(images || []).map((url, index) => (
                         <div key={index} className="relative aspect-square rounded-md overflow-hidden border">
                             <Image src={url} alt={`Item image ${index + 1}`} fill className="object-cover" />
                             <Button
@@ -400,4 +402,3 @@ function ImageUploader({
         </div>
     );
 }
-
