@@ -27,8 +27,6 @@ type ReturnRequest = {
     status: 'pending-review';
 }
 
-type CartItem = Product & { productId: string; quantity: number; cartItemId: string; };
-
 export default function AdminLayout({
     children,
 }: {
@@ -46,19 +44,22 @@ export default function AdminLayout({
     const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
     
     useEffect(() => {
+        // We are in a loading state until both the Firebase Auth user and the Firestore user document are resolved.
         if (isUserLoading || (user && !user.isAnonymous && isUserDocLoading)) {
             setAuthStatus('loading');
             return;
         }
 
-        if (!user || user.isAnonymous || userData?.role !== 'admin') {
-            setAuthStatus('unauthorized');
-        } else {
+        // Once loading is complete, we can make a definitive decision.
+        if (user && !user.isAnonymous && userData?.role === 'admin') {
             setAuthStatus('authorized');
+        } else {
+            setAuthStatus('unauthorized');
         }
     }, [user, userData, isUserLoading, isUserDocLoading]);
     
     useEffect(() => {
+        // This effect ONLY handles redirection once a final 'unauthorized' status is determined.
         if (authStatus === 'unauthorized') {
             router.push('/');
         }
@@ -94,6 +95,8 @@ export default function AdminLayout({
         if(isMobileMenuOpen) setIsMobileMenuOpen(false);
     }, [pathname])
 
+    // The main guard: Render a spinner while loading, or if unauthorized (before redirect effect runs).
+    // This prevents any child components from rendering and firing off their own effects prematurely.
     if (authStatus !== 'authorized') {
         return (
             <div className="flex h-screen items-center justify-center">
