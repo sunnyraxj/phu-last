@@ -488,14 +488,11 @@ export default function ProductPage() {
     if (!allOtherMembers || allOtherMembers.length === 0) return [];
     // Ensure at least 15 items for a smooth loop, duplicating if necessary
     const minItems = 15;
-    if (allOtherMembers.length < minItems) {
-      let repeated = [];
-      while (repeated.length < minItems) {
-        repeated.push(...allOtherMembers);
-      }
-      return repeated;
+    let repeated = [...allOtherMembers];
+    while (repeated.length > 0 && repeated.length < minItems) {
+      repeated = [...repeated, ...allOtherMembers];
     }
-    return allOtherMembers;
+    return repeated;
   }, [allOtherMembers]);
 
   return (
@@ -750,12 +747,12 @@ export default function ProductPage() {
           ) : (
             <>
                 {founder && (
-                  <div className="text-center mb-12 md:mb-16">
-                    <div className="flex flex-col items-center gap-8 md:gap-12">
+                  <div className="mb-12 md:mb-16">
+                    <div className="flex flex-row items-center gap-8 md:gap-12">
                        <div className="relative h-32 w-32 md:h-48 md:w-48 rounded-lg overflow-hidden shadow-lg group">
                           <Image src={founder.image} alt={founder.name} fill className="object-cover transition-transform duration-300 group-hover:scale-110" data-ai-hint={founder['data-ai-hint']} />
                        </div>
-                      <div className="text-center max-w-md">
+                      <div className="text-left flex-1">
                         <h3 className="text-2xl font-bold">{founder.name}</h3>
                         <p className="text-sm text-muted-foreground mb-4">{founder.role}</p>
                         <p className="mt-3 text-muted-foreground">{founder.bio}</p>
@@ -812,6 +809,7 @@ export default function ProductPage() {
 }
     
     
+
 
 
 
