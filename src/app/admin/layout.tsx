@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Home, Package, ShoppingCart, Users, Store, Menu, Settings, Undo2, LayoutDashboard, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Header } from '@/components/shared/Header';
 
 type Order = {
@@ -46,32 +46,47 @@ export default function AdminLayout({
     const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
 
     useEffect(() => {
-        // Step 1: Wait for initial auth loading to complete.
-        if (isUserLoading || isUserDocLoading) {
+        // This effect will determine the final authorization status.
+        // It waits for all loading to complete before making a decision.
+
+        // If Firebase auth is still loading, we are in a 'loading' state.
+        if (isUserLoading) {
             setAuthStatus('loading');
             return;
         }
 
-        // Step 2: Check for a valid, non-anonymous user and their role data.
-        const isAdmin = user && !user.isAnonymous && userData?.role === 'admin';
+        // If there's no user, or the user is anonymous, they are unauthorized.
+        if (!user || user.isAnonymous) {
+            setAuthStatus('unauthorized');
+            return;
+        }
+        
+        // If we have a user, but we are still waiting for their role document, we are still 'loading'.
+        if (isUserDocLoading) {
+            setAuthStatus('loading');
+            return;
+        }
 
+        // At this point, all data is loaded. We can make a final decision.
+        const isAdmin = userData?.role === 'admin';
+        
         if (isAdmin) {
             setAuthStatus('authorized');
         } else {
-            // This covers: not logged in, anonymous user, or not an admin.
             setAuthStatus('unauthorized');
         }
 
     }, [user, userData, isUserLoading, isUserDocLoading]);
     
     useEffect(() => {
-        // Step 3: Redirect if unauthorized. This runs only when authStatus changes.
+        // This effect handles the redirection based on the final authStatus.
+        // It only runs when authStatus changes from 'loading'.
         if (authStatus === 'unauthorized') {
             router.push('/');
         }
     }, [authStatus, router]);
     
-    const isAuthorizedAdmin = userData?.role === 'admin';
+    const isAuthorizedAdmin = authStatus === 'authorized';
 
     const ordersQuery = useMemoFirebase(() => (isAuthorizedAdmin ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval', 'order-confirmed'])) : null), [firestore, isAuthorizedAdmin]);
     const { data: orders } = useCollection<Order>(ordersQuery);
