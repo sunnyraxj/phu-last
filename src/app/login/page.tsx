@@ -108,15 +108,16 @@ export default function LoginPage() {
   };
 
   useEffect(() => {
-    // We only want to run this once the auth object is ready and not loading.
     if (isAuthReady) {
-      return;
+      return; 
     }
     
+    // The auth has initialized, check for redirect result.
     setIsSubmitting(true);
     getRedirectResult(auth)
       .then(async (result) => {
         if (result) {
+          // This means a user has just signed in via redirect.
           const user = result.user;
           const userDocRef = doc(firestore, "users", user.uid);
           const userDocSnap = await getDoc(userDocRef);
@@ -136,7 +137,8 @@ export default function LoginPage() {
           }
           await handleSuccessfulLogin(user);
         } else {
-            setIsSubmitting(false);
+          // This means the page loaded without a redirect result.
+          setIsSubmitting(false);
         }
       })
       .catch((error) => {
@@ -151,19 +153,19 @@ export default function LoginPage() {
       });
   }, [isAuthReady, auth, firestore]);
 
+
   const onSignUpSubmit: SubmitHandler<SignUpFormValues> = async (data) => {
     setIsSubmitting(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
       
-      // Create a user document in Firestore
       await setDoc(doc(firestore, "users", user.uid), {
         id: user.uid,
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
-        role: 'user' // Assign default role
+        role: 'user'
       });
 
       await handleSuccessfulLogin(user);
