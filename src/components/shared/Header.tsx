@@ -3,7 +3,7 @@
 'use client';
 
 import Link from "next/link";
-import { ChevronDown, ShoppingBag, User, LogOut, Settings, Store, Package, Users, ShoppingCart, Menu, X as CloseIcon, UserCog, Undo2 } from "lucide-react";
+import { ChevronDown, ShoppingBag, User, LogOut, Settings, Store, Package, Users, ShoppingCart, Menu, X as CloseIcon, UserCog, Undo2, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -208,6 +208,19 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                         <ShoppingCart className="mr-2 h-4 w-4" />
                                         Orders
                                         {(adminActionCounts?.pendingOrders || 0) > 0 && <Badge className="ml-auto">{adminActionCounts?.pendingOrders}</Badge>}
+                                    </Button>
+                                </Link>
+                                 <Link href="/admin">
+                                    <Button variant="ghost" className="w-full justify-start">
+                                        <Package className="mr-2 h-4 w-4" />
+                                        Products
+                                        {(adminActionCounts?.outOfStockProducts || 0) > 0 && <Badge variant="destructive" className="ml-auto">{adminActionCounts?.outOfStockProducts}</Badge>}
+                                    </Button>
+                                </Link>
+                                <Link href="/admin/dashboard">
+                                    <Button variant="ghost" className="w-full justify-start">
+                                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                                        Dashboard
                                     </Button>
                                 </Link>
                             </PopoverContent>
