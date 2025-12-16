@@ -364,12 +364,11 @@ export default function ProductPage() {
   );
   const { data: returnRequests } = useCollection<any>(returnsQuery);
 
-  const { founder, managementMembers, otherTeamMembers } = useMemo(() => {
-    if (!teamMembers) return { founder: null, managementMembers: [], otherTeamMembers: [] };
+  const { founder, allOtherMembers } = useMemo(() => {
+    if (!teamMembers) return { founder: null, allOtherMembers: [] };
     const founderMember = teamMembers.find(member => member.role === 'Founder');
-    const management = teamMembers.filter(member => member.role === 'Management');
-    const others = teamMembers.filter(member => member.role === 'Team Member');
-    return { founder: founderMember, managementMembers: management, otherTeamMembers: others };
+    const others = teamMembers.filter(member => member.role !== 'Founder');
+    return { founder: founderMember, allOtherMembers: others };
   }, [teamMembers]);
 
 
@@ -727,33 +726,34 @@ export default function ProductPage() {
 
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Meet Our Team</h2>
-          </div>
           {teamMembersLoading ? (
             <div className="flex justify-center items-center h-64">
               <PottersWheelSpinner />
             </div>
           ) : (
             <>
-              <div className="flex flex-col items-center">
                 {founder && (
-                  <div className="flex flex-row items-center gap-8 md:gap-12 mb-12 md:mb-16">
-                     <div className="relative h-32 w-32 md:h-48 md:w-48 rounded-lg overflow-hidden shadow-lg group">
-                        <Image src={founder.image} alt={founder.name} fill className="object-cover transition-transform duration-300 group-hover:scale-110" data-ai-hint={founder['data-ai-hint']} />
-                     </div>
-                    <div className="text-left max-w-md">
-                      <h3 className="text-2xl font-bold">{founder.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-4">{founder.role}</p>
-                      <p className="mt-3 text-muted-foreground">{founder.bio}</p>
+                  <div className="text-center mb-12 md:mb-16">
+                    <div className="flex flex-col items-center gap-8 md:gap-12">
+                       <div className="relative h-32 w-32 md:h-48 md:w-48 rounded-lg overflow-hidden shadow-lg group">
+                          <Image src={founder.image} alt={founder.name} fill className="object-cover transition-transform duration-300 group-hover:scale-110" data-ai-hint={founder['data-ai-hint']} />
+                       </div>
+                      <div className="text-center max-w-md">
+                        <h3 className="text-2xl font-bold">{founder.name}</h3>
+                        <p className="text-sm text-muted-foreground mb-4">{founder.role}</p>
+                        <p className="mt-3 text-muted-foreground">{founder.bio}</p>
+                      </div>
                     </div>
                   </div>
                 )}
-                {managementMembers.length > 0 && (
+                {allOtherMembers && allOtherMembers.length > 0 && (
                    <div className="w-full">
+                     <div className="text-center mb-8">
+                        <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Our Team</h2>
+                    </div>
                      <Carousel opts={{ align: "start" }} className="w-full">
                        <CarouselContent className="-ml-2 md:-ml-4">
-                         {managementMembers.map((member) => (
+                         {allOtherMembers.map((member) => (
                           <CarouselItem key={member.id} className="pl-4 md:pl-6 basis-1/2 sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                               <Card className="w-full max-w-sm overflow-hidden rounded-2xl shadow-lg group">
                                 <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-2xl">
@@ -782,37 +782,6 @@ export default function ProductPage() {
                    </div>
                 )}
 
-                {otherTeamMembers && otherTeamMembers.length > 0 && (
-                    <div className="mt-16 w-full">
-                        <div className="text-center mb-8">
-                            <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Our Dedicated Team</h2>
-                        </div>
-                        <Carousel opts={{ align: "start" }} className="w-full">
-                            <CarouselContent className="-ml-2 md:-ml-4">
-                                {otherTeamMembers.map((member) => (
-                                <CarouselItem key={member.id} className="pl-4 md:pl-6 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
-                                    <div className="relative aspect-square rounded-full overflow-hidden group shadow-lg">
-                                        <Image
-                                            src={member.image}
-                                            alt={member.name}
-                                            fill
-                                            className="object-cover transition-transform duration-300 group-hover:scale-110"
-                                            data-ai-hint={member['data-ai-hint']}
-                                        />
-                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-center p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                            <div className="text-white">
-                                                <h3 className="font-bold text-sm sm:text-base">{member.name}</h3>
-                                                <p className="text-xs sm:text-sm opacity-90">{member.role}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </CarouselItem>
-                                ))}
-                            </CarouselContent>
-                        </Carousel>
-                    </div>
-                )}
-              </div>
               <div className="text-center mt-12">
                 <Link href="/our-team">
                   <Button variant="outline">View All Team Members</Button>
@@ -828,3 +797,4 @@ export default function ProductPage() {
 }
     
     
+
