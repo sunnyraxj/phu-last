@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ScrollArea } from '../ui/scroll-area';
 import { DialogFooter } from '../ui/dialog';
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
-import { UploadCloud, X, PlusCircle } from 'lucide-react';
+import { UploadCloud, X, PlusCircle, Link as LinkIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useImageUploader } from '@/hooks/useImageUploader';
 import { Progress } from '../ui/progress';
@@ -94,8 +94,9 @@ export function ItemForm({
   const { uploadFile, isUploading, uploadProgress, uploadedUrl, error: uploadError, clearUpload } = useImageUploader('product_images');
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isAddMaterialOpen, setIsAddMaterialOpen] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
 
-  const images = watch('images');
+  const images = watch('images', []);
 
   useEffect(() => {
     if (product) {
@@ -103,6 +104,7 @@ export function ItemForm({
         ...product,
         mrp: product.mrp || 0,
         gst: product.gst || undefined,
+        images: product.images || [],
         size: product.size || { height: undefined, length: undefined, width: undefined },
       });
     } else {
@@ -112,7 +114,7 @@ export function ItemForm({
   
   useEffect(() => {
     if (uploadedUrl) {
-      setValue('images', [...(images || []), uploadedUrl], { shouldValidate: true });
+      setValue('images', [...images, uploadedUrl], { shouldValidate: true });
       clearUpload();
     }
   }, [uploadedUrl, images, setValue, clearUpload]);
@@ -132,7 +134,7 @@ export function ItemForm({
   };
 
   const handleRemoveImage = (index: number) => {
-    const newImages = [...(images || [])];
+    const newImages = [...images];
     newImages.splice(index, 1);
     setValue('images', newImages, { shouldValidate: true });
   };
@@ -148,6 +150,13 @@ export function ItemForm({
     setValue('material', value, { shouldValidate: true });
     setIsAddMaterialOpen(false);
   }
+  
+  const handleAddImageUrl = () => {
+    if (imageUrl && z.string().url().safeParse(imageUrl).success) {
+      setValue('images', [...images, imageUrl], { shouldValidate: true });
+      setImageUrl('');
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)}>
@@ -164,10 +173,10 @@ export function ItemForm({
             {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
           </div>
           
-           <div className="space-y-1">
+           <div className="space-y-2">
                 <Label>Images</Label>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                    {(images || []).map((url, index) => (
+                    {images.map((url, index) => (
                         <div key={index} className="relative aspect-square rounded-md overflow-hidden border">
                             <Image src={url} alt={`Item image ${index + 1}`} fill className="object-cover" />
                             <Button
@@ -184,6 +193,18 @@ export function ItemForm({
                      <ImageUploader onFileUpload={uploadFile} isUploading={isUploading} uploadProgress={uploadProgress} error={uploadError} />
                 </div>
                  {errors.images && <p className="text-xs text-destructive">{errors.images.message}</p>}
+                 <div className="flex items-center gap-2">
+                    <Input
+                        type="text"
+                        placeholder="Or add image URL"
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                        className="h-9"
+                    />
+                    <Button type="button" size="sm" onClick={handleAddImageUrl}>
+                        <LinkIcon className="mr-2 h-4 w-4" /> Add URL
+                    </Button>
+                </div>
             </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -402,3 +423,4 @@ function ImageUploader({
         </div>
     );
 }
+
