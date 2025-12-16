@@ -232,7 +232,8 @@ service cloud.firestore {
      */
     match /blogs/{blogId} {
       allow get: if resource.data.status == 'published' || isAdmin();
-      allow list: if isAdmin(); // Public list may need a different rule based on queries
+      // Allow public listing only for published posts, admin can list all
+      allow list: if (request.query.get('status') == 'published') || isAdmin();
       allow create, update, delete: if isAdmin();
     }
   }
