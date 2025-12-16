@@ -147,7 +147,7 @@ export default function LoginPage() {
     };
     
     handleRedirectResult();
-  }, [auth, firestore, handleSuccessfulLogin]);
+  }, [auth, firestore]);
 
   const onSignUpSubmit: SubmitHandler<SignUpFormValues> = async (data) => {
     setIsSubmitting(true);
