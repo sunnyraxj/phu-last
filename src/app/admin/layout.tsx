@@ -202,9 +202,6 @@ export default function AdminLayout({
                 <div className="flex h-full max-h-screen flex-col gap-2">
                     <div className="flex h-24 items-center border-b px-6">
                          <Link href="/" className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
-                                <span className="text-2xl font-bold">P</span>
-                            </div>
                             <span className="text-lg font-semibold">Hasta Udyog Admin</span>
                         </Link>
                     </div>

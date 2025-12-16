@@ -104,9 +104,6 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
         <header className="bg-black text-white sticky top-0 z-40">
             <div className="container mx-auto flex items-center justify-between px-4 sm:px-8 py-4">
                 <Link href="/" className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                        <span className="text-2xl font-bold">P</span>
-                    </div>
                     <span className="text-lg font-semibold">Purbanchal Hasta Udyog</span>
                 </Link>
 
