@@ -200,7 +200,6 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     setIsSubmitting(true);
     const provider = new GoogleAuthProvider();
-    provider.addScope('profile');
     provider.addScope('email');
     try {
       await setPersistence(auth, browserLocalPersistence);
