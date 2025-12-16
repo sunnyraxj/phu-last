@@ -50,7 +50,7 @@ export default function AdminLayout({
         // It waits for all loading to complete before making a decision.
 
         // If Firebase auth is still loading, we are in a 'loading' state.
-        if (isUserLoading) {
+        if (isUserLoading || isUserDocLoading) {
             setAuthStatus('loading');
             return;
         }
@@ -61,12 +61,6 @@ export default function AdminLayout({
             return;
         }
         
-        // If we have a user, but we are still waiting for their role document, we are still 'loading'.
-        if (isUserDocLoading) {
-            setAuthStatus('loading');
-            return;
-        }
-
         // At this point, all data is loaded. We can make a final decision.
         const isAdmin = userData?.role === 'admin';
         
