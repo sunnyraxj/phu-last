@@ -176,7 +176,7 @@ export function ItemForm({
            <div className="space-y-2">
                 <Label>Images</Label>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                    {images.map((url, index) => (
+                    {images && images.map((url, index) => (
                         <div key={index} className="relative aspect-square rounded-md overflow-hidden border">
                             <Image src={url} alt={`Item image ${index + 1}`} fill className="object-cover" />
                             <Button
