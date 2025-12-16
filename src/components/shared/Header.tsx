@@ -185,7 +185,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                     <Link href="/blog">
                         <button className="hover:opacity-80">BLOG</button>
                     </Link>
-                     {userData?.role === 'admin' && (
+                     {user && !user.isAnonymous && userData?.role === 'admin' && (
                         <Popover open={adminMenuOpen} onOpenChange={setAdminMenuOpen}>
                             <PopoverTrigger asChild onMouseEnter={() => setAdminMenuOpen(true)} onMouseLeave={() => setAdminMenuOpen(false)}>
                                 <div className="flex items-center relative">
