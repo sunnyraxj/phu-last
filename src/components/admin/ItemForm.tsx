@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
 import { UploadCloud, X, PlusCircle, Sparkles, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
-import { useImageUploader } from '@/hooks/useImageUploader';
+import { useImageUploader, type UploadableFile } from '@/hooks/useImageUploader';
 import { Progress } from '../ui/progress';
 import { cn } from '@/lib/utils';
 import { AddOptionDialog } from './AddOptionDialog';
@@ -95,12 +95,13 @@ export function ItemForm({
     defaultValues: defaultFormValues,
   });
 
-  const handleImageUploaded = (url: string) => {
+  const { uploadFiles, files: uploadedFiles, removeFile } = useImageUploader('product_images');
+  
+  const handleImageUploaded = useCallback((url: string) => {
     const currentImages = getValues('images');
     setValue('images', [...currentImages, url], { shouldValidate: true });
-  };
-  
-  const { uploadFiles, isUploading, uploadProgress, error: uploadError } = useImageUploader('product_images');
+  }, [getValues, setValue]);
+
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isAddMaterialOpen, setIsAddMaterialOpen] = useState(false);
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
@@ -186,44 +187,41 @@ export function ItemForm({
             </div>
             
             <div className="space-y-2">
-                  <Label>Images</Label>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                      {images && images.map((url, index) => (
-                          <div key={index} className="relative aspect-square rounded-md overflow-hidden border">
-                              <Image src={url} alt={`Item image ${index + 1}`} fill className="object-cover" />
-                              <Button
-                                  type="button"
-                                  variant="destructive"
-                                  size="icon"
-                                  className="absolute top-1 right-1 h-5 w-5 opacity-80 hover:opacity-100"
-                                  onClick={() => handleRemoveImage(index)}
-                              >
-                                  <X className="h-3 w-3" />
-                              </Button>
-                          </div>
-                      ))}
-                       <ImageUploader onFileUpload={(files) => uploadFiles(files, handleImageUploaded)} isUploading={isUploading} uploadProgress={uploadProgress} error={uploadError} />
-                       <div className="relative aspect-square rounded-md border border-dashed flex flex-col items-center justify-center p-2 text-center">
-                            <Label htmlFor="image-url-input" className="text-xs text-muted-foreground">Add from URL</Label>
-                            <Input
-                                id="image-url-input"
-                                placeholder="https://..."
-                                className="text-xs h-8 mt-1"
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        const url = e.currentTarget.value;
-                                        if (url) {
-                                            handleImageUploaded(url);
-                                            e.currentTarget.value = '';
-                                        }
-                                    }
-                                }}
-                            />
+                <Label>Images</Label>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                    {images && images.map((url, index) => (
+                        <div key={index} className="relative aspect-square rounded-md overflow-hidden border">
+                            <Image src={url} alt={`Item image ${index + 1}`} fill className="object-cover" />
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="absolute top-1 right-1 h-5 w-5 opacity-80 hover:opacity-100"
+                                onClick={() => handleRemoveImage(index)}
+                            >
+                                <X className="h-3 w-3" />
+                            </Button>
                         </div>
-                  </div>
-                   {errors.images && <p className="text-xs text-destructive">{errors.images.message}</p>}
-              </div>
+                    ))}
+                    {uploadedFiles.map(file => (
+                        <div key={file.id} className="relative aspect-square rounded-md overflow-hidden border">
+                            <Image src={URL.createObjectURL(file.file)} alt={file.file.name} fill className="object-cover opacity-50" />
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white p-1">
+                                {file.progress < 100 && !file.error && (
+                                    <>
+                                        <PottersWheelSpinner className="w-8 h-8" />
+                                        <Progress value={file.progress} className="w-full h-1 mt-1" />
+                                    </>
+                                )}
+                                {file.progress === 100 && !file.error && <CheckCircle className="h-8 w-8 text-green-400" />}
+                                {file.error && <p className="text-xs text-center text-destructive-foreground">{file.error}</p>}
+                            </div>
+                        </div>
+                    ))}
+                    <ImageUploader onFileUpload={(files) => uploadFiles(files, handleImageUploaded)} />
+                </div>
+                {errors.images && <p className="text-xs text-destructive mt-2">{errors.images.message}</p>}
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
@@ -388,18 +386,10 @@ export function ItemForm({
 
 
 interface ImageUploaderProps {
-    isUploading: boolean;
-    uploadProgress: number;
     onFileUpload: (files: FileList) => void;
-    error?: string | null;
 }
 
-function ImageUploader({
-    isUploading,
-    uploadProgress,
-    onFileUpload,
-    error
-}: ImageUploaderProps) {
+function ImageUploader({ onFileUpload }: ImageUploaderProps) {
     const [isDragging, setIsDragging] = useState(false);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -431,42 +421,29 @@ function ImageUploader({
         setIsDragging(false);
     };
     
-    if (isUploading) {
-        return (
-            <div className="aspect-square w-full rounded-md border border-dashed flex flex-col items-center justify-center p-2">
-                <PottersWheelSpinner />
-                <p className="text-xs text-muted-foreground mt-1">Uploading...</p>
-                <Progress value={uploadProgress} className="w-full mt-2 h-1" />
-            </div>
-        )
-    }
-
     return (
-        <div className="col-span-1">
-            <div
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                className={cn(
-                    "aspect-square w-full rounded-md border-2 border-dashed flex flex-col items-center justify-center p-2 text-center cursor-pointer hover:border-primary transition-colors",
-                    isDragging && "border-primary bg-primary/10"
-                )}
-                onClick={() => document.getElementById('image-upload-input')?.click()}
-            >
-                <UploadCloud className="h-6 w-6 text-muted-foreground" />
-                <p className="mt-1 text-xs text-muted-foreground">
-                    Add Images
-                </p>
-                <input
-                    id="image-upload-input"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    multiple
-                />
-            </div>
-            {error && <p className="text-xs text-destructive mt-1">{error}</p>}
+        <div
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            className={cn(
+                "aspect-square w-full rounded-md border-2 border-dashed flex flex-col items-center justify-center p-2 text-center cursor-pointer hover:border-primary transition-colors",
+                isDragging && "border-primary bg-primary/10"
+            )}
+            onClick={() => document.getElementById('image-upload-input')?.click()}
+        >
+            <UploadCloud className="h-6 w-6 text-muted-foreground" />
+            <p className="mt-1 text-xs text-muted-foreground">
+                Add Images
+            </p>
+            <input
+                id="image-upload-input"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+                multiple
+            />
         </div>
     );
 }

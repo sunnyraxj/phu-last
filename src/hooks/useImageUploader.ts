@@ -3,7 +3,15 @@
 
 import { useState } from 'react';
 import { useStorage } from '@/firebase';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytesResumable, getDownloadURL, UploadTask } from 'firebase/storage';
+
+export type UploadableFile = {
+    file: File;
+    id: string;
+    progress: number;
+    url?: string;
+    error?: string;
+};
 
 const compressImage = (file: File): Promise<File> => {
     return new Promise((resolve, reject) => {
@@ -64,59 +72,57 @@ const compressImage = (file: File): Promise<File> => {
 
 
 export function useImageUploader(uploadPath: string) {
-  const storage = useStorage();
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [error, setError] = useState<string | null>(null);
+    const storage = useStorage();
+    const [files, setFiles] = useState<UploadableFile[]>([]);
 
-  const uploadFiles = async (files: FileList, onUrlReady: (url: string) => void) => {
-    if (!files || files.length === 0) return;
+    const uploadFile = (file: File, onUrlReady: (url: string, file: File) => void) => {
+        const fileId = `${file.name}-${Date.now()}`;
+        const newUploadableFile: UploadableFile = { file, id: fileId, progress: 0 };
+        setFiles(prev => [...prev, newUploadableFile]);
 
-    setIsUploading(true);
-    setError(null);
-    
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        try {
-            const compressedFile = await compressImage(file);
-            
-            const storageRef = ref(storage, `${uploadPath}/${Date.now()}_${compressedFile.name}`);
-            const uploadTask = uploadBytesResumable(storageRef, compressedFile);
+        compressImage(file)
+            .then(compressedFile => {
+                const storageRef = ref(storage, `${uploadPath}/${Date.now()}_${compressedFile.name}`);
+                const uploadTask = uploadBytesResumable(storageRef, compressedFile);
 
-            await new Promise<void>((resolve, reject) => {
-                uploadTask.on(
-                  'state_changed',
-                  (snapshot) => {
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    setUploadProgress(progress);
-                  },
-                  (uploadError) => {
-                    console.error("Upload failed:", uploadError);
-                    setError(`Upload failed for ${file.name}. Please try again.`);
-                    reject(uploadError);
-                  },
-                  () => {
-                    getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                      onUrlReady(downloadURL);
-                      resolve();
-                    });
-                  }
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        setFiles(prev => prev.map(f => f.id === fileId ? { ...f, progress } : f));
+                    },
+                    (error) => {
+                        console.error("Upload failed:", error);
+                        setFiles(prev => prev.map(f => f.id === fileId ? { ...f, error: 'Upload failed' } : f));
+                    },
+                    () => {
+                        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                            setFiles(prev => prev.map(f => f.id === fileId ? { ...f, url: downloadURL, progress: 100 } : f));
+                            onUrlReady(downloadURL, file);
+                        });
+                    }
                 );
+            })
+            .catch(compressionError => {
+                console.error("Image processing failed:", compressionError);
+                setFiles(prev => prev.map(f => f.id === fileId ? { ...f, error: 'Image processing failed' } : f));
             });
-        } catch(compressionError) {
-            console.error("Image processing failed:", compressionError);
-            setError(`Could not process ${file.name}. Please try a different file.`);
-        }
-    }
+    };
     
-    setIsUploading(false);
-    setUploadProgress(0);
-  };
+     const uploadMultipleFiles = (fileList: FileList, onUrlReady: (url: string, file: File) => void) => {
+        if (!fileList || fileList.length === 0) return;
+        for (let i = 0; i < fileList.length; i++) {
+            uploadFile(fileList[i], onUrlReady);
+        }
+    };
 
-  return {
-    uploadFiles,
-    isUploading,
-    uploadProgress,
-    error,
-  };
+
+    const removeFile = (id: string) => {
+        setFiles(prev => prev.filter(f => f.id !== id));
+    };
+
+    return {
+        uploadFiles: uploadMultipleFiles,
+        files,
+        removeFile,
+    };
 }
