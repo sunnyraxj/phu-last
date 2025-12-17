@@ -14,10 +14,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ScrollArea } from '../ui/scroll-area';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
-import { X, PlusCircle, Sparkles, CheckCircle } from 'lucide-react';
+import { X, PlusCircle, Sparkles, CheckCircle, UploadCloud } from 'lucide-react';
 import Image from 'next/image';
 import { AddOptionDialog } from './AddOptionDialog';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { useStorage } from '@/firebase';
+import { ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { Progress } from '../ui/progress';
 
 const itemSchema = z.object({
   name: z.string().min(1, 'Item name is required'),
@@ -69,6 +72,14 @@ const defaultFormValues: ItemFormValues = {
   size: { height: undefined, length: undefined, width: undefined },
 };
 
+type UploadingFile = {
+  id: string;
+  name: string;
+  progress: number;
+  error?: string;
+};
+
+
 export function ItemForm({
   onSuccess,
   onCancel,
@@ -92,7 +103,8 @@ export function ItemForm({
     defaultValues: defaultFormValues,
   });
 
-  const [imageUrl, setImageUrl] = useState('');
+  const storage = useStorage();
+  const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isAddMaterialOpen, setIsAddMaterialOpen] = useState(false);
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
@@ -122,7 +134,6 @@ export function ItemForm({
     setIsAiDialogOpen(false);
   };
 
-
   const handleFormSubmit: SubmitHandler<ItemFormValues> = (data) => {
     const finalData = {
         ...data,
@@ -142,14 +153,6 @@ export function ItemForm({
     newImages.splice(index, 1);
     setValue('images', newImages, { shouldValidate: true });
   };
-
-  const handleAddImageUrl = () => {
-    if (imageUrl && z.string().url().safeParse(imageUrl).success) {
-      const currentImages = getValues('images');
-      setValue('images', [...currentImages, imageUrl], { shouldValidate: true });
-      setImageUrl('');
-    }
-  };
   
   const handleAddCategory = (value: string) => {
     onNewCategory(value);
@@ -162,6 +165,36 @@ export function ItemForm({
     setValue('material', value, { shouldValidate: true });
     setIsAddMaterialOpen(false);
   }
+
+  const uploadFiles = (filesToUpload: FileList | null) => {
+    if (!filesToUpload) return;
+
+    Array.from(filesToUpload).forEach(file => {
+      const id = `${file.name}-${Date.now()}`;
+      setUploadingFiles(prev => [...prev, { id, name: file.name, progress: 0 }]);
+      
+      const fileRef = storageRef(storage, `product_images/${Date.now()}_${file.name}`);
+      const uploadTask = uploadBytesResumable(fileRef, file);
+
+      uploadTask.on('state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setUploadingFiles(prev => prev.map(f => f.id === id ? { ...f, progress } : f));
+        },
+        (error) => {
+          console.error("Upload failed:", error);
+          setUploadingFiles(prev => prev.map(f => f.id === id ? { ...f, error: 'Upload failed' } : f));
+        },
+        () => {
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            const currentImages = getValues('images');
+            setValue('images', [...currentImages, downloadURL], { shouldValidate: true });
+            setUploadingFiles(prev => prev.filter(f => f.id !== id));
+          });
+        }
+      );
+    });
+  };
   
   return (
     <>
@@ -187,17 +220,28 @@ export function ItemForm({
             
             <div className="space-y-2">
               <Label>Images</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="image-url"
-                  placeholder="https://example.com/image.png"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                />
-                <Button type="button" onClick={handleAddImageUrl}>
-                  Add Image
-                </Button>
+              <div>
+                <Label htmlFor="file-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted hover:bg-muted/50">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <UploadCloud className="w-8 h-8 mb-2 text-muted-foreground" />
+                        <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                        <p className="text-xs text-muted-foreground">PNG, JPG, GIF up to 10MB</p>
+                    </div>
+                    <Input id="file-upload" type="file" className="hidden" multiple onChange={(e) => uploadFiles(e.target.files)} />
+                </Label>
               </div>
+              
+              {uploadingFiles.map(file => (
+                  <div key={file.id} className="mt-2">
+                      <div className="flex justify-between items-center text-sm">
+                          <p className="text-muted-foreground truncate w-4/5">{file.name}</p>
+                          <p className="font-semibold">{Math.round(file.progress)}%</p>
+                      </div>
+                      <Progress value={file.progress} className="h-2" />
+                      {file.error && <p className="text-xs text-destructive mt-1">{file.error}</p>}
+                  </div>
+              ))}
+              
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 mt-2">
                 {images && images.map((url, index) => (
                   <div key={index} className="relative aspect-square rounded-md overflow-hidden border">
@@ -349,8 +393,8 @@ export function ItemForm({
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? <PottersWheelSpinner /> : (product ? 'Save Changes' : 'Add Item')}
+          <Button type="submit" disabled={isSubmitting || uploadingFiles.length > 0}>
+            {isSubmitting ? <PottersWheelSpinner /> : (uploadingFiles.length > 0 ? 'Uploading...' : (product ? 'Save Changes' : 'Add Item'))}
           </Button>
         </DialogFooter>
         
@@ -516,5 +560,7 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
         </Dialog>
     );
 }
+
+    
 
     
