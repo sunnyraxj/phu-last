@@ -77,19 +77,7 @@ const materials = ["Paper", "Ceramic", "Brass", "Sabai Grass", "Jute"];
 
 function Filters({ selectedCategories, handleCategoryChange, selectedMaterials, handleMaterialChange, availability, setAvailability, priceRange, setPriceRange, maxPrice }: any) {
   
-  const handleMinPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value === '' ? 0 : Number(e.target.value);
-    if (!isNaN(value) && value >= 0 && value <= priceRange[1]) {
-      setPriceRange([value, priceRange[1]]);
-    }
-  };
-
-  const handleMaxPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value === '' ? 0 : Number(e.target.value);
-    if (!isNaN(value) && value >= priceRange[0] && value <= maxPrice) {
-      setPriceRange([priceRange[0], value]);
-    }
-  };
+  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(amount);
   
   return (
     <>
@@ -156,35 +144,17 @@ function Filters({ selectedCategories, handleCategoryChange, selectedMaterials, 
           <AccordionTrigger className="font-semibold py-3 text-base">Price</AccordionTrigger>
           <AccordionContent>
              <div className="pt-2">
-              <Slider
-                max={maxPrice}
-                step={100}
-                min={0}
-                value={priceRange}
-                onValueChange={(value) => setPriceRange(value as [number, number])}
-              />
-              <div className="flex items-center gap-4 mt-4">
-                <div className="flex-1 space-y-1">
-                  <Label htmlFor="min-price" className="text-xs">Min</Label>
-                  <Input
-                    id="min-price"
-                    type="number"
-                    value={isNaN(priceRange[0]) ? '' : priceRange[0]}
-                    onChange={handleMinPriceChange}
-                    className="h-8"
-                  />
+               <div className="flex justify-between text-sm text-muted-foreground mb-2">
+                  <span>{formatCurrency(priceRange[0])}</span>
+                  <span>{formatCurrency(priceRange[1])}</span>
                 </div>
-                 <div className="flex-1 space-y-1">
-                  <Label htmlFor="max-price" className="text-xs">Max</Label>
-                  <Input
-                    id="max-price"
-                    type="number"
-                    value={isNaN(priceRange[1]) ? '' : priceRange[1]}
-                    onChange={handleMaxPriceChange}
-                    className="h-8"
-                  />
-                </div>
-              </div>
+                <Slider
+                  max={maxPrice}
+                  step={100}
+                  min={0}
+                  value={priceRange}
+                  onValueChange={(value) => setPriceRange(value as [number, number])}
+                />
             </div>
           </AccordionContent>
         </AccordionItem>
@@ -808,6 +778,7 @@ export default function ProductPage() {
 }
     
     
+
 
 
 
