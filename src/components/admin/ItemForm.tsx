@@ -92,7 +92,12 @@ export function ItemForm({
     defaultValues: defaultFormValues,
   });
 
-  const { uploadFile, isUploading, uploadProgress, uploadedUrl, error: uploadError, clearUpload } = useImageUploader('product_images');
+  const handleImageUploaded = (url: string) => {
+    const currentImages = getValues('images');
+    setValue('images', [...currentImages, url], { shouldValidate: true });
+  };
+  
+  const { uploadFiles, isUploading, uploadProgress, error: uploadError } = useImageUploader('product_images');
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isAddMaterialOpen, setIsAddMaterialOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
@@ -123,15 +128,6 @@ export function ItemForm({
         alert('Please enter a valid image URL.');
     }
   };
-
-  useEffect(() => {
-    if (uploadedUrl) {
-      const currentImages = getValues('images');
-      setValue('images', [...currentImages, uploadedUrl], { shouldValidate: true });
-      clearUpload();
-    }
-  }, [uploadedUrl, setValue, getValues, clearUpload]);
-
 
   const handleFormSubmit: SubmitHandler<ItemFormValues> = (data) => {
     const finalData = {
@@ -212,7 +208,7 @@ export function ItemForm({
                             </Button>
                         </div>
                     ))}
-                     <ImageUploader onFileUpload={uploadFile} isUploading={isUploading} uploadProgress={uploadProgress} error={uploadError} />
+                     <ImageUploader onFileUpload={(files) => uploadFiles(files, handleImageUploaded)} isUploading={isUploading} uploadProgress={uploadProgress} error={uploadError} />
                 </div>
                  {errors.images && <p className="text-xs text-destructive">{errors.images.message}</p>}
             </div>
@@ -354,7 +350,7 @@ export function ItemForm({
 interface ImageUploaderProps {
     isUploading: boolean;
     uploadProgress: number;
-    onFileUpload: (file: File) => void;
+    onFileUpload: (files: FileList) => void;
     error?: string | null;
 }
 
@@ -367,9 +363,9 @@ function ImageUploader({
     const [isDragging, setIsDragging] = useState(false);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file) {
-            onFileUpload(file);
+        const files = event.target.files;
+        if (files) {
+            onFileUpload(files);
         }
     };
 
@@ -377,9 +373,9 @@ function ImageUploader({
         event.preventDefault();
         event.stopPropagation();
         setIsDragging(false);
-        const file = event.dataTransfer.files?.[0];
-        if (file) {
-            onFileUpload(file);
+        const files = event.dataTransfer.files;
+        if (files) {
+            onFileUpload(files);
         }
     };
 
@@ -419,7 +415,7 @@ function ImageUploader({
             >
                 <UploadCloud className="h-6 w-6 text-muted-foreground" />
                 <p className="mt-1 text-xs text-muted-foreground">
-                    Add Image
+                    Add Images
                 </p>
                 <input
                     id="image-upload-input"
@@ -427,6 +423,7 @@ function ImageUploader({
                     accept="image/*"
                     onChange={handleFileChange}
                     className="hidden"
+                    multiple
                 />
             </div>
             {error && <p className="text-xs text-destructive mt-1">{error}</p>}
