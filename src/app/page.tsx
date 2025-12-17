@@ -75,7 +75,7 @@ const categories = [
 
 const materials = ["Paper", "Ceramic", "Brass", "Sabai Grass", "Jute"];
 
-function Filters({ selectedCategories, handleCategoryChange, selectedMaterials, handleMaterialChange, availability, setAvailability, priceRange, setPriceRange, maxPrice }: any) {
+function Filters({ selectedCategories, handleCategoryChange, selectedMaterials, handleMaterialChange, availability, setAvailability }: any) {
   
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(amount);
   
@@ -85,7 +85,7 @@ function Filters({ selectedCategories, handleCategoryChange, selectedMaterials, 
         <h2 className="text-xl font-bold">Filter:</h2>
       </div>
 
-      <Accordion type="multiple" defaultValue={["category", "material", "availability", "price"]} className="w-full">
+      <Accordion type="multiple" defaultValue={["category", "material", "availability"]} className="w-full">
         <AccordionItem value="category">
           <AccordionTrigger className="font-semibold py-3 text-base">Category</AccordionTrigger>
           <AccordionContent>
@@ -136,25 +136,6 @@ function Filters({ selectedCategories, handleCategoryChange, selectedMaterials, 
                 <Checkbox id="out-of-stock" onCheckedChange={(checked) => setAvailability(checked ? 'out-of-stock' : 'all')} checked={availability === 'out-of-stock'} />
                 <span className="text-sm">Out of Stock</span>
               </label>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="price">
-          <AccordionTrigger className="font-semibold py-3 text-base">Price</AccordionTrigger>
-          <AccordionContent>
-             <div className="pt-2">
-               <div className="flex justify-between text-sm text-muted-foreground mb-2">
-                  <span>{formatCurrency(priceRange[0])}</span>
-                  <span>{formatCurrency(priceRange[1])}</span>
-                </div>
-                <Slider
-                  max={maxPrice}
-                  step={100}
-                  min={0}
-                  value={priceRange}
-                  onValueChange={(value) => setPriceRange(value as [number, number])}
-                />
             </div>
           </AccordionContent>
         </AccordionItem>
@@ -265,7 +246,6 @@ export default function ProductPage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [availability, setAvailability] = useState<string>("all"); // all, in-stock, out-of-stock
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [searchTerm, setSearchTerm] = useState("");
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -282,18 +262,6 @@ export default function ProductPage() {
     [firestore]
   );
   const { data: allProducts, isLoading: productsLoading } = useCollection<Product>(productsQuery);
-
-  const maxPrice = useMemo(() => {
-    if (!allProducts || allProducts.length === 0) return 10000;
-    return Math.ceil(Math.max(...allProducts.map(p => p.price)) / 100) * 100;
-  }, [allProducts]);
-
-  useEffect(() => {
-    if (maxPrice > 0) {
-      setPriceRange([0, maxPrice]);
-    }
-  }, [maxPrice]);
-
 
   const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
   const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
@@ -422,9 +390,6 @@ export default function ProductPage() {
         if (availability === 'out-of-stock' && product.inStock) {
           return false;
         }
-        if (product.price < priceRange[0] || product.price > priceRange[1]) {
-          return false;
-        }
         if (searchTerm && !product.name.toLowerCase().includes(searchTerm.toLowerCase())) {
           return false;
         }
@@ -444,7 +409,7 @@ export default function ProductPage() {
             return 0;
         }
       });
-  }, [allProducts, selectedCategories, selectedMaterials, availability, priceRange, sortBy, searchTerm]);
+  }, [allProducts, selectedCategories, selectedMaterials, availability, sortBy, searchTerm]);
 
   const productsToShow = useMemo(() => filteredProducts.slice(0, 20), [filteredProducts]);
   
@@ -510,9 +475,6 @@ export default function ProductPage() {
                 handleMaterialChange={handleMaterialChange}
                 availability={availability}
                 setAvailability={setAvailability}
-                priceRange={priceRange}
-                setPriceRange={setPriceRange}
-                maxPrice={maxPrice}
               />
             </aside>
 
@@ -538,9 +500,6 @@ export default function ProductPage() {
                           handleMaterialChange={handleMaterialChange}
                           availability={availability}
                           setAvailability={setAvailability}
-                          priceRange={priceRange}
-                          setPriceRange={setPriceRange}
-                          maxPrice={maxPrice}
                         />
                       </div>
                     </SheetContent>
@@ -780,6 +739,7 @@ export default function ProductPage() {
 }
     
     
+
 
 
 
