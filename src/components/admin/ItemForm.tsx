@@ -110,6 +110,7 @@ export function ItemForm({
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isAddMaterialOpen, setIsAddMaterialOpen] = useState(false);
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
 
   const images = watch('images', []);
   const seoKeywords = watch('seoKeywords', []);
@@ -213,13 +214,12 @@ export function ItemForm({
   };
 
   const handleAddImageUrl = () => {
-    const url = prompt("Please enter the image URL:");
-    if (url) {
+    if (imageUrl) {
       try {
-        // Zod validation for the URL
-        z.string().url().parse(url);
+        z.string().url().parse(imageUrl);
         const currentImages = getValues('images');
-        setValue('images', [...currentImages, url], { shouldValidate: true });
+        setValue('images', [...currentImages, imageUrl], { shouldValidate: true });
+        setImageUrl(''); // Clear the input field
       } catch (error) {
         toast({
           variant: "destructive",
@@ -264,9 +264,17 @@ export function ItemForm({
                     <Input id="file-upload" type="file" className="hidden" multiple onChange={(e) => uploadFiles(e.target.files)} />
                 </Label>
               </div>
-              <Button type="button" variant="outline" size="sm" onClick={handleAddImageUrl}>
-                Add Image from URL
-              </Button>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="text"
+                  placeholder="Or paste an image URL"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                />
+                <Button type="button" variant="outline" onClick={handleAddImageUrl}>
+                  Add URL
+                </Button>
+              </div>
               
               {uploadingFiles.map(file => (
                   <div key={file.id} className="mt-2">
@@ -597,3 +605,5 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
         </Dialog>
     );
 }
+
+    
