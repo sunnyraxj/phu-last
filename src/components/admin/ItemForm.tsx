@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -14,11 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ScrollArea } from '../ui/scroll-area';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
-import { UploadCloud, X, PlusCircle, Sparkles, CheckCircle } from 'lucide-react';
+import { X, PlusCircle, Sparkles, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
-import { useImageUploader, type UploadableFile } from '@/hooks/useImageUploader';
-import { Progress } from '../ui/progress';
-import { cn } from '@/lib/utils';
 import { AddOptionDialog } from './AddOptionDialog';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
@@ -95,13 +92,7 @@ export function ItemForm({
     defaultValues: defaultFormValues,
   });
 
-  const { uploadFiles, files: uploadedFiles, removeFile } = useImageUploader('product_images');
-  
-  const handleImageUploaded = useCallback((url: string) => {
-    const currentImages = getValues('images');
-    setValue('images', [...currentImages, url], { shouldValidate: true });
-  }, [getValues, setValue]);
-
+  const [imageUrl, setImageUrl] = useState('');
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isAddMaterialOpen, setIsAddMaterialOpen] = useState(false);
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
@@ -151,6 +142,14 @@ export function ItemForm({
     newImages.splice(index, 1);
     setValue('images', newImages, { shouldValidate: true });
   };
+
+  const handleAddImageUrl = () => {
+    if (imageUrl && z.string().url().safeParse(imageUrl).success) {
+      const currentImages = getValues('images');
+      setValue('images', [...currentImages, imageUrl], { shouldValidate: true });
+      setImageUrl('');
+    }
+  };
   
   const handleAddCategory = (value: string) => {
     onNewCategory(value);
@@ -187,40 +186,35 @@ export function ItemForm({
             </div>
             
             <div className="space-y-2">
-                <Label>Images</Label>
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                    {images && images.map((url, index) => (
-                        <div key={index} className="relative aspect-square rounded-md overflow-hidden border">
-                            <Image src={url} alt={`Item image ${index + 1}`} fill className="object-cover" />
-                            <Button
-                                type="button"
-                                variant="destructive"
-                                size="icon"
-                                className="absolute top-1 right-1 h-5 w-5 opacity-80 hover:opacity-100"
-                                onClick={() => handleRemoveImage(index)}
-                            >
-                                <X className="h-3 w-3" />
-                            </Button>
-                        </div>
-                    ))}
-                    {uploadedFiles.map(file => (
-                        <div key={file.id} className="relative aspect-square rounded-md overflow-hidden border">
-                            <Image src={URL.createObjectURL(file.file)} alt={file.file.name} fill className="object-cover opacity-50" />
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white p-1">
-                                {file.progress < 100 && !file.error && (
-                                    <>
-                                        <PottersWheelSpinner className="w-8 h-8" />
-                                        <Progress value={file.progress} className="w-full h-1 mt-1" />
-                                    </>
-                                )}
-                                {file.progress === 100 && !file.error && <CheckCircle className="h-8 w-8 text-green-400" />}
-                                {file.error && <p className="text-xs text-center text-destructive-foreground">{file.error}</p>}
-                            </div>
-                        </div>
-                    ))}
-                    <ImageUploader onFileUpload={(files) => uploadFiles(files, handleImageUploaded)} />
-                </div>
-                {errors.images && <p className="text-xs text-destructive mt-2">{errors.images.message}</p>}
+              <Label>Images</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="image-url"
+                  placeholder="https://example.com/image.png"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                />
+                <Button type="button" onClick={handleAddImageUrl}>
+                  Add Image
+                </Button>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 mt-2">
+                {images && images.map((url, index) => (
+                  <div key={index} className="relative aspect-square rounded-md overflow-hidden border">
+                    <Image src={url} alt={`Item image ${index + 1}`} fill className="object-cover" />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-1 right-1 h-5 w-5 opacity-80 hover:opacity-100"
+                      onClick={() => handleRemoveImage(index)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              {errors.images && <p className="text-xs text-destructive mt-2">{errors.images.message}</p>}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -384,70 +378,6 @@ export function ItemForm({
   );
 }
 
-
-interface ImageUploaderProps {
-    onFileUpload: (files: FileList) => void;
-}
-
-function ImageUploader({ onFileUpload }: ImageUploaderProps) {
-    const [isDragging, setIsDragging] = useState(false);
-
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const files = event.target.files;
-        if (files) {
-            onFileUpload(files);
-        }
-    };
-
-    const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-        setIsDragging(false);
-        const files = event.dataTransfer.files;
-        if (files) {
-            onFileUpload(files);
-        }
-    };
-
-    const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-        setIsDragging(true);
-    };
-
-    const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-        setIsDragging(false);
-    };
-    
-    return (
-        <div
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            className={cn(
-                "aspect-square w-full rounded-md border-2 border-dashed flex flex-col items-center justify-center p-2 text-center cursor-pointer hover:border-primary transition-colors",
-                isDragging && "border-primary bg-primary/10"
-            )}
-            onClick={() => document.getElementById('image-upload-input')?.click()}
-        >
-            <UploadCloud className="h-6 w-6 text-muted-foreground" />
-            <p className="mt-1 text-xs text-muted-foreground">
-                Add Images
-            </p>
-            <input
-                id="image-upload-input"
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-                multiple
-            />
-        </div>
-    );
-}
-
 // AI Details Generator Dialog
 interface AIDetailsGeneratorDialogProps {
   isOpen: boolean;
@@ -586,3 +516,5 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
         </Dialog>
     );
 }
+
+    
