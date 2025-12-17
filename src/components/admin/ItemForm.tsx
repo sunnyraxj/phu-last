@@ -187,8 +187,9 @@ export function ItemForm({
         },
         () => {
           getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-            const currentImages = getValues('images');
-            setValue('images', [...currentImages, downloadURL], { shouldValidate: true });
+            const currentImages = getValues('images') || [];
+            const newImages = [...currentImages, downloadURL];
+            setValue('images', newImages, { shouldValidate: true });
             setUploadingFiles(prev => prev.filter(f => f.id !== id));
           });
         }
@@ -560,7 +561,3 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
         </Dialog>
     );
 }
-
-    
-
-    
