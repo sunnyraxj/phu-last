@@ -203,7 +203,8 @@ export function ItemForm({
         },
         () => {
           getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-            setValue('images', [...getValues('images'), downloadURL], { shouldValidate: true });
+            const currentImages = getValues('images');
+            setValue('images', [...currentImages, downloadURL], { shouldValidate: true });
             setUploadingFiles(prev => prev.filter(f => f.id !== id));
           });
         }
@@ -217,7 +218,8 @@ export function ItemForm({
       try {
         // Zod validation for the URL
         z.string().url().parse(url);
-        setValue('images', [...images, url], { shouldValidate: true });
+        const currentImages = getValues('images');
+        setValue('images', [...currentImages, url], { shouldValidate: true });
       } catch (error) {
         toast({
           variant: "destructive",
