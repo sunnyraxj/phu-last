@@ -134,13 +134,13 @@ export function ItemForm({
   const handleFormSubmit: SubmitHandler<ItemFormValues> = (data) => {
     const finalData = {
         ...data,
-        hsn: data.hsn || null,
-        gst: data.gst ?? null,
+        hsn: data.hsn || undefined,
+        gst: data.gst ?? undefined,
         size: data.size ? {
-            height: data.size.height ?? null,
-            width: data.size.width ?? null,
-            length: data.size.length ?? null,
-        } : null
+            height: data.size.height ?? undefined,
+            width: data.size.width ?? undefined,
+            length: data.size.length ?? undefined,
+        } : undefined
     }
     onSuccess(finalData as ItemFormValues);
   };
@@ -203,6 +203,24 @@ export function ItemForm({
                           </div>
                       ))}
                        <ImageUploader onFileUpload={(files) => uploadFiles(files, handleImageUploaded)} isUploading={isUploading} uploadProgress={uploadProgress} error={uploadError} />
+                       <div className="relative aspect-square rounded-md border border-dashed flex flex-col items-center justify-center p-2 text-center">
+                            <Label htmlFor="image-url-input" className="text-xs text-muted-foreground">Add from URL</Label>
+                            <Input
+                                id="image-url-input"
+                                placeholder="https://..."
+                                className="text-xs h-8 mt-1"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        const url = e.currentTarget.value;
+                                        if (url) {
+                                            handleImageUploaded(url);
+                                            e.currentTarget.value = '';
+                                        }
+                                    }
+                                }}
+                            />
+                        </div>
                   </div>
                    {errors.images && <p className="text-xs text-destructive">{errors.images.message}</p>}
               </div>
@@ -524,7 +542,13 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="py-4 space-y-4">
+                <div className="py-4 space-y-4 relative">
+                    {isGenerating && (
+                        <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center z-10">
+                            <PottersWheelSpinner />
+                            <p className="mt-2 text-sm text-muted-foreground">Generating details...</p>
+                        </div>
+                    )}
                     {generatedData ? (
                         <div className="space-y-4">
                             <Alert>
