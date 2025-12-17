@@ -21,6 +21,7 @@ import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { useStorage } from '@/firebase';
 import { ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Progress } from '../ui/progress';
+import { useToast } from '@/hooks/use-toast';
 
 const itemSchema = z.object({
   name: z.string().min(1, 'Item name is required'),
@@ -89,6 +90,7 @@ export function ItemForm({
   onNewCategory,
   onNewMaterial
 }: ItemFormProps) {
+  const { toast } = useToast();
   const {
     register,
     handleSubmit,
@@ -168,8 +170,21 @@ export function ItemForm({
 
   const uploadFiles = (filesToUpload: FileList | null) => {
     if (!filesToUpload) return;
+    
+    const acceptedFileTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    const maxFileSize = 10 * 1024 * 1024; // 10MB
 
     Array.from(filesToUpload).forEach(file => {
+      // Client-side validation
+      if (!acceptedFileTypes.includes(file.type)) {
+        toast({ variant: 'destructive', title: 'Invalid File Type', description: `File "${file.name}" is not a supported image type.` });
+        return;
+      }
+      if (file.size > maxFileSize) {
+        toast({ variant: 'destructive', title: 'File Too Large', description: `File "${file.name}" exceeds the 10MB size limit.` });
+        return;
+      }
+
       const id = `${file.name}-${Date.now()}`;
       setUploadingFiles(prev => [...prev, { id, name: file.name, progress: 0 }]);
       
@@ -183,18 +198,34 @@ export function ItemForm({
         },
         (error) => {
           console.error("Upload failed:", error);
-          setUploadingFiles(prev => prev.map(f => f.id === id ? { ...f, error: 'Upload failed' } : f));
+          setUploadingFiles(prev => prev.filter(f => f.id !== id));
+          toast({ variant: 'destructive', title: 'Upload Failed', description: `Could not upload ${file.name}. Please try again.` });
         },
         () => {
           getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-            const currentImages = getValues('images') || [];
-            const newImages = [...currentImages, downloadURL];
-            setValue('images', newImages, { shouldValidate: true });
+            setValue('images', [...getValues('images'), downloadURL], { shouldValidate: true });
             setUploadingFiles(prev => prev.filter(f => f.id !== id));
           });
         }
       );
     });
+  };
+
+  const handleAddImageUrl = () => {
+    const url = prompt("Please enter the image URL:");
+    if (url) {
+      try {
+        // Zod validation for the URL
+        z.string().url().parse(url);
+        setValue('images', [...images, url], { shouldValidate: true });
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Invalid URL",
+          description: "Please enter a valid image URL.",
+        });
+      }
+    }
   };
   
   return (
@@ -231,6 +262,9 @@ export function ItemForm({
                     <Input id="file-upload" type="file" className="hidden" multiple onChange={(e) => uploadFiles(e.target.files)} />
                 </Label>
               </div>
+              <Button type="button" variant="outline" size="sm" onClick={handleAddImageUrl}>
+                Add Image from URL
+              </Button>
               
               {uploadingFiles.map(file => (
                   <div key={file.id} className="mt-2">
