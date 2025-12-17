@@ -95,6 +95,7 @@ export function ItemForm({
   const { uploadFile, isUploading, uploadProgress, uploadedUrl, error: uploadError, clearUpload } = useImageUploader('product_images');
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isAddMaterialOpen, setIsAddMaterialOpen] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
 
   const images = watch('images', []);
 
@@ -112,13 +113,24 @@ export function ItemForm({
     }
   }, [product, reset]);
   
+  const handleAddImageUrl = () => {
+    try {
+        z.string().url().parse(imageUrl);
+        const currentImages = getValues('images');
+        setValue('images', [...currentImages, imageUrl], { shouldValidate: true });
+        setImageUrl('');
+    } catch (error) {
+        alert('Please enter a valid image URL.');
+    }
+  };
+
   useEffect(() => {
     if (uploadedUrl) {
       const currentImages = getValues('images');
       setValue('images', [...currentImages, uploadedUrl], { shouldValidate: true });
       clearUpload();
     }
-  }, [uploadedUrl, setValue, clearUpload, getValues]);
+  }, [uploadedUrl, setValue, getValues, clearUpload]);
 
 
   const handleFormSubmit: SubmitHandler<ItemFormValues> = (data) => {
@@ -170,6 +182,21 @@ export function ItemForm({
           
            <div className="space-y-2">
                 <Label>Images</Label>
+                <div className="flex items-center gap-2">
+                    <Input 
+                        type="text" 
+                        placeholder="https://... Add image from URL" 
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                        onKeyDown={(e) => {
+                          if(e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddImageUrl();
+                          }
+                        }}
+                    />
+                    <Button type="button" onClick={handleAddImageUrl}>Add URL</Button>
+                </div>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                     {images && images.map((url, index) => (
                         <div key={index} className="relative aspect-square rounded-md overflow-hidden border">
