@@ -190,11 +190,13 @@ export default function PurchasePage() {
 
   const maxPrice = useMemo(() => {
     if (!allProducts || allProducts.length === 0) return 10000;
-    return Math.max(...allProducts.map(p => p.price));
+    return Math.ceil(Math.max(...allProducts.map(p => p.price)) / 100) * 100;
   }, [allProducts]);
 
   useEffect(() => {
-    setPriceRange([0, maxPrice]);
+    if (maxPrice > 0) {
+      setPriceRange([0, maxPrice]);
+    }
   }, [maxPrice]);
   
   const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
