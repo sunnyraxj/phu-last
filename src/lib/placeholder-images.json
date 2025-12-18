@@ -1,1 +1,10 @@
-{}
+{
+  "hero": {
+    "url": "https://picsum.photos/seed/hero/1200/800",
+    "data-ai-hint": "handicrafts lifestyle"
+  },
+  "product": {
+    "url": "https://picsum.photos/seed/placeholder/300",
+    "data-ai-hint": "handicraft product"
+  }
+}

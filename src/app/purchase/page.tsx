@@ -21,6 +21,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle 
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Label } from "@/components/ui/label";
+import placeholderImages from '@/lib/placeholder-images.json';
 
 
 type Product = {
@@ -48,17 +49,17 @@ type Store = {
     image?: string;
 };
 
-const categories = [
-  { name: "Crafts", count: 5 },
-  { name: "LifeStyle", count: 5 },
-]
-
-const materials = ["Paper", "Ceramic", "Brass", "Sabai Grass", "Jute"];
-
-function Filters({ selectedCategories, handleCategoryChange, selectedMaterials, handleMaterialChange, availability, setAvailability }: any) {
+function Filters({ 
+  categories, 
+  materials,
+  selectedCategories, 
+  handleCategoryChange, 
+  selectedMaterials, 
+  handleMaterialChange, 
+  availability, 
+  setAvailability 
+}: any) {
   
-  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(amount);
-
   return (
     <>
       <div className="flex justify-between items-center mb-6">
@@ -70,7 +71,7 @@ function Filters({ selectedCategories, handleCategoryChange, selectedMaterials, 
           <AccordionTrigger className="font-semibold py-3 text-base">Category</AccordionTrigger>
           <AccordionContent>
             <div className="space-y-2 pt-2">
-              {categories.map((cat) => (
+              {categories.map((cat: {name: string, count: number}) => (
                 <label key={cat.name} className="flex items-center gap-3 cursor-pointer">
                   <Checkbox
                     id={cat.name}
@@ -90,7 +91,7 @@ function Filters({ selectedCategories, handleCategoryChange, selectedMaterials, 
           <AccordionTrigger className="font-semibold py-3 text-base">Material</AccordionTrigger>
           <AccordionContent>
             <div className="space-y-2 pt-2">
-              {materials.map((mat) => (
+              {materials.map((mat: string) => (
                 <label key={mat} className="flex items-center gap-3 cursor-pointer">
                   <Checkbox
                     id={mat}
@@ -217,6 +218,26 @@ export default function PurchasePage() {
       };
   }, [orders, outOfStockProducts, returnRequests, userData]);
 
+  const { categories, materials } = useMemo(() => {
+    if (!allProducts) return { categories: [], materials: [] };
+    const categoryCounts: { [key: string]: number } = {};
+    const materialSet = new Set<string>();
+
+    allProducts.forEach(product => {
+      if (product.category) {
+        categoryCounts[product.category] = (categoryCounts[product.category] || 0) + 1;
+      }
+      if (product.material) {
+        materialSet.add(product.material);
+      }
+    });
+
+    return {
+      categories: Object.entries(categoryCounts).map(([name, count]) => ({ name, count })),
+      materials: Array.from(materialSet),
+    };
+  }, [allProducts]);
+
   const handleCategoryChange = (categoryName: string) => {
     setSelectedCategories(prev => 
       prev.includes(categoryName) 
@@ -336,6 +357,8 @@ export default function PurchasePage() {
       <div className="container mx-auto flex items-start px-0 sm:px-4 mt-8">
         <aside className="w-72 bg-background p-6 border-r border-border h-screen sticky top-[88px] overflow-y-auto hidden lg:block">
           <Filters 
+            categories={categories}
+            materials={materials}
             selectedCategories={selectedCategories}
             handleCategoryChange={handleCategoryChange}
             selectedMaterials={selectedMaterials}
@@ -366,6 +389,8 @@ export default function PurchasePage() {
                     </SheetHeader>
                    <div className="p-6 overflow-y-auto">
                       <Filters 
+                        categories={categories}
+                        materials={materials}
                         selectedCategories={selectedCategories}
                         handleCategoryChange={handleCategoryChange}
                         selectedMaterials={selectedMaterials}
@@ -431,11 +456,11 @@ export default function PurchasePage() {
                     onClick={() => setSelectedProduct(product)}
                   >
                     <Image
-                      src={product.images?.[0] || 'https://picsum.photos/seed/placeholder/300'}
+                      src={product.images?.[0] || placeholderImages.product.url}
                       alt={product.name}
                       fill
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      data-ai-hint={product['data-ai-hint']}
+                      data-ai-hint={product['data-ai-hint'] || placeholderImages.product['data-ai-hint']}
                     />
                     <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <Eye className="text-white h-8 w-8" />
@@ -465,7 +490,7 @@ export default function PurchasePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-2">
                   <div className="relative aspect-square bg-muted rounded-lg">
                     <Image
-                      src={selectedProduct.images?.[0] || 'https://picsum.photos/seed/placeholder/300'}
+                      src={selectedProduct.images?.[0] || placeholderImages.product.url}
                       alt={selectedProduct.name}
                       fill
                       className="object-cover rounded-lg"

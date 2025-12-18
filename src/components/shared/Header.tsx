@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from "next/link";
@@ -17,15 +18,16 @@ import { Badge } from "../ui/badge";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "../ui/accordion";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import placeholderImages from '@/lib/placeholder-images.json';
 
 
 type Product = {
     id: string;
     name: string;
     price: number;
-    image: string;
+    images: string[];
     "data-ai-hint": string;
-    collection: string;
+    category: string;
     material: string;
     inStock: boolean;
     description: string;
@@ -126,7 +128,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                     {featuredProducts.map((product) => (
                                         <Link href="/purchase" key={product.id} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted -m-2">
                                             <div className="relative h-20 w-20 rounded-md overflow-hidden">
-                                                <Image src={product.images?.[0] || 'https://picsum.photos/seed/placeholder/200'} alt={product.name} fill className="object-cover" />
+                                                <Image src={product.images?.[0] || placeholderImages.product.url} alt={product.name} fill className="object-cover" />
                                             </div>
                                             <div>
                                                 <p className="font-semibold text-xs truncate w-20 text-center">{product.name}</p>
@@ -291,7 +293,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                                 <div key={item.id} className="flex items-center gap-4">
                                                     <div className="relative h-20 w-20 rounded-md overflow-hidden bg-muted">
                                                         <Image
-                                                            src={item.images?.[0] || 'https://picsum.photos/seed/placeholder/200'}
+                                                            src={item.images?.[0] || placeholderImages.product.url}
                                                             alt={item.name}
                                                             fill
                                                             className="object-cover"

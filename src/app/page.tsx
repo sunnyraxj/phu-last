@@ -26,7 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { Label } from "@/components/ui/label";
 import Autoplay from "embla-carousel-autoplay"
-
+import placeholderImages from '@/lib/placeholder-images.json';
 
 type Product = {
   id: string;
@@ -67,17 +67,16 @@ type TeamMember = {
     socialLink?: string;
 };
 
-
-const categories = [
-  { name: "Crafts", count: 5 },
-  { name: "LifeStyle", count: 5 },
-]
-
-const materials = ["Paper", "Ceramic", "Brass", "Sabai Grass", "Jute"];
-
-function Filters({ selectedCategories, handleCategoryChange, selectedMaterials, handleMaterialChange, availability, setAvailability }: any) {
-  
-  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(amount);
+function Filters({ 
+  categories, 
+  materials,
+  selectedCategories, 
+  handleCategoryChange, 
+  selectedMaterials, 
+  handleMaterialChange, 
+  availability, 
+  setAvailability 
+}: any) {
   
   return (
     <>
@@ -90,7 +89,7 @@ function Filters({ selectedCategories, handleCategoryChange, selectedMaterials, 
           <AccordionTrigger className="font-semibold py-3 text-base">Category</AccordionTrigger>
           <AccordionContent>
             <div className="space-y-2 pt-2">
-              {categories.map((cat) => (
+              {categories.map((cat: {name: string, count: number}) => (
                 <label key={cat.name} className="flex items-center gap-3 cursor-pointer">
                   <Checkbox
                     id={cat.name}
@@ -110,7 +109,7 @@ function Filters({ selectedCategories, handleCategoryChange, selectedMaterials, 
           <AccordionTrigger className="font-semibold py-3 text-base">Material</AccordionTrigger>
           <AccordionContent>
             <div className="space-y-2 pt-2">
-              {materials.map((mat) => (
+              {materials.map((mat: string) => (
                 <label key={mat} className="flex items-center gap-3 cursor-pointer">
                   <Checkbox
                     id={mat}
@@ -154,11 +153,11 @@ function ProductGrid({ productsToShow, addToCart, setSelectedProduct }: { produc
             onClick={() => setSelectedProduct(product)}
           >
             <Image
-              src={product.images?.[0] || 'https://picsum.photos/seed/placeholder/300'}
+              src={product.images?.[0] || placeholderImages.product.url}
               alt={product.name}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
-              data-ai-hint={product['data-ai-hint']}
+              data-ai-hint={product['data-ai-hint'] || placeholderImages.product['data-ai-hint']}
             />
             <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               <Eye className="text-white h-8 w-8" />
@@ -325,6 +324,26 @@ export default function ProductPage() {
     };
   }, [orders, outOfStockProducts, returnRequests, userData]);
 
+  const { categories, materials } = useMemo(() => {
+    if (!allProducts) return { categories: [], materials: [] };
+    const categoryCounts: { [key: string]: number } = {};
+    const materialSet = new Set<string>();
+
+    allProducts.forEach(product => {
+      if (product.category) {
+        categoryCounts[product.category] = (categoryCounts[product.category] || 0) + 1;
+      }
+      if (product.material) {
+        materialSet.add(product.material);
+      }
+    });
+
+    return {
+      categories: Object.entries(categoryCounts).map(([name, count]) => ({ name, count })),
+      materials: Array.from(materialSet),
+    };
+  }, [allProducts]);
+
   const handleCategoryChange = (categoryName: string) => {
     setSelectedCategories(prev =>
       prev.includes(categoryName)
@@ -444,11 +463,12 @@ export default function ProductPage() {
 
       <section className="relative h-[60vh] w-full flex items-center justify-center text-white">
         <Image
-          src="https://picsum.photos/seed/hero/1200/800"
+          src={placeholderImages.hero.url}
           alt="Authentic handicrafts from North-East India, including bamboo and jute products."
           fill
           className="object-cover"
-          data-ai-hint="handicrafts lifestyle"
+          data-ai-hint={placeholderImages.hero['data-ai-hint']}
+          priority
         />
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 text-center px-4">
@@ -469,6 +489,8 @@ export default function ProductPage() {
           <div className="flex items-start">
             <aside className="w-72 bg-background p-6 border-r border-border h-screen sticky top-0 overflow-y-auto hidden lg:block">
               <Filters
+                categories={categories}
+                materials={materials}
                 selectedCategories={selectedCategories}
                 handleCategoryChange={handleCategoryChange}
                 selectedMaterials={selectedMaterials}
@@ -494,6 +516,8 @@ export default function ProductPage() {
                       </SheetHeader>
                       <div className="p-6 overflow-y-auto">
                         <Filters
+                          categories={categories}
+                          materials={materials}
                           selectedCategories={selectedCategories}
                           handleCategoryChange={handleCategoryChange}
                           selectedMaterials={selectedMaterials}
@@ -556,7 +580,7 @@ export default function ProductPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-2">
                         <div className="relative aspect-square bg-muted rounded-lg">
                           <Image
-                            src={selectedProduct.images?.[0] || 'https://picsum.photos/seed/placeholder/300'}
+                            src={selectedProduct.images?.[0] || placeholderImages.product.url}
                             alt={selectedProduct.name}
                             fill
                             className="object-cover rounded-lg"
@@ -739,6 +763,7 @@ export default function ProductPage() {
 }
     
     
+
 
 
 

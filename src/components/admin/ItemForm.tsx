@@ -1,8 +1,9 @@
 
+
 'use client';
 
 import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -20,6 +21,8 @@ import Image from 'next/image';
 import { AddOptionDialog } from './AddOptionDialog';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 const itemSchema = z.object({
   name: z.string().min(1, 'Item name is required'),
@@ -51,10 +54,11 @@ interface ItemFormProps {
   onSuccess: (data: ItemFormValues) => void;
   onCancel: () => void;
   product: ItemFormValues & { id?: string } | null;
-  categories: string[];
-  materials: string[];
-  onNewCategory: (category: string) => void;
-  onNewMaterial: (material: string) => void;
+}
+
+type Product = {
+  category: string;
+  material: string;
 }
 
 const defaultFormValues: ItemFormValues = {
@@ -75,12 +79,41 @@ export function ItemForm({
   onSuccess,
   onCancel,
   product,
-  categories,
-  materials,
-  onNewCategory,
-  onNewMaterial
 }: ItemFormProps) {
   const { toast } = useToast();
+  const firestore = useFirestore();
+
+  const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
+  const { data: allProducts } = useCollection<Product>(productsQuery);
+
+  const { categories, materials } = useMemo(() => {
+    if (!allProducts) return { categories: [], materials: [] };
+    const categorySet = new Set<string>();
+    const materialSet = new Set<string>();
+
+    allProducts.forEach(product => {
+      if (product.category) categorySet.add(product.category);
+      if (product.material) materialSet.add(product.material);
+    });
+
+    return {
+      categories: Array.from(categorySet),
+      materials: Array.from(materialSet),
+    };
+  }, [allProducts]);
+
+  const [allCategories, setAllCategories] = useState(categories);
+  const [allMaterials, setAllMaterials] = useState(materials);
+
+  useEffect(() => {
+    setAllCategories(categories);
+  }, [categories]);
+
+  useEffect(() => {
+    setAllMaterials(materials);
+  }, [materials]);
+
+
   const {
     register,
     handleSubmit,
@@ -147,13 +180,17 @@ export function ItemForm({
   };
   
   const handleAddCategory = (value: string) => {
-    onNewCategory(value);
+    if (value && !allCategories.includes(value)) {
+      setAllCategories(prev => [...prev, value]);
+    }
     setValue('category', value, { shouldValidate: true });
     setIsAddCategoryOpen(false);
   }
   
   const handleAddMaterial = (value: string) => {
-    onNewMaterial(value);
+    if (value && !allMaterials.includes(value)) {
+      setAllMaterials(prev => [...prev, value]);
+    }
     setValue('material', value, { shouldValidate: true });
     setIsAddMaterialOpen(false);
   }
@@ -272,7 +309,7 @@ export function ItemForm({
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                         <SelectContent>
-                           {categories.map(cat => (
+                           {allCategories.map(cat => (
                               <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                           ))}
                           <Button type="button" variant="ghost" className="w-full justify-start mt-1" onClick={() => setIsAddCategoryOpen(true)}>
@@ -295,7 +332,7 @@ export function ItemForm({
                           <SelectValue placeholder="Select a material" />
                         </SelectTrigger>
                         <SelectContent>
-                          {materials.map(mat => (
+                          {allMaterials.map(mat => (
                               <SelectItem key={mat} value={mat}>{mat}</SelectItem>
                           ))}
                            <Button type="button" variant="ghost" className="w-full justify-start mt-1" onClick={() => setIsAddMaterialOpen(true)}>

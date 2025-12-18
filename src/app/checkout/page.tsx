@@ -23,7 +23,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { PlusCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
-
+import placeholderImages from '@/lib/placeholder-images.json';
 
 type ShippingAddress = AddressFormValues & { id: string, email?: string };
 
@@ -407,7 +407,7 @@ export default function CheckoutPage() {
                         <div key={item.cartItemId} className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <div className="relative h-16 w-16 rounded-md overflow-hidden bg-muted">
-                            <Image src={item.images?.[0] || 'https://picsum.photos/seed/placeholder/200'} alt={item.name} fill className="object-cover" />
+                            <Image src={item.images?.[0] || placeholderImages.product.url} alt={item.name} fill className="object-cover" />
                             </div>
                             <div>
                             <p className="font-semibold">{item.name}</p>

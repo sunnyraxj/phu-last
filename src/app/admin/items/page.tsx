@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
@@ -21,17 +22,12 @@ type Item = ItemFormValues & {
     id: string;
 };
 
-const categories = ["Crafts", "LifeStyle"];
-const materials = ["Paper", "Ceramic", "Brass", "Sabai Grass", "Jute"];
-
 export default function ItemsPage() {
     const firestore = useFirestore();
     
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<Item | null>(null);
     const [itemToDelete, setItemToDelete] = useState<Item | null>(null);
-    const [allCategories, setAllCategories] = useState(categories);
-    const [allMaterials, setAllMaterials] = useState(materials);
 
     const itemsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
     const { data: items, isLoading: itemsLoading } = useCollection<Item>(itemsQuery);
@@ -72,18 +68,6 @@ export default function ItemsPage() {
         handleCloseForm();
     };
 
-    const handleNewCategory = useCallback((category: string) => {
-        if (category && !allCategories.includes(category)) {
-            setAllCategories(prev => [...prev, category]);
-        }
-    }, [allCategories]);
-
-    const handleNewMaterial = useCallback((material: string) => {
-        if (material && !allMaterials.includes(material)) {
-            setAllMaterials(prev => [...prev, material]);
-        }
-    }, [allMaterials]);
-
     return (
         <div className="flex-1 space-y-4 p-2 sm:p-4 md:p-8 pt-6">
             <div className="flex items-center justify-between space-y-2">
@@ -105,10 +89,6 @@ export default function ItemsPage() {
                             product={selectedItem}
                             onSuccess={handleFormSubmit}
                             onCancel={handleCloseForm}
-                            categories={allCategories}
-                            materials={allMaterials}
-                            onNewCategory={handleNewCategory}
-                            onNewMaterial={handleNewMaterial}
                         />
                     </DialogContent>
                 </Dialog>
