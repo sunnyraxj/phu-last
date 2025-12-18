@@ -14,13 +14,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { UploadCloud, X } from 'lucide-react';
-import { useImageUploader } from '@/hooks/useImageUploader';
-import { Progress } from '@/components/ui/progress';
-import { cn } from '@/lib/utils';
+import { X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
 
 type OrderStatus = 'pending-payment-approval' | 'pending' | 'shipped' | 'delivered' | 'cancelled';
 
@@ -60,15 +57,8 @@ export default function ReturnRequestPage() {
     const [comments, setComments] = useState('');
     const [damageImages, setDamageImages] = useState<string[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [imageUrl, setImageUrl] = useState('');
 
-    const {
-        uploadFile,
-        isUploading,
-        uploadProgress,
-        uploadedUrl,
-        error: uploadError,
-        clearUpload,
-    } = useImageUploader('return_images');
 
     const orderRef = useMemoFirebase(() => doc(firestore, 'orders', orderId as string), [firestore, orderId]);
     const { data: order, isLoading: orderLoading } = useDoc<Order>(orderRef);
@@ -79,13 +69,21 @@ export default function ReturnRequestPage() {
     );
     const { data: orderItems, isLoading: itemsLoading } = useCollection<OrderItem>(orderItemsQuery);
     
-    // Add new image URL to state when upload is complete
-    useMemo(() => {
-        if(uploadedUrl) {
-            setDamageImages(prev => [...prev, uploadedUrl]);
-            clearUpload();
+    const handleAddImageUrl = () => {
+        if (imageUrl) {
+            try {
+                new URL(imageUrl); // Basic URL validation
+                setDamageImages(prev => [...prev, imageUrl]);
+                setImageUrl('');
+            } catch {
+                toast({
+                    variant: 'destructive',
+                    title: 'Invalid URL',
+                    description: 'Please enter a valid image URL.'
+                });
+            }
         }
-    }, [uploadedUrl, clearUpload]);
+    };
 
     const handleItemSelection = (item: OrderItem, checked: boolean) => {
         setSelectedItems(prev => {
@@ -220,14 +218,17 @@ export default function ReturnRequestPage() {
                         </div>
                         
                         <div className="space-y-2">
-                             <Label className="font-semibold">Upload Images (optional)</Label>
-                             <p className="text-xs text-muted-foreground">If your item is damaged, please upload clear photos.</p>
-                             <ImageUploader
-                                isUploading={isUploading}
-                                uploadProgress={uploadProgress}
-                                onFileUpload={uploadFile}
-                                error={uploadError}
-                             />
+                             <Label className="font-semibold">Add Image URLs (optional)</Label>
+                             <p className="text-xs text-muted-foreground">If your item is damaged, please provide links to clear photos.</p>
+                              <div className="flex items-center gap-2">
+                                <Input
+                                    type="text"
+                                    placeholder="https://example.com/image.jpg"
+                                    value={imageUrl}
+                                    onChange={(e) => setImageUrl(e.target.value)}
+                                />
+                                <Button type="button" variant="outline" onClick={handleAddImageUrl}>Add</Button>
+                            </div>
                              <div className="flex flex-wrap gap-2 mt-2">
                                 {damageImages.map((url, index) => (
                                     <div key={index} className="relative h-20 w-20 rounded-md overflow-hidden border">
@@ -258,89 +259,3 @@ export default function ReturnRequestPage() {
         </div>
     );
 }
-
-// Reusable ImageUploader component for the page
-interface ImageUploaderProps {
-    isUploading: boolean;
-    uploadProgress: number;
-    onFileUpload: (file: File) => void;
-    error?: string | null;
-}
-
-function ImageUploader({
-    isUploading,
-    uploadProgress,
-    onFileUpload,
-    error
-}: ImageUploaderProps) {
-    const [isDragging, setIsDragging] = useState(false);
-
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file) {
-            onFileUpload(file);
-        }
-    };
-
-    const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-        setIsDragging(false);
-        const file = event.dataTransfer.files?.[0];
-        if (file) {
-            onFileUpload(file);
-        }
-    };
-
-    const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-        setIsDragging(true);
-    };
-
-    const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-        setIsDragging(false);
-    };
-    
-    if (isUploading) {
-        return (
-            <div className="h-32 w-full rounded-md border border-dashed flex flex-col items-center justify-center p-4">
-                <PottersWheelSpinner />
-                <p className="text-sm text-muted-foreground mt-2">Uploading...</p>
-                <Progress value={uploadProgress} className="w-full mt-2" />
-            </div>
-        )
-    }
-
-    return (
-        <div>
-            <div
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                className={cn(
-                    "h-32 w-full rounded-md border-2 border-dashed flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:border-primary transition-colors",
-                    isDragging && "border-primary bg-primary/10"
-                )}
-                onClick={() => document.getElementById('image-upload-input-return')?.click()}
-            >
-                <UploadCloud className="h-8 w-8 text-muted-foreground" />
-                <p className="mt-2 text-sm text-muted-foreground">
-                    Drag & drop images here, or click to select files
-                </p>
-                <input
-                    id="image-upload-input-return"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    multiple
-                />
-            </div>
-            {error && <p className="text-xs text-destructive mt-1">{error}</p>}
-        </div>
-    );
-}
-

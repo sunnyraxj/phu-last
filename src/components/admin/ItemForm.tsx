@@ -15,16 +15,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ScrollArea } from '../ui/scroll-area';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
-import { X, PlusCircle, Sparkles, CheckCircle, UploadCloud } from 'lucide-react';
+import { X, PlusCircle, Sparkles, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
 import { AddOptionDialog } from './AddOptionDialog';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { Progress } from '../ui/progress';
-import { cn } from '@/lib/utils';
-import { useStorage } from '@/firebase';
-import { ref as storageRef, uploadBytesResumable, getDownloadURL, StorageError } from 'firebase/storage';
-import imageCompression from 'browser-image-compression';
 
 const itemSchema = z.object({
   name: z.string().min(1, 'Item name is required'),
@@ -109,59 +104,6 @@ export function ItemForm({
   const images = watch('images', []);
   const seoKeywords = watch('seoKeywords', []);
   
-  const storage = useStorage();
-
-  const handleImageUpload = async (file: File) => {
-    const options = {
-        maxSizeMB: 1,
-        maxWidthOrHeight: 1920,
-        useWebWorker: true,
-    };
-
-    try {
-        const compressedFile = await imageCompression(file, options);
-        
-        const currentImages = getValues('images');
-        setValue('images', [...currentImages, ''], { shouldValidate: true });
-        const imageIndex = currentImages.length;
-        
-        if (!storage) {
-            toast({ variant: 'destructive', title: 'Storage Error', description: "Firebase Storage is not available." });
-            const newImages = getValues('images').filter((_, i) => i !== imageIndex);
-            setValue('images', newImages, { shouldValidate: true });
-            return;
-        }
-        
-        const sRef = storageRef(storage, `product-images/${Date.now()}_${compressedFile.name}`);
-        const uploadTask = uploadBytesResumable(sRef, compressedFile);
-
-        uploadTask.on('state_changed',
-            (snapshot) => {
-                // Can be used to update progress if needed
-            },
-            (error) => {
-                console.error("Upload failed:", error);
-                toast({ variant: 'destructive', title: 'Upload Failed', description: "Could not upload image." });
-                const newImages = getValues('images').filter((_, i) => i !== imageIndex);
-                setValue('images', newImages, { shouldValidate: true });
-            },
-            () => {
-                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                    const newImages = getValues('images');
-                    newImages[imageIndex] = downloadURL;
-                    setValue('images', newImages, { shouldValidate: true, shouldDirty: true });
-                    toast({ title: 'Upload Complete', description: "Image has been uploaded."});
-                });
-            }
-        );
-
-    } catch (error) {
-        console.error('Image compression failed:', error);
-        toast({ variant: 'destructive', title: 'Compression Failed', description: 'Could not process the image.' });
-    }
-  };
-
-
   useEffect(() => {
     if (product) {
       reset({
@@ -257,11 +199,10 @@ export function ItemForm({
             
             <div className="space-y-2">
               <Label>Images</Label>
-               <ImageUploader onFileUpload={handleImageUpload} />
               <div className="flex items-center gap-2">
                 <Input
                   type="text"
-                  placeholder="Or paste an image URL"
+                  placeholder="Paste an image URL"
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
                 />
@@ -470,25 +411,10 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
     const [isGenerating, setIsGenerating] = useState(false);
     const [generatedData, setGeneratedData] = useState<{ name: string; description: string; seoKeywords: string[] } | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => {
-                setImageUrl(reader.result as string);
-            };
-            reader.onerror = () => {
-                setError('Failed to read image file.');
-            };
-        }
-    };
-    
     const handleGenerate = async () => {
         if (!imageUrl) {
-            setError('Please upload an image or provide a URL.');
+            setError('Please provide an image URL.');
             return;
         }
         setIsGenerating(true);
@@ -496,25 +422,44 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
         setGeneratedData(null);
 
         try {
-            const response = await fetch('/api/generate-product-details', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    imageDataUri: imageUrl,
-                    userNotes 
-                }),
-            });
+            // Convert to data URI for the API
+            const response = await fetch(imageUrl);
+            if (!response.ok) throw new Error('Failed to fetch image from URL.');
+            const blob = await response.blob();
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = async () => {
+                const base64data = reader.result;
+                try {
+                    const apiResponse = await fetch('/api/generate-product-details', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            imageDataUri: base64data,
+                            userNotes 
+                        }),
+                    });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to generate details.');
-            }
+                    if (!apiResponse.ok) {
+                        const errorData = await apiResponse.json();
+                        throw new Error(errorData.error || 'Failed to generate details.');
+                    }
 
-            const data = await response.json();
-            setGeneratedData(data);
+                    const data = await apiResponse.json();
+                    setGeneratedData(data);
+                } catch (err: any) {
+                    setError(err.message);
+                } finally {
+                    setIsGenerating(false);
+                }
+            };
+            reader.onerror = () => {
+                setError('Failed to process image.');
+                setIsGenerating(false);
+            };
+
         } catch (err: any) {
             setError(err.message);
-        } finally {
             setIsGenerating(false);
         }
     };
@@ -571,7 +516,7 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
                     ) : (
                          <div className="space-y-4">
                             <div className="space-y-1">
-                                <Label htmlFor="ai-image-url">Image URL or Upload</Label>
+                                <Label htmlFor="ai-image-url">Image URL</Label>
                                 <div className="flex items-center gap-2">
                                     <Input 
                                         id="ai-image-url"
@@ -579,10 +524,7 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
                                         placeholder="https://example.com/image.jpg"
                                         value={imageUrl}
                                         onChange={(e) => setImageUrl(e.target.value)}
-                                        disabled={!!imageUrl && imageUrl.startsWith('data:')}
                                     />
-                                     <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>Upload</Button>
-                                     <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept="image/*" />
                                 </div>
                             </div>
 
@@ -629,84 +571,4 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
             </DialogContent>
         </Dialog>
     );
-}
-
-// Reusable ImageUploader component for the page
-interface ImageUploaderProps {
-  onFileUpload: (file: File) => void;
-}
-
-function ImageUploader({ onFileUpload }: ImageUploaderProps) {
-  const [isDragging, setIsDragging] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
-
-  const handleFileSelect = (file: File | null) => {
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => setPreview(e.target?.result as string);
-    reader.readAsDataURL(file);
-
-    onFileUpload(file);
-    // Note: We don't clear the preview here. Let the parent form decide when to clear things.
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    handleFileSelect(file || null);
-    event.target.value = ''; // Reset input to allow re-uploading the same file
-  };
-
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDragging(false);
-    const file = event.dataTransfer.files?.[0];
-    handleFileSelect(file || null);
-  };
-
-  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDragging(false);
-  };
-
-  return (
-    <div>
-      <div
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        className={cn(
-          "relative h-32 w-full rounded-md border-2 border-dashed flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:border-primary transition-colors",
-          isDragging && "border-primary bg-primary/10"
-        )}
-        onClick={() => document.getElementById('image-upload-input')?.click()}
-      >
-        {preview ? (
-          <Image src={preview} alt="upload preview" fill className="object-cover rounded-md opacity-50" />
-        ) : (
-          <>
-            <UploadCloud className="h-8 w-8 text-muted-foreground" />
-            <p className="mt-2 text-sm text-muted-foreground">
-              Drag & drop an image here, or click to select a file
-            </p>
-          </>
-        )}
-        <input
-          id="image-upload-input"
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          className="hidden"
-        />
-      </div>
-    </div>
-  );
 }
