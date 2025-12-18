@@ -10,17 +10,8 @@ interface FirebaseClientProviderProps {
 }
 
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
-  const [firebaseServices, setFirebaseServices] = useState<ReturnType<typeof initializeFirebase> | null>(null);
-
-  useEffect(() => {
-    // Initialize Firebase on the client side, once per component mount.
-    setFirebaseServices(initializeFirebase());
-  }, []); // Empty dependency array ensures this runs only once on mount
-
-  if (!firebaseServices) {
-    // You can return a loading spinner or null here
-    return null;
-  }
+  // Use useMemo to ensure initializeFirebase() is called only once.
+  const firebaseServices = useMemo(() => initializeFirebase(), []);
 
   return (
     <FirebaseProvider

@@ -3,11 +3,16 @@
 
 import { useState, useCallback } from 'react';
 import { useStorage } from '@/firebase';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytesResumable, getDownloadURL, StorageError } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 
+/**
+ * A streamlined hook for handling single image uploads to Firebase Storage.
+ * @param uploadPath - The path in your Firebase Storage bucket where files will be uploaded (e.g., 'product-images').
+ * @returns An object with upload state and control functions.
+ */
 export function useImageUploader(uploadPath: string) {
-    const storage = useStorage();
+    const storage = useStorage(); // Directly get the storage instance.
     const { toast } = useToast();
     
     const [isUploading, setIsUploading] = useState(false);
@@ -16,6 +21,7 @@ export function useImageUploader(uploadPath: string) {
     const [error, setError] = useState<string | null>(null);
 
     const uploadFile = useCallback((file: File) => {
+        // Guard against calls before storage is initialized.
         if (!storage) {
             const err = "Firebase Storage is not available. Please try again later.";
             setError(err);
@@ -23,7 +29,7 @@ export function useImageUploader(uploadPath: string) {
             return;
         }
 
-        // Reset state for new upload
+        // Reset state for new upload.
         setIsUploading(true);
         setUploadProgress(0);
         setUploadedUrl(null);
@@ -56,23 +62,40 @@ export function useImageUploader(uploadPath: string) {
                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
                 setUploadProgress(progress);
             },
-            (uploadError) => {
+            (uploadError: StorageError) => {
                 console.error("Upload failed:", uploadError);
-                const err = `Could not upload ${file.name}. Please try again.`;
-                setError(err);
+                let errMessage = `Could not upload ${file.name}. Please try again.`;
+
+                // Provide more specific error feedback if possible.
+                if (uploadError.code === 'storage/unauthorized') {
+                    errMessage = "You do not have permission to upload files. Please check storage rules.";
+                } else if (uploadError.code === 'storage/canceled') {
+                    errMessage = "The upload was canceled.";
+                }
+
+                setError(errMessage);
                 setIsUploading(false);
-                toast({ variant: 'destructive', title: 'Upload Failed', description: err });
+                toast({ variant: 'destructive', title: 'Upload Failed', description: errMessage });
             },
             () => {
+                // Upload completed successfully.
                 getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
                     setUploadedUrl(downloadURL);
                     setIsUploading(false);
                     toast({ title: 'Upload Complete', description: `${file.name} has been uploaded.`});
+                }).catch((urlError) => {
+                     // Handle errors from getDownloadURL (less common, but possible).
+                    console.error("Failed to get download URL:", urlError);
+                    const err = "Upload succeeded, but could not get the image URL.";
+                    setError(err);
+                    setIsUploading(false);
+                    toast({ variant: 'destructive', title: 'Error', description: err });
                 });
             }
         );
     }, [storage, uploadPath, toast]);
     
+    /** Resets the uploader state, but does not cancel an ongoing upload. */
     const clearUpload = useCallback(() => {
         setIsUploading(false);
         setUploadProgress(0);
