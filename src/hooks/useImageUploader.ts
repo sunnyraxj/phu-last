@@ -16,6 +16,13 @@ export function useImageUploader(uploadPath: string) {
     const [error, setError] = useState<string | null>(null);
 
     const uploadFile = useCallback((file: File) => {
+        if (!storage) {
+            const err = "Firebase Storage is not available. Please try again later.";
+            setError(err);
+            toast({ variant: 'destructive', title: 'Storage Error', description: err });
+            return;
+        }
+
         // Reset state for new upload
         setIsUploading(true);
         setUploadProgress(0);
@@ -60,6 +67,7 @@ export function useImageUploader(uploadPath: string) {
                 getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
                     setUploadedUrl(downloadURL);
                     setIsUploading(false);
+                    toast({ title: 'Upload Complete', description: `${file.name} has been uploaded.`});
                 });
             }
         );
