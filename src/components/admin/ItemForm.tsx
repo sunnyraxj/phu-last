@@ -15,13 +15,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ScrollArea } from '../ui/scroll-area';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
-import { X, PlusCircle, Sparkles, CheckCircle, UploadCloud } from 'lucide-react';
+import { X, PlusCircle, Sparkles, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
 import { AddOptionDialog } from './AddOptionDialog';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
-import { Progress } from '../ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { useImageUploader } from '@/hooks/useImageUploader';
 import { cn } from '@/lib/utils';
 
 const itemSchema = z.object({
@@ -98,14 +96,6 @@ export function ItemForm({
     defaultValues: defaultFormValues,
   });
   
-  const {
-      uploadFile,
-      isUploading,
-      uploadProgress,
-      uploadedUrl,
-      error: uploadError,
-      clearUpload
-  } = useImageUploader('product_images');
 
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isAddMaterialOpen, setIsAddMaterialOpen] = useState(false);
@@ -129,14 +119,6 @@ export function ItemForm({
         reset(defaultFormValues);
     }
   }, [product, reset]);
-  
-  useEffect(() => {
-    if (uploadedUrl) {
-      const currentImages = getValues('images');
-      setValue('images', [...currentImages, uploadedUrl], { shouldValidate: true });
-      clearUpload(); // Reset the uploader state
-    }
-  }, [uploadedUrl, setValue, getValues, clearUpload]);
   
   const handleApplyAiData = (data: { name: string, description: string, seoKeywords: string[] }) => {
     setValue('name', data.name, { shouldValidate: true });
@@ -218,21 +200,14 @@ export function ItemForm({
             
             <div className="space-y-2">
               <Label>Images</Label>
-              <ImageUploader
-                onFileUpload={uploadFile}
-                isUploading={isUploading}
-                uploadProgress={uploadProgress}
-                error={uploadError}
-              />
               <div className="flex items-center gap-2">
                 <Input
                   type="text"
-                  placeholder="Or paste an image URL"
+                  placeholder="Paste an image URL"
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
-                  disabled={isUploading}
                 />
-                <Button type="button" variant="outline" onClick={handleAddImageUrl} disabled={isUploading}>
+                <Button type="button" variant="outline" onClick={handleAddImageUrl}>
                   Add URL
                 </Button>
               </div>
@@ -388,8 +363,8 @@ export function ItemForm({
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting || isUploading}>
-            {isSubmitting ? <PottersWheelSpinner /> : (isUploading ? 'Uploading...' : (product ? 'Save Changes' : 'Add Item'))}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? <PottersWheelSpinner /> : (product ? 'Save Changes' : 'Add Item')}
           </Button>
         </DialogFooter>
         
@@ -417,107 +392,6 @@ export function ItemForm({
   );
 }
 
-// Reusable ImageUploader component for the page
-interface ImageUploaderProps {
-    onFileUpload: (file: File) => void;
-    isUploading: boolean;
-    uploadProgress: number;
-    error?: string | null;
-}
-
-function ImageUploader({
-    onFileUpload,
-    isUploading,
-    uploadProgress,
-    error,
-}: ImageUploaderProps) {
-    const [isDragging, setIsDragging] = useState(false);
-    const [preview, setPreview] = useState<string | null>(null);
-
-    const handleFileSelect = (file: File | null) => {
-        if (file) {
-            onFileUpload(file);
-            const previewUrl = URL.createObjectURL(file);
-            setPreview(previewUrl);
-        }
-    };
-    
-    // Cleanup preview URL to prevent memory leaks
-    useEffect(() => {
-        if (!isUploading) {
-            if (preview) {
-                URL.revokeObjectURL(preview);
-                setPreview(null);
-            }
-        }
-    }, [isUploading, preview]);
-    
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        handleFileSelect(event.target.files?.[0] || null);
-    };
-
-    const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-        setIsDragging(false);
-        handleFileSelect(event.dataTransfer.files?.[0] || null);
-    };
-
-    const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-        setIsDragging(true);
-    };
-
-    const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-        setIsDragging(false);
-    };
-
-    return (
-        <div>
-            <div
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                className={cn(
-                    "relative h-32 w-full rounded-md border-2 border-dashed flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:border-primary transition-colors",
-                    isDragging && "border-primary bg-primary/10"
-                )}
-                onClick={() => document.getElementById('image-upload-input')?.click()}
-            >
-                {preview && (
-                    <Image src={preview} alt="Upload preview" fill className="object-contain rounded-md" />
-                )}
-                 {isUploading && (
-                    <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center z-10">
-                        <PottersWheelSpinner />
-                        <p className="text-sm text-muted-foreground mt-2">Uploading...</p>
-                        <Progress value={uploadProgress} className="w-1/2 mt-2" />
-                    </div>
-                )}
-                {!isUploading && !preview && (
-                     <>
-                        <UploadCloud className="h-8 w-8 text-muted-foreground" />
-                        <p className="mt-2 text-sm text-muted-foreground">
-                            Drag & drop an image here, or click to select
-                        </p>
-                    </>
-                )}
-                <input
-                    id="image-upload-input"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    disabled={isUploading}
-                />
-            </div>
-            {error && <p className="text-xs text-destructive mt-1">{error}</p>}
-        </div>
-    );
-}
 
 // AI Details Generator Dialog
 interface AIDetailsGeneratorDialogProps {
@@ -595,7 +469,7 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
                 <DialogHeader>
                     <DialogTitle>Generate Product Details with AI</DialogTitle>
                     <DialogDescription>
-                        Upload a product image or provide a URL and add some notes. The AI will create a name, description, and SEO keywords for you.
+                        Provide an image URL and add some notes. The AI will create a name, description, and SEO keywords for you.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -632,32 +506,15 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
                         </div>
                     ) : (
                          <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <Label htmlFor="ai-image-url">Image URL</Label>
-                                    <Input 
-                                        id="ai-image-url"
-                                        type="text" 
-                                        placeholder="https://example.com/image.jpg"
-                                        value={imageUrl.startsWith('data:') ? '' : imageUrl}
-                                        onChange={(e) => setImageUrl(e.target.value)}
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <Label>Or Upload Image</Label>
-                                     <Button type="button" variant="outline" className="w-full" onClick={() => fileInputRef.current?.click()}>
-                                        <UploadCloud className="mr-2 h-4 w-4" />
-                                        Upload Image
-                                    </Button>
-                                    <Input
-                                        ref={fileInputRef}
-                                        id="ai-image-upload-hidden"
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleFileSelect}
-                                        className="hidden"
-                                    />
-                                </div>
+                            <div className="space-y-1">
+                                <Label htmlFor="ai-image-url">Image URL</Label>
+                                <Input 
+                                    id="ai-image-url"
+                                    type="text" 
+                                    placeholder="https://example.com/image.jpg"
+                                    value={imageUrl}
+                                    onChange={(e) => setImageUrl(e.target.value)}
+                                />
                             </div>
 
                              {imageUrl && (
