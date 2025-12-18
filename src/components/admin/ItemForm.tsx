@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import * as React from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -18,10 +19,9 @@ import { X, PlusCircle, Sparkles, CheckCircle, UploadCloud } from 'lucide-react'
 import Image from 'next/image';
 import { AddOptionDialog } from './AddOptionDialog';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
-import { useStorage } from '@/firebase';
-import { ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Progress } from '../ui/progress';
 import { useToast } from '@/hooks/use-toast';
+import { useImageUploader } from '@/hooks/useImageUploader';
 
 const itemSchema = z.object({
   name: z.string().min(1, 'Item name is required'),
@@ -73,14 +73,6 @@ const defaultFormValues: ItemFormValues = {
   size: { height: undefined, length: undefined, width: undefined },
 };
 
-type UploadingFile = {
-  id: string;
-  name: string;
-  progress: number;
-  error?: string;
-};
-
-
 export function ItemForm({
   onSuccess,
   onCancel,
@@ -104,9 +96,16 @@ export function ItemForm({
     resolver: zodResolver(itemSchema),
     defaultValues: defaultFormValues,
   });
+  
+  const {
+      uploadFile,
+      isUploading,
+      uploadProgress,
+      uploadedUrl,
+      error: uploadError,
+      clearUpload
+  } = useImageUploader('product_images');
 
-  const storage = useStorage();
-  const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isAddMaterialOpen, setIsAddMaterialOpen] = useState(false);
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
@@ -129,6 +128,22 @@ export function ItemForm({
         reset(defaultFormValues);
     }
   }, [product, reset]);
+  
+  useEffect(() => {
+    if (uploadedUrl) {
+      const currentImages = getValues('images');
+      setValue('images', [...currentImages, uploadedUrl], { shouldValidate: true });
+      clearUpload(); // Reset the uploader state
+    }
+  }, [uploadedUrl, setValue, getValues, clearUpload]);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      uploadFile(file);
+    }
+  };
+
   
   const handleApplyAiData = (data: { name: string, description: string, seoKeywords: string[] }) => {
     setValue('name', data.name, { shouldValidate: true });
@@ -168,50 +183,6 @@ export function ItemForm({
     setValue('material', value, { shouldValidate: true });
     setIsAddMaterialOpen(false);
   }
-
-  const uploadFiles = (filesToUpload: FileList | null) => {
-    if (!filesToUpload) return;
-    
-    const acceptedFileTypes = ['image/jpeg', 'image/png', 'image/gif'];
-    const maxFileSize = 10 * 1024 * 1024; // 10MB
-
-    Array.from(filesToUpload).forEach(file => {
-      // Client-side validation
-      if (!acceptedFileTypes.includes(file.type)) {
-        toast({ variant: 'destructive', title: 'Invalid File Type', description: `File "${file.name}" is not a supported image type.` });
-        return;
-      }
-      if (file.size > maxFileSize) {
-        toast({ variant: 'destructive', title: 'File Too Large', description: `File "${file.name}" exceeds the 10MB size limit.` });
-        return;
-      }
-
-      const id = `${file.name}-${Date.now()}`;
-      setUploadingFiles(prev => [...prev, { id, name: file.name, progress: 0 }]);
-      
-      const fileRef = storageRef(storage, `product_images/${Date.now()}_${file.name}`);
-      const uploadTask = uploadBytesResumable(fileRef, file);
-
-      uploadTask.on('state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadingFiles(prev => prev.map(f => f.id === id ? { ...f, progress } : f));
-        },
-        (error) => {
-          console.error("Upload failed:", error);
-          setUploadingFiles(prev => prev.filter(f => f.id !== id));
-          toast({ variant: 'destructive', title: 'Upload Failed', description: `Could not upload ${file.name}. Please try again.` });
-        },
-        () => {
-          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-            const currentImages = getValues('images');
-            setValue('images', [...currentImages, downloadURL], { shouldValidate: true });
-            setUploadingFiles(prev => prev.filter(f => f.id !== id));
-          });
-        }
-      );
-    });
-  };
 
   const handleAddImageUrl = () => {
     if (imageUrl) {
@@ -259,9 +230,9 @@ export function ItemForm({
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
                         <UploadCloud className="w-8 h-8 mb-2 text-muted-foreground" />
                         <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                        <p className="text-xs text-muted-foreground">PNG, JPG, GIF up to 10MB</p>
+                        <p className="text-xs text-muted-foreground">PNG, JPG, GIF, WEBP up to 10MB</p>
                     </div>
-                    <Input id="file-upload" type="file" className="hidden" multiple onChange={(e) => uploadFiles(e.target.files)} />
+                    <Input id="file-upload" type="file" className="hidden" multiple onChange={handleFileChange} disabled={isUploading} />
                 </Label>
               </div>
               <div className="flex items-center gap-2">
@@ -270,22 +241,18 @@ export function ItemForm({
                   placeholder="Or paste an image URL"
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
+                  disabled={isUploading}
                 />
-                <Button type="button" variant="outline" onClick={handleAddImageUrl}>
+                <Button type="button" variant="outline" onClick={handleAddImageUrl} disabled={isUploading}>
                   Add URL
                 </Button>
               </div>
               
-              {uploadingFiles.map(file => (
-                  <div key={file.id} className="mt-2">
-                      <div className="flex justify-between items-center text-sm">
-                          <p className="text-muted-foreground truncate w-4/5">{file.name}</p>
-                          <p className="font-semibold">{Math.round(file.progress)}%</p>
-                      </div>
-                      <Progress value={file.progress} className="h-2" />
-                      {file.error && <p className="text-xs text-destructive mt-1">{file.error}</p>}
+              {isUploading && (
+                  <div className="mt-2">
+                      <Progress value={uploadProgress} className="h-2" />
                   </div>
-              ))}
+              )}
               
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 mt-2">
                 {images && images.map((url, index) => (
@@ -438,8 +405,8 @@ export function ItemForm({
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting || uploadingFiles.length > 0}>
-            {isSubmitting ? <PottersWheelSpinner /> : (uploadingFiles.length > 0 ? 'Uploading...' : (product ? 'Save Changes' : 'Add Item'))}
+          <Button type="submit" disabled={isSubmitting || isUploading}>
+            {isSubmitting ? <PottersWheelSpinner /> : (isUploading ? 'Uploading...' : (product ? 'Save Changes' : 'Add Item'))}
           </Button>
         </DialogFooter>
         
@@ -475,53 +442,62 @@ interface AIDetailsGeneratorDialogProps {
 }
 
 function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGeneratorDialogProps) {
-    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imageUrl, setImageUrl] = useState('');
     const [userNotes, setUserNotes] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
     const [generatedData, setGeneratedData] = useState<{ name: string; description: string; seoKeywords: string[] } | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
+    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+                setImageUrl(reader.result as string);
+            };
+            reader.onerror = () => {
+                setError('Failed to read image file.');
+            };
+        }
+    };
+    
     const handleGenerate = async () => {
-        if (!imageFile) {
-            setError('Please upload an image.');
+        if (!imageUrl) {
+            setError('Please upload an image or provide a URL.');
             return;
         }
         setIsGenerating(true);
         setError(null);
         setGeneratedData(null);
 
-        const reader = new FileReader();
-        reader.readAsDataURL(imageFile);
-        reader.onload = async () => {
-            const imageDataUri = reader.result as string;
-            try {
-                const response = await fetch('/api/generate-product-details', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ imageDataUri, userNotes }),
-                });
+        try {
+            const response = await fetch('/api/generate-product-details', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    imageDataUri: imageUrl, // Can be data URI or regular URL
+                    userNotes 
+                }),
+            });
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Failed to generate details.');
-                }
-
-                const data = await response.json();
-                setGeneratedData(data);
-            } catch (err: any) {
-                setError(err.message);
-            } finally {
-                setIsGenerating(false);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to generate details.');
             }
-        };
-        reader.onerror = () => {
-            setError('Failed to read image file.');
+
+            const data = await response.json();
+            setGeneratedData(data);
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
             setIsGenerating(false);
-        };
+        }
     };
     
      const handleClose = () => {
-        setImageFile(null);
+        setImageUrl('');
         setUserNotes('');
         setGeneratedData(null);
         setError(null);
@@ -534,7 +510,7 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
                 <DialogHeader>
                     <DialogTitle>Generate Product Details with AI</DialogTitle>
                     <DialogDescription>
-                        Upload a product image and add some notes. The AI will create a name, description, and SEO keywords for you.
+                        Upload a product image or provide a URL and add some notes. The AI will create a name, description, and SEO keywords for you.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -571,11 +547,51 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
                         </div>
                     ) : (
                          <div className="space-y-4">
-                            <div>
-                                <Label htmlFor="ai-image-upload">Product Image</Label>
-                                <Input id="ai-image-upload" type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
-                                {imageFile && <p className="text-sm text-muted-foreground mt-2">Selected: {imageFile.name}</p>}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <Label htmlFor="ai-image-url">Image URL</Label>
+                                    <Input 
+                                        id="ai-image-url"
+                                        type="text" 
+                                        placeholder="https://example.com/image.jpg"
+                                        value={imageUrl.startsWith('data:') ? '' : imageUrl}
+                                        onChange={(e) => setImageUrl(e.target.value)}
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label>Or Upload Image</Label>
+                                     <Button type="button" variant="outline" className="w-full" onClick={() => fileInputRef.current?.click()}>
+                                        <UploadCloud className="mr-2 h-4 w-4" />
+                                        Upload Image
+                                    </Button>
+                                    <Input
+                                        ref={fileInputRef}
+                                        id="ai-image-upload-hidden"
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleFileSelect}
+                                        className="hidden"
+                                    />
+                                </div>
                             </div>
+
+                             {imageUrl && (
+                                 <div className="mt-2 relative h-24 w-24 rounded-md overflow-hidden border">
+                                    {imageUrl.startsWith('http') || imageUrl.startsWith('data:') ? (
+                                        <Image src={imageUrl} alt="Preview" fill className="object-cover" />
+                                     ) : null}
+                                     <Button
+                                        type="button"
+                                        variant="destructive"
+                                        size="icon"
+                                        className="absolute top-1 right-1 h-5 w-5 opacity-80 hover:opacity-100 z-10"
+                                        onClick={() => setImageUrl('')}
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </Button>
+                                </div>
+                             )}
+
                             <div>
                                 <Label htmlFor="ai-user-notes">Notes</Label>
                                 <Textarea 
@@ -605,5 +621,3 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
         </Dialog>
     );
 }
-
-    

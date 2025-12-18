@@ -1,9 +1,10 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import { generateProductDetails } from '@/ai/flows/generate-product-details';
 import { z } from 'zod';
 
 const InputSchema = z.object({
-  imageUrl: z.string(),
+  imageDataUri: z.string(),
   userNotes: z.string(),
 });
 
@@ -16,10 +17,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid input', details: parsedBody.error.flatten() }, { status: 400 });
     }
 
-    const { imageUrl, userNotes } = parsedBody.data;
+    const { imageDataUri, userNotes } = parsedBody.data;
 
     const result = await generateProductDetails({
-      imageUrl,
+      imageDataUri,
       userNotes,
     });
 
