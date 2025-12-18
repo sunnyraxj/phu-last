@@ -3,7 +3,8 @@
 
 import { useState, useCallback } from 'react';
 import { useStorage } from '@/firebase';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytesResumable, getDownloadURL, UploadTask } from 'firebase/storage';
+import { useToast } from '@/hooks/use-toast';
 
 export type UploadableFile = {
     file: File;
@@ -11,46 +12,55 @@ export type UploadableFile = {
     progress: number;
     url?: string;
     error?: string;
+    task?: UploadTask;
 };
 
-// This hook is not currently used but is kept for potential future use.
-// The image upload functionality has been simplified to use URLs directly.
 export function useImageUploader(uploadPath: string) {
     const storage = useStorage();
+    const { toast } = useToast();
     const [files, setFiles] = useState<UploadableFile[]>([]);
 
     const uploadFile = useCallback(async (file: File, onUrlReady: (url: string, file: File) => void) => {
         const fileId = `${file.name}-${Date.now()}`;
         
-        // Add to state for immediate feedback
-        const newFile: UploadableFile = { file, id: fileId, progress: 0 };
+        // Client-side validation
+        const acceptedFileTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!acceptedFileTypes.includes(file.type)) {
+            toast({ variant: 'destructive', title: 'Invalid File Type', description: `File "${file.name}" is not supported.` });
+            return;
+        }
+
+        const maxFileSize = 10 * 1024 * 1024; // 10MB
+        if (file.size > maxFileSize) {
+            toast({ variant: 'destructive', title: 'File Too Large', description: `File "${file.name}" exceeds the 10MB limit.` });
+            return;
+        }
+
+        const storageRef = ref(storage, `${uploadPath}/${Date.now()}_${file.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+        const newFile: UploadableFile = { file, id: fileId, progress: 0, task: uploadTask };
         setFiles(prev => [...prev, newFile]);
 
-        try {
-            const storageRef = ref(storage, `${uploadPath}/${Date.now()}_${file.name}`);
-            const uploadTask = uploadBytesResumable(storageRef, file);
+        uploadTask.on('state_changed',
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                setFiles(prev => prev.map(f => f.id === fileId ? { ...f, progress } : f));
+            },
+            (error) => {
+                console.error("Upload failed:", error);
+                setFiles(prev => prev.map(f => f.id === fileId ? { ...f, error: 'Upload failed' } : f));
+                toast({ variant: 'destructive', title: 'Upload Failed', description: `Could not upload ${file.name}. Please try again.` });
+            },
+            () => {
+                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                    setFiles(prev => prev.map(f => f.id === fileId ? { ...f, url: downloadURL, progress: 100 } : f));
+                    onUrlReady(downloadURL, file);
+                });
+            }
+        );
 
-            uploadTask.on('state_changed',
-                (snapshot) => {
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    setFiles(prev => prev.map(f => f.id === fileId ? { ...f, progress } : f));
-                },
-                (error) => {
-                    console.error("Upload failed:", error);
-                    setFiles(prev => prev.map(f => f.id === fileId ? { ...f, error: 'Upload failed' } : f));
-                },
-                () => {
-                    getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                        setFiles(prev => prev.map(f => f.id === fileId ? { ...f, url: downloadURL, progress: 100 } : f));
-                        onUrlReady(downloadURL, file);
-                    });
-                }
-            );
-        } catch (error) {
-            console.error("Image processing failed:", error);
-            setFiles(prev => prev.map(f => f.id === fileId ? { ...f, error: 'Image processing failed' } : f));
-        }
-    }, [storage, uploadPath]);
+    }, [storage, uploadPath, toast]);
 
     const uploadMultipleFiles = useCallback((fileList: FileList, onUrlReady: (url: string, file: File) => void) => {
         if (!fileList || fileList.length === 0) return;
@@ -60,7 +70,13 @@ export function useImageUploader(uploadPath: string) {
     }, [uploadFile]);
 
     const removeFile = (id: string) => {
-        setFiles(prev => prev.filter(f => f.id !== id));
+        setFiles(prev => {
+            const fileToRemove = prev.find(f => f.id === id);
+            if (fileToRemove?.task && fileToRemove.task.snapshot.state === 'running') {
+                fileToRemove.task.cancel();
+            }
+            return prev.filter(f => f.id !== id);
+        });
     };
 
     return {
@@ -69,5 +85,3 @@ export function useImageUploader(uploadPath: string) {
         removeFile,
     };
 }
-
-    
