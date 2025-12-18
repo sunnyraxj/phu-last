@@ -8,6 +8,7 @@ import { Auth, User, onAuthStateChanged, signInAnonymously } from 'firebase/auth
 import { FirebaseStorage } from 'firebase/storage';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
 import { addDocumentNonBlocking } from './non-blocking-updates';
+import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -17,23 +18,14 @@ interface FirebaseProviderProps {
   storage: FirebaseStorage;
 }
 
-// Internal state for user authentication
-interface UserAuthState {
-  user: User | null;
-  isUserLoading: boolean;
-  userError: Error | null;
-}
-
 // Combined state for the Firebase context
 export interface FirebaseContextState {
-  areServicesAvailable: boolean; // True if core services (app, firestore, auth instance) are provided
-  firebaseApp: FirebaseApp | null;
-  firestore: Firestore | null;
-  auth: Auth | null; // The Auth service instance
-  storage: FirebaseStorage | null;
-  // User authentication state
-  user: User | null;
-  isUserLoading: boolean; // True during initial auth check
+  firebaseApp: FirebaseApp;
+  firestore: Firestore;
+  auth: Auth;
+  storage: FirebaseStorage;
+  user: User; // User will never be null after initial loading
+  isUserLoading: boolean; // Tracks the initial auth check
   userError: Error | null; // Error from auth listener
 }
 
@@ -43,14 +35,14 @@ export interface FirebaseServicesAndUser {
   firestore: Firestore;
   auth: Auth;
   storage: FirebaseStorage;
-  user: User | null;
+  user: User;
   isUserLoading: boolean;
   userError: Error | null;
 }
 
-// Return type for useUser() - specific to user auth state
-export interface UserHookResult { // Renamed from UserAuthHookResult for consistency if desired, or keep as UserAuthHookResult
-  user: User | null;
+// Return type for useUser()
+export interface UserHookResult {
+  user: User | null; // Can be null during initial load
   isUserLoading: boolean;
   userError: Error | null;
 }
@@ -60,9 +52,6 @@ export const FirebaseContext = createContext<FirebaseContextState | undefined>(u
 
 /**
  * Merges the cart from an anonymous user to a permanent user.
- * @param firestore - The Firestore instance.
- * @param anonymousUid - The UID of the anonymous user.
- * @param permanentUid - The UID of the permanent user.
  */
 const mergeCarts = async (firestore: Firestore, anonymousUid: string, permanentUid: string) => {
     const anonCartRef = collection(firestore, 'users', anonymousUid, 'cart');
@@ -80,15 +69,12 @@ const mergeCarts = async (firestore: Firestore, anonymousUid: string, permanentU
         const existingPermanentItemDoc = permanentCartItems.get(anonItem.productId);
 
         if (existingPermanentItemDoc) {
-            // Item exists, update quantity
             const newQuantity = existingPermanentItemDoc.data().quantity + anonItem.quantity;
             batch.update(existingPermanentItemDoc.ref, { quantity: newQuantity });
         } else {
-            // Item does not exist, add it to the permanent cart
             const newPermanentItemRef = doc(permanentCartRef);
             batch.set(newPermanentItemRef, anonItem);
         }
-        // Delete the item from the anonymous cart
         batch.delete(anonDoc.ref);
     });
 
@@ -106,52 +92,61 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   auth,
   storage,
 }) => {
-  const [userAuthState, setUserAuthState] = useState<UserAuthState>({
-    user: auth.currentUser, // Initialize with current user if available
-    isUserLoading: true, // Start loading until first auth event
-    userError: null,
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-  // Effect to subscribe to Firebase auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(
       auth,
-      async (firebaseUser) => { // Auth state determined
-        if (!firebaseUser) {
-           try {
-              // If no user, sign in anonymously
-              const anonUserCredential = await signInAnonymously(auth);
-              setUserAuthState({ user: anonUserCredential.user, isUserLoading: false, userError: null });
-            } catch (error) {
-              console.error("Anonymous sign-in failed:", error);
-              setUserAuthState({ user: null, isUserLoading: false, userError: error as Error });
-            }
+      async (firebaseUser) => {
+        if (firebaseUser) {
+          setUser(firebaseUser);
+          setIsLoading(false);
         } else {
-            setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
+          // If no user, sign in anonymously to ensure services are always available
+          try {
+            const { user: anonUser } = await signInAnonymously(auth);
+            setUser(anonUser);
+          } catch (e) {
+            console.error("FirebaseProvider: Anonymous sign-in failed.", e);
+            setError(e as Error);
+          } finally {
+            setIsLoading(false);
+          }
         }
       },
-      (error) => { // Auth listener error
-        console.error("FirebaseProvider: onAuthStateChanged error:", error);
-        setUserAuthState({ user: null, isUserLoading: false, userError: error });
+      (e) => {
+        console.error("FirebaseProvider: onAuthStateChanged error:", e);
+        setError(e);
+        setIsLoading(false);
       }
     );
-    return () => unsubscribe(); // Cleanup
-  }, [auth]); // Depends on the auth instance
+    return () => unsubscribe();
+  }, [auth]);
 
-  // Memoize the context value
-  const contextValue = useMemo((): FirebaseContextState => {
-    const servicesAvailable = !!(firebaseApp && firestore && auth && storage);
+  const contextValue = useMemo(() => {
+    if (isLoading || !user) {
+      return undefined; // Services are not ready
+    }
     return {
-      areServicesAvailable: servicesAvailable,
-      firebaseApp: servicesAvailable ? firebaseApp : null,
-      firestore: servicesAvailable ? firestore : null,
-      auth: servicesAvailable ? auth : null,
-      storage: servicesAvailable ? storage : null,
-      user: userAuthState.user,
-      isUserLoading: userAuthState.isUserLoading,
-      userError: userAuthState.userError,
+      firebaseApp,
+      firestore,
+      auth,
+      storage,
+      user,
+      isUserLoading: isLoading,
+      userError: error,
     };
-  }, [firebaseApp, firestore, auth, storage, userAuthState]);
+  }, [firebaseApp, firestore, auth, storage, user, isLoading, error]);
+
+  if (isLoading || !contextValue) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center bg-background">
+            <PottersWheelSpinner />
+        </div>
+    );
+  }
 
   return (
     <FirebaseContext.Provider value={contextValue}>
@@ -163,17 +158,13 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
 /**
  * Hook to access core Firebase services and user authentication state.
- * Throws error if core services are not available or used outside provider.
+ * Throws error if used outside a ready FirebaseProvider.
  */
-export const useFirebase = (): FirebaseServicesAndUser & { addDocumentNonBlocking: typeof addDocumentNonBlocking, mergeCarts: (anonymousUid: string, permanentUid: string) => Promise<void> } => {
+export const useFirebase = (): FirebaseContextState & { addDocumentNonBlocking: typeof addDocumentNonBlocking, mergeCarts: (anonymousUid: string, permanentUid: string) => Promise<void> } => {
   const context = useContext(FirebaseContext);
 
   if (context === undefined) {
-    throw new Error('useFirebase must be used within a FirebaseProvider.');
-  }
-
-  if (!context.areServicesAvailable || !context.firebaseApp || !context.firestore || !context.auth || !context.storage) {
-    throw new Error('Firebase core services not available. Check FirebaseProvider props.');
+    throw new Error('useFirebase must be used within a FirebaseProvider and after initial auth check.');
   }
   
   const memoizedAddDoc = useMemo(() => addDocumentNonBlocking, []);
@@ -183,13 +174,7 @@ export const useFirebase = (): FirebaseServicesAndUser & { addDocumentNonBlockin
   }, [context.firestore]);
 
   return {
-    firebaseApp: context.firebaseApp,
-    firestore: context.firestore,
-    auth: context.auth,
-    storage: context.storage,
-    user: context.user,
-    isUserLoading: context.isUserLoading,
-    userError: context.userError,
+    ...context,
     addDocumentNonBlocking: memoizedAddDoc,
     mergeCarts: memoizedMergeCarts,
   };
@@ -233,10 +218,13 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | 
 
 /**
  * Hook specifically for accessing the authenticated user's state.
- * This provides the User object, loading status, and any auth errors.
- * @returns {UserHookResult} Object with user, isUserLoading, userError.
  */
-export const useUser = (): UserHookResult => { // Renamed from useAuthUser
-  const { user, isUserLoading, userError } = useFirebase(); // Leverages the main hook
-  return { user, isUserLoading, userError };
+export const useUser = (): UserHookResult => {
+  const context = useContext(FirebaseContext);
+  // This might be called before provider is ready, so handle undefined context gracefully.
+  return { 
+    user: context?.user ?? null, 
+    isUserLoading: !context, 
+    userError: context?.userError ?? null 
+  };
 };
