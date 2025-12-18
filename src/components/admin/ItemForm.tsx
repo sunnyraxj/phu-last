@@ -22,6 +22,7 @@ import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Progress } from '../ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useImageUploader } from '@/hooks/useImageUploader';
+import { cn } from '@/lib/utils';
 
 const itemSchema = z.object({
   name: z.string().min(1, 'Item name is required'),
