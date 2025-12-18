@@ -15,11 +15,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ScrollArea } from '../ui/scroll-area';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
-import { X, PlusCircle, Sparkles, CheckCircle } from 'lucide-react';
+import { X, PlusCircle, Sparkles, CheckCircle, UploadCloud } from 'lucide-react';
 import Image from 'next/image';
 import { AddOptionDialog } from './AddOptionDialog';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { useImageUploader } from '@/hooks/useImageUploader';
+import { Progress } from '../ui/progress';
 import { cn } from '@/lib/utils';
 
 const itemSchema = z.object({
@@ -104,6 +106,17 @@ export function ItemForm({
 
   const images = watch('images', []);
   const seoKeywords = watch('seoKeywords', []);
+  
+  const { uploadFile, isUploading, uploadProgress, uploadedUrl, error: uploadError, clearUpload } = useImageUploader('product-images');
+
+  useEffect(() => {
+      if (uploadedUrl) {
+          const currentImages = getValues('images');
+          setValue('images', [...currentImages, uploadedUrl], { shouldValidate: true });
+          clearUpload();
+      }
+  }, [uploadedUrl, setValue, getValues, clearUpload]);
+
 
   useEffect(() => {
     if (product) {
@@ -200,10 +213,16 @@ export function ItemForm({
             
             <div className="space-y-2">
               <Label>Images</Label>
+               <ImageUploader
+                  isUploading={isUploading}
+                  uploadProgress={uploadProgress}
+                  onFileUpload={uploadFile}
+                  error={uploadError}
+                />
               <div className="flex items-center gap-2">
                 <Input
                   type="text"
-                  placeholder="Paste an image URL"
+                  placeholder="Or paste an image URL"
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
                 />
@@ -507,14 +526,19 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
                     ) : (
                          <div className="space-y-4">
                             <div className="space-y-1">
-                                <Label htmlFor="ai-image-url">Image URL</Label>
-                                <Input 
-                                    id="ai-image-url"
-                                    type="text" 
-                                    placeholder="https://example.com/image.jpg"
-                                    value={imageUrl}
-                                    onChange={(e) => setImageUrl(e.target.value)}
-                                />
+                                <Label htmlFor="ai-image-url">Image URL or Upload</Label>
+                                <div className="flex items-center gap-2">
+                                    <Input 
+                                        id="ai-image-url"
+                                        type="text" 
+                                        placeholder="https://example.com/image.jpg"
+                                        value={imageUrl}
+                                        onChange={(e) => setImageUrl(e.target.value)}
+                                        disabled={!!imageUrl && imageUrl.startsWith('data:')}
+                                    />
+                                     <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>Upload</Button>
+                                     <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept="image/*" />
+                                </div>
                             </div>
 
                              {imageUrl && (
@@ -559,5 +583,105 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+    );
+}
+
+// Reusable ImageUploader component for the page
+interface ImageUploaderProps {
+    isUploading: boolean;
+    uploadProgress: number;
+    onFileUpload: (file: File) => void;
+    error?: string | null;
+}
+
+function ImageUploader({
+    isUploading,
+    uploadProgress,
+    onFileUpload,
+    error
+}: ImageUploaderProps) {
+    const [isDragging, setIsDragging] = useState(false);
+    const [preview, setPreview] = useState<string | null>(null);
+
+    const handleFileSelect = (file: File | null) => {
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (e) => setPreview(e.target?.result as string);
+        reader.readAsDataURL(file);
+
+        onFileUpload(file);
+    };
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        handleFileSelect(file || null);
+    };
+
+    const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setIsDragging(false);
+        const file = event.dataTransfer.files?.[0];
+        handleFileSelect(file || null);
+    };
+
+    const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setIsDragging(false);
+    };
+    
+    useEffect(() => {
+        if (!isUploading) {
+            setPreview(null);
+        }
+    }, [isUploading]);
+
+    return (
+        <div>
+            <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                className={cn(
+                    "relative h-32 w-full rounded-md border-2 border-dashed flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:border-primary transition-colors",
+                    isDragging && "border-primary bg-primary/10"
+                )}
+                onClick={() => document.getElementById('image-upload-input')?.click()}
+            >
+                {isUploading ? (
+                    <>
+                        {preview && <Image src={preview} alt="upload preview" fill className="object-cover rounded-md opacity-30" />}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/70">
+                            <PottersWheelSpinner />
+                            <p className="text-sm text-muted-foreground mt-2">Uploading...</p>
+                            <Progress value={uploadProgress} className="w-3/4 mt-2" />
+                        </div>
+                    </>
+                ) : (
+                     <>
+                        <UploadCloud className="h-8 w-8 text-muted-foreground" />
+                        <p className="mt-2 text-sm text-muted-foreground">
+                            Drag & drop an image here, or click to select a file
+                        </p>
+                    </>
+                )}
+                 <input
+                    id="image-upload-input"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                />
+            </div>
+            {error && <p className="text-xs text-destructive mt-1">{error}</p>}
+        </div>
     );
 }
