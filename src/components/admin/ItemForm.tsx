@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -24,6 +24,7 @@ import { Progress } from '../ui/progress';
 import { cn } from '@/lib/utils';
 import { useStorage } from '@/firebase';
 import { ref as storageRef, uploadBytesResumable, getDownloadURL, StorageError } from 'firebase/storage';
+import imageCompression from 'browser-image-compression';
 
 const itemSchema = z.object({
   name: z.string().min(1, 'Item name is required'),
@@ -110,40 +111,54 @@ export function ItemForm({
   
   const storage = useStorage();
 
-  const handleImageUpload = (file: File) => {
-    const currentImages = getValues('images');
-    setValue('images', [...currentImages, ''], { shouldValidate: true });
-    const imageIndex = currentImages.length;
-    
-    if (!storage) {
-        toast({ variant: 'destructive', title: 'Storage Error', description: "Firebase Storage is not available." });
-        const newImages = getValues('images').filter((_, i) => i !== imageIndex);
-        setValue('images', newImages, { shouldValidate: true });
-        return;
-    }
-    
-    const sRef = storageRef(storage, `product-images/${Date.now()}_${file.name}`);
-    const uploadTask = uploadBytesResumable(sRef, file);
+  const handleImageUpload = async (file: File) => {
+    const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+    };
 
-    uploadTask.on('state_changed',
-        (snapshot) => {
-            // Can be used to update progress if needed
-        },
-        (error) => {
-            console.error("Upload failed:", error);
-            toast({ variant: 'destructive', title: 'Upload Failed', description: "Could not upload image." });
+    try {
+        const compressedFile = await imageCompression(file, options);
+        
+        const currentImages = getValues('images');
+        setValue('images', [...currentImages, ''], { shouldValidate: true });
+        const imageIndex = currentImages.length;
+        
+        if (!storage) {
+            toast({ variant: 'destructive', title: 'Storage Error', description: "Firebase Storage is not available." });
             const newImages = getValues('images').filter((_, i) => i !== imageIndex);
             setValue('images', newImages, { shouldValidate: true });
-        },
-        () => {
-            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                const newImages = getValues('images');
-                newImages[imageIndex] = downloadURL;
-                setValue('images', newImages, { shouldValidate: true, shouldDirty: true });
-                toast({ title: 'Upload Complete', description: "Image has been uploaded."});
-            });
+            return;
         }
-    );
+        
+        const sRef = storageRef(storage, `product-images/${Date.now()}_${compressedFile.name}`);
+        const uploadTask = uploadBytesResumable(sRef, compressedFile);
+
+        uploadTask.on('state_changed',
+            (snapshot) => {
+                // Can be used to update progress if needed
+            },
+            (error) => {
+                console.error("Upload failed:", error);
+                toast({ variant: 'destructive', title: 'Upload Failed', description: "Could not upload image." });
+                const newImages = getValues('images').filter((_, i) => i !== imageIndex);
+                setValue('images', newImages, { shouldValidate: true });
+            },
+            () => {
+                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                    const newImages = getValues('images');
+                    newImages[imageIndex] = downloadURL;
+                    setValue('images', newImages, { shouldValidate: true, shouldDirty: true });
+                    toast({ title: 'Upload Complete', description: "Image has been uploaded."});
+                });
+            }
+        );
+
+    } catch (error) {
+        console.error('Image compression failed:', error);
+        toast({ variant: 'destructive', title: 'Compression Failed', description: 'Could not process the image.' });
+    }
   };
 
 
