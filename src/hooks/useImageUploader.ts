@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
  * @returns An object with upload state and control functions.
  */
 export function useImageUploader(uploadPath: string) {
-    const storage = useStorage(); // Directly get the storage instance.
+    const storage = useStorage();
     const { toast } = useToast();
     
     const [isUploading, setIsUploading] = useState(false);
