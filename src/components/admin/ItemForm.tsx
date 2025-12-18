@@ -20,9 +20,10 @@ import Image from 'next/image';
 import { AddOptionDialog } from './AddOptionDialog';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { useImageUploader } from '@/hooks/useImageUploader';
 import { Progress } from '../ui/progress';
 import { cn } from '@/lib/utils';
+import { useStorage } from '@/firebase';
+import { ref as storageRef, uploadBytesResumable, getDownloadURL, StorageError } from 'firebase/storage';
 
 const itemSchema = z.object({
   name: z.string().min(1, 'Item name is required'),
@@ -107,15 +108,43 @@ export function ItemForm({
   const images = watch('images', []);
   const seoKeywords = watch('seoKeywords', []);
   
-  const { uploadFile, isUploading, uploadProgress, uploadedUrl, error: uploadError, clearUpload } = useImageUploader('product-images');
+  const storage = useStorage();
 
-  useEffect(() => {
-      if (uploadedUrl) {
-          const currentImages = getValues('images');
-          setValue('images', [...currentImages, uploadedUrl], { shouldValidate: true });
-          clearUpload();
-      }
-  }, [uploadedUrl, setValue, getValues, clearUpload]);
+  const handleImageUpload = (file: File) => {
+    const currentImages = getValues('images');
+    setValue('images', [...currentImages, ''], { shouldValidate: true });
+    const imageIndex = currentImages.length;
+    
+    if (!storage) {
+        toast({ variant: 'destructive', title: 'Storage Error', description: "Firebase Storage is not available." });
+        const newImages = getValues('images').filter((_, i) => i !== imageIndex);
+        setValue('images', newImages, { shouldValidate: true });
+        return;
+    }
+    
+    const sRef = storageRef(storage, `product-images/${Date.now()}_${file.name}`);
+    const uploadTask = uploadBytesResumable(sRef, file);
+
+    uploadTask.on('state_changed',
+        (snapshot) => {
+            // Can be used to update progress if needed
+        },
+        (error) => {
+            console.error("Upload failed:", error);
+            toast({ variant: 'destructive', title: 'Upload Failed', description: "Could not upload image." });
+            const newImages = getValues('images').filter((_, i) => i !== imageIndex);
+            setValue('images', newImages, { shouldValidate: true });
+        },
+        () => {
+            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                const newImages = getValues('images');
+                newImages[imageIndex] = downloadURL;
+                setValue('images', newImages, { shouldValidate: true, shouldDirty: true });
+                toast({ title: 'Upload Complete', description: "Image has been uploaded."});
+            });
+        }
+    );
+  };
 
 
   useEffect(() => {
@@ -213,12 +242,7 @@ export function ItemForm({
             
             <div className="space-y-2">
               <Label>Images</Label>
-               <ImageUploader
-                  isUploading={isUploading}
-                  uploadProgress={uploadProgress}
-                  onFileUpload={uploadFile}
-                  error={uploadError}
-                />
+               <ImageUploader onFileUpload={handleImageUpload} />
               <div className="flex items-center gap-2">
                 <Input
                   type="text"
@@ -234,7 +258,13 @@ export function ItemForm({
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 mt-2">
                 {images && images.map((url, index) => (
                   <div key={index} className="relative aspect-square rounded-md overflow-hidden border">
-                    <Image src={url} alt={`Item image ${index + 1}`} fill className="object-cover" />
+                    {url ? (
+                        <Image src={url} alt={`Item image ${index + 1}`} fill className="object-cover" />
+                    ) : (
+                        <div className="flex items-center justify-center h-full bg-muted">
+                            <PottersWheelSpinner />
+                        </div>
+                    )}
                     <Button
                       type="button"
                       variant="destructive"
@@ -588,100 +618,80 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
 
 // Reusable ImageUploader component for the page
 interface ImageUploaderProps {
-    isUploading: boolean;
-    uploadProgress: number;
-    onFileUpload: (file: File) => void;
-    error?: string | null;
+  onFileUpload: (file: File) => void;
 }
 
-function ImageUploader({
-    isUploading,
-    uploadProgress,
-    onFileUpload,
-    error
-}: ImageUploaderProps) {
-    const [isDragging, setIsDragging] = useState(false);
-    const [preview, setPreview] = useState<string | null>(null);
+function ImageUploader({ onFileUpload }: ImageUploaderProps) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
 
-    const handleFileSelect = (file: File | null) => {
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = (e) => setPreview(e.target?.result as string);
-        reader.readAsDataURL(file);
+  const handleFileSelect = (file: File | null) => {
+    if (!file) return;
 
-        onFileUpload(file);
-    };
+    const reader = new FileReader();
+    reader.onload = (e) => setPreview(e.target?.result as string);
+    reader.readAsDataURL(file);
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        handleFileSelect(file || null);
-    };
+    onFileUpload(file);
+    // Note: We don't clear the preview here. Let the parent form decide when to clear things.
+  };
 
-    const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-        setIsDragging(false);
-        const file = event.dataTransfer.files?.[0];
-        handleFileSelect(file || null);
-    };
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    handleFileSelect(file || null);
+    event.target.value = ''; // Reset input to allow re-uploading the same file
+  };
 
-    const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-        setIsDragging(true);
-    };
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+    const file = event.dataTransfer.files?.[0];
+    handleFileSelect(file || null);
+  };
 
-    const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        event.stopPropagation();
-        setIsDragging(false);
-    };
-    
-    useEffect(() => {
-        if (!isUploading) {
-            setPreview(null);
-        }
-    }, [isUploading]);
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(true);
+  };
 
-    return (
-        <div>
-            <div
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                className={cn(
-                    "relative h-32 w-full rounded-md border-2 border-dashed flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:border-primary transition-colors",
-                    isDragging && "border-primary bg-primary/10"
-                )}
-                onClick={() => document.getElementById('image-upload-input')?.click()}
-            >
-                {isUploading ? (
-                    <>
-                        {preview && <Image src={preview} alt="upload preview" fill className="object-cover rounded-md opacity-30" />}
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/70">
-                            <PottersWheelSpinner />
-                            <p className="text-sm text-muted-foreground mt-2">Uploading...</p>
-                            <Progress value={uploadProgress} className="w-3/4 mt-2" />
-                        </div>
-                    </>
-                ) : (
-                     <>
-                        <UploadCloud className="h-8 w-8 text-muted-foreground" />
-                        <p className="mt-2 text-sm text-muted-foreground">
-                            Drag & drop an image here, or click to select a file
-                        </p>
-                    </>
-                )}
-                 <input
-                    id="image-upload-input"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                />
-            </div>
-            {error && <p className="text-xs text-destructive mt-1">{error}</p>}
-        </div>
-    );
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+  };
+
+  return (
+    <div>
+      <div
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        className={cn(
+          "relative h-32 w-full rounded-md border-2 border-dashed flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:border-primary transition-colors",
+          isDragging && "border-primary bg-primary/10"
+        )}
+        onClick={() => document.getElementById('image-upload-input')?.click()}
+      >
+        {preview ? (
+          <Image src={preview} alt="upload preview" fill className="object-cover rounded-md opacity-50" />
+        ) : (
+          <>
+            <UploadCloud className="h-8 w-8 text-muted-foreground" />
+            <p className="mt-2 text-sm text-muted-foreground">
+              Drag & drop an image here, or click to select a file
+            </p>
+          </>
+        )}
+        <input
+          id="image-upload-input"
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+      </div>
+    </div>
+  );
 }
