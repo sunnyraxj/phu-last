@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateProductDetails } from '@/ai/flows/generate-product-details';
 import { z } from 'zod';
 
-export const maxDuration = 60; // Vercel hobby tier max duration
-
 const InputSchema = z.object({
-  imageDataUri: z.string(),
+  imageUrl: z.string(),
   userNotes: z.string(),
 });
 
@@ -18,10 +16,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid input', details: parsedBody.error.flatten() }, { status: 400 });
     }
 
-    const { imageDataUri, userNotes } = parsedBody.data;
+    const { imageUrl, userNotes } = parsedBody.data;
 
     const result = await generateProductDetails({
-      imageDataUri,
+      imageUrl,
       userNotes,
     });
 

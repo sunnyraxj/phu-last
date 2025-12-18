@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateBlogPost } from '@/ai/flows/generate-blog-post';
 import { z } from 'zod';
 
-export const maxDuration = 60; // Vercel hobby tier max duration
-
 const InputSchema = z.object({
   imageDataUri: z.string(),
   userNotes: z.string(),
