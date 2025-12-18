@@ -136,14 +136,6 @@ export function ItemForm({
       clearUpload(); // Reset the uploader state
     }
   }, [uploadedUrl, setValue, getValues, clearUpload]);
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      uploadFile(file);
-    }
-  };
-
   
   const handleApplyAiData = (data: { name: string, description: string, seoKeywords: string[] }) => {
     setValue('name', data.name, { shouldValidate: true });
@@ -225,16 +217,12 @@ export function ItemForm({
             
             <div className="space-y-2">
               <Label>Images</Label>
-              <div>
-                <Label htmlFor="file-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted hover:bg-muted/50">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <UploadCloud className="w-8 h-8 mb-2 text-muted-foreground" />
-                        <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                        <p className="text-xs text-muted-foreground">PNG, JPG, GIF, WEBP up to 10MB</p>
-                    </div>
-                    <Input id="file-upload" type="file" className="hidden" multiple onChange={handleFileChange} disabled={isUploading} />
-                </Label>
-              </div>
+              <ImageUploader
+                onFileUpload={uploadFile}
+                isUploading={isUploading}
+                uploadProgress={uploadProgress}
+                error={uploadError}
+              />
               <div className="flex items-center gap-2">
                 <Input
                   type="text"
@@ -247,12 +235,6 @@ export function ItemForm({
                   Add URL
                 </Button>
               </div>
-              
-              {isUploading && (
-                  <div className="mt-2">
-                      <Progress value={uploadProgress} className="h-2" />
-                  </div>
-              )}
               
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 mt-2">
                 {images && images.map((url, index) => (
@@ -434,6 +416,108 @@ export function ItemForm({
   );
 }
 
+// Reusable ImageUploader component for the page
+interface ImageUploaderProps {
+    onFileUpload: (file: File) => void;
+    isUploading: boolean;
+    uploadProgress: number;
+    error?: string | null;
+}
+
+function ImageUploader({
+    onFileUpload,
+    isUploading,
+    uploadProgress,
+    error,
+}: ImageUploaderProps) {
+    const [isDragging, setIsDragging] = useState(false);
+    const [preview, setPreview] = useState<string | null>(null);
+
+    const handleFileSelect = (file: File | null) => {
+        if (file) {
+            onFileUpload(file);
+            const previewUrl = URL.createObjectURL(file);
+            setPreview(previewUrl);
+        }
+    };
+    
+    // Cleanup preview URL to prevent memory leaks
+    useEffect(() => {
+        if (!isUploading) {
+            if (preview) {
+                URL.revokeObjectURL(preview);
+                setPreview(null);
+            }
+        }
+    }, [isUploading, preview]);
+    
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        handleFileSelect(event.target.files?.[0] || null);
+    };
+
+    const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setIsDragging(false);
+        handleFileSelect(event.dataTransfer.files?.[0] || null);
+    };
+
+    const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setIsDragging(false);
+    };
+
+    return (
+        <div>
+            <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                className={cn(
+                    "relative h-32 w-full rounded-md border-2 border-dashed flex flex-col items-center justify-center p-4 text-center cursor-pointer hover:border-primary transition-colors",
+                    isDragging && "border-primary bg-primary/10"
+                )}
+                onClick={() => document.getElementById('image-upload-input')?.click()}
+            >
+                {preview && (
+                    <Image src={preview} alt="Upload preview" fill className="object-contain rounded-md" />
+                )}
+                 {isUploading && (
+                    <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center z-10">
+                        <PottersWheelSpinner />
+                        <p className="text-sm text-muted-foreground mt-2">Uploading...</p>
+                        <Progress value={uploadProgress} className="w-1/2 mt-2" />
+                    </div>
+                )}
+                {!isUploading && !preview && (
+                     <>
+                        <UploadCloud className="h-8 w-8 text-muted-foreground" />
+                        <p className="mt-2 text-sm text-muted-foreground">
+                            Drag & drop an image here, or click to select
+                        </p>
+                    </>
+                )}
+                <input
+                    id="image-upload-input"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    disabled={isUploading}
+                />
+            </div>
+            {error && <p className="text-xs text-destructive mt-1">{error}</p>}
+        </div>
+    );
+}
+
 // AI Details Generator Dialog
 interface AIDetailsGeneratorDialogProps {
   isOpen: boolean;
@@ -477,7 +561,7 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    imageDataUri: imageUrl, // Can be data URI or regular URL
+                    imageDataUri: imageUrl,
                     userNotes 
                 }),
             });
@@ -577,9 +661,7 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
 
                              {imageUrl && (
                                  <div className="mt-2 relative h-24 w-24 rounded-md overflow-hidden border">
-                                    {imageUrl.startsWith('http') || imageUrl.startsWith('data:') ? (
-                                        <Image src={imageUrl} alt="Preview" fill className="object-cover" />
-                                     ) : null}
+                                    <Image src={imageUrl} alt="Preview" fill className="object-cover" />
                                      <Button
                                         type="button"
                                         variant="destructive"
