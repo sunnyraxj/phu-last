@@ -3,7 +3,7 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -16,16 +16,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ScrollArea } from '../ui/scroll-area';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
-import { X, PlusCircle, Sparkles, CheckCircle, Upload } from 'lucide-react';
+import { X, PlusCircle, Sparkles, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
 import { AddOptionDialog } from './AddOptionDialog';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { useCollection, useMemoFirebase, useFirestore, useStorage } from '@/firebase';
+import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
 import { collection } from 'firebase/firestore';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import imageCompression from 'browser-image-compression';
-import { Progress } from '../ui/progress';
 
 const itemSchema = z.object({
   name: z.string().min(1, 'Item name is required'),
@@ -85,11 +82,6 @@ export function ItemForm({
 }: ItemFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
-  const storage = useStorage();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
 
   const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
   const { data: allProducts } = useCollection<Product>(productsQuery);
@@ -159,53 +151,6 @@ export function ItemForm({
         reset(defaultFormValues);
     }
   }, [product, reset]);
-
-  const handleImageUpload = async (file: File) => {
-    if (!file) return;
-
-    setIsUploading(true);
-    setUploadProgress(0);
-
-    const options = {
-      maxSizeMB: 1,
-      maxWidthOrHeight: 1920,
-      useWebWorker: true,
-    };
-
-    try {
-      const compressedFile = await imageCompression(file, options);
-      const storageRef = ref(storage, `products/${Date.now()}-${compressedFile.name}`);
-      const uploadTask = uploadBytesResumable(storageRef, compressedFile);
-
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadProgress(progress);
-        },
-        (error) => {
-          console.error("Upload failed:", error);
-          toast({ variant: "destructive", title: "Upload Failed", description: error.message });
-          setIsUploading(false);
-        },
-        async () => {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          setValue('images', [...getValues('images'), downloadURL], { shouldValidate: true });
-          setIsUploading(false);
-        }
-      );
-    } catch (error) {
-      console.error("Compression or upload failed:", error);
-      toast({ variant: "destructive", title: "Error", description: "Could not process image for upload." });
-      setIsUploading(false);
-    }
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      handleImageUpload(event.target.files[0]);
-    }
-  };
   
   const handleApplyAiData = (data: { name: string, description: string, seoKeywords: string[] }) => {
     setValue('name', data.name, { shouldValidate: true });
@@ -299,20 +244,7 @@ export function ItemForm({
                   onChange={(e) => setImageUrl(e.target.value)}
                 />
                 <Button type="button" variant="outline" onClick={handleAddImageUrl}>Add URL</Button>
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept="image/*"
-                    className="hidden"
-                />
-                <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-                    <Upload className="mr-2 h-4 w-4" />
-                    {isUploading ? "Uploading..." : "Upload"}
-                </Button>
               </div>
-
-               {isUploading && <Progress value={uploadProgress} className="w-full h-2" />}
               
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 mt-2">
                 {images && images.map((url, index) => (
@@ -471,8 +403,8 @@ export function ItemForm({
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting || isUploading}>
-            {isSubmitting || isUploading ? <PottersWheelSpinner /> : (product ? 'Save Changes' : 'Add Item')}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? <PottersWheelSpinner /> : (product ? 'Save Changes' : 'Add Item')}
           </Button>
         </DialogFooter>
         
