@@ -55,7 +55,13 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https' as const,
-        hostname: 'm.media-amazon.com',
+        hostname: '**.media-amazon.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https' as const,
+        hostname: '**.images-amazon.com',
         port: '',
         pathname: '/**',
       }
