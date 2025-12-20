@@ -104,6 +104,11 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
 
     return (
         <header className="bg-black text-white sticky top-0 z-40">
+            <div className="bg-primary text-primary-foreground py-2 text-sm overflow-hidden whitespace-nowrap">
+                <p className="animate-marquee">
+                    यह वेबसाइट अभी ऑर्डर प्लेस करने के लिए तैयार की गई है। आप ऑर्डर कर सकते हैं, लेकिन बाकी पेज अभी अंडर कंस्ट्रक्शन हैं। अगर कोई गलती हुई तो माफ करना।
+                </p>
+            </div>
             <div className="container mx-auto flex items-center justify-between px-4 sm:px-8 py-4">
                 <Link href="/" className="flex items-center gap-3">
                     <span className="text-lg font-semibold whitespace-nowrap">Purbanchal Hasta Udyog</span>
