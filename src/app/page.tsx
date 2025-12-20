@@ -464,10 +464,18 @@ export default function ProductPage() {
       <section className="relative h-[60vh] w-full flex items-center justify-center text-white">
         <Image
           src={placeholderImages.hero.url}
-          alt="Authentic handicrafts from North-East India, including bamboo and jute products."
+          alt="Authentic handicrafts from North-East India"
           fill
-          className="object-cover"
+          className="object-cover hidden md:block"
           data-ai-hint={placeholderImages.hero['data-ai-hint']}
+          priority
+        />
+        <Image
+          src={placeholderImages.heroMobile.url}
+          alt="Authentic handicrafts from North-East India"
+          fill
+          className="object-cover md:hidden"
+          data-ai-hint={placeholderImages.heroMobile['data-ai-hint']}
           priority
         />
         <div className="absolute inset-0 bg-black/50" />
@@ -763,6 +771,7 @@ export default function ProductPage() {
 }
     
     
+
 
 
 
