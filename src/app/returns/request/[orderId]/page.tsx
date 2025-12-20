@@ -1,9 +1,11 @@
 
+
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useFirestore, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
+import { useState, useMemo, useRef } from 'react';
+import { useFirestore, useUser, useDoc, useCollection, useMemoFirebase, useStorage } from '@/firebase';
 import { doc, collection, query, where, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { useParams, useRouter } from 'next/navigation';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Header } from '@/components/shared/Header';
@@ -14,10 +16,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { X } from 'lucide-react';
+import { X, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
+import imageCompression from 'browser-image-compression';
 
 type OrderStatus = 'pending-payment-approval' | 'pending' | 'shipped' | 'delivered' | 'cancelled';
 
@@ -48,16 +52,19 @@ type ReturnItem = {
 export default function ReturnRequestPage() {
     const { orderId } = useParams();
     const firestore = useFirestore();
+    const storage = useStorage();
     const { user, isUserLoading } = useUser();
     const router = useRouter();
     const { toast } = useToast();
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [selectedItems, setSelectedItems] = useState<ReturnItem[]>([]);
     const [reason, setReason] = useState('');
     const [comments, setComments] = useState('');
     const [damageImages, setDamageImages] = useState<string[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [imageUrl, setImageUrl] = useState('');
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
 
 
     const orderRef = useMemoFirebase(() => doc(firestore, 'orders', orderId as string), [firestore, orderId]);
@@ -69,21 +76,45 @@ export default function ReturnRequestPage() {
     );
     const { data: orderItems, isLoading: itemsLoading } = useCollection<OrderItem>(orderItemsQuery);
     
-    const handleAddImageUrl = () => {
-        if (imageUrl) {
-            try {
-                new URL(imageUrl); // Basic URL validation
-                setDamageImages(prev => [...prev, imageUrl]);
-                setImageUrl('');
-            } catch {
-                toast({
-                    variant: 'destructive',
-                    title: 'Invalid URL',
-                    description: 'Please enter a valid image URL.'
-                });
-            }
+    const handleImageUpload = async (file: File) => {
+        if (!file) return;
+        setIsUploading(true);
+        setUploadProgress(0);
+
+        const options = { maxSizeMB: 1, maxWidthOrHeight: 1024, useWebWorker: true };
+        try {
+            const compressedFile = await imageCompression(file, options);
+            const storageRef = ref(storage, `returns/${orderId}/${Date.now()}-${compressedFile.name}`);
+            const uploadTask = uploadBytesResumable(storageRef, compressedFile);
+
+            uploadTask.on(
+                'state_changed',
+                (snapshot) => {
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    setUploadProgress(progress);
+                },
+                (error) => {
+                    toast({ variant: 'destructive', title: 'Upload Failed', description: error.message });
+                    setIsUploading(false);
+                },
+                async () => {
+                    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                    setDamageImages(prev => [...prev, downloadURL]);
+                    setIsUploading(false);
+                }
+            );
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not process image.' });
+            setIsUploading(false);
         }
     };
+    
+     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files && event.target.files[0]) {
+            handleImageUpload(event.target.files[0]);
+        }
+    };
+
 
     const handleItemSelection = (item: OrderItem, checked: boolean) => {
         setSelectedItems(prev => {
@@ -218,17 +249,22 @@ export default function ReturnRequestPage() {
                         </div>
                         
                         <div className="space-y-2">
-                             <Label className="font-semibold">Add Image URLs (optional)</Label>
-                             <p className="text-xs text-muted-foreground">If your item is damaged, please provide links to clear photos.</p>
-                              <div className="flex items-center gap-2">
-                                <Input
-                                    type="text"
-                                    placeholder="https://example.com/image.jpg"
-                                    value={imageUrl}
-                                    onChange={(e) => setImageUrl(e.target.value)}
-                                />
-                                <Button type="button" variant="outline" onClick={handleAddImageUrl}>Add</Button>
-                            </div>
+                             <Label className="font-semibold">Add Damage Images (optional)</Label>
+                             <p className="text-xs text-muted-foreground">If your item is damaged, please upload clear photos.</p>
+                             <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                accept="image/*"
+                                className="hidden"
+                            />
+                            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                                <Upload className="mr-2 h-4 w-4" />
+                                {isUploading ? "Uploading..." : "Upload Image"}
+                            </Button>
+                            
+                            {isUploading && <Progress value={uploadProgress} className="w-full h-2" />}
+
                              <div className="flex flex-wrap gap-2 mt-2">
                                 {damageImages.map((url, index) => (
                                     <div key={index} className="relative h-20 w-20 rounded-md overflow-hidden border">
@@ -250,7 +286,7 @@ export default function ReturnRequestPage() {
                     </CardContent>
                     <CardFooter className="flex justify-end gap-2">
                         <Button variant="outline" onClick={() => router.back()}>Cancel</Button>
-                        <Button onClick={handleSubmit} disabled={isSubmitting}>
+                        <Button onClick={handleSubmit} disabled={isSubmitting || isUploading}>
                             {isSubmitting ? <PottersWheelSpinner /> : 'Submit Request'}
                         </Button>
                     </CardFooter>
