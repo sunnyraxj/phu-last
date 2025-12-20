@@ -743,11 +743,13 @@ export default function ProductPage() {
                                 <div className="p-4 text-left bg-white">
                                   <h3 className="text-lg font-bold text-slate-900 truncate h-7">{member.name}</h3>
                                   <p className="text-sm text-muted-foreground mt-1 mb-3">{member.role}</p>
-                                  {member.socialLink && (
-                                      <Link href={member.socialLink} target="_blank" rel="noopener noreferrer">
-                                          <Button size="sm" className="w-full rounded-full">Follow +</Button>
-                                      </Link>
-                                  )}
+                                  {member.socialLink ? (
+                                        <Link href={member.socialLink} target="_blank" rel="noopener noreferrer" className="w-full">
+                                            <Button size="sm" className="w-full rounded-full">Follow +</Button>
+                                        </Link>
+                                    ) : (
+                                        <Button size="sm" className="w-full rounded-full" disabled>Follow +</Button>
+                                    )}
                                 </div>
                               </Card>
                           </div>
@@ -771,6 +773,7 @@ export default function ProductPage() {
 }
     
     
+
 
 
 
