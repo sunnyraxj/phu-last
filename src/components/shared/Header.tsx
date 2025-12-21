@@ -104,9 +104,14 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
     return (
         <header className="bg-black text-white sticky top-0 z-40">
             <div className="bg-primary text-primary-foreground py-2 text-sm overflow-hidden whitespace-nowrap">
-                <p className="animate-marquee">
-                    This website is now ready for placing orders. You can place orders, but other pages are still under construction. Please excuse any mistakes.
-                </p>
+                <div className="flex animate-marquee">
+                    <p className="flex-shrink-0 px-4">
+                        This website is now ready for placing orders. You can place orders, but other pages are still under construction. Please excuse any mistakes.
+                    </p>
+                    <p className="flex-shrink-0 px-4">
+                        This website is now ready for placing orders. You can place orders, but other pages are still under construction. Please excuse any mistakes.
+                    </p>
+                </div>
             </div>
             <div className="container mx-auto flex items-center justify-between px-4 sm:px-8 py-4">
                 <Link href="/" className="flex items-center gap-3">
