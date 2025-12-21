@@ -23,7 +23,7 @@ import placeholderImages from '@/lib/placeholder-images.json';
 type Product = {
     id: string;
     name: string;
-    price: number;
+    mrp: number;
     images: string[];
     "data-ai-hint": string;
     category: string;
@@ -96,7 +96,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
     };
 
     const cartCount = useMemo(() => cartItems.reduce((acc, item) => acc + item.quantity, 0), [cartItems]);
-    const cartSubtotal = useMemo(() => cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0), [cartItems]);
+    const cartSubtotal = useMemo(() => cartItems.reduce((acc, item) => acc + item.mrp * item.quantity, 0), [cartItems]);
 
     const totalAdminActionCount = useMemo(() => {
         return (adminActionCounts?.pendingOrders || 0) + (adminActionCounts?.pendingReturns || 0);
@@ -314,7 +314,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                                     <div className="flex-1">
                                                         <p className="font-semibold text-sm">{item.name}</p>
                                                         <p className="text-muted-foreground text-sm">
-                                                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.price)}
+                                                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.mrp)}
                                                         </p>
                                                         <div className="flex items-center gap-2 mt-2">
                                                             <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartItemQuantity(item.cartItemId, item.quantity - 1)}>

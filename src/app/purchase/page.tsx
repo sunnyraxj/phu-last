@@ -27,7 +27,7 @@ import placeholderImages from '@/lib/placeholder-images.json';
 type Product = {
   id: string;
   name: string;
-  price: number;
+  mrp: number;
   images: string[];
   "data-ai-hint": string;
   category: string;
@@ -330,9 +330,9 @@ export default function PurchasePage() {
       .sort((a, b) => {
         switch (sortBy) {
           case 'price-low-high':
-            return a.price - b.price;
+            return a.mrp - b.mrp;
           case 'price-high-low':
-            return b.price - a.price;
+            return b.mrp - a.mrp;
           case 'newest':
             // Assuming higher firestore doc id is not newer. We need a timestamp
             return 0;
@@ -470,7 +470,7 @@ export default function PurchasePage() {
                   <div className="mt-2 sm:mt-4 flex flex-col items-start">
                     <h3 className="text-sm sm:text-base font-bold text-black truncate w-full">{product.name}</h3>
                     <p className="font-bold text-sm sm:text-base text-black">
-                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.price)}
+                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.mrp)}
                     </p>
                     <Button
                         variant="ghost"
@@ -505,7 +505,7 @@ export default function PurchasePage() {
                     </DialogHeader>
                     <div className="mt-4">
                       <p className="text-2xl font-bold">
-                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(selectedProduct.price)}
+                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(selectedProduct.mrp)}
                       </p>
                       <p className={cn("mt-2 text-sm font-semibold", selectedProduct.inStock ? "text-green-600" : "text-red-600")}>
                         {selectedProduct.inStock ? "In Stock" : "Out of Stock"}
