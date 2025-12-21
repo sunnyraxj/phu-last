@@ -40,7 +40,7 @@ export function TeamMemberForm({ onSuccess, onCancel, member }: TeamMemberFormPr
     handleSubmit,
     reset,
     control,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<TeamMemberFormValues>({
     resolver: zodResolver(teamMemberSchema),
     defaultValues: {
@@ -121,7 +121,7 @@ export function TeamMemberForm({ onSuccess, onCancel, member }: TeamMemberFormPr
             <Button type="button" variant="outline" onClick={onCancel}>
                 Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || !isDirty}>
             {isSubmitting ? 'Saving...' : 'Save Member'}
             </Button>
         </DialogFooter>

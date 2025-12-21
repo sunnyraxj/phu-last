@@ -32,7 +32,7 @@ export function SettingsForm({ onSubmit, settings }: SettingsFormProps) {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<CompanySettingsFormValues>({
     resolver: zodResolver(settingsSchema),
   });
@@ -88,7 +88,7 @@ export function SettingsForm({ onSubmit, settings }: SettingsFormProps) {
             <div className="space-y-2">
                 <Label htmlFor="ifscCode">IFSC Code</Label>
                 <Input id="ifscCode" {...register('ifscCode')} />
-                {errors.ifscCode && <p className="text-sm text-destructive">{errors.ifscCode.message}</p>}
+                {errors.ifscCode && <p className="text-xs text-destructive">{errors.ifscCode.message}</p>}
             </div>
         </div>
         <div className="space-y-2">
@@ -99,7 +99,7 @@ export function SettingsForm({ onSubmit, settings }: SettingsFormProps) {
       </div>
 
       <div className="flex justify-end">
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting || !isDirty}>
           {isSubmitting ? <PottersWheelSpinner /> : 'Save Settings'}
         </Button>
       </div>

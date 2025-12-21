@@ -122,10 +122,10 @@ export function ItemForm({
     setValue,
     watch,
     getValues,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<ItemFormValues>({
     resolver: zodResolver(itemSchema),
-    defaultValues: product ? product : defaultFormValues,
+    defaultValues: product || defaultFormValues,
   });
   
 
@@ -138,24 +138,22 @@ export function ItemForm({
   const seoKeywords = watch('seoKeywords', []);
   
   useEffect(() => {
-    if (product) {
-      reset({
-        ...product,
-        mrp: product.mrp || 0,
-        gst: product.gst || undefined,
-        images: product.images || [],
-        seoKeywords: product.seoKeywords || [],
-        size: product.size || { height: undefined, length: undefined, width: undefined },
-      });
-    } else {
-        reset(defaultFormValues);
-    }
+    const defaultValues = {
+      ...defaultFormValues,
+      ...(product || {}),
+      mrp: product?.mrp || 0,
+      gst: product?.gst || undefined,
+      images: product?.images || [],
+      seoKeywords: product?.seoKeywords || [],
+      size: product?.size || { height: undefined, length: undefined, width: undefined },
+    };
+    reset(defaultValues);
   }, [product, reset]);
   
   const handleApplyAiData = (data: { name: string, description: string, seoKeywords: string[] }) => {
-    setValue('name', data.name, { shouldValidate: true });
-    setValue('description', data.description, { shouldValidate: true });
-    setValue('seoKeywords', data.seoKeywords, { shouldValidate: true });
+    setValue('name', data.name, { shouldValidate: true, shouldDirty: true });
+    setValue('description', data.description, { shouldValidate: true, shouldDirty: true });
+    setValue('seoKeywords', data.seoKeywords, { shouldValidate: true, shouldDirty: true });
     setIsAiDialogOpen(false);
   };
 
@@ -166,14 +164,14 @@ export function ItemForm({
   const handleRemoveImage = (index: number) => {
     const newImages = [...images];
     newImages.splice(index, 1);
-    setValue('images', newImages, { shouldValidate: true });
+    setValue('images', newImages, { shouldValidate: true, shouldDirty: true });
   };
   
   const handleAddCategory = (value: string) => {
     if (value && !allCategories.includes(value)) {
       setAllCategories(prev => [...prev, value]);
     }
-    setValue('category', value, { shouldValidate: true });
+    setValue('category', value, { shouldValidate: true, shouldDirty: true });
     setIsAddCategoryOpen(false);
   }
   
@@ -181,7 +179,7 @@ export function ItemForm({
     if (value && !allMaterials.includes(value)) {
       setAllMaterials(prev => [...prev, value]);
     }
-    setValue('material', value, { shouldValidate: true });
+    setValue('material', value, { shouldValidate: true, shouldDirty: true });
     setIsAddMaterialOpen(false);
   }
 
@@ -190,7 +188,7 @@ export function ItemForm({
       try {
         z.string().url().parse(imageUrl);
         const currentImages = getValues('images');
-        setValue('images', [...currentImages, imageUrl], { shouldValidate: true });
+        setValue('images', [...currentImages, imageUrl], { shouldValidate: true, shouldDirty: true });
         setImageUrl(''); // Clear the input field
       } catch (error) {
         toast({
@@ -393,7 +391,7 @@ export function ItemForm({
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting || !isDirty}>
             {isSubmitting ? <PottersWheelSpinner /> : (product ? 'Save Changes' : 'Add Item')}
           </Button>
         </DialogFooter>

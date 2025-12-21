@@ -39,7 +39,7 @@ export function StoreForm({ onSuccess, onCancel, store }: StoreFormProps) {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<StoreFormValues>({
     resolver: zodResolver(storeSchema),
     defaultValues: {
@@ -103,7 +103,7 @@ export function StoreForm({ onSuccess, onCancel, store }: StoreFormProps) {
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || !isDirty}>
             {isSubmitting ? 'Saving...' : 'Save Store'}
             </Button>
         </DialogFooter>
