@@ -1,48 +1,41 @@
 import { MetadataRoute } from 'next';
 
+// This function would ideally fetch dynamic data, e.g., from a CMS or database.
+// For now, we'll keep it static as per the project's reliability guidelines.
+async function fetchProductUrls(): Promise<string[]> {
+  // In a real app, you'd fetch product slugs from your database:
+  // const products = await db.collection('products').get();
+  // return products.docs.map(doc => `/product/${doc.data().slug}`);
+  return []; // Returning empty for now to avoid breaking the build.
+}
+
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://purbanchal-hasta-udyog.com'; // Replace with your actual domain
+  const baseUrl = 'https://purbanchal-hasta-udyog.com';
 
-  // Static URLs are more reliable for build processes.
-  // Dynamic sitemaps that fetch data should be handled carefully to avoid build failures.
-  const staticUrls: MetadataRoute.Sitemap = [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/purchase`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/our-stores`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/our-team`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/privacy-policy`,
-      lastModified: new Date(),
-      changeFrequency: 'yearly',
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/help-center`,
-      lastModified: new Date(),
-      changeFrequency: 'yearly',
-      priority: 0.4,
-    },
-  ];
+  // Static pages
+  const staticRoutes = [
+    '',
+    '/purchase',
+    '/our-stores',
+    '/our-team',
+    '/privacy-policy',
+    '/help-center',
+    '/login',
+  ].map((route) => ({
+    url: `${baseUrl}${route}`,
+    lastModified: new Date().toISOString(),
+  }));
 
-  return staticUrls;
+  // Dynamic product pages (if any)
+  const productUrls = await fetchProductUrls();
+  const productRoutes = productUrls.map(url => ({
+    url: `${baseUrl}${url}`,
+    lastModified: new Date().toISOString(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
+  }));
+
+
+  return [...staticRoutes, ...productRoutes];
 }

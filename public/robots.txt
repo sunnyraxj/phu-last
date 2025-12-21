@@ -1,7 +1,14 @@
-# See https://www.robotstxt.org/robotstxt.html for documentation on how to use the robots.txt file
+# robots.txt for Purbanchal Hasta Udyog
 
 User-agent: *
-Disallow: /admin/
 Allow: /
 
+# Disallow admin and private areas from being crawled
+Disallow: /admin/
+Disallow: /account/
+Disallow: /orders/
+Disallow: /checkout/
+Disallow: /receipt/
+
+# Sitemap location
 Sitemap: https://purbanchal-hasta-udyog.com/sitemap.xml
