@@ -271,7 +271,7 @@ export function ItemForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label htmlFor="mrp">Price (MRP)</Label>
-                <Input id="mrp" type="text" {...register('mrp')} placeholder="e.g., 1250.00" />
+                <Input id="mrp" type="number" {...register('mrp')} placeholder="e.g., 1250.00" />
                 {errors.mrp && <p className="text-xs text-destructive">{errors.mrp.message}</p>}
               </div>
               <div className="space-y-1 pt-7">
