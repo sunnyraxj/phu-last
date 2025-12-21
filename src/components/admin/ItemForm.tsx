@@ -28,14 +28,17 @@ const itemSchema = z.object({
   description: z.string().min(1, 'Description is required'),
   mrp: z.preprocess(
     (val) => {
-        if (typeof val === 'string' && val.trim() === '') return undefined;
-        const processed = Number(val);
-        return isNaN(processed) ? undefined : processed;
+        if (typeof val === 'string') {
+            if (val.trim() === '') return undefined; // Treat empty string as undefined for required check
+            const processed = Number(val);
+            return isNaN(processed) ? val : processed; // Keep as string if not a number, else convert
+        }
+        return val;
     },
     z.number({
-        required_error: "Price is required",
-        invalid_type_error: "Price must be a valid number" 
-    }).positive('Price must be a positive number')
+        required_error: "Price is required.",
+        invalid_type_error: "Price must be a valid number." 
+    }).positive('Price must be a positive number.')
   ),
   images: z.array(z.string().url()).min(1, 'At least one image is required'),
   category: z.string().min(1, 'Category is required'),
@@ -147,8 +150,8 @@ export function ItemForm({
     const initialValues = product ? {
         ...defaultFormValues,
         ...product,
-        mrp: product.mrp || undefined,
-        gst: product.gst || undefined,
+        mrp: product.mrp ?? undefined,
+        gst: product.gst ?? undefined,
         images: product.images || [],
         seoKeywords: product.seoKeywords || [],
         size: product.size || { height: undefined, length: undefined, width: undefined },
@@ -268,7 +271,7 @@ export function ItemForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label htmlFor="mrp">Price (MRP)</Label>
-                <Input id="mrp" type="number" step="0.01" {...register('mrp')} />
+                <Input id="mrp" type="text" {...register('mrp')} placeholder="e.g., 1250.00" />
                 {errors.mrp && <p className="text-xs text-destructive">{errors.mrp.message}</p>}
               </div>
               <div className="space-y-1 pt-7">
