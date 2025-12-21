@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -61,8 +62,6 @@ export type ItemFormValues = z.infer<typeof itemSchema>;
 interface ItemFormProps {
   onSuccess: (data: ItemFormValues) => void;
   onCancel: () => void;
-  product: ItemFormValues & { id?: string } | null;
-  mode: 'add' | 'edit' | 'duplicate';
 }
 
 type Product = {
@@ -87,8 +86,6 @@ const defaultFormValues: ItemFormValues = {
 export function ItemForm({
   onSuccess,
   onCancel,
-  product,
-  mode,
 }: ItemFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -135,7 +132,7 @@ export function ItemForm({
     formState: { errors, isSubmitting, isDirty },
   } = useForm<ItemFormValues>({
     resolver: zodResolver(itemSchema),
-    defaultValues: product || defaultFormValues,
+    defaultValues: defaultFormValues,
   });
   
 
@@ -147,34 +144,8 @@ export function ItemForm({
   const seoKeywords = watch('seoKeywords', []);
   
     useEffect(() => {
-        let initialValues;
-        if (mode === 'edit' && product) {
-            initialValues = {
-                ...defaultFormValues,
-                ...product,
-                mrp: product.mrp ?? undefined,
-                gst: product.gst ?? undefined,
-                images: product.images || [],
-                seoKeywords: product.seoKeywords || [],
-                size: product.size || { height: undefined, length: undefined, width: undefined },
-            };
-        } else if (mode === 'duplicate' && product) {
-            initialValues = {
-                ...defaultFormValues,
-                ...product,
-                name: `${product.name} (Copy)`,
-                mrp: product.mrp ?? undefined,
-                gst: product.gst ?? undefined,
-                images: product.images || [],
-                seoKeywords: product.seoKeywords || [],
-                size: product.size || { height: undefined, length: undefined, width: undefined },
-            };
-        }
-        else {
-            initialValues = defaultFormValues;
-        }
-        reset(initialValues);
-    }, [product, mode, reset]);
+        reset(defaultFormValues);
+    }, [reset]);
   
   const handleFormSubmit: SubmitHandler<ItemFormValues> = (data) => {
     onSuccess(data);
@@ -385,7 +356,7 @@ export function ItemForm({
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting || !isDirty}>
-            {isSubmitting ? <PottersWheelSpinner /> : (mode === 'edit' ? 'Save Changes' : 'Add Item')}
+            {isSubmitting ? <PottersWheelSpinner /> : 'Add Item'}
           </Button>
         </DialogFooter>
         

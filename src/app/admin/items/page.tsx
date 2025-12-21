@@ -9,10 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Edit, Trash2, Copy } from 'lucide-react';
+import { PlusCircle, Trash2 } from 'lucide-react';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ItemForm, type ItemFormValues } from '@/components/admin/ItemForm';
 import Image from 'next/image';
@@ -28,35 +28,18 @@ export default function ItemsPage() {
     const { toast } = useToast();
     
     const [isFormOpen, setIsFormOpen] = useState(false);
-    const [selectedItem, setSelectedItem] = useState<Item | null>(null);
-    const [formMode, setFormMode] = useState<'add' | 'edit' | 'duplicate'>('add');
     const [itemsToDelete, setItemsToDelete] = useState<Item[]>([]);
     const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
     const itemsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
     const { data: items, isLoading: itemsLoading } = useCollection<Item>(itemsQuery);
 
-    const handleEditClick = (item: Item) => {
-        setFormMode('edit');
-        setSelectedItem(item);
-        setIsFormOpen(true);
-    };
-
     const handleAddNewClick = () => {
-        setFormMode('add');
-        setSelectedItem(null);
         setIsFormOpen(true);
     };
 
-    const handleDuplicateClick = (item: Item) => {
-        setFormMode('duplicate');
-        setSelectedItem(item);
-        setIsFormOpen(true);
-    };
-    
     const handleCloseForm = useCallback(() => {
         setIsFormOpen(false);
-        setSelectedItem(null);
     }, []);
 
     const handleDeleteItems = async () => {
@@ -76,17 +59,9 @@ export default function ItemsPage() {
     };
     
     const handleFormSubmit = (formData: ItemFormValues) => {
-        if (formMode === 'edit' && selectedItem) {
-            // Editing existing item
-            const itemRef = doc(firestore, "products", selectedItem.id);
-            setDocumentNonBlocking(itemRef, formData, { merge: true });
-            toast({ title: 'Item Updated', description: `${formData.name} has been saved.` });
-        } else {
-            // Adding new or duplicated item
-            const itemsCollection = collection(firestore, "products");
-            addDocumentNonBlocking(itemsCollection, formData);
-            toast({ title: 'Item Added', description: `${formData.name} has been added to your store.` });
-        }
+        const itemsCollection = collection(firestore, "products");
+        addDocumentNonBlocking(itemsCollection, formData);
+        toast({ title: 'Item Added', description: `${formData.name} has been added to your store.` });
         handleCloseForm();
     };
 
@@ -115,18 +90,6 @@ export default function ItemsPage() {
         setItemsToDelete([item]);
     }
 
-    const formTitle = useMemo(() => {
-        if (formMode === 'edit') return 'Edit Item';
-        if (formMode === 'duplicate') return 'Duplicate Item';
-        return 'Add New Item';
-    }, [formMode]);
-
-    const formDescription = useMemo(() => {
-        if (formMode === 'edit') return "Update the details for this item.";
-        if (formMode === 'duplicate') return "Modify the details below and save to create a new item.";
-        return "Fill out the form to add a new item to your store.";
-    }, [formMode]);
-
     return (
         <div>
             <div className="flex items-center justify-between space-y-2 mb-4">
@@ -139,16 +102,14 @@ export default function ItemsPage() {
                     </DialogTrigger>
                     <DialogContent className="max-w-4xl">
                         <DialogHeader>
-                            <DialogTitle>{formTitle}</DialogTitle>
+                            <DialogTitle>Add New Item</DialogTitle>
                             <DialogDescription>
-                                {formDescription}
+                                Fill out the form to add a new item to your store.
                             </DialogDescription>
                         </DialogHeader>
                         <ItemForm
-                            product={selectedItem}
                             onSuccess={handleFormSubmit}
                             onCancel={handleCloseForm}
-                            mode={formMode}
                         />
                     </DialogContent>
                 </Dialog>
@@ -219,12 +180,6 @@ export default function ItemsPage() {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end items-center gap-2">
-                                                    <Button variant="ghost" size="sm" onClick={() => handleDuplicateClick(item)}>
-                                                        <Copy className="mr-2 h-4 w-4" /> Duplicate
-                                                    </Button>
-                                                    <Button variant="ghost" size="sm" onClick={() => handleEditClick(item)}>
-                                                        <Edit className="mr-2 h-4 w-4" /> Edit
-                                                    </Button>
                                                     <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDeleteClick(item)}>
                                                         <Trash2 className="mr-2 h-4 w-4" /> Delete
                                                     </Button>
