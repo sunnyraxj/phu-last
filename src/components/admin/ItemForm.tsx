@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -29,7 +28,7 @@ const itemSchema = z.object({
   description: z.string().min(1, 'Description is required'),
   mrp: z.preprocess(
     (val) => (val === '' || val === null || val === undefined ? undefined : Number(val)),
-    z.number({ required_error: "Price is required" }).positive('Price must be a positive number')
+    z.number({ required_error: "Price is required", invalid_type_error: "Price must be a number" }).positive('Price must be a positive number')
   ),
   images: z.array(z.string().url()).min(1, 'At least one image is required'),
   category: z.string().min(1, 'Category is required'),
@@ -64,7 +63,7 @@ type Product = {
 const defaultFormValues: ItemFormValues = {
   name: '',
   description: '',
-  mrp: 0,
+  mrp: undefined as unknown as number, // Set to undefined to trigger validation correctly
   images: [],
   category: '',
   material: '',
@@ -595,3 +594,5 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
         </Dialog>
     );
 }
+
+    
