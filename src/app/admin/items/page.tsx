@@ -99,9 +99,13 @@ export default function ItemsPage() {
         const toDelete = items?.filter(item => selectedItems.includes(item.id)) || [];
         setItemsToDelete(toDelete);
     }
+    
+    const handleDeleteClick = (item: Item) => {
+        setItemsToDelete([item]);
+    }
 
     return (
-        <div className="flex-1 space-y-4">
+        <div className="space-y-4">
             <div className="flex items-center justify-between space-y-2">
                 <h2 className="text-3xl font-bold tracking-tight">Items</h2>
                  <Dialog open={isFormOpen} onOpenChange={(open) => !open && handleCloseForm()}>
@@ -191,9 +195,11 @@ export default function ItemsPage() {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end items-center gap-2">
-                                                    <Button variant="ghost" size="icon" onClick={() => handleEditClick(item)}>
-                                                        <Edit className="h-4 w-4" />
-                                                        <span className="sr-only">Edit</span>
+                                                    <Button variant="ghost" size="sm" onClick={() => handleEditClick(item)}>
+                                                        <Edit className="mr-2 h-4 w-4" /> Edit
+                                                    </Button>
+                                                    <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDeleteClick(item)}>
+                                                        <Trash2 className="mr-2 h-4 w-4" /> Delete
                                                     </Button>
                                                 </div>
                                             </TableCell>
