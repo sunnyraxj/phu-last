@@ -125,7 +125,7 @@ export function ItemForm({
     formState: { errors, isSubmitting },
   } = useForm<ItemFormValues>({
     resolver: zodResolver(itemSchema),
-    defaultValues: defaultFormValues,
+    defaultValues: product ? product : defaultFormValues,
   });
   
 
