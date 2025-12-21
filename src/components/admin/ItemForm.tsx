@@ -27,8 +27,8 @@ const itemSchema = z.object({
   name: z.string().min(1, 'Item name is required'),
   description: z.string().min(1, 'Description is required'),
   mrp: z.preprocess(
-    (val) => (val === '' || val === null || val === undefined ? undefined : Number(val)),
-    z.number({ required_error: "Price is required", invalid_type_error: "Price must be a number" }).positive('Price must be a positive number')
+    (val) => Number(String(val)), // Force conversion to number
+    z.number({ required_error: "Price is required", invalid_type_error: "Price must be a valid number" }).positive('Price must be a positive number')
   ),
   images: z.array(z.string().url()).min(1, 'At least one image is required'),
   category: z.string().min(1, 'Category is required'),
@@ -63,7 +63,7 @@ type Product = {
 const defaultFormValues: ItemFormValues = {
   name: '',
   description: '',
-  mrp: undefined as unknown as number, // Set to undefined to trigger validation correctly
+  mrp: undefined as unknown as number,
   images: [],
   category: '',
   material: '',
@@ -137,15 +137,14 @@ export function ItemForm({
   const seoKeywords = watch('seoKeywords', []);
   
   useEffect(() => {
-    const defaultValues = {
-      ...defaultFormValues,
-      ...(product || {}),
-      mrp: product?.mrp || 0,
-      gst: product?.gst || undefined,
-      images: product?.images || [],
-      seoKeywords: product?.seoKeywords || [],
-      size: product?.size || { height: undefined, length: undefined, width: undefined },
-    };
+    const defaultValues = product ? {
+      ...product,
+      mrp: product.mrp || 0,
+      gst: product.gst || undefined,
+      images: product.images || [],
+      seoKeywords: product.seoKeywords || [],
+      size: product.size || { height: undefined, length: undefined, width: undefined },
+    } : defaultFormValues;
     reset(defaultValues);
   }, [product, reset]);
   
@@ -594,5 +593,6 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
         </Dialog>
     );
 }
+    
 
     
