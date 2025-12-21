@@ -27,8 +27,15 @@ const itemSchema = z.object({
   name: z.string().min(1, 'Item name is required'),
   description: z.string().min(1, 'Description is required'),
   mrp: z.preprocess(
-    (val) => Number(String(val)), // Force conversion to number
-    z.number({ required_error: "Price is required", invalid_type_error: "Price must be a valid number" }).positive('Price must be a positive number')
+    (val) => {
+        if (typeof val === 'string' && val.trim() === '') return undefined;
+        const processed = Number(val);
+        return isNaN(processed) ? undefined : processed;
+    },
+    z.number({
+        required_error: "Price is required",
+        invalid_type_error: "Price must be a valid number" 
+    }).positive('Price must be a positive number')
   ),
   images: z.array(z.string().url()).min(1, 'At least one image is required'),
   category: z.string().min(1, 'Category is required'),
@@ -36,14 +43,14 @@ const itemSchema = z.object({
   inStock: z.boolean().default(true),
   hsn: z.string().optional(),
   gst: z.preprocess(
-    (a) => (a === '' ? undefined : parseFloat(z.string().parse(a))),
+    (a) => (a === '' || a === undefined ? undefined : parseFloat(z.string().parse(a))),
     z.number().min(0).optional()
   ),
   seoKeywords: z.array(z.string()).optional(),
   size: z.object({
-    height: z.preprocess((a) => (a === '' ? undefined : parseFloat(z.string().parse(a))), z.number().min(0).optional()),
-    length: z.preprocess((a) => (a === '' ? undefined : parseFloat(z.string().parse(a))), z.number().min(0).optional()),
-    width: z.preprocess((a) => (a === '' ? undefined : parseFloat(z.string().parse(a))), z.number().min(0).optional()),
+    height: z.preprocess((a) => (a === '' || a === undefined ? undefined : parseFloat(z.string().parse(a))), z.number().min(0).optional()),
+    length: z.preprocess((a) => (a === '' || a === undefined ? undefined : parseFloat(z.string().parse(a))), z.number().min(0).optional()),
+    width: z.preprocess((a) => (a === '' || a === undefined ? undefined : parseFloat(z.string().parse(a))), z.number().min(0).optional()),
   }).optional(),
 });
 
@@ -137,16 +144,17 @@ export function ItemForm({
   const seoKeywords = watch('seoKeywords', []);
   
   useEffect(() => {
-    const defaultValues = product ? {
-      ...product,
-      mrp: product.mrp || 0,
-      gst: product.gst || undefined,
-      images: product.images || [],
-      seoKeywords: product.seoKeywords || [],
-      size: product.size || { height: undefined, length: undefined, width: undefined },
+    const initialValues = product ? {
+        ...defaultFormValues,
+        ...product,
+        mrp: product.mrp || undefined,
+        gst: product.gst || undefined,
+        images: product.images || [],
+        seoKeywords: product.seoKeywords || [],
+        size: product.size || { height: undefined, length: undefined, width: undefined },
     } : defaultFormValues;
-    reset(defaultValues);
-  }, [product, reset]);
+    reset(initialValues);
+}, [product, reset]);
   
   const handleApplyAiData = (data: { name: string, description: string, seoKeywords: string[] }) => {
     setValue('name', data.name, { shouldValidate: true, shouldDirty: true });
@@ -593,6 +601,8 @@ function AIDetailsGeneratorDialog({ isOpen, onClose, onApply }: AIDetailsGenerat
         </Dialog>
     );
 }
+    
+
     
 
     
