@@ -359,28 +359,6 @@ export function ItemForm({
                   {errors.gst && <p className="text-xs text-destructive">{errors.gst.message}</p>}
                </div>
             </div>
-
-            <div className="space-y-2">
-                <Label>SEO Keywords (Optional)</Label>
-                <div className="flex flex-wrap gap-2">
-                    {seoKeywords?.map((keyword, index) => (
-                        <div key={index} className="flex items-center gap-1 bg-muted text-muted-foreground rounded-full px-3 py-1 text-sm">
-                            <span>{keyword}</span>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    const newKeywords = [...(seoKeywords || [])];
-                                    newKeywords.splice(index, 1);
-                                    setValue('seoKeywords', newKeywords);
-                                }}
-                                className="text-muted-foreground hover:text-foreground"
-                            >
-                                <X className="h-3 w-3" />
-                            </button>
-                        </div>
-                    ))}
-                </div>
-            </div>
             
              <div>
               <Label>Dimensions (Optional)</Label>
@@ -429,8 +407,3 @@ export function ItemForm({
     </>
   );
 }
-    
-
-    
-
-    
