@@ -9,11 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Edit, Trash2, MoreHorizontal } from 'lucide-react';
+import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { setDocumentNonBlocking, deleteDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ItemForm, type ItemFormValues } from '@/components/admin/ItemForm';
 import Image from 'next/image';
@@ -138,23 +137,16 @@ export default function ItemsPage() {
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="icon">
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem onClick={() => handleEditClick(item)}>
-                                                            <Edit className="mr-2 h-4 w-4" />
-                                                            Edit
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem className="text-destructive" onClick={() => setItemToDelete(item)}>
-                                                            <Trash2 className="mr-2 h-4 w-4" />
-                                                            Delete
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
+                                                <div className="flex justify-end items-center gap-2">
+                                                    <Button variant="ghost" size="icon" onClick={() => handleEditClick(item)}>
+                                                        <Edit className="h-4 w-4" />
+                                                        <span className="sr-only">Edit</span>
+                                                    </Button>
+                                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setItemToDelete(item)}>
+                                                        <Trash2 className="h-4 w-4" />
+                                                        <span className="sr-only">Delete</span>
+                                                    </Button>
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     ))
