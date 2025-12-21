@@ -187,8 +187,9 @@ export default function AdminLayout({
                     stores={stores || []}
                     products={[]}
                     adminActionCounts={adminActionCounts}
+                    showAnnouncement={false}
                 />
-                <main className="flex-1 overflow-auto bg-background p-2 sm:p-4">
+                <main className="flex-1 overflow-auto bg-background">
                     <div className="container mx-auto px-4 sm:px-8 py-4">
                         {children}
                     </div>
