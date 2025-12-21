@@ -28,7 +28,7 @@ const itemSchema = z.object({
   name: z.string().min(1, 'Item name is required'),
   description: z.string().min(1, 'Description is required'),
   mrp: z.preprocess(
-    (val) => (val === '' ? undefined : Number(val)),
+    (val) => (val === '' || val === null || val === undefined ? undefined : Number(val)),
     z.number({ required_error: "Price is required" }).positive('Price must be a positive number')
   ),
   images: z.array(z.string().url()).min(1, 'At least one image is required'),
@@ -160,17 +160,7 @@ export function ItemForm({
   };
 
   const handleFormSubmit: SubmitHandler<ItemFormValues> = (data) => {
-    const finalData = {
-        ...data,
-        hsn: data.hsn || undefined,
-        gst: data.gst ?? undefined,
-        size: data.size ? {
-            height: data.size.height ?? undefined,
-            width: data.size.width ?? undefined,
-            length: data.size.length ?? undefined,
-        } : undefined
-    }
-    onSuccess(finalData as ItemFormValues);
+    onSuccess(data);
   };
 
   const handleRemoveImage = (index: number) => {
