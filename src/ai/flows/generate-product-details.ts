@@ -46,6 +46,7 @@ const generateProductDetailsPrompt = ai.definePrompt({
   name: 'generateProductDetailsPrompt',
   input: {schema: GenerateProductDetailsInputSchema},
   output: {schema: GenerateProductDetailsOutputSchema},
+  model: 'gemini-1.5-flash-latest',
   prompt: `You are an expert e-commerce copywriter and SEO specialist for a store that sells authentic handicrafts from North-East India.
 Your task is to generate compelling product details based on the provided image and user notes.
 

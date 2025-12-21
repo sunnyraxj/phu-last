@@ -52,6 +52,7 @@ const generateBlogPostPrompt = ai.definePrompt({
   name: 'generateBlogPostPrompt',
   input: {schema: GenerateBlogPostInputSchema},
   output: {schema: GenerateBlogPostOutputSchema},
+  model: 'gemini-1.5-flash-latest',
   prompt: `You are an expert content writer and SEO specialist for an e-commerce store that sells authentic handicrafts from North-East India.
 Your task is to write a blog post based on the provided image and user notes.
 
