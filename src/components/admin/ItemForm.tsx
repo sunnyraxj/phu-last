@@ -28,8 +28,8 @@ const itemSchema = z.object({
   name: z.string().min(1, 'Item name is required'),
   description: z.string().min(1, 'Description is required'),
   mrp: z.preprocess(
-    (a) => parseFloat(z.string().parse(a)),
-    z.number().positive('Price must be positive')
+    (val) => (val === '' ? undefined : Number(val)),
+    z.number({ required_error: "Price is required" }).positive('Price must be a positive number')
   ),
   images: z.array(z.string().url()).min(1, 'At least one image is required'),
   category: z.string().min(1, 'Category is required'),
