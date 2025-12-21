@@ -1,79 +1,63 @@
-
-'use server';
-
-/**
- * @fileOverview This file defines a Genkit flow for generating product details
- * (name, description, and SEO keywords) based on an image and user-provided notes.
- *
- * @module src/ai/flows/generate-product-details
- *
- * @interface GenerateProductDetailsInput - The input type for the flow.
- * @interface GenerateProductDetailsOutput - The output type for the flow.
- * @function generateProductDetails - A function that takes GenerateProductDetailsInput and returns a Promise of GenerateProductDetailsOutput.
- */
-
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-
-const GenerateProductDetailsInputSchema = z.object({
-  imageDataUri: z
-    .string()
-    .describe(
-      "A photo of the product, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
-    ),
-  userNotes: z.string().describe('Additional notes or keywords provided by the user to guide content generation.'),
-});
-export type GenerateProductDetailsInput = z.infer<typeof GenerateProductDetailsInputSchema>;
-
-const GenerateProductDetailsOutputSchema = z.object({
-  name: z.string().describe('A creative, SEO-friendly name for the product.'),
-  description: z.string().describe('A detailed, engaging, and SEO-optimized product description highlighting its features and story.'),
-  seoKeywords: z.array(z.string()).describe("An array of 5-7 relevant SEO keywords or tags for the product."),
-});
-export type GenerateProductDetailsOutput = z.infer<typeof GenerateProductDetailsOutputSchema>;
-
-/**
- * This function takes an image and user notes and uses a generative AI model
- * to create product details.
- * @param input The image and user notes.
- * @returns The generated product name, description, and SEO keywords.
- */
-export async function generateProductDetails(input: GenerateProductDetailsInput): Promise<GenerateProductDetailsOutput> {
-  return generateProductDetailsFlow(input);
-}
-
-const generateProductDetailsPrompt = ai.definePrompt({
-  name: 'generateProductDetailsPrompt',
-  input: {schema: GenerateProductDetailsInputSchema},
-  output: {schema: GenerateProductDetailsOutputSchema},
-  model: 'gemini-1.5-flash-latest',
-  prompt: `You are an expert e-commerce copywriter and SEO specialist for a store that sells authentic handicrafts from North-East India.
-Your task is to generate compelling product details based on the provided image and user notes.
-
-- **Product Name:** Create a short, catchy, and descriptive name that is optimized for search engines.
-- **Product Description:** Write a detailed and engaging description. It should highlight the craftsmanship, materials, cultural significance, and potential uses of the item. Subtly weave in promotional language.
-- **SEO Keywords:** Generate a list of 5-7 relevant keywords or tags that customers might use to find this product. Include terms related to the craft, material, region, and use case.
-
-User Notes: {{{userNotes}}}
-Product Image: {{media url=imageDataUri}}
-`,
-});
-
-const generateProductDetailsFlow = ai.defineFlow(
-  {
-    name: 'generateProductDetailsFlow',
-    inputSchema: GenerateProductDetailsInputSchema,
-    outputSchema: GenerateProductDetailsOutputSchema,
+{
+  "name": "nextn",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack -p 9002",
+    "build": "NODE_ENV=production next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
   },
-  async input => {
-    try {
-      const {output} = await generateProductDetailsPrompt(input);
-      return output!;
-    } catch (error: any) {
-      if (error.message?.includes('503')) {
-        throw new Error('The AI model is currently overloaded. Please try again in a few moments.');
-      }
-      throw error;
-    }
+  "dependencies": {
+    "@hookform/resolvers": "^4.1.3",
+    "@radix-ui/react-accordion": "^1.2.3",
+    "@radix-ui/react-alert-dialog": "^1.1.6",
+    "@radix-ui/react-avatar": "^1.1.3",
+    "@radix-ui/react-checkbox": "^1.1.4",
+    "@radix-ui/react-collapsible": "^1.1.11",
+    "@radix-ui/react-dialog": "^1.1.6",
+    "@radix-ui/react-dropdown-menu": "^2.1.6",
+    "@radix-ui/react-label": "^2.1.2",
+    "@radix-ui/react-menubar": "^1.1.6",
+    "@radix-ui/react-popover": "^1.1.6",
+    "@radix-ui/react-progress": "^1.1.2",
+    "@radix-ui/react-radio-group": "^1.2.3",
+    "@radix-ui/react-scroll-area": "^1.2.3",
+    "@radix-ui/react-select": "^2.1.6",
+    "@radix-ui/react-separator": "^1.1.2",
+    "@radix-ui/react-slider": "^1.2.3",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.1.3",
+    "@radix-ui/react-tabs": "^1.1.3",
+    "@radix-ui/react-toast": "^1.2.6",
+    "@radix-ui/react-tooltip": "^1.1.8",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cmdk": "^1.0.0",
+    "date-fns": "^3.6.0",
+    "dotenv": "^16.5.0",
+    "embla-carousel-autoplay": "^8.1.5",
+    "embla-carousel-react": "^8.6.0",
+    "firebase": "^11.9.1",
+    "lucide-react": "^0.475.0",
+    "next": "15.5.9",
+    "patch-package": "^8.0.0",
+    "react": "^19.2.1",
+    "react-day-picker": "^9.11.3",
+    "react-dom": "^19.2.1",
+    "react-hook-form": "^7.54.2",
+    "recharts": "^2.15.1",
+    "tailwind-merge": "^3.0.1",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19.2.1",
+    "@types/react-dom": "^19.2.1",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
   }
-);
+}

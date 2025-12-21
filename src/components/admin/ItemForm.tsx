@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -15,10 +15,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ScrollArea } from '../ui/scroll-area';
 import { DialogFooter } from '../ui/dialog';
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
-import { X, PlusCircle, Sparkles, CheckCircle, Copy, AlertCircle } from 'lucide-react';
+import { X, PlusCircle } from 'lucide-react';
 import Image from 'next/image';
 import { AddOptionDialog } from './AddOptionDialog';
-import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
 import { collection } from 'firebase/firestore';
@@ -71,9 +70,6 @@ type Product = {
   material: string;
 }
 
-type AiStatus = 'idle' | 'generating' | 'success' | 'error';
-
-
 const defaultFormValues: ItemFormValues = {
   name: '',
   description: '',
@@ -119,11 +115,6 @@ export function ItemForm({
   const [allCategories, setAllCategories] = useState(categories);
   const [allMaterials, setAllMaterials] = useState(materials);
 
-  const [aiStatus, setAiStatus] = useState<AiStatus>('idle');
-  const [aiError, setAiError] = useState<string | null>(null);
-  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
-  const hasAiRun = useRef(false);
-
   useEffect(() => {
     setAllCategories(categories);
   }, [categories]);
@@ -154,12 +145,10 @@ export function ItemForm({
 
   const images = watch('images', []);
   const seoKeywords = watch('seoKeywords', []);
-  const name = watch('name');
   
     useEffect(() => {
         let initialValues;
         if (mode === 'edit' && product) {
-            hasAiRun.current = true; // Don't run AI on edit
             initialValues = {
                 ...defaultFormValues,
                 ...product,
@@ -229,120 +218,6 @@ export function ItemForm({
       }
     }
   };
-
-  const triggerAiGeneration = async () => {
-    const currentImages = getValues('images');
-    const currentName = getValues('name');
-
-    if (hasAiRun.current || !currentImages?.[0] || !currentName) {
-        return;
-    }
-
-    setAiStatus('generating');
-    setAiError(null);
-
-    try {
-        const imageUrl = currentImages[0];
-        const response = await fetch(imageUrl);
-        if (!response.ok) throw new Error('Failed to fetch image from URL.');
-        
-        const blob = await response.blob();
-        const reader = new FileReader();
-
-        reader.onloadend = async () => {
-            const base64data = reader.result;
-            try {
-                const apiResponse = await fetch('/api/generate-product-details', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        imageDataUri: base64data,
-                        userNotes: currentName // Use the current name as notes
-                    }),
-                });
-
-                if (!apiResponse.ok) {
-                    const errorData = await apiResponse.json();
-                    throw new Error(errorData.error || 'Failed to generate details.');
-                }
-
-                const data = await apiResponse.json();
-                
-                setValue('name', data.name, { shouldDirty: true, shouldValidate: true });
-                setValue('description', data.description, { shouldDirty: true, shouldValidate: true });
-                setValue('seoKeywords', data.seoKeywords, { shouldDirty: true, shouldValidate: true });
-
-                setAiStatus('success');
-                hasAiRun.current = true;
-            } catch (err: any) {
-                setAiError(err.message);
-                setAiStatus('error');
-            }
-        };
-
-        reader.onerror = () => {
-            throw new Error('Failed to process image for AI generation.');
-        };
-
-        reader.readAsDataURL(blob);
-
-    } catch (err: any) {
-        setAiError(err.message);
-        setAiStatus('error');
-    }
-  };
-
-  // Effect to trigger AI generation on changes to name or images
-  useEffect(() => {
-    if (mode === 'edit' || hasAiRun.current) {
-        return;
-    }
-
-    const currentImages = getValues('images');
-    const currentName = getValues('name');
-    
-    if (currentImages.length > 0 && currentName && currentName.length > 2) {
-        if (debounceTimeout.current) {
-            clearTimeout(debounceTimeout.current);
-        }
-        debounceTimeout.current = setTimeout(() => {
-            triggerAiGeneration();
-        }, 1500); // Debounce for 1.5 seconds
-    }
-    
-    return () => {
-      if(debounceTimeout.current) {
-        clearTimeout(debounceTimeout.current);
-      }
-    }
-  }, [name, images, mode]);
-
-  const AiStatusIndicator = () => {
-    if (aiStatus === 'idle' || mode === 'edit') {
-        return null;
-    }
-
-    let content;
-    switch (aiStatus) {
-        case 'generating':
-            content = <><PottersWheelSpinner className="h-4 w-4" /><span>Generating AI content...</span></>;
-            break;
-        case 'success':
-            content = <><CheckCircle className="h-4 w-4 text-green-500" /><span>AI content generated.</span></>;
-            break;
-        case 'error':
-            content = <><AlertCircle className="h-4 w-4 text-destructive" /><span>AI Error: {aiError}</span></>;
-            break;
-        default:
-            return null;
-    }
-
-    return (
-        <div className="flex items-center gap-2 text-xs text-muted-foreground p-2 bg-muted rounded-md">
-            {content}
-        </div>
-    );
-  };
   
   return (
     <>
@@ -353,7 +228,6 @@ export function ItemForm({
               <Label htmlFor="name">Item Name</Label>
               <div className="flex items-center gap-2">
                 <Input id="name" {...register('name')} />
-                <AiStatusIndicator />
               </div>
               {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
             </div>
