@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ScrollArea } from '../ui/scroll-area';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
-import { X, PlusCircle, Sparkles, CheckCircle } from 'lucide-react';
+import { X, PlusCircle, Sparkles, CheckCircle, Copy } from 'lucide-react';
 import Image from 'next/image';
 import { AddOptionDialog } from './AddOptionDialog';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
@@ -29,9 +29,9 @@ const itemSchema = z.object({
   mrp: z.preprocess(
     (val) => {
         if (typeof val === 'string') {
-            if (val.trim() === '') return undefined; // Treat empty string as undefined for required check
+            if (val.trim() === '') return undefined; 
             const processed = Number(val);
-            return isNaN(processed) ? val : processed; // Keep as string if not a number, else convert
+            return isNaN(processed) ? val : processed;
         }
         return val;
     },
@@ -63,6 +63,7 @@ interface ItemFormProps {
   onSuccess: (data: ItemFormValues) => void;
   onCancel: () => void;
   product: ItemFormValues & { id?: string } | null;
+  mode: 'add' | 'edit' | 'duplicate';
 }
 
 type Product = {
@@ -88,6 +89,7 @@ export function ItemForm({
   onSuccess,
   onCancel,
   product,
+  mode,
 }: ItemFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -146,18 +148,35 @@ export function ItemForm({
   const images = watch('images', []);
   const seoKeywords = watch('seoKeywords', []);
   
-  useEffect(() => {
-    const initialValues = product ? {
-        ...defaultFormValues,
-        ...product,
-        mrp: product.mrp ?? undefined,
-        gst: product.gst ?? undefined,
-        images: product.images || [],
-        seoKeywords: product.seoKeywords || [],
-        size: product.size || { height: undefined, length: undefined, width: undefined },
-    } : defaultFormValues;
-    reset(initialValues);
-}, [product, reset]);
+    useEffect(() => {
+        let initialValues;
+        if (mode === 'edit' && product) {
+            initialValues = {
+                ...defaultFormValues,
+                ...product,
+                mrp: product.mrp ?? undefined,
+                gst: product.gst ?? undefined,
+                images: product.images || [],
+                seoKeywords: product.seoKeywords || [],
+                size: product.size || { height: undefined, length: undefined, width: undefined },
+            };
+        } else if (mode === 'duplicate' && product) {
+            initialValues = {
+                ...defaultFormValues,
+                ...product,
+                name: `${product.name} (Copy)`,
+                mrp: product.mrp ?? undefined,
+                gst: product.gst ?? undefined,
+                images: product.images || [],
+                seoKeywords: product.seoKeywords || [],
+                size: product.size || { height: undefined, length: undefined, width: undefined },
+            };
+        }
+        else {
+            initialValues = defaultFormValues;
+        }
+        reset(initialValues);
+    }, [product, mode, reset]);
   
   const handleApplyAiData = (data: { name: string, description: string, seoKeywords: string[] }) => {
     setValue('name', data.name, { shouldValidate: true, shouldDirty: true });
@@ -401,7 +420,7 @@ export function ItemForm({
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting || !isDirty}>
-            {isSubmitting ? <PottersWheelSpinner /> : (product ? 'Save Changes' : 'Add Item')}
+            {isSubmitting ? <PottersWheelSpinner /> : (mode === 'edit' ? 'Save Changes' : 'Add Item')}
           </Button>
         </DialogFooter>
         
