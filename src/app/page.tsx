@@ -726,7 +726,7 @@ export default function ProductPage() {
                      <div className="text-center mb-8">
                         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Our Team</h2>
                     </div>
-                     <div className="flex animate-marquee hover:[animation-play-state:paused] group">
+                     <div className="flex animate-marquee group">
                         {[...teamMembersToDisplay, ...teamMembersToDisplay].map((member, index) => (
                           <div key={`${member.id}-${index}`} className="flex-shrink-0 w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5 px-2 md:px-4">
                               <Card className="w-full max-w-sm overflow-hidden rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow duration-300">
@@ -772,6 +772,7 @@ export default function ProductPage() {
 }
     
     
+
 
 
 
