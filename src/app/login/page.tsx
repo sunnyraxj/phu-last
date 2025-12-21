@@ -111,12 +111,12 @@ export default function LoginPage() {
     if (userDocSnap.exists()) {
         const userData = userDocSnap.data();
         if (userData.role === 'admin') {
-            finalRedirect = '/admin'; // Override redirect for admins
+            finalRedirect = '/admin/orders'; // Override redirect for admins
         }
     }
     
-    // Fallback to original redirect if not admin, or if it's already /admin
-    if (finalRedirect === '/') {
+    // Fallback to original redirect if not admin, or if it's already an admin page
+    if (finalRedirect === '/' && redirectTo !== '/') {
         // Avoid redirecting away from a deep link unless it's the homepage
         finalRedirect = redirectTo;
     }
