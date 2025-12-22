@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -26,6 +25,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import placeholderImages from '@/lib/placeholder-images.json';
 import { isValidImageDomain } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import Link from 'next/link';
 
 type ShippingAddress = AddressFormValues & { id: string, email?: string };
 
@@ -51,13 +51,10 @@ export default function CheckoutPage() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
-  const [showNewAddressForm, setShowNewAddressForm] = useState(false);
   const [selectedPaymentPercentage, setSelectedPaymentPercentage] = useState<number>(1);
   const [utr, setUtr] = useState('');
   const [transactionId, setTransactionId] = useState('');
 
-
-  const { reset } = useForm<AddressFormValues>();
 
   const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
   const { data: allProducts } = useCollection<Product>(productsQuery);
@@ -165,28 +162,6 @@ export default function CheckoutPage() {
     return qrApiUrl.toString();
   }, [advanceAmount, transactionId]);
 
-  const handleNewAddressSubmit = async (formData: AddressFormValues) => {
-    if (!user) return;
-    const addressesCollection = collection(firestore, 'users', user.uid, 'shippingAddresses');
-    
-    try {
-      const docRef = await addDocumentNonBlocking(addressesCollection, { 
-          ...formData, 
-          userId: user.uid,
-          email: user.email // Also save user's email with address
-      });
-      if(docRef) {
-        setSelectedAddressId(docRef.id);
-      }
-    } catch (e) {
-      console.error(e);
-      toast({variant: "destructive", title: "Could not save address"});
-    } finally {
-      setShowNewAddressForm(false);
-      reset();
-    }
-  };
-
   const onSubmit = async () => {
     if (!user || cartItems.length === 0) {
       toast({ variant: "destructive", title: 'Error', description: "Your cart is empty or you are not logged in." });
@@ -282,10 +257,6 @@ export default function CheckoutPage() {
 
   if (!user) {
       return <div className="flex h-screen items-center justify-center"><PottersWheelSpinner /></div>;
-  }
-
-  if (user && !user.isAnonymous && addresses?.length === 0 && !showNewAddressForm) {
-      setShowNewAddressForm(true);
   }
 
   if (cartItems.length === 0 && !cartLoading) {
@@ -397,11 +368,12 @@ export default function CheckoutPage() {
                                 </RadioGroup>
                                 
                                 <Separator className="my-4" />
-
-                                <Button variant="outline" size="sm" onClick={() => setShowNewAddressForm(true)}>
-                                    <PlusCircle className="mr-2 h-4 w-4" />
-                                    Add New Address
-                                </Button>
+                                <Link href="/account/add-address?redirect=/checkout">
+                                    <Button variant="outline" size="sm">
+                                        <PlusCircle className="mr-2 h-4 w-4" />
+                                        Add New Address
+                                    </Button>
+                                </Link>
                             </CardContent>
                         </Card>
 
@@ -515,29 +487,15 @@ export default function CheckoutPage() {
                     </Card>
                 </div>
             </div>
-             {!selectedAddressId && !user?.isAnonymous && (
-                <Alert variant="destructive" className="mt-6">
+             {!selectedAddressId && !user?.isAnonymous && addresses && addresses.length === 0 && (
+                <Alert variant="default" className="mt-6">
                     <AlertTitle>Address Required</AlertTitle>
                     <AlertDescription>
-                        Please select or add a shipping address to calculate taxes and place your order.
+                        Please add a shipping address to calculate taxes and place your order.
                     </AlertDescription>
                 </Alert>
             )}
         </main>
-        
-        <Dialog open={showNewAddressForm} onOpenChange={setShowNewAddressForm}>
-            <DialogContent className="z-50">
-                <DialogHeader>
-                    <DialogTitle>Add a New Address</DialogTitle>
-                    <DialogDescription>Enter the details for your new shipping address.</DialogDescription>
-                </DialogHeader>
-                <AddressForm 
-                    onSuccess={handleNewAddressSubmit} 
-                    onCancel={() => setShowNewAddressForm(false)}
-                    address={null}
-                />
-            </DialogContent>
-        </Dialog>
         
         <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t p-4 z-40">
             <Button onClick={onSubmit} size="lg" className="w-full" disabled={isSubmitting || !!user?.isAnonymous || !selectedAddressId}>
@@ -547,5 +505,3 @@ export default function CheckoutPage() {
     </div>
   );
 }
-
-

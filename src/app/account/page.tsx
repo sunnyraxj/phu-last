@@ -14,6 +14,7 @@ import { AddressForm, AddressFormValues } from '@/components/account/AddressForm
 import { addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import Link from 'next/link';
 
 type ShippingAddress = AddressFormValues & { id: string };
 
@@ -22,7 +23,6 @@ export default function AccountPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
 
-  const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<ShippingAddress | null>(null);
   const [addressToDelete, setAddressToDelete] = useState<ShippingAddress | null>(null);
@@ -46,13 +46,6 @@ export default function AccountPage() {
     }
   };
 
-  const handleAddSubmit = (formData: AddressFormValues) => {
-    if (!user) return;
-    const addressesCollection = collection(firestore, 'users', user.uid, 'shippingAddresses');
-    addDocumentNonBlocking(addressesCollection, { ...formData, userId: user.uid });
-    setIsAddFormOpen(false);
-  };
-  
   const handleEditSubmit = (formData: AddressFormValues) => {
       if (!user || !selectedAddress) return;
       const addressRef = doc(firestore, 'users', user.uid, 'shippingAddresses', selectedAddress.id);
@@ -113,24 +106,9 @@ export default function AccountPage() {
             )}
           </CardContent>
           <CardFooter>
-            <Dialog open={isAddFormOpen} onOpenChange={setIsAddFormOpen}>
-                <DialogTrigger asChild>
-                    <Button><PlusCircle className="mr-2 h-4 w-4" /> Add New Address</Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Add New Address</DialogTitle>
-                        <DialogDescription>
-                            Enter the details for your new shipping address.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <AddressForm
-                        onSuccess={handleAddSubmit}
-                        onCancel={() => setIsAddFormOpen(false)}
-                        address={null}
-                    />
-                </DialogContent>
-            </Dialog>
+            <Link href="/account/add-address?redirect=/account">
+                <Button><PlusCircle className="mr-2 h-4 w-4" /> Add New Address</Button>
+            </Link>
           </CardFooter>
         </Card>
 

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useEffect } from 'react';
-import { DialogFooter, DialogClose } from '../ui/dialog';
+import { DialogFooter } from '../ui/dialog';
 
 const addressSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -24,7 +24,7 @@ const addressSchema = z.object({
 export type AddressFormValues = z.infer<typeof addressSchema>;
 
 interface AddressFormProps {
-  onSuccess: (data: AddressFormValues) => Promise<void>;
+  onSuccess: (data: AddressFormValues) => void;
   onCancel: () => void;
   address: AddressFormValues & { id?: string } | null;
 }
@@ -98,14 +98,14 @@ export function AddressForm({ onSuccess, onCancel, address }: AddressFormProps) 
             </div>
           </div>
         </div>
-        <DialogFooter className="mt-6">
+        <div className="mt-6 flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Saving...' : 'Save Address'}
           </Button>
-        </DialogFooter>
+        </div>
       </form>
   );
 }
