@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useForm, SubmitHandler, Controller } from 'react-hook-form';
@@ -21,7 +22,6 @@ const teamMemberSchema = z.object({
   role: z.enum(['Founder', 'Management', 'Team Member'], {
     required_error: "Role is required",
   }),
-  bio: z.string().min(1, { message: 'Bio is required' }),
   image: z.string().url({ message: 'Please enter a valid image URL' }),
   socialLink: z.string().url({ message: 'Please enter a valid URL' }).optional().or(z.literal('')),
 });
@@ -46,7 +46,6 @@ export function TeamMemberForm({ onSuccess, onCancel, member }: TeamMemberFormPr
     defaultValues: {
       name: '',
       role: 'Team Member',
-      bio: '',
       image: '',
       socialLink: '',
     },
@@ -59,7 +58,6 @@ export function TeamMemberForm({ onSuccess, onCancel, member }: TeamMemberFormPr
       reset({
         name: '',
         role: 'Team Member',
-        bio: '',
         image: '',
         socialLink: '',
       });
@@ -98,11 +96,6 @@ export function TeamMemberForm({ onSuccess, onCancel, member }: TeamMemberFormPr
                       )}
                     />
                     {errors.role && <p className="text-xs text-destructive">{errors.role.message}</p>}
-                </div>
-                <div className="space-y-1">
-                    <Label htmlFor="bio">Biography</Label>
-                    <Textarea id="bio" {...register('bio')} rows={4} />
-                    {errors.bio && <p className="text-xs text-destructive">{errors.bio.message}</p>}
                 </div>
                  <div className="space-y-1">
                     <Label htmlFor="image">Image URL</Label>

@@ -18,7 +18,6 @@ type TeamMember = {
     id: string;
     name: string;
     role: 'Founder' | 'Management' | 'Team Member';
-    bio: string;
     image: string;
     'data-ai-hint'?: string;
     socialLink?: string;
@@ -149,7 +148,7 @@ export default function OurTeamPage() {
           <>
             {founder && (
               <div className="mb-12 md:mb-16">
-                <div className="flex flex-row items-center gap-8 md:gap-12">
+                <div className="flex flex-row items-center justify-center gap-8 md:gap-12 text-center">
                    <div className="relative h-32 w-32 md:h-48 md:w-48 rounded-lg overflow-hidden shadow-2xl group">
                      <Image
                         src={founder.image}
@@ -159,10 +158,9 @@ export default function OurTeamPage() {
                         data-ai-hint={founder['data-ai-hint']}
                       />
                   </div>
-                  <div className="text-left flex-1">
+                  <div className="text-left flex-1 max-w-lg">
                     <h3 className="text-2xl font-bold">{founder.name}</h3>
-                    <p className="text-sm text-muted-foreground mb-4">{founder.role}</p>
-                    <p className="text-base sm:text-lg text-muted-foreground max-w-lg">{founder.bio}</p>
+                    <p className="text-sm text-muted-foreground">{founder.role}</p>
                   </div>
                 </div>
               </div>

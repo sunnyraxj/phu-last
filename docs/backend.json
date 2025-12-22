@@ -119,11 +119,10 @@
           "description": "The role or position of the team member.",
           "enum": ["Founder", "Management", "Team Member"]
         },
-        "bio": { "type": "string", "description": "A short biography of the team member." },
         "image": { "type": "string", "description": "A URL to the team member's profile picture." },
         "socialLink": { "type": "string", "description": "A URL to the team member's social media profile.", "format": "uri" }
       },
-      "required": ["id", "name", "role", "bio", "image"]
+      "required": ["id", "name", "role", "image"]
     },
     "Store": {
       "$schema": "http://json-schema.org/draft-07/schema#",

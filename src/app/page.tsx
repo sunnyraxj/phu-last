@@ -61,7 +61,6 @@ type TeamMember = {
     id: string;
     name: string;
     role: 'Founder' | 'Management' | 'Team Member';
-    bio: string;
     image: string;
     'data-ai-hint'?: string;
     socialLink?: string;
@@ -156,7 +155,7 @@ function ProductGrid({ productsToShow, addToCart, setSelectedProduct }: { produc
               src={product.images?.[0] || placeholderImages.product.url}
               alt={product.name}
               fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              className="object-cover transition-transform duration-300 scale-100 group-hover:scale-105"
               data-ai-hint={product['data-ai-hint'] || placeholderImages.product['data-ai-hint']}
             />
           </div>
@@ -438,13 +437,11 @@ export default function ProductPage() {
 
   const teamMembersToDisplay = useMemo(() => {
     if (!allOtherMembers) return [];
-    
-    const displayList = [...allOtherMembers];
     // If marquee is active (more than 5 members), we duplicate for a seamless loop
     if (allOtherMembers.length > 5 && allOtherMembers.length < 15) {
-      return [...displayList, ...displayList];
+      return [...allOtherMembers, ...allOtherMembers];
     }
-    return displayList;
+    return allOtherMembers;
   }, [allOtherMembers]);
 
   return (
@@ -714,7 +711,6 @@ export default function ProductPage() {
                       <div className="text-left flex-1">
                         <h3 className="text-2xl font-bold">{founder.name}</h3>
                         <p className="text-sm text-muted-foreground mb-4">{founder.role}</p>
-                        <p className="mt-3 text-muted-foreground">{founder.bio}</p>
                       </div>
                     </div>
                   </div>
