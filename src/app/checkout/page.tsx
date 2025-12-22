@@ -393,25 +393,10 @@ export default function CheckoutPage() {
                                 
                                 <Separator className="my-4" />
 
-                                <Dialog open={showNewAddressForm} onOpenChange={setShowNewAddressForm}>
-                                    <DialogTrigger asChild>
-                                        <Button variant="outline" size="sm">
-                                            <PlusCircle className="mr-2 h-4 w-4" />
-                                            Add New Address
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="z-50">
-                                        <DialogHeader>
-                                            <DialogTitle>Add a New Address</DialogTitle>
-                                            <DialogDescription>Enter the details for your new shipping address.</DialogDescription>
-                                        </DialogHeader>
-                                        <AddressForm 
-                                            onSuccess={handleNewAddressSubmit} 
-                                            onCancel={() => setShowNewAddressForm(false)}
-                                            address={null}
-                                        />
-                                    </DialogContent>
-                                </Dialog>
+                                <Button variant="outline" size="sm" onClick={() => setShowNewAddressForm(true)}>
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    Add New Address
+                                </Button>
                             </CardContent>
                         </Card>
 
@@ -534,6 +519,21 @@ export default function CheckoutPage() {
                 </Alert>
             )}
         </main>
+        
+        <Dialog open={showNewAddressForm} onOpenChange={setShowNewAddressForm}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Add a New Address</DialogTitle>
+                    <DialogDescription>Enter the details for your new shipping address.</DialogDescription>
+                </DialogHeader>
+                <AddressForm 
+                    onSuccess={handleNewAddressSubmit} 
+                    onCancel={() => setShowNewAddressForm(false)}
+                    address={null}
+                />
+            </DialogContent>
+        </Dialog>
+
          <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t p-4 z-40">
             <Button onClick={onSubmit} size="lg" className="w-full" disabled={isSubmitting || !!user?.isAnonymous || !selectedAddressId}>
                 {isSubmitting ? <PottersWheelSpinner /> : 'Place Order'}
