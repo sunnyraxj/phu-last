@@ -141,7 +141,7 @@ export function ItemForm({
     setValue,
     watch,
     getValues,
-    formState: { errors, isSubmitting, isDirty },
+    formState: { errors, isSubmitting },
   } = useForm<ItemFormValues>({
     resolver: zodResolver(itemSchema),
     defaultValues: item || defaultFormValues,
@@ -404,7 +404,7 @@ export function ItemForm({
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting || !isDirty}>
+          <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? <PottersWheelSpinner /> : (item ? 'Save Changes' : 'Add Item')}
           </Button>
         </DialogFooter>
