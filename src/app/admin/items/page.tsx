@@ -14,6 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ItemForm, type ItemFormValues } from '@/components/admin/ItemForm';
+import { QuickEditForm, type QuickEditFormValues } from '@/components/admin/QuickEditForm';
 import Image from 'next/image';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
@@ -28,14 +29,18 @@ export default function ItemsPage() {
     const { toast } = useToast();
     
     const [isAddFormOpen, setIsAddFormOpen] = useState(false);
+    const [isEditFormOpen, setIsEditFormOpen] = useState(false);
     const [itemsToDelete, setItemsToDelete] = useState<Item[]>([]);
     const [selectedItems, setSelectedItems] = useState<string[]>([]);
+    const [itemToEdit, setItemToEdit] = useState<Item | null>(null);
 
     const itemsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
     const { data: items, isLoading: itemsLoading } = useCollection<Item>(itemsQuery);
 
     const handleCloseForms = useCallback(() => {
         setIsAddFormOpen(false);
+        setIsEditFormOpen(false);
+        setItemToEdit(null);
     }, []);
 
     const handleDeleteItems = async () => {
@@ -61,6 +66,19 @@ export default function ItemsPage() {
         handleCloseForms();
     };
     
+    const handleEditFormSubmit = (formData: QuickEditFormValues) => {
+        if (!itemToEdit) return;
+        const itemRef = doc(firestore, 'products', itemToEdit.id);
+        addDocumentNonBlocking(itemRef, formData, { merge: true });
+        toast({ title: 'Item Updated', description: `${itemToEdit.name} has been updated.` });
+        handleCloseForms();
+    };
+    
+    const handleEditClick = (item: Item) => {
+        setItemToEdit(item);
+        setIsEditFormOpen(true);
+    };
+
     const toggleSelection = (itemId: string) => {
         setSelectedItems(prev => 
             prev.includes(itemId) 
@@ -188,11 +206,9 @@ export default function ItemsPage() {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end items-center gap-2">
-                                                    <Link href={`/admin/items/update/${item.id}`}>
-                                                        <Button variant="ghost" size="sm">
-                                                            <Edit className="mr-2 h-4 w-4" /> Edit
-                                                        </Button>
-                                                    </Link>
+                                                    <Button variant="ghost" size="sm" onClick={() => handleEditClick(item)}>
+                                                        <Edit className="mr-2 h-4 w-4" /> Edit
+                                                    </Button>
                                                     <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDeleteClick(item)}>
                                                         <Trash2 className="mr-2 h-4 w-4" /> Delete
                                                     </Button>
@@ -212,6 +228,24 @@ export default function ItemsPage() {
                     </div>
                 </CardContent>
             </Card>
+
+            <Dialog open={isEditFormOpen} onOpenChange={handleCloseForms}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Quick Edit: {itemToEdit?.name}</DialogTitle>
+                        <DialogDescription>
+                            Quickly update images and pricing for this item.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {itemToEdit && (
+                        <QuickEditForm
+                            onSuccess={handleEditFormSubmit}
+                            onCancel={handleCloseForms}
+                            item={itemToEdit}
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
 
             <AlertDialog open={itemsToDelete.length > 0} onOpenChange={(isOpen) => !isOpen && setItemsToDelete([])}>
                 <AlertDialogContent>
