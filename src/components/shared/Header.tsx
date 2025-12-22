@@ -105,7 +105,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
     return (
         <header className="bg-black text-white sticky top-0 z-40">
             {showAnnouncement && (
-                <div className="bg-primary text-primary-foreground py-2 text-sm overflow-hidden whitespace-nowrap">
+                <div className="bg-yellow-400 text-black py-2 text-sm overflow-hidden whitespace-nowrap">
                     <div className="flex animate-marquee">
                         <p className="flex-shrink-0 px-4">
                             This website is now ready for placing orders. You can place orders, but other pages are still under construction. Please excuse any mistakes.
