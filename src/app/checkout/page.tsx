@@ -400,7 +400,7 @@ export default function CheckoutPage() {
                                             Add New Address
                                         </Button>
                                     </DialogTrigger>
-                                    <DialogContent>
+                                    <DialogContent className="z-50">
                                         <DialogHeader>
                                             <DialogTitle>Add a New Address</DialogTitle>
                                             <DialogDescription>Enter the details for your new shipping address.</DialogDescription>
