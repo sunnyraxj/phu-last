@@ -330,7 +330,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                         <Separator className="my-4" />
                                         <div className="flex flex-col gap-6">
                                             {cartItems.map(item => (
-                                                <div key={item.id} className="flex items-start gap-4">
+                                                <div key={item.cartItemId} className="flex items-start gap-4">
                                                     <div className="relative h-20 w-20 rounded-md overflow-hidden bg-muted">
                                                         <Image
                                                             src={isValidImageDomain(item.images?.[0]) ? item.images[0] : placeholderImages.product.url}
@@ -341,6 +341,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                                     </div>
                                                     <div className="flex-1 space-y-2">
                                                         <p className="font-semibold text-sm">{item.name}</p>
+                                                        {item.selectedSize && <p className="text-xs text-muted-foreground">Size: {item.selectedSize}</p>}
                                                         <p className="text-muted-foreground text-sm font-bold">
                                                             {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(getCartItemPrice(item))}
                                                         </p>

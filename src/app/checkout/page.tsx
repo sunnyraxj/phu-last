@@ -427,6 +427,7 @@ export default function CheckoutPage() {
                             <div>
                             <p className="font-semibold">{item.name}</p>
                             <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                            {item.selectedSize && <p className="text-sm text-muted-foreground">Size: {item.selectedSize}</p>}
                             </div>
                         </div>
                         <p className="font-semibold">

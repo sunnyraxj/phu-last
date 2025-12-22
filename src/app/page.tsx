@@ -49,7 +49,7 @@ type Order = {
     status: 'pending' | 'shipped' | 'delivered' | 'pending-payment-approval';
 };
 
-type CartItem = Product & { quantity: number; cartItemId: string; };
+type CartItem = Product & { quantity: number; cartItemId: string; selectedSize?: string };
 
 type Store = {
     id: string;
@@ -271,7 +271,7 @@ export default function ProductPage() {
     if (!cartData || !allProducts) return [];
     return cartData.map(cartItem => {
       const product = allProducts.find(p => p.id === cartItem.productId);
-      return product ? { ...product, quantity: cartItem.quantity, cartItemId: cartItem.id } : null;
+      return product ? { ...product, quantity: cartItem.quantity, cartItemId: cartItem.id, selectedSize: cartItem.selectedSize } : null;
     }).filter((item): item is CartItem => item !== null);
   }, [cartData, allProducts]);
 
