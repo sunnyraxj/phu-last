@@ -154,6 +154,7 @@ function ProductCarousel({ product, onClick }: { product: Product, onClick: () =
     const [isHovered, setIsHovered] = useState(false);
 
     useEffect(() => {
+        if (!autoplay.current) return;
         if (isHovered) {
             autoplay.current.play();
         } else {
@@ -172,7 +173,7 @@ function ProductCarousel({ product, onClick }: { product: Product, onClick: () =
             <CarouselContent>
                 {(product.images && product.images.length > 0 ? product.images : [placeholderImages.product.url]).map((img, index) => (
                     <CarouselItem key={index}>
-                        <div className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer">
+                        <div className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer group">
                             <Image
                                 src={img}
                                 alt={product.name}

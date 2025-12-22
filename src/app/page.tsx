@@ -147,6 +147,7 @@ function ProductCarousel({ product, onClick }: { product: Product, onClick: () =
     const [isHovered, setIsHovered] = useState(false);
 
     useEffect(() => {
+        if (!autoplay.current) return;
         if (isHovered) {
             autoplay.current.play();
         } else {
@@ -165,7 +166,7 @@ function ProductCarousel({ product, onClick }: { product: Product, onClick: () =
             <CarouselContent>
                 {(product.images && product.images.length > 0 ? product.images : [placeholderImages.product.url]).map((img, index) => (
                     <CarouselItem key={index}>
-                        <div className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer">
+                        <div className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer group">
                             <Image
                                 src={img}
                                 alt={product.name}
@@ -466,7 +467,15 @@ export default function ProductPage() {
 
   const teamMembersToDisplay = useMemo(() => {
     if (!allOtherMembers) return [];
-    return allOtherMembers;
+    const repeatedMembers = [];
+    if (allOtherMembers.length > 0) {
+        // Repeat the array to create a seamless loop effect, but only if needed
+        const repeatCount = Math.ceil((10) / allOtherMembers.length);
+        for (let i = 0; i < repeatCount; i++) {
+            repeatedMembers.push(...allOtherMembers);
+        }
+    }
+    return repeatedMembers.length > 0 ? repeatedMembers : allOtherMembers;
   }, [allOtherMembers]);
 
   return (
@@ -729,24 +738,24 @@ export default function ProductPage() {
             <>
                 {founder && (
                   <div className="mb-12 md:mb-16">
-                    <div className="flex flex-row items-center gap-8 md:gap-12">
+                    <div className="flex flex-row items-center justify-center gap-8 md:gap-12">
                        <div className="relative h-32 w-32 md:h-48 md:w-48 rounded-lg overflow-hidden shadow-lg group">
                           <Image src={founder.image} alt={founder.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" data-ai-hint={founder['data-ai-hint']} />
                        </div>
-                      <div className="text-left flex-1">
+                      <div className="text-left flex-1 max-w-lg">
                         <h3 className="text-2xl font-bold">{founder.name}</h3>
                         <p className="text-sm text-muted-foreground mb-4">{founder.role}</p>
                       </div>
                     </div>
                   </div>
                 )}
-                {teamMembersToDisplay && teamMembersToDisplay.length > 0 && (
+                {allOtherMembers && allOtherMembers.length > 0 && (
                    <div className="w-full overflow-hidden">
                      <div className="text-center mb-8">
                         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Our Team</h2>
                     </div>
-                     <div className={cn("flex group")}>
-                        {teamMembersToDisplay.map((member, index) => (
+                     <div className="flex group">
+                        {(teamMembersToDisplay.length > 0 ? teamMembersToDisplay : allOtherMembers).map((member, index) => (
                           <div key={`${member.id}-${index}`} className="flex-shrink-0 w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5 px-2 md:px-4">
                               <Card className="w-full max-w-sm overflow-hidden rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow duration-300">
                                 <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-2xl">
