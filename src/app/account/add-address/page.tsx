@@ -18,7 +18,7 @@ export default function AddAddressPage() {
     const { toast } = useToast();
 
     const handleAddSubmit = async (formData: AddressFormValues) => {
-        if (!user) return;
+        if (!user || !user.email) return;
         const addressesCollection = collection(firestore, 'users', user.uid, 'shippingAddresses');
         
         try {
