@@ -149,50 +149,26 @@ function Breadcrumbs({ categories, onClear }: { categories: string[], onClear: (
     );
 }
 
-function ProductCarousel({ product, onClick }: { product: Product, onClick: () => void }) {
-    const plugin = useRef(
-        Autoplay({ delay: 1000, stopOnInteraction: true, stopOnMouseEnter: true })
-    );
-    const [api, setApi] = useState<CarouselApi>()
+function ProductImage({ product, onClick }: { product: Product; onClick: () => void }) {
     const [isHovered, setIsHovered] = useState(false);
-
-    useEffect(() => {
-        if (!api) return;
-
-        if (isHovered) {
-            plugin.current.play();
-        } else {
-            plugin.current.stop();
-            api.scrollTo(0, true);
-        }
-    }, [isHovered, api]);
-
+    const primaryImage = product.images?.[0] || placeholderImages.product.url;
+    const secondaryImage = product.images?.[1] || primaryImage;
 
     return (
-        <Carousel
-            setApi={setApi}
-            plugins={[plugin.current]}
+        <div 
+            className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer group"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onClick={onClick}
-            className="w-full"
         >
-            <CarouselContent>
-                {(product.images && product.images.length > 0 ? product.images : [placeholderImages.product.url]).map((img, index) => (
-                    <CarouselItem key={index}>
-                        <div className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer group">
-                            <Image
-                                src={img}
-                                alt={product.name}
-                                fill
-                                className="object-cover transition-transform duration-300 group-hover:scale-105"
-                                data-ai-hint={product['data-ai-hint'] || placeholderImages.product['data-ai-hint']}
-                            />
-                        </div>
-                    </CarouselItem>
-                ))}
-            </CarouselContent>
-        </Carousel>
+            <Image
+                src={isHovered ? secondaryImage : primaryImage}
+                alt={product.name}
+                fill
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                data-ai-hint={product['data-ai-hint'] || placeholderImages.product['data-ai-hint']}
+            />
+        </div>
     );
 }
 
@@ -501,7 +477,7 @@ export default function PurchasePage() {
             <div className={cn('grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-y-2 sm:gap-y-8')}>
               {filteredProducts.map((product) => (
                 <div key={product.id} className="group relative text-left p-2 sm:p-4">
-                    <ProductCarousel product={product} onClick={() => setSelectedProduct(product)} />
+                    <ProductImage product={product} onClick={() => setSelectedProduct(product)} />
                   
                   <div className="mt-2 sm:mt-4 flex flex-col items-start">
                     <h3 className="text-sm sm:text-base font-bold text-black truncate w-full">{product.name}</h3>

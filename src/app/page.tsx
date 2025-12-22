@@ -142,50 +142,26 @@ function Filters({
   )
 }
 
-function ProductCarousel({ product, onClick }: { product: Product, onClick: () => void }) {
-    const plugin = useRef(
-        Autoplay({ delay: 1000, stopOnInteraction: true, stopOnMouseEnter: true })
-    );
-    const [api, setApi] = useState<CarouselApi>()
+function ProductImage({ product, onClick }: { product: Product; onClick: () => void }) {
     const [isHovered, setIsHovered] = useState(false);
-
-    useEffect(() => {
-        if (!api) return;
-
-        if (isHovered) {
-            plugin.current.play();
-        } else {
-            plugin.current.stop();
-            api.scrollTo(0, true);
-        }
-    }, [isHovered, api]);
-
+    const primaryImage = product.images?.[0] || placeholderImages.product.url;
+    const secondaryImage = product.images?.[1] || primaryImage;
 
     return (
-        <Carousel
-            setApi={setApi}
-            plugins={[plugin.current]}
+        <div 
+            className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer group"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onClick={onClick}
-            className="w-full"
         >
-            <CarouselContent>
-                {(product.images && product.images.length > 0 ? product.images : [placeholderImages.product.url]).map((img, index) => (
-                    <CarouselItem key={index}>
-                        <div className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer group">
-                            <Image
-                                src={img}
-                                alt={product.name}
-                                fill
-                                className="object-cover transition-transform duration-300 group-hover:scale-105"
-                                data-ai-hint={product['data-ai-hint'] || placeholderImages.product['data-ai-hint']}
-                            />
-                        </div>
-                    </CarouselItem>
-                ))}
-            </CarouselContent>
-        </Carousel>
+            <Image
+                src={isHovered ? secondaryImage : primaryImage}
+                alt={product.name}
+                fill
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                data-ai-hint={product['data-ai-hint'] || placeholderImages.product['data-ai-hint']}
+            />
+        </div>
     );
 }
 
@@ -195,7 +171,7 @@ function ProductGrid({ productsToShow, addToCart, setSelectedProduct }: { produc
       {productsToShow.map((product) => (
         <div key={product.id} className="group relative text-left p-2 sm:p-4">
           
-          <ProductCarousel product={product} onClick={() => setSelectedProduct(product)} />
+          <ProductImage product={product} onClick={() => setSelectedProduct(product)} />
 
           <div className="mt-2 sm:mt-4 flex flex-col items-start">
             <h3 className="text-sm sm:text-base text-foreground font-bold truncate w-full">{product.name}</h3>
@@ -286,7 +262,6 @@ export default function ProductPage() {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const router = useRouter();
-  const autoplay = useRef(Autoplay({ delay: 3000, stopOnInteraction: false }));
 
 
   const productsQuery = useMemoFirebase(() =>
@@ -474,10 +449,12 @@ export default function ProductPage() {
 
   const teamMembersToDisplay = useMemo(() => {
     if (!allOtherMembers) return [];
+    if (allOtherMembers.length < 5) return allOtherMembers; // Don't repeat if not enough members
+    
     const repeatedMembers = [];
     if (allOtherMembers.length > 0) {
-        // Repeat the array to create a seamless loop effect, but only if needed
-        const repeatCount = Math.ceil((10) / allOtherMembers.length);
+        // Repeat the array to create a seamless loop effect
+        const repeatCount = Math.ceil(10 / allOtherMembers.length);
         for (let i = 0; i < repeatCount; i++) {
             repeatedMembers.push(...allOtherMembers);
         }
@@ -745,11 +722,11 @@ export default function ProductPage() {
             <>
                 {founder && (
                   <div className="mb-12 md:mb-16">
-                    <div className="flex flex-row items-center justify-center gap-8 md:gap-12">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-8 md:gap-12 text-center sm:text-left">
                        <div className="relative h-32 w-32 md:h-48 md:w-48 rounded-lg overflow-hidden shadow-lg group">
                           <Image src={founder.image} alt={founder.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" data-ai-hint={founder['data-ai-hint']} />
                        </div>
-                      <div className="text-left flex-1 max-w-lg">
+                      <div className="flex-1 max-w-lg">
                         <h3 className="text-2xl font-bold">{founder.name}</h3>
                         <p className="text-sm text-muted-foreground mb-4">{founder.role}</p>
                       </div>
@@ -762,7 +739,7 @@ export default function ProductPage() {
                         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Our Team</h2>
                     </div>
                      <div className="flex group">
-                        {(allOtherMembers).map((member, index) => (
+                        {teamMembersToDisplay.map((member, index) => (
                           <div key={`${member.id}-${index}`} className="flex-shrink-0 w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5 px-2 md:px-4">
                               <Card className="w-full max-w-sm overflow-hidden rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow duration-300">
                                 <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-2xl">
