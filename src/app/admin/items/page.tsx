@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Trash2, Edit } from 'lucide-react';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ItemForm, type ItemFormValues } from '@/components/admin/ItemForm';
 import { QuickEditForm, type QuickEditFormValues } from '@/components/admin/QuickEditForm';
@@ -69,7 +69,7 @@ export default function ItemsPage() {
     const handleEditFormSubmit = (formData: QuickEditFormValues) => {
         if (!itemToEdit) return;
         const itemRef = doc(firestore, 'products', itemToEdit.id);
-        addDocumentNonBlocking(itemRef, formData, { merge: true });
+        setDocumentNonBlocking(itemRef, formData, { merge: true });
         toast({ title: 'Item Updated', description: `${itemToEdit.name} has been updated.` });
         handleCloseForms();
     };
