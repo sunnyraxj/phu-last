@@ -459,7 +459,7 @@ export default function PurchasePage() {
                       src={product.images?.[0] || placeholderImages.product.url}
                       alt={product.name}
                       fill
-                      className="object-cover transition-transform duration-300 scale-105 group-hover:scale-100"
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
                       data-ai-hint={product['data-ai-hint'] || placeholderImages.product['data-ai-hint']}
                     />
                   </div>
