@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   description: 'Shop for authentic handicraft items from North-East India at Purbanchal Hasta Udyog. Discover unique, handmade bamboo, jute, and cane crafts. Support local artisans and bring home a piece of Indian heritage.',
   keywords: ['handicraft items', 'indian handicrafts', 'purbanchal hasta udyog', 'bamboo crafts', 'jute products', 'handmade decor', 'north-east india crafts'],
   manifest: '/manifest.json',
+  icons: {
+    icon: '/favicon.svg',
+  },
   openGraph: {
     title: 'Purbanchal Hasta Udyog | Authentic Indian Handicrafts',
     description: 'Shop for authentic handicraft items from North-East India. Discover unique, handmade bamboo, jute, and cane crafts.',
