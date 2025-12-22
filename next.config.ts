@@ -52,6 +52,12 @@ const nextConfig: NextConfig = {
         hostname: 'encrypted-tbn0.gstatic.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https' as const,
+        hostname: 'bs6gijwtdzcsl8jl.public.blob.vercel-storage.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
