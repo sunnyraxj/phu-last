@@ -100,7 +100,7 @@ export function AddressForm({ onSuccess, onCancel, address }: AddressFormProps) 
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit">
             {isSubmitting ? 'Saving...' : 'Save Address'}
           </Button>
         </DialogFooter>
