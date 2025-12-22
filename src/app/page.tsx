@@ -51,6 +51,15 @@ type Order = {
 
 type CartItem = Product & { quantity: number; cartItemId: string; selectedSize?: string };
 
+type TeamMember = {
+    id: string;
+    name: string;
+    role: 'Founder' | 'Management' | 'Team Member';
+    image: string;
+    'data-ai-hint'?: string;
+    socialLink?: string;
+};
+
 type Store = {
     id: string;
     name: string;
@@ -59,15 +68,6 @@ type Store = {
     image?: string;
     googleMapsLink: string;
     'data-ai-hint'?: string;
-};
-
-type TeamMember = {
-    id: string;
-    name: string;
-    role: 'Founder' | 'Management' | 'Team Member';
-    image: string;
-    'data-ai-hint'?: string;
-    socialLink?: string;
 };
 
 function Filters({ 
@@ -840,7 +840,6 @@ export default function ProductPage() {
                           <CarouselItem key={`${member.id}-${index}`} className="pl-4 md:pl-6 basis-1/2 sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                               <Card className="w-full max-w-sm overflow-hidden rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow duration-300">
                                 <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-2xl">
-                                  {member.image && isValidImageDomain(member.image) ? (
                                     <Image
                                         src={member.image}
                                         alt={member.name}
@@ -848,11 +847,6 @@ export default function ProductPage() {
                                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                                         data-ai-hint={member['data-ai-hint']}
                                     />
-                                  ) : (
-                                    <div className="h-full w-full bg-muted flex items-center justify-center text-muted-foreground">
-                                        <User className="h-12 w-12" />
-                                    </div>
-                                  )}
                                 </div>
                                 <div className="p-4 text-left bg-white">
                                   <h3 className="text-lg font-bold text-slate-900 truncate h-7">{member.name}</h3>
