@@ -11,7 +11,7 @@ import Image from "next/image"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { cn } from "@/lib/utils"
+import { cn, isValidImageDomain } from "@/lib/utils"
 import { useAuth, useCollection, useDoc, useFirestore, useMemoFirebase, useUser, useFirebase } from "@/firebase";
 import { PottersWheelSpinner } from "@/components/shared/PottersWheelSpinner";
 import { useRouter } from "next/navigation";
@@ -24,12 +24,12 @@ import { Label } from "@/components/ui/label";
 import placeholderImages from '@/lib/placeholder-images.json';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay"
+import { Badge } from "@/components/ui/badge";
 
 
 type Product = {
   id: string;
   name: string;
-  mrp: number;
   images: string[];
   "data-ai-hint": string;
   category: string;
@@ -37,6 +37,8 @@ type Product = {
   inStock: boolean;
   description: string;
   artisanId: string;
+  baseMrp?: number;
+  variants?: { size: string; price: number }[];
 };
 
 type Order = {
@@ -151,8 +153,12 @@ function Breadcrumbs({ categories, onClear }: { categories: string[], onClear: (
 
 function ProductImage({ product, onClick }: { product: Product; onClick: () => void }) {
     const [isHovered, setIsHovered] = useState(false);
-    const primaryImage = product.images?.[0] || placeholderImages.product.url;
-    const secondaryImage = product.images?.[1] || primaryImage;
+    const primaryImageUrl = product.images?.[0] || placeholderImages.product.url;
+    const secondaryImageUrl = product.images?.[1] || primaryImageUrl;
+
+    const primaryImage = isValidImageDomain(primaryImageUrl) ? primaryImageUrl : placeholderImages.product.url;
+    const secondaryImage = isValidImageDomain(secondaryImageUrl) ? secondaryImageUrl : primaryImage;
+
 
     return (
         <div 
@@ -208,7 +214,7 @@ export default function PurchasePage() {
     user ? collection(firestore, 'users', user.uid, 'cart') : null,
     [firestore, user]
   );
-  const { data: cartData, isLoading: cartLoading } = useCollection<{ productId: string; quantity: number }>(cartItemsQuery);
+  const { data: cartData, isLoading: cartLoading } = useCollection<{ productId: string; quantity: number, selectedSize?: string }>(cartItemsQuery);
 
   const cartItems = useMemo(() => {
     if (!cartData || !allProducts) return [];
@@ -315,6 +321,7 @@ export default function PurchasePage() {
       addDocumentNonBlocking(cartCollection, {
         productId: product.id,
         quantity: 1,
+        selectedSize: product.variants && product.variants.length > 0 ? product.variants[0].size : null
       });
     }
     toast({
@@ -334,6 +341,14 @@ export default function PurchasePage() {
 
   const filteredProducts = useMemo(() => {
     if (!allProducts) return [];
+
+    const getDisplayPrice = (product: Product): number => {
+        if (product.variants && product.variants.length > 0) {
+            return product.variants[0].price;
+        }
+        return product.baseMrp || 0;
+    };
+
     return allProducts
       .filter(product => {
         if (selectedCategories.length > 0 && !selectedCategories.includes(product.category)) {
@@ -356,9 +371,9 @@ export default function PurchasePage() {
       .sort((a, b) => {
         switch (sortBy) {
           case 'price-low-high':
-            return a.mrp - b.mrp;
+            return getDisplayPrice(a) - getDisplayPrice(b);
           case 'price-high-low':
-            return b.mrp - a.mrp;
+            return getDisplayPrice(b) - getDisplayPrice(a);
           case 'newest':
             // Assuming higher firestore doc id is not newer. We need a timestamp
             return 0;
@@ -368,6 +383,13 @@ export default function PurchasePage() {
         }
       });
   }, [allProducts, selectedCategories, selectedMaterials, availability, sortBy, searchTerm]);
+
+  const getProductPrice = (product: Product) => {
+      if (product.variants && product.variants.length > 0) {
+          return product.variants[0].price;
+      }
+      return product.baseMrp || 0;
+  };
 
   return (
     <div className="min-h-screen bg-background font-sans">
@@ -481,9 +503,12 @@ export default function PurchasePage() {
                   
                   <div className="mt-2 sm:mt-4 flex flex-col items-start">
                     <h3 className="text-sm sm:text-base font-bold text-black truncate w-full">{product.name}</h3>
-                    <p className="font-bold text-sm sm:text-base text-black">
-                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.mrp)}
-                    </p>
+                    <div className="flex items-center gap-2">
+                        <p className="font-bold text-sm sm:text-base text-black">
+                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(getProductPrice(product))}
+                        </p>
+                         {product.variants && product.variants.length > 0 && <Badge variant="secondary">Multiple Sizes</Badge>}
+                    </div>
                     <Button
                         variant="ghost"
                         className="w-full sm:w-auto mt-2 text-white bg-black hover:bg-black/80 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold text-sm h-auto justify-center"
@@ -506,7 +531,7 @@ export default function PurchasePage() {
                         <CarouselItem key={index}>
                           <div className="relative aspect-square bg-muted rounded-lg">
                             <Image
-                              src={image}
+                              src={isValidImageDomain(image) ? image : placeholderImages.product.url}
                               alt={`${selectedProduct.name} - image ${index + 1}`}
                               fill
                               className="object-cover rounded-lg"
@@ -527,7 +552,7 @@ export default function PurchasePage() {
                     </DialogHeader>
                     <div className="mt-4">
                       <p className="text-2xl font-bold">
-                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(selectedProduct.mrp)}
+                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(getProductPrice(selectedProduct))}
                       </p>
                       <p className={cn("mt-2 text-sm font-semibold", selectedProduct.inStock ? "text-green-600" : "text-red-600")}>
                         {selectedProduct.inStock ? "In Stock" : "Out of Stock"}

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from "next/link";
@@ -7,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { signOut } from "firebase/auth";
-import { useAuth, useUser } from "@/firebase";
+import { useAuth, useUser, useFirestore } from "@/firebase";
 import { useMemo, useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Separator } from "../ui/separator";
@@ -15,15 +16,16 @@ import { Input } from "../ui/input";
 import { Plus, Minus, X } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "../ui/accordion";
-import { cn } from "@/lib/utils";
+import { cn, isValidImageDomain } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import placeholderImages from '@/lib/placeholder-images.json';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../ui/select";
+import { doc, setDoc } from 'firebase/firestore';
 
 
 type Product = {
     id: string;
     name: string;
-    mrp: number;
     images: string[];
     "data-ai-hint": string;
     category: string;
@@ -31,9 +33,11 @@ type Product = {
     inStock: boolean;
     description: string;
     artisanId: string;
+    baseMrp?: number;
+    variants?: { size: string; price: number }[];
 };
 
-type CartItem = Product & { quantity: number; cartItemId: string; };
+type CartItem = Product & { quantity: number; cartItemId: string; selectedSize?: string };
 
 type Store = {
     id: string;
@@ -58,6 +62,7 @@ interface HeaderProps {
 export function Header({ userData, cartItems, updateCartItemQuantity, stores = [], products = [], adminActionCounts = { pendingOrders: 0, outOfStockProducts: 0, pendingReturns: 0 }, showAnnouncement = true }: HeaderProps) {
     const { user, isUserLoading } = useUser();
     const auth = useAuth();
+    const firestore = useFirestore();
     const router = useRouter();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -94,9 +99,32 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
             router.push('/checkout');
         }
     };
+    
+    const updateCartItemSize = (cartItemId: string, newSize: string) => {
+        if (!user) return;
+        const itemRef = doc(firestore, 'users', user.uid, 'cart', cartItemId);
+        setDoc(itemRef, { selectedSize: newSize }, { merge: true });
+    };
+
+    const getCartItemPrice = (item: CartItem): number => {
+        if (item.variants && item.variants.length > 0) {
+            const selectedVariant = item.variants.find(v => v.size === item.selectedSize);
+            if (selectedVariant) {
+                return selectedVariant.price;
+            }
+            // If no size is selected, or selected size is invalid, default to first variant's price
+            return item.variants[0].price;
+        }
+        return item.baseMrp || 0;
+    };
 
     const cartCount = useMemo(() => cartItems.reduce((acc, item) => acc + item.quantity, 0), [cartItems]);
-    const cartSubtotal = useMemo(() => cartItems.reduce((acc, item) => acc + item.mrp * item.quantity, 0), [cartItems]);
+    const cartSubtotal = useMemo(() => {
+        return cartItems.reduce((acc, item) => {
+            const price = getCartItemPrice(item);
+            return acc + price * item.quantity;
+        }, 0);
+    }, [cartItems]);
 
     const totalAdminActionCount = useMemo(() => {
         return (adminActionCounts?.pendingOrders || 0) + (adminActionCounts?.pendingReturns || 0);
@@ -140,7 +168,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                     {featuredProducts.map((product) => (
                                         <Link href="/purchase" key={product.id} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted -m-2">
                                             <div className="relative h-20 w-20 rounded-md overflow-hidden">
-                                                <Image src={product.images?.[0] || placeholderImages.product.url} alt={product.name} fill className="object-cover" />
+                                                <Image src={isValidImageDomain(product.images?.[0]) ? product.images[0] : placeholderImages.product.url} alt={product.name} fill className="object-cover" />
                                             </div>
                                             <div>
                                                 <p className="font-semibold text-xs truncate w-20 text-center">{product.name}</p>
@@ -171,7 +199,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                 <div className="grid gap-2">
                                     {stores.slice(0, 3).map((store) => (
                                         <Link href="/our-stores" key={store.id} className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted -m-2">
-                                            {store.image ? (
+                                            {store.image && isValidImageDomain(store.image) ? (
                                                 <div className="relative h-12 w-12 rounded-md overflow-hidden">
                                                     <Image src={store.image} alt={store.name} fill className="object-cover" />
                                                 </div>
@@ -302,21 +330,38 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                         <Separator className="my-4" />
                                         <div className="flex flex-col gap-6">
                                             {cartItems.map(item => (
-                                                <div key={item.id} className="flex items-center gap-4">
+                                                <div key={item.id} className="flex items-start gap-4">
                                                     <div className="relative h-20 w-20 rounded-md overflow-hidden bg-muted">
                                                         <Image
-                                                            src={item.images?.[0] || placeholderImages.product.url}
+                                                            src={isValidImageDomain(item.images?.[0]) ? item.images[0] : placeholderImages.product.url}
                                                             alt={item.name}
                                                             fill
                                                             className="object-cover"
                                                         />
                                                     </div>
-                                                    <div className="flex-1">
+                                                    <div className="flex-1 space-y-2">
                                                         <p className="font-semibold text-sm">{item.name}</p>
-                                                        <p className="text-muted-foreground text-sm">
-                                                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.mrp)}
+                                                        <p className="text-muted-foreground text-sm font-bold">
+                                                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(getCartItemPrice(item))}
                                                         </p>
-                                                        <div className="flex items-center gap-2 mt-2">
+                                                        {item.variants && item.variants.length > 0 && (
+                                                            <Select 
+                                                                value={item.selectedSize || item.variants[0].size} 
+                                                                onValueChange={(newSize) => updateCartItemSize(item.cartItemId, newSize)}
+                                                            >
+                                                                <SelectTrigger className="h-8 text-xs">
+                                                                    <SelectValue placeholder="Select size" />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    {item.variants.map(variant => (
+                                                                        <SelectItem key={variant.size} value={variant.size} className="text-xs">
+                                                                            {variant.size} - {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(variant.price)}
+                                                                        </SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        )}
+                                                        <div className="flex items-center gap-2">
                                                             <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartItemQuantity(item.cartItemId, item.quantity - 1)}>
                                                                 <Minus size={14} />
                                                             </Button>

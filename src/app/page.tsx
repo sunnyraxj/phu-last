@@ -4,7 +4,7 @@
 
 import { useState, useMemo, useEffect, useRef } from "react"
 import { collection, doc, query, where, writeBatch, setDoc, deleteDoc } from "firebase/firestore";
-import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon, MapPin, Phone, ExternalLink, Sparkles, Wand2, CheckCircle } from "lucide-react"
+import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon, MapPin, Phone, ExternalLink, Sparkles, Wand2, CheckCircle, User, Store as StoreIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
@@ -13,7 +13,7 @@ import Image from "next/image"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { cn } from "@/lib/utils"
+import { cn, isValidImageDomain } from "@/lib/utils"
 import { useAuth, useCollection, useDoc, useFirestore, useMemoFirebase, useUser, useFirebase } from "@/firebase";
 import { PottersWheelSpinner } from "@/components/shared/PottersWheelSpinner";
 import { useRouter } from "next/navigation";
@@ -27,11 +27,11 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { Label } from "@/components/ui/label";
 import Autoplay from "embla-carousel-autoplay"
 import placeholderImages from '@/lib/placeholder-images.json';
+import { Badge } from "@/components/ui/badge";
 
 type Product = {
   id: string;
   name: string;
-  mrp: number;
   images: string[];
   "data-ai-hint": string;
   category: string;
@@ -39,6 +39,8 @@ type Product = {
   inStock: boolean;
   description: string;
   artisanId: string;
+  baseMrp?: number;
+  variants?: { size: string; price: number }[];
 };
 
 type Order = {
@@ -144,8 +146,11 @@ function Filters({
 
 function ProductImage({ product, onClick }: { product: Product; onClick: () => void }) {
     const [isHovered, setIsHovered] = useState(false);
-    const primaryImage = product.images?.[0] || placeholderImages.product.url;
-    const secondaryImage = product.images?.[1] || primaryImage;
+    const primaryImageUrl = product.images?.[0] || placeholderImages.product.url;
+    const secondaryImageUrl = product.images?.[1] || primaryImageUrl;
+
+    const primaryImage = isValidImageDomain(primaryImageUrl) ? primaryImageUrl : placeholderImages.product.url;
+    const secondaryImage = isValidImageDomain(secondaryImageUrl) ? secondaryImageUrl : primaryImage;
 
     return (
         <div 
@@ -166,6 +171,14 @@ function ProductImage({ product, onClick }: { product: Product; onClick: () => v
 }
 
 function ProductGrid({ productsToShow, addToCart, setSelectedProduct }: { productsToShow: Product[], addToCart: (p: Product) => void, setSelectedProduct: (p: Product | null) => void }) {
+  
+  const getDisplayPrice = (product: Product): number => {
+    if (product.variants && product.variants.length > 0) {
+      return product.variants[0].price;
+    }
+    return product.baseMrp || 0;
+  };
+  
   return (
     <div className={cn('grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-y-8')}>
       {productsToShow.map((product) => (
@@ -175,9 +188,12 @@ function ProductGrid({ productsToShow, addToCart, setSelectedProduct }: { produc
 
           <div className="mt-2 sm:mt-4 flex flex-col items-start">
             <h3 className="text-sm sm:text-base text-foreground font-bold truncate w-full">{product.name}</h3>
-            <p className="font-bold text-sm sm:text-base text-foreground">
-              {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(product.mrp)}
-            </p>
+            <div className="flex items-center gap-2">
+                <p className="font-bold text-sm sm:text-base text-foreground">
+                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(getDisplayPrice(product))}
+                </p>
+                {product.variants && product.variants.length > 0 && <Badge variant="secondary">Multiple Sizes</Badge>}
+            </div>
             <Button
               variant="ghost"
               className="w-full sm:w-auto mt-2 text-white bg-black hover:bg-black/80 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold text-sm h-auto justify-center"
@@ -285,7 +301,7 @@ export default function ProductPage() {
     user ? collection(firestore, 'users', user.uid, 'cart') : null,
     [firestore, user]
   );
-  const { data: cartData, isLoading: cartLoading } = useCollection<{ productId: string; quantity: number }>(cartItemsQuery);
+  const { data: cartData, isLoading: cartLoading } = useCollection<{ productId: string; quantity: number, selectedSize?: string }>(cartItemsQuery);
 
   const cartItems = useMemo(() => {
     if (!cartData || !allProducts) return [];
@@ -392,6 +408,7 @@ export default function ProductPage() {
       setDoc(newCartItemRef, {
         productId: product.id,
         quantity: 1,
+        selectedSize: product.variants && product.variants.length > 0 ? product.variants[0].size : null
       });
     }
     toast({
@@ -403,6 +420,14 @@ export default function ProductPage() {
 
   const filteredProducts = useMemo(() => {
     if (!allProducts) return [];
+
+    const getDisplayPrice = (product: Product): number => {
+      if (product.variants && product.variants.length > 0) {
+        return product.variants[0].price;
+      }
+      return product.baseMrp || 0;
+    };
+
     return allProducts
       .filter(product => {
         if (selectedCategories.length > 0 && !selectedCategories.includes(product.category)) {
@@ -425,9 +450,9 @@ export default function ProductPage() {
       .sort((a, b) => {
         switch (sortBy) {
           case 'price-low-high':
-            return a.mrp - b.mrp;
+            return getDisplayPrice(a) - getDisplayPrice(b);
           case 'price-high-low':
-            return b.mrp - a.mrp;
+            return getDisplayPrice(b) - getDisplayPrice(a);
           case 'newest':
             // Assuming higher firestore doc id is not newer. We need a timestamp
             return 0;
@@ -452,6 +477,13 @@ export default function ProductPage() {
     // No duplication, just show the members
     return allOtherMembers;
   }, [allOtherMembers]);
+
+  const getProductPrice = (product: Product) => {
+      if (product.variants && product.variants.length > 0) {
+          return product.variants[0].price;
+      }
+      return product.baseMrp || 0;
+  };
 
   return (
     <div className="min-h-screen bg-background font-sans">
@@ -595,7 +627,7 @@ export default function ProductPage() {
                               <CarouselItem key={index}>
                                 <div className="relative aspect-square bg-muted rounded-lg">
                                   <Image
-                                    src={image}
+                                    src={isValidImageDomain(image) ? image : placeholderImages.product.url}
                                     alt={`${selectedProduct.name} - image ${index + 1}`}
                                     fill
                                     className="object-cover rounded-lg"
@@ -616,7 +648,7 @@ export default function ProductPage() {
                           </DialogHeader>
                           <div className="mt-4">
                             <p className="text-2xl font-bold">
-                              {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(selectedProduct.mrp)}
+                              {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(getProductPrice(selectedProduct))}
                             </p>
                             <p className={cn("mt-2 text-sm font-semibold", selectedProduct.inStock ? "text-green-600" : "text-red-600")}>
                               {selectedProduct.inStock ? "In Stock" : "Out of Stock"}
@@ -667,7 +699,7 @@ export default function ProductPage() {
                               <CarouselItem key={store.id} className="pl-2 md:pl-4 basis-[80%] sm:basis-1/2 md:basis-1/3">
                                   <div className="p-1">
                                     <Card className="overflow-hidden flex flex-col bg-card shadow-lg hover:shadow-xl transition-shadow duration-300 h-full">
-                                        {store.image && (
+                                        {store.image && isValidImageDomain(store.image) ? (
                                             <div className="relative h-40 sm:h-48 w-full">
                                                 <Image
                                                     src={store.image}
@@ -676,6 +708,10 @@ export default function ProductPage() {
                                                     className="object-cover"
                                                     data-ai-hint={store['data-ai-hint']}
                                                 />
+                                            </div>
+                                        ) : (
+                                            <div className="relative h-40 sm:h-48 w-full bg-muted flex items-center justify-center">
+                                                <StoreIcon className="h-10 w-10 text-muted-foreground" />
                                             </div>
                                         )}
                                         <CardHeader className="p-3">
@@ -731,7 +767,7 @@ export default function ProductPage() {
                   <div className="mb-12 md:mb-16">
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-8 md:gap-12 text-center sm:text-left">
                        <div className="relative h-32 w-32 md:h-48 md:w-48 rounded-lg overflow-hidden shadow-lg group">
-                          <Image src={founder.image} alt={founder.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" data-ai-hint={founder['data-ai-hint']} />
+                          <Image src={isValidImageDomain(founder.image) ? founder.image : placeholderImages.product.url} alt={founder.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" data-ai-hint={founder['data-ai-hint']} />
                        </div>
                       <div className="flex-1 max-w-lg">
                         <h3 className="text-2xl font-bold">{founder.name}</h3>
@@ -762,13 +798,19 @@ export default function ProductPage() {
                           <CarouselItem key={`${member.id}-${index}`} className="pl-4 md:pl-6 basis-1/2 sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                               <Card className="w-full max-w-sm overflow-hidden rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow duration-300">
                                 <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-2xl">
-                                  <Image
-                                      src={member.image}
-                                      alt={member.name}
-                                      fill
-                                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                      data-ai-hint={member['data-ai-hint']}
-                                  />
+                                  {member.image && isValidImageDomain(member.image) ? (
+                                    <Image
+                                        src={member.image}
+                                        alt={member.name}
+                                        fill
+                                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                        data-ai-hint={member['data-ai-hint']}
+                                    />
+                                  ) : (
+                                    <div className="h-full w-full bg-muted flex items-center justify-center text-muted-foreground">
+                                        <User className="h-12 w-12" />
+                                    </div>
+                                  )}
                                 </div>
                                 <div className="p-4 text-left bg-white">
                                   <h3 className="text-lg font-bold text-slate-900 truncate h-7">{member.name}</h3>

@@ -24,19 +24,21 @@ import { PlusCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import placeholderImages from '@/lib/placeholder-images.json';
+import { isValidImageDomain } from '@/lib/utils';
 
 type ShippingAddress = AddressFormValues & { id: string, email?: string };
 
 type Product = {
   id: string;
   name: string;
-  mrp: number;
   gst: number;
   images: string[];
   inStock: boolean;
+  baseMrp?: number;
+  variants?: { size: string; price: number }[];
 };
 
-type CartItem = Product & { quantity: number; cartItemId: string; };
+type CartItem = Product & { quantity: number; cartItemId: string; selectedSize?: string; };
 
 const UPI_ID = 'gpay-12190144290@okbizaxis';
 const PAYEE_NAME = 'Purbanchal Hasta Udyog';
@@ -63,7 +65,7 @@ export default function CheckoutPage() {
     user ? collection(firestore, 'users', user.uid, 'cart') : null,
     [firestore, user]
   );
-  const { data: cartData, isLoading: cartLoading } = useCollection<{ productId: string; quantity: number }>(cartItemsQuery);
+  const { data: cartData, isLoading: cartLoading } = useCollection<{ productId: string; quantity: number; selectedSize?: string }>(cartItemsQuery);
 
   const addressesQuery = useMemoFirebase(
     () => (user && !user.isAnonymous ? collection(firestore, 'users', user.uid, 'shippingAddresses') : null),
@@ -76,15 +78,26 @@ export default function CheckoutPage() {
     setTransactionId(`PHU${Date.now()}`);
   }, []);
 
-  const cartItems = useMemo(() => {
+  const cartItems: CartItem[] = useMemo(() => {
     if (!cartData || !allProducts) return [];
     return cartData.map(cartItem => {
       const product = allProducts.find(p => p.id === cartItem.productId);
-      return product ? { ...product, quantity: cartItem.quantity, cartItemId: cartItem.id } : null;
+      return product ? { ...product, ...cartItem, cartItemId: cartItem.id } as CartItem : null;
     }).filter((item): item is CartItem => item !== null);
   }, [cartData, allProducts]);
 
-  const subtotal = useMemo(() => cartItems.reduce((acc, item) => acc + item.mrp * item.quantity, 0), [cartItems]);
+  const getCartItemPrice = (item: CartItem): number => {
+      if (item.variants && item.variants.length > 0) {
+          const selectedVariant = item.variants.find(v => v.size === item.selectedSize);
+          if (selectedVariant) {
+              return selectedVariant.price;
+          }
+          return item.variants[0].price; // Default to first variant if no selection
+      }
+      return item.baseMrp || 0;
+  };
+
+  const subtotal = useMemo(() => cartItems.reduce((acc, item) => acc + getCartItemPrice(item) * item.quantity, 0), [cartItems]);
   const shippingFee = useMemo(() => subtotal > 0 && subtotal < 1000 ? 79 : 0, [subtotal]);
   const totalAmount = subtotal + shippingFee;
   
@@ -96,7 +109,8 @@ export default function CheckoutPage() {
     let igst = 0;
 
     cartItems.forEach(item => {
-        const itemTotal = item.mrp * item.quantity;
+        const itemPrice = getCartItemPrice(item);
+        const itemTotal = itemPrice * item.quantity;
         const gstRate = (item.gst || 5) / 100;
         const itemGST = itemTotal - (itemTotal / (1 + gstRate));
         totalGST += itemGST;
@@ -233,9 +247,10 @@ export default function CheckoutPage() {
           orderId: orderRef.id,
           productId: item.id,
           quantity: item.quantity,
-          price: item.mrp,
+          price: getCartItemPrice(item),
           productName: item.name,
           productImage: item.images?.[0] || null,
+          size: item.selectedSize,
         });
 
         const cartItemRef = doc(firestore, 'users', user.uid, 'cart', item.cartItemId);
@@ -407,7 +422,7 @@ export default function CheckoutPage() {
                         <div key={item.cartItemId} className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <div className="relative h-16 w-16 rounded-md overflow-hidden bg-muted">
-                            <Image src={item.images?.[0] || placeholderImages.product.url} alt={item.name} fill className="object-cover" />
+                            <Image src={isValidImageDomain(item.images?.[0]) ? item.images[0] : placeholderImages.product.url} alt={item.name} fill className="object-cover" />
                             </div>
                             <div>
                             <p className="font-semibold">{item.name}</p>
@@ -415,7 +430,7 @@ export default function CheckoutPage() {
                             </div>
                         </div>
                         <p className="font-semibold">
-                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.mrp * item.quantity)}
+                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(getCartItemPrice(item) * item.quantity)}
                         </p>
                         </div>
                     ))}

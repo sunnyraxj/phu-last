@@ -23,6 +23,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { Separator } from '../ui/separator';
+import { cn, isValidImageDomain } from '@/lib/utils';
+import placeholderImages from '@/lib/placeholder-images.json';
 
 const variantSchema = z.object({
   size: z.string().min(1, 'Size is required'),
@@ -45,9 +47,8 @@ const itemSchema = z.object({
         return val;
     },
     z.number({
-        required_error: "Base price is required.",
         invalid_type_error: "Base price must be a valid number." 
-    }).positive('Price must be a positive number.')
+    }).positive('Price must be a positive number.').optional()
   ),
   images: z.array(z.string().url()).min(1, 'At least one image is required'),
   category: z.string().min(1, 'Category is required'),
@@ -59,7 +60,15 @@ const itemSchema = z.object({
     z.number().min(0).optional()
   ),
   variants: z.array(variantSchema).optional(),
+}).refine(data => {
+    // If there are no variants, baseMrp must be a positive number.
+    // If there are variants, baseMrp can be undefined.
+    return (data.variants && data.variants.length > 0) || (typeof data.baseMrp === 'number' && data.baseMrp > 0);
+}, {
+    message: "Base price is required when no size variants are present.",
+    path: ["baseMrp"], // Field to highlight with the error
 });
+
 
 export type ItemFormValues = z.infer<typeof itemSchema>;
 
@@ -76,7 +85,7 @@ type Product = {
 const defaultFormValues: ItemFormValues = {
   name: '',
   description: '',
-  baseMrp: undefined as unknown as number,
+  baseMrp: undefined,
   images: [],
   category: '',
   material: '',
@@ -228,11 +237,11 @@ export function ItemForm({
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 mt-2">
                 {images && images.map((url, index) => (
                   <div key={index} className="relative aspect-square rounded-md overflow-hidden border">
-                    {url ? (
+                    {url && isValidImageDomain(url) ? (
                         <Image src={url} alt={`Item image ${index + 1}`} fill className="object-cover" />
                     ) : (
-                        <div className="flex items-center justify-center h-full bg-muted">
-                            <PottersWheelSpinner />
+                        <div className="flex items-center justify-center h-full bg-muted text-muted-foreground text-xs text-center p-1">
+                          Invalid or unsecured URL
                         </div>
                     )}
                     <Button
@@ -254,6 +263,7 @@ export function ItemForm({
               <div className="space-y-1">
                 <Label htmlFor="baseMrp">Base Price (MRP)</Label>
                 <Input id="baseMrp" type="number" {...register('baseMrp')} placeholder="e.g., 1250.00" />
+                <p className="text-xs text-muted-foreground">Required if no variants are added.</p>
                 {errors.baseMrp && <p className="text-xs text-destructive">{errors.baseMrp.message}</p>}
               </div>
               <div className="space-y-1 pt-7">
