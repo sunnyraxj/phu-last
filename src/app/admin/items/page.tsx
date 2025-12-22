@@ -9,10 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Trash2, Edit } from 'lucide-react';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ItemForm, type ItemFormValues } from '@/components/admin/ItemForm';
 import Image from 'next/image';
@@ -27,19 +27,24 @@ export default function ItemsPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
     
-    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [isAddFormOpen, setIsAddFormOpen] = useState(false);
+    const [isEditFormOpen, setIsEditFormOpen] = useState(false);
+    const [itemToEdit, setItemToEdit] = useState<Item | null>(null);
     const [itemsToDelete, setItemsToDelete] = useState<Item[]>([]);
     const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
     const itemsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
     const { data: items, isLoading: itemsLoading } = useCollection<Item>(itemsQuery);
 
-    const handleAddNewClick = () => {
-        setIsFormOpen(true);
+    const handleEditClick = (item: Item) => {
+        setItemToEdit(item);
+        setIsEditFormOpen(true);
     };
 
-    const handleCloseForm = useCallback(() => {
-        setIsFormOpen(false);
+    const handleCloseForms = useCallback(() => {
+        setIsAddFormOpen(false);
+        setIsEditFormOpen(false);
+        setItemToEdit(null);
     }, []);
 
     const handleDeleteItems = async () => {
@@ -58,11 +63,19 @@ export default function ItemsPage() {
         }
     };
     
-    const handleFormSubmit = (formData: ItemFormValues) => {
+    const handleAddFormSubmit = (formData: ItemFormValues) => {
         const itemsCollection = collection(firestore, "products");
         addDocumentNonBlocking(itemsCollection, formData);
         toast({ title: 'Item Added', description: `${formData.name} has been added to your store.` });
-        handleCloseForm();
+        handleCloseForms();
+    };
+    
+    const handleEditFormSubmit = (formData: ItemFormValues) => {
+        if (!itemToEdit) return;
+        const itemRef = doc(firestore, 'products', itemToEdit.id);
+        setDocumentNonBlocking(itemRef, formData, { merge: true });
+        toast({ title: 'Item Updated', description: `${formData.name} has been updated.` });
+        handleCloseForms();
     };
 
     const toggleSelection = (itemId: string) => {
@@ -95,16 +108,16 @@ export default function ItemsPage() {
             const minPrice = Math.min(...item.variants.map(v => v.price));
             return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(minPrice);
         }
-        return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.baseMrp);
+        return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.baseMrp || 0);
     };
 
     return (
         <div>
             <div className="flex items-center justify-between space-y-2 mb-4">
                 <h2 className="text-3xl font-bold tracking-tight">Items</h2>
-                 <Dialog open={isFormOpen} onOpenChange={(open) => !open && handleCloseForm()}>
+                 <Dialog open={isAddFormOpen} onOpenChange={setIsAddFormOpen}>
                     <DialogTrigger asChild>
-                         <Button onClick={handleAddNewClick}>
+                         <Button onClick={() => setIsAddFormOpen(true)}>
                             <PlusCircle className="mr-2 h-4 w-4" /> Add New
                         </Button>
                     </DialogTrigger>
@@ -116,8 +129,9 @@ export default function ItemsPage() {
                             </DialogDescription>
                         </DialogHeader>
                         <ItemForm
-                            onSuccess={handleFormSubmit}
-                            onCancel={handleCloseForm}
+                            onSuccess={handleAddFormSubmit}
+                            onCancel={handleCloseForms}
+                            item={null}
                         />
                     </DialogContent>
                 </Dialog>
@@ -191,6 +205,9 @@ export default function ItemsPage() {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end items-center gap-2">
+                                                    <Button variant="ghost" size="sm" onClick={() => handleEditClick(item)}>
+                                                        <Edit className="mr-2 h-4 w-4" /> Edit
+                                                    </Button>
                                                     <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDeleteClick(item)}>
                                                         <Trash2 className="mr-2 h-4 w-4" /> Delete
                                                     </Button>
@@ -210,6 +227,22 @@ export default function ItemsPage() {
                     </div>
                 </CardContent>
             </Card>
+
+            <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
+                <DialogContent className="max-w-4xl">
+                    <DialogHeader>
+                        <DialogTitle>Edit Item</DialogTitle>
+                        <DialogDescription>
+                            Update the details for this item.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <ItemForm
+                        onSuccess={handleEditFormSubmit}
+                        onCancel={handleCloseForms}
+                        item={itemToEdit}
+                    />
+                </DialogContent>
+            </Dialog>
 
             <AlertDialog open={itemsToDelete.length > 0} onOpenChange={(isOpen) => !isOpen && setItemsToDelete([])}>
                 <AlertDialogContent>

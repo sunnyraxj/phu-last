@@ -73,6 +73,7 @@ export type ItemFormValues = z.infer<typeof itemSchema>;
 interface ItemFormProps {
   onSuccess: (data: ItemFormValues) => void;
   onCancel: () => void;
+  item: (ItemFormValues & { id?: string }) | null;
 }
 
 type Product = {
@@ -96,6 +97,7 @@ const defaultFormValues: ItemFormValues = {
 export function ItemForm({
   onSuccess,
   onCancel,
+  item
 }: ItemFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -142,7 +144,7 @@ export function ItemForm({
     formState: { errors, isSubmitting, isDirty },
   } = useForm<ItemFormValues>({
     resolver: zodResolver(itemSchema),
-    defaultValues: defaultFormValues,
+    defaultValues: item || defaultFormValues,
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -159,8 +161,8 @@ export function ItemForm({
 
   
     useEffect(() => {
-        reset(defaultFormValues);
-    }, [reset]);
+        reset(item || defaultFormValues);
+    }, [item, reset]);
   
   const handleFormSubmit: SubmitHandler<ItemFormValues> = (data) => {
     onSuccess(data);
@@ -403,7 +405,7 @@ export function ItemForm({
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting || !isDirty}>
-            {isSubmitting ? <PottersWheelSpinner /> : 'Add Item'}
+            {isSubmitting ? <PottersWheelSpinner /> : (item ? 'Save Changes' : 'Add Item')}
           </Button>
         </DialogFooter>
         
