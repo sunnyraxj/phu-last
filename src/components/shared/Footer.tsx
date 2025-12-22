@@ -16,27 +16,32 @@ export function Footer() {
               Handcrafted treasures from the East that tell a story.
             </p>
           </div>
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider mb-4">Quick Links</h3>
-            <div className="flex gap-16">
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/purchase" className="text-gray-400 hover:text-white">Shop</Link></li>
-                <li><Link href="/our-team" className="text-gray-400 hover:text-white">Our Team</Link></li>
-                <li><Link href="/our-stores" className="text-gray-400 hover:text-white">Our Stores</Link></li>
-              </ul>
-              <ul className="space-y-2 text-sm">
-                 <li><Link href="/privacy-policy" className="text-gray-400 hover:text-white">Policies</Link></li>
-                 <li><Link href="/help-center" className="text-gray-400 hover:text-white">Help Center</Link></li>
-              </ul>
+          <div className="md:col-span-2">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 className="text-sm font-semibold uppercase tracking-wider mb-4">Quick Links</h3>
+                    <ul className="space-y-2 text-sm">
+                        <li><Link href="/purchase" className="text-gray-400 hover:text-white">Shop</Link></li>
+                        <li><Link href="/our-team" className="text-gray-400 hover:text-white">Our Team</Link></li>
+                        <li><Link href="/our-stores" className="text-gray-400 hover:text-white">Our Stores</Link></li>
+                    </ul>
+                </div>
+                <div>
+                     <h3 className="text-sm font-semibold uppercase tracking-wider mb-4">Info</h3>
+                     <ul className="space-y-2 text-sm">
+                         <li><Link href="/privacy-policy" className="text-gray-400 hover:text-white">Policies</Link></li>
+                         <li><Link href="/help-center" className="text-gray-400 hover:text-white">Help Center</Link></li>
+                      </ul>
+                </div>
+                <div>
+                    <h3 className="text-sm font-semibold uppercase tracking-wider mb-4">My Account</h3>
+                    <ul className="space-y-2 text-sm">
+                      <li><Link href="/account" className="text-gray-400 hover:text-white">My Account</Link></li>
+                      <li><Link href="/orders" className="text-gray-400 hover:text-white">My Orders</Link></li>
+                      <li><Link href="/login" className="text-gray-400 hover:text-white">Login / Register</Link></li>
+                    </ul>
+                </div>
             </div>
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider mb-4">My Account</h3>
-            <ul className="space-y-2 text-sm">
-              <li><Link href="/account" className="text-gray-400 hover:text-white">My Account</Link></li>
-              <li><Link href="/orders" className="text-gray-400 hover:text-white">My Orders</Link></li>
-              <li><Link href="/login" className="text-gray-400 hover:text-white">Login / Register</Link></li>
-            </ul>
           </div>
         </div>
         <div className="border-t border-gray-800 pt-6 flex flex-col sm:flex-row justify-between items-center">
