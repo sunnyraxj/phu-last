@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import { collection, doc, query, where, writeBatch, setDoc, deleteDoc } from "firebase/firestore";
 import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -22,6 +22,8 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Label } from "@/components/ui/label";
 import placeholderImages from '@/lib/placeholder-images.json';
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay"
 
 
 type Product = {
@@ -146,6 +148,46 @@ function Breadcrumbs({ categories, onClear }: { categories: string[], onClear: (
         </div>
     );
 }
+
+function ProductCarousel({ product, onClick }: { product: Product, onClick: () => void }) {
+    const autoplay = useRef(Autoplay({ delay: 1000, stopOnInteraction: false, stopOnMouseEnter: false }));
+    const [isHovered, setIsHovered] = useState(false);
+
+    useEffect(() => {
+        if (isHovered) {
+            autoplay.current.play();
+        } else {
+            autoplay.current.stop();
+        }
+    }, [isHovered]);
+
+    return (
+        <Carousel
+            plugins={[autoplay.current]}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            onClick={onClick}
+            className="w-full"
+        >
+            <CarouselContent>
+                {(product.images && product.images.length > 0 ? product.images : [placeholderImages.product.url]).map((img, index) => (
+                    <CarouselItem key={index}>
+                        <div className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer">
+                            <Image
+                                src={img}
+                                alt={product.name}
+                                fill
+                                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                                data-ai-hint={product['data-ai-hint'] || placeholderImages.product['data-ai-hint']}
+                            />
+                        </div>
+                    </CarouselItem>
+                ))}
+            </CarouselContent>
+        </Carousel>
+    );
+}
+
 
 export default function PurchasePage() {
   const [sortBy, setSortBy] = useState("Featured")
@@ -451,18 +493,7 @@ export default function PurchasePage() {
             <div className={cn('grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-y-2 sm:gap-y-8')}>
               {filteredProducts.map((product) => (
                 <div key={product.id} className="group relative text-left p-2 sm:p-4">
-                  <div 
-                    className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer"
-                    onClick={() => setSelectedProduct(product)}
-                  >
-                    <Image
-                      src={product.images?.[0] || placeholderImages.product.url}
-                      alt={product.name}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      data-ai-hint={product['data-ai-hint'] || placeholderImages.product['data-ai-hint']}
-                    />
-                  </div>
+                    <ProductCarousel product={product} onClick={() => setSelectedProduct(product)} />
                   
                   <div className="mt-2 sm:mt-4 flex flex-col items-start">
                     <h3 className="text-sm sm:text-base font-bold text-black truncate w-full">{product.name}</h3>

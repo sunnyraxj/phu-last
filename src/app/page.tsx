@@ -142,23 +142,52 @@ function Filters({
   )
 }
 
+function ProductCarousel({ product, onClick }: { product: Product, onClick: () => void }) {
+    const autoplay = useRef(Autoplay({ delay: 1000, stopOnInteraction: false, stopOnMouseEnter: false }));
+    const [isHovered, setIsHovered] = useState(false);
+
+    useEffect(() => {
+        if (isHovered) {
+            autoplay.current.play();
+        } else {
+            autoplay.current.stop();
+        }
+    }, [isHovered]);
+
+    return (
+        <Carousel
+            plugins={[autoplay.current]}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            onClick={onClick}
+            className="w-full"
+        >
+            <CarouselContent>
+                {(product.images && product.images.length > 0 ? product.images : [placeholderImages.product.url]).map((img, index) => (
+                    <CarouselItem key={index}>
+                        <div className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer">
+                            <Image
+                                src={img}
+                                alt={product.name}
+                                fill
+                                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                                data-ai-hint={product['data-ai-hint'] || placeholderImages.product['data-ai-hint']}
+                            />
+                        </div>
+                    </CarouselItem>
+                ))}
+            </CarouselContent>
+        </Carousel>
+    );
+}
+
 function ProductGrid({ productsToShow, addToCart, setSelectedProduct }: { productsToShow: Product[], addToCart: (p: Product) => void, setSelectedProduct: (p: Product | null) => void }) {
   return (
     <div className={cn('grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-y-8')}>
       {productsToShow.map((product) => (
         <div key={product.id} className="group relative text-left p-2 sm:p-4">
-          <div
-            className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden cursor-pointer"
-            onClick={() => setSelectedProduct(product)}
-          >
-            <Image
-              src={product.images?.[0] || placeholderImages.product.url}
-              alt={product.name}
-              fill
-              className="object-cover transition-transform duration-300 scale-100 group-hover:scale-105"
-              data-ai-hint={product['data-ai-hint'] || placeholderImages.product['data-ai-hint']}
-            />
-          </div>
+          
+          <ProductCarousel product={product} onClick={() => setSelectedProduct(product)} />
 
           <div className="mt-2 sm:mt-4 flex flex-col items-start">
             <h3 className="text-sm sm:text-base text-foreground font-bold truncate w-full">{product.name}</h3>
@@ -437,10 +466,6 @@ export default function ProductPage() {
 
   const teamMembersToDisplay = useMemo(() => {
     if (!allOtherMembers) return [];
-    // If marquee is active (more than 5 members), we duplicate for a seamless loop
-    if (allOtherMembers.length > 5 && allOtherMembers.length < 15) {
-      return [...allOtherMembers, ...allOtherMembers];
-    }
     return allOtherMembers;
   }, [allOtherMembers]);
 
@@ -706,7 +731,7 @@ export default function ProductPage() {
                   <div className="mb-12 md:mb-16">
                     <div className="flex flex-row items-center gap-8 md:gap-12">
                        <div className="relative h-32 w-32 md:h-48 md:w-48 rounded-lg overflow-hidden shadow-lg group">
-                          <Image src={founder.image} alt={founder.name} fill className="object-cover transition-transform duration-300 group-hover:scale-110" data-ai-hint={founder['data-ai-hint']} />
+                          <Image src={founder.image} alt={founder.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" data-ai-hint={founder['data-ai-hint']} />
                        </div>
                       <div className="text-left flex-1">
                         <h3 className="text-2xl font-bold">{founder.name}</h3>
@@ -720,7 +745,7 @@ export default function ProductPage() {
                      <div className="text-center mb-8">
                         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Our Team</h2>
                     </div>
-                     <div className={cn("flex group", teamMembersToDisplay.length > 5 && "animate-marquee")}>
+                     <div className={cn("flex group")}>
                         {teamMembersToDisplay.map((member, index) => (
                           <div key={`${member.id}-${index}`} className="flex-shrink-0 w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5 px-2 md:px-4">
                               <Card className="w-full max-w-sm overflow-hidden rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow duration-300">
