@@ -341,7 +341,7 @@ export default function CheckoutPage() {
         if (noAddressAdded) {
             return (
                 <Link href="/account/add-address?redirect=/checkout" className="w-full">
-                    <Button size="lg" className="w-full">Add Address to Order</Button>
+                    <Button size="lg" className="w-full bg-yellow-400 text-black hover:bg-yellow-500">Add Address to Order</Button>
                 </Link>
             )
         }
