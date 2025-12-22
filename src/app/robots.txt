@@ -1,0 +1,14 @@
+# See https://www.robotstxt.org/robotstxt.html for syntax and directives
+
+User-agent: *
+Allow: /
+
+# Disallow admin and private pages
+Disallow: /admin/
+Disallow: /account/
+Disallow: /orders/
+Disallow: /checkout/
+Disallow: /receipt/
+Disallow: /returns/
+
+Sitemap: https://purbanchal-hasta-udyog.com/sitemap.xml
