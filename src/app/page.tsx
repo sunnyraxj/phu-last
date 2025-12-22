@@ -271,7 +271,7 @@ export default function ProductPage() {
     if (!cartData || !allProducts) return [];
     return cartData.map(cartItem => {
       const product = allProducts.find(p => p.id === cartItem.productId);
-      return product ? { ...product, quantity: cartItem.quantity, cartItemId: cartItem.id, selectedSize: cartItem.selectedSize } : null;
+      return product ? { ...product, ...cartItem, cartItemId: cartItem.id } : null;
     }).filter((item): item is CartItem => item !== null);
   }, [cartData, allProducts]);
 
@@ -809,7 +809,7 @@ export default function ProductPage() {
                   <div className="mb-12 md:mb-16">
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-8 md:gap-12 text-center sm:text-left">
                        <div className="relative h-32 w-32 md:h-48 md:w-48 rounded-lg overflow-hidden shadow-lg group">
-                          <Image src={isValidImageDomain(founder.image) ? founder.image : placeholderImages.product.url} alt={founder.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" data-ai-hint={founder['data-ai-hint']} />
+                          <Image src={isValidImageDomain(founder.image) ? founder.image : placeholderImages.person.url} alt={founder.name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" data-ai-hint={founder['data-ai-hint']} />
                        </div>
                       <div className="flex-1 max-w-lg">
                         <h3 className="text-2xl font-bold">{founder.name}</h3>

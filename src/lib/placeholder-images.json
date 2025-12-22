@@ -10,5 +10,9 @@
   "product": {
     "url": "https://picsum.photos/seed/placeholder/300",
     "data-ai-hint": "handicraft product"
+  },
+  "person": {
+    "url": "https://picsum.photos/seed/person/300",
+    "data-ai-hint": "team member"
   }
 }
