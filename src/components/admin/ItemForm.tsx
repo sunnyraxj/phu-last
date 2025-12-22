@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 import { useState, useEffect, useMemo } from 'react';
-import { useForm, Controller, SubmitHandler } from 'react-hook-form';
+import { useForm, Controller, SubmitHandler, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -16,17 +16,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ScrollArea } from '../ui/scroll-area';
 import { DialogFooter } from '../ui/dialog';
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
-import { X, PlusCircle } from 'lucide-react';
+import { X, PlusCircle, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { AddOptionDialog } from './AddOptionDialog';
 import { useToast } from '@/hooks/use-toast';
 import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
 import { collection } from 'firebase/firestore';
+import { Separator } from '../ui/separator';
+
+const variantSchema = z.object({
+  size: z.string().min(1, 'Size is required'),
+  price: z.preprocess(
+    val => (typeof val === 'string' ? parseFloat(val) : val),
+    z.number().positive('Price must be a positive number')
+  ),
+});
 
 const itemSchema = z.object({
   name: z.string().min(1, 'Item name is required'),
   description: z.string().min(1, 'Description is required'),
-  mrp: z.preprocess(
+  baseMrp: z.preprocess(
     (val) => {
         if (typeof val === 'string') {
             if (val.trim() === '') return undefined; 
@@ -36,8 +45,8 @@ const itemSchema = z.object({
         return val;
     },
     z.number({
-        required_error: "Price is required.",
-        invalid_type_error: "Price must be a valid number." 
+        required_error: "Base price is required.",
+        invalid_type_error: "Base price must be a valid number." 
     }).positive('Price must be a positive number.')
   ),
   images: z.array(z.string().url()).min(1, 'At least one image is required'),
@@ -49,12 +58,7 @@ const itemSchema = z.object({
     (a) => (a === '' || a === undefined ? undefined : parseFloat(z.string().parse(a))),
     z.number().min(0).optional()
   ),
-  seoKeywords: z.array(z.string()).optional(),
-  size: z.object({
-    height: z.preprocess((a) => (a === '' || a === undefined ? undefined : parseFloat(z.string().parse(a))), z.number().min(0).optional()),
-    length: z.preprocess((a) => (a === '' || a === undefined ? undefined : parseFloat(z.string().parse(a))), z.number().min(0).optional()),
-    width: z.preprocess((a) => (a === '' || a === undefined ? undefined : parseFloat(z.string().parse(a))), z.number().min(0).optional()),
-  }).optional(),
+  variants: z.array(variantSchema).optional(),
 });
 
 export type ItemFormValues = z.infer<typeof itemSchema>;
@@ -72,15 +76,14 @@ type Product = {
 const defaultFormValues: ItemFormValues = {
   name: '',
   description: '',
-  mrp: undefined as unknown as number,
+  baseMrp: undefined as unknown as number,
   images: [],
   category: '',
   material: '',
   inStock: true,
   hsn: '',
   gst: undefined,
-  seoKeywords: [],
-  size: { height: undefined, length: undefined, width: undefined },
+  variants: [],
 };
 
 export function ItemForm({
@@ -134,6 +137,11 @@ export function ItemForm({
     resolver: zodResolver(itemSchema),
     defaultValues: defaultFormValues,
   });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "variants",
+  });
   
 
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
@@ -141,7 +149,6 @@ export function ItemForm({
   const [imageUrl, setImageUrl] = useState('');
 
   const images = watch('images', []);
-  const seoKeywords = watch('seoKeywords', []);
   
     useEffect(() => {
         reset(defaultFormValues);
@@ -197,9 +204,7 @@ export function ItemForm({
           <div className="space-y-4 my-4">
             <div className="space-y-1">
               <Label htmlFor="name">Item Name</Label>
-              <div className="flex items-center gap-2">
-                <Input id="name" {...register('name')} />
-              </div>
+              <Input id="name" {...register('name')} />
               {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
             </div>
             <div className="space-y-1">
@@ -247,9 +252,9 @@ export function ItemForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <Label htmlFor="mrp">Price (MRP)</Label>
-                <Input id="mrp" type="number" {...register('mrp')} placeholder="e.g., 1250.00" />
-                {errors.mrp && <p className="text-xs text-destructive">{errors.mrp.message}</p>}
+                <Label htmlFor="baseMrp">Base Price (MRP)</Label>
+                <Input id="baseMrp" type="number" {...register('baseMrp')} placeholder="e.g., 1250.00" />
+                {errors.baseMrp && <p className="text-xs text-destructive">{errors.baseMrp.message}</p>}
               </div>
               <div className="space-y-1 pt-7">
                   <div className="flex items-center space-x-2">
@@ -269,6 +274,56 @@ export function ItemForm({
               </div>
             </div>
             
+            <div className="space-y-2">
+                <Separator />
+                <Label>Size Variants (Optional)</Label>
+                <p className="text-xs text-muted-foreground">Add different sizes and prices for this product.</p>
+                <div className="space-y-2">
+                    {fields.map((field, index) => (
+                        <div key={field.id} className="flex items-end gap-2 p-2 border rounded-md">
+                            <div className="flex-1 grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                    <Label htmlFor={`variants.${index}.size`} className="text-xs">Size Name</Label>
+                                    <Input
+                                        id={`variants.${index}.size`}
+                                        placeholder="e.g., Small, 12-inch"
+                                        {...register(`variants.${index}.size` as const)}
+                                    />
+                                    {errors.variants?.[index]?.size && <p className="text-xs text-destructive">{errors.variants[index].size.message}</p>}
+                                </div>
+                                <div className="space-y-1">
+                                    <Label htmlFor={`variants.${index}.price`} className="text-xs">Price (MRP)</Label>
+                                    <Input
+                                        id={`variants.${index}.price`}
+                                        type="number"
+                                        placeholder="e.g., 1450.00"
+                                        {...register(`variants.${index}.price` as const)}
+                                    />
+                                    {errors.variants?.[index]?.price && <p className="text-xs text-destructive">{errors.variants[index].price.message}</p>}
+                                </div>
+                            </div>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive h-8 w-8"
+                                onClick={() => remove(index)}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    ))}
+                </div>
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => append({ size: '', price: undefined as unknown as number })}
+                >
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Size Variant
+                </Button>
+            </div>
+            <Separator />
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label htmlFor="category">Category</Label>
@@ -330,25 +385,6 @@ export function ItemForm({
                   {errors.gst && <p className="text-xs text-destructive">{errors.gst.message}</p>}
                </div>
             </div>
-            
-             <div>
-              <Label>Dimensions (Optional)</Label>
-              <div className="grid grid-cols-3 gap-4 mt-1">
-                  <div className="space-y-1">
-                      <Label htmlFor="length" className="text-xs">Length (cm)</Label>
-                      <Input id="length" type="number" step="0.01" {...register('size.length')} />
-                  </div>
-                   <div className="space-y-1">
-                      <Label htmlFor="width" className="text-xs">Width (cm)</Label>
-                      <Input id="width" type="number" step="0.01" {...register('size.width')} />
-                  </div>
-                   <div className="space-y-1">
-                      <Label htmlFor="height" className="text-xs">Height (cm)</Label>
-                      <Input id="height" type="number" step="0.01" {...register('size.height')} />
-                  </div>
-              </div>
-             </div>
-
           </div>
         </ScrollArea>
         <DialogFooter className="mt-4 pt-4 border-t">

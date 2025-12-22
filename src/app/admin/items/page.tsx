@@ -89,6 +89,14 @@ export default function ItemsPage() {
     const handleDeleteClick = (item: Item) => {
         setItemsToDelete([item]);
     }
+    
+    const getDisplayPrice = (item: Item) => {
+        if (item.variants && item.variants.length > 0) {
+            const minPrice = Math.min(...item.variants.map(v => v.price));
+            return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(minPrice);
+        }
+        return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.baseMrp);
+    };
 
     return (
         <div>
@@ -172,7 +180,10 @@ export default function ItemsPage() {
                                             </TableCell>
                                             <TableCell className="font-medium">{item.name}</TableCell>
                                             <TableCell>{item.category}</TableCell>
-                                            <TableCell>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.mrp)}</TableCell>
+                                            <TableCell>
+                                                {getDisplayPrice(item)}
+                                                {item.variants && item.variants.length > 0 && <Badge variant="secondary" className="ml-2">Variants</Badge>}
+                                            </TableCell>
                                             <TableCell>
                                                 <Badge variant={item.inStock ? 'outline' : 'destructive'}>
                                                     {item.inStock ? 'In Stock' : 'Out of Stock'}

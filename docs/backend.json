@@ -33,28 +33,31 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Product",
       "type": "object",
-      "description": "Represents a product listed by an artisan.",
+      "description": "Represents a product listed by an artisan. Can have multiple size/price variants.",
       "properties": {
         "id": { "type": "string", "description": "Unique identifier for the product." },
         "artisanId": { "type": "string", "description": "Reference to ArtisanProfile. (Relationship: ArtisanProfile 1:N Product)" },
         "name": { "type": "string", "description": "The name of the product." },
         "description": { "type": "string", "description": "A detailed description of the product." },
         "images": { "type": "array", "description": "An array of image URLs for the product.", "items": { "type": "string" } },
-        "mrp": { "type": "number", "description": "The Maximum Retail Price of the product." },
+        "baseMrp": { "type": "number", "description": "The base Maximum Retail Price, used if no variants exist." },
+        "variants": {
+          "type": "array",
+          "description": "An array of product variants, each with a specific size and price.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "size": { "type": "string", "description": "The size of the variant (e.g., 'Small', 'Medium', '12-inch')." },
+              "price": { "type": "number", "description": "The price for this specific variant." }
+            },
+            "required": ["size", "price"]
+          }
+        },
         "category": { "type": "string", "description": "The category of the product." },
         "hsn": { "type": "string", "description": "Harmonized System of Nomenclature code for the product." },
-        "gst": { "type": "number", "description": "The applicable GST percentage for the product." },
-        "size": {
-          "type": "object",
-          "description": "The dimensions of the product (optional).",
-          "properties": {
-            "height": { "type": "number", "description": "Height of the product." },
-            "length": { "type": "number", "description": "Length of the product." },
-            "width": { "type": "number", "description": "Width of the product." }
-          }
-        }
+        "gst": { "type": "number", "description": "The applicable GST percentage for the product." }
       },
-      "required": ["id", "artisanId", "name", "description", "images", "mrp", "category", "gst"]
+      "required": ["id", "artisanId", "name", "description", "images", "baseMrp", "category", "gst"]
     },
     "Order": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -86,7 +89,8 @@
         "orderId": { "type": "string", "description": "Reference to Order. (Relationship: Order 1:N OrderItem)" },
         "productId": { "type": "string", "description": "Reference to Product. (Relationship: Product 1:N OrderItem)" },
         "quantity": { "type": "number", "description": "The quantity of the product in the order item." },
-        "price": { "type": "number", "description": "The price of the product in the order item (may differ from current product price)." }
+        "price": { "type": "number", "description": "The price of the product in the order item (may differ from current product price)." },
+        "size": { "type": "string", "description": "The selected size of the product variant." }
       },
       "required": ["id", "orderId", "productId", "quantity", "price"]
     },
