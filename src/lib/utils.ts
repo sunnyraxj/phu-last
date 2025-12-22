@@ -12,12 +12,20 @@ export function isValidImageDomain(url: string | undefined | null): boolean {
     try {
         const urlObject = new URL(url);
         const remotePatterns = nextConfig.images?.remotePatterns || [];
+        
         return remotePatterns.some(pattern => {
-            const regex = new RegExp(`^${pattern.hostname?.replace(/\*\*/g, '.+').replace(/\*/g, '[^.]+')}$`);
-            return (
-                pattern.protocol === urlObject.protocol.slice(0, -1) &&
-                regex.test(urlObject.hostname)
-            );
+            if (pattern.hostname.startsWith('**.')) {
+                // Handle wildcard subdomains like '**.media-amazon.com'
+                const mainDomain = pattern.hostname.substring(3); // e.g., 'media-amazon.com'
+                return urlObject.hostname.endsWith(mainDomain);
+            }
+            if (pattern.hostname.startsWith('*.')) {
+                // Handle wildcard like '*.example.com'
+                const mainDomain = pattern.hostname.substring(2);
+                 return urlObject.hostname.endsWith(`.${mainDomain}`) || urlObject.hostname === mainDomain;
+            }
+            // Exact match
+            return pattern.hostname === urlObject.hostname;
         });
     } catch (e) {
         return false;
