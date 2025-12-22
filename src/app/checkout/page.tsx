@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -313,7 +312,7 @@ export default function CheckoutPage() {
             </div>
             <div className="flex justify-between">
                 <p className="text-muted-foreground">Taxes</p>
-                <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalGST)}</p>
+                <p>Included in MRP</p>
             </div>
             <Separator />
             <div className="flex justify-between font-bold text-base">
@@ -527,3 +526,5 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
+    
