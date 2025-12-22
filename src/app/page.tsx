@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useMemo, useEffect, useRef } from "react"
@@ -155,12 +156,9 @@ function ProductGrid({ productsToShow, addToCart, setSelectedProduct }: { produc
               src={product.images?.[0] || placeholderImages.product.url}
               alt={product.name}
               fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              className="object-cover transition-transform duration-300 scale-105 group-hover:scale-100"
               data-ai-hint={product['data-ai-hint'] || placeholderImages.product['data-ai-hint']}
             />
-            <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <Eye className="text-white h-8 w-8" />
-            </div>
           </div>
 
           <div className="mt-2 sm:mt-4 flex flex-col items-start">
