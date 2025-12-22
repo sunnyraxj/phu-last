@@ -23,7 +23,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle 
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 import { Label } from "@/components/ui/label";
 import Autoplay from "embla-carousel-autoplay"
 import placeholderImages from '@/lib/placeholder-images.json';
@@ -449,17 +449,8 @@ export default function ProductPage() {
 
   const teamMembersToDisplay = useMemo(() => {
     if (!allOtherMembers) return [];
-    if (allOtherMembers.length < 5) return allOtherMembers; // Don't repeat if not enough members
-    
-    const repeatedMembers = [];
-    if (allOtherMembers.length > 0) {
-        // Repeat the array to create a seamless loop effect
-        const repeatCount = Math.ceil(10 / allOtherMembers.length);
-        for (let i = 0; i < repeatCount; i++) {
-            repeatedMembers.push(...allOtherMembers);
-        }
-    }
-    return repeatedMembers.length > 0 ? repeatedMembers : allOtherMembers;
+    // No duplication, just show the members
+    return allOtherMembers;
   }, [allOtherMembers]);
 
   return (
@@ -598,14 +589,24 @@ export default function ProductPage() {
                   {selectedProduct && (
                     <DialogContent className="sm:max-w-[800px]">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-2">
-                        <div className="relative aspect-square bg-muted rounded-lg">
-                          <Image
-                            src={selectedProduct.images?.[0] || placeholderImages.product.url}
-                            alt={selectedProduct.name}
-                            fill
-                            className="object-cover rounded-lg"
-                          />
-                        </div>
+                        <Carousel className="w-full">
+                          <CarouselContent>
+                            {(selectedProduct.images.length > 0 ? selectedProduct.images : [placeholderImages.product.url]).map((image, index) => (
+                              <CarouselItem key={index}>
+                                <div className="relative aspect-square bg-muted rounded-lg">
+                                  <Image
+                                    src={image}
+                                    alt={`${selectedProduct.name} - image ${index + 1}`}
+                                    fill
+                                    className="object-cover rounded-lg"
+                                  />
+                                </div>
+                              </CarouselItem>
+                            ))}
+                          </CarouselContent>
+                          <CarouselPrevious className="left-2" />
+                          <CarouselNext className="right-2" />
+                        </Carousel>
                         <div className="flex flex-col justify-center">
                           <DialogHeader>
                             <DialogTitle className="text-3xl font-bold">{selectedProduct.name}</DialogTitle>
@@ -653,6 +654,12 @@ export default function ProductPage() {
                           align: "start",
                           loop: true,
                       }}
+                      plugins={[
+                          Autoplay({
+                            delay: 3000,
+                            stopOnInteraction: true,
+                          })
+                      ]}
                       className="w-full"
                   >
                       <CarouselContent className="-ml-2 md:-ml-4">
@@ -738,9 +745,21 @@ export default function ProductPage() {
                      <div className="text-center mb-8">
                         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Our Team</h2>
                     </div>
-                     <div className="flex group">
+                     <Carousel
+                        opts={{
+                          align: "start",
+                          loop: teamMembersToDisplay.length > 5, 
+                        }}
+                        plugins={[
+                            Autoplay({
+                                delay: 2000,
+                                stopOnInteraction: true,
+                            })
+                        ]}
+                     >
+                        <CarouselContent className="-ml-2 md:-ml-4">
                         {teamMembersToDisplay.map((member, index) => (
-                          <div key={`${member.id}-${index}`} className="flex-shrink-0 w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5 px-2 md:px-4">
+                          <CarouselItem key={`${member.id}-${index}`} className="pl-4 md:pl-6 basis-1/2 sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                               <Card className="w-full max-w-sm overflow-hidden rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow duration-300">
                                 <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-2xl">
                                   <Image
@@ -763,9 +782,10 @@ export default function ProductPage() {
                                     </Button>
                                 </div>
                               </Card>
-                          </div>
+                          </CarouselItem>
                          ))}
-                     </div>
+                         </CarouselContent>
+                     </Carousel>
                    </div>
                 )}
 

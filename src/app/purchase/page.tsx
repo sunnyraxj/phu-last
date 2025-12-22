@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Label } from "@/components/ui/label";
 import placeholderImages from '@/lib/placeholder-images.json';
-import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay"
 
 
@@ -500,14 +500,24 @@ export default function PurchasePage() {
             {selectedProduct && (
               <DialogContent className="sm:max-w-[800px]">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-2">
-                  <div className="relative aspect-square bg-muted rounded-lg">
-                    <Image
-                      src={selectedProduct.images?.[0] || placeholderImages.product.url}
-                      alt={selectedProduct.name}
-                      fill
-                      className="object-cover rounded-lg"
-                    />
-                  </div>
+                  <Carousel className="w-full">
+                    <CarouselContent>
+                      {(selectedProduct.images.length > 0 ? selectedProduct.images : [placeholderImages.product.url]).map((image, index) => (
+                        <CarouselItem key={index}>
+                          <div className="relative aspect-square bg-muted rounded-lg">
+                            <Image
+                              src={image}
+                              alt={`${selectedProduct.name} - image ${index + 1}`}
+                              fill
+                              className="object-cover rounded-lg"
+                            />
+                          </div>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="left-2" />
+                    <CarouselNext className="right-2" />
+                  </Carousel>
                   <div className="flex flex-col justify-center">
                     <DialogHeader>
                       <DialogTitle className="text-3xl font-bold">{selectedProduct.name}</DialogTitle>
