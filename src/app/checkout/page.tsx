@@ -6,7 +6,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useUser, useCollection, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
 import { collection, doc, writeBatch, serverTimestamp, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -168,15 +168,15 @@ export default function CheckoutPage() {
   const handleNewAddressSubmit = (formData: AddressFormValues) => {
     if (!user) return;
     const addressesCollection = collection(firestore, 'users', user.uid, 'shippingAddresses');
-    const newAddressRef = doc(addressesCollection);
-    const newAddressData = { 
+    
+    addDocumentNonBlocking(addressesCollection, { 
         ...formData, 
-        userId: user.uid, 
-        id: newAddressRef.id,
+        userId: user.uid,
         email: user.email // Also save user's email with address
-    };
-    setDoc(newAddressRef, newAddressData).then(() => {
-        setSelectedAddressId(newAddressRef.id);
+    }).then((docRef) => {
+        if(docRef) {
+          setSelectedAddressId(docRef.id);
+        }
         setShowNewAddressForm(false);
         reset();
     });
@@ -520,8 +520,14 @@ export default function CheckoutPage() {
             )}
         </main>
         
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t p-4 z-40">
+            <Button onClick={onSubmit} size="lg" className="w-full" disabled={isSubmitting || !!user?.isAnonymous || !selectedAddressId}>
+                {isSubmitting ? <PottersWheelSpinner /> : 'Place Order'}
+            </Button>
+        </div>
+
         <Dialog open={showNewAddressForm} onOpenChange={setShowNewAddressForm}>
-            <DialogContent>
+            <DialogContent className="z-50">
                 <DialogHeader>
                     <DialogTitle>Add a New Address</DialogTitle>
                     <DialogDescription>Enter the details for your new shipping address.</DialogDescription>
@@ -533,12 +539,7 @@ export default function CheckoutPage() {
                 />
             </DialogContent>
         </Dialog>
-
-         <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t p-4 z-40">
-            <Button onClick={onSubmit} size="lg" className="w-full" disabled={isSubmitting || !!user?.isAnonymous || !selectedAddressId}>
-                {isSubmitting ? <PottersWheelSpinner /> : 'Place Order'}
-            </Button>
-        </div>
     </div>
   );
 }
+
