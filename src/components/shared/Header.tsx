@@ -425,9 +425,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                 </Link>
                                 <SheetTitle className="sr-only">Main Menu</SheetTitle>
                                 <SheetClose asChild>
-                                    <Button variant="ghost" size="icon">
-                                        <CloseIcon />
-                                    </Button>
+                                    <Button variant="ghost">Close</Button>
                                 </SheetClose>
                             </SheetHeader>
                             <div className="flex h-full flex-col">
