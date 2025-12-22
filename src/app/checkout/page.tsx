@@ -20,11 +20,12 @@ import Image from 'next/image';
 import { Header } from '@/components/shared/Header';
 import { AddressForm, AddressFormValues } from '@/components/account/AddressForm';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, ShoppingBag } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import placeholderImages from '@/lib/placeholder-images.json';
 import { isValidImageDomain } from '@/lib/utils';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 type ShippingAddress = AddressFormValues & { id: string, email?: string };
 
@@ -275,7 +276,6 @@ export default function CheckoutPage() {
   }
 
   if (!user) {
-      // This case should be handled by the provider, but as a fallback
       return <div className="flex h-screen items-center justify-center"><PottersWheelSpinner /></div>;
   }
 
@@ -285,204 +285,260 @@ export default function CheckoutPage() {
 
   if (cartItems.length === 0 && !cartLoading) {
     return (
-        <div className="flex h-screen items-center justify-center flex-col gap-4">
-            <h2 className="text-2xl font-semibold">Your cart is empty</h2>
-            <Button onClick={() => router.push('/purchase')}>Continue Shopping</Button>
+        <div className="bg-background">
+            <Header userData={null} cartItems={[]} updateCartItemQuantity={() => {}} />
+            <div className="flex h-[calc(100vh-80px)] items-center justify-center flex-col gap-4">
+                <ShoppingBag className="h-16 w-16 text-muted-foreground" />
+                <h2 className="text-2xl font-semibold">Your cart is empty</h2>
+                <Button onClick={() => router.push('/purchase')}>Continue Shopping</Button>
+            </div>
         </div>
     )
   }
 
+  const OrderSummary = () => (
+    <div className="space-y-4">
+        {cartItems.map((item) => (
+            <div key={item.cartItemId} className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <div className="relative h-16 w-16 rounded-md overflow-hidden bg-muted">
+                        <Image src={isValidImageDomain(item.images?.[0]) ? item.images[0] : placeholderImages.product.url} alt={item.name} fill className="object-cover" />
+                    </div>
+                    <div>
+                        <p className="font-semibold text-sm">{item.name}</p>
+                        <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                        {item.selectedSize && <p className="text-xs text-muted-foreground">Size: {item.selectedSize}</p>}
+                    </div>
+                </div>
+                <p className="font-semibold text-sm">
+                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(getCartItemPrice(item) * item.quantity)}
+                </p>
+            </div>
+        ))}
+        <Separator />
+        <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+                <p className="text-muted-foreground">Subtotal</p>
+                <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(subtotal)}</p>
+            </div>
+            <div className="flex justify-between">
+                <p className="text-muted-foreground">Shipping Fee</p>
+                <p>{shippingFee > 0 ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(shippingFee) : 'Free'}</p>
+            </div>
+            <div className="flex justify-between">
+                <p className="text-muted-foreground">Taxes</p>
+                <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalGST)}</p>
+            </div>
+            <Separator />
+            <div className="flex justify-between font-bold text-base">
+                <p>Total</p>
+                <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalAmount)}</p>
+            </div>
+        </div>
+        <Separator />
+         <div className="space-y-2 text-sm">
+            <div className="flex justify-between font-semibold text-primary">
+                <p>{selectedPaymentPercentage === 1 ? 'Amount to Pay' : 'Advance to Pay'}</p>
+                <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(advanceAmount)}</p>
+            </div>
+            {remainingAmount > 0 && (
+              <div className="flex justify-between text-muted-foreground">
+                  <p>Remaining Amount</p>
+                  <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(remainingAmount)}</p>
+              </div>
+            )}
+        </div>
+    </div>
+  )
+
   return (
     <div className="bg-background">
         <Header userData={null} cartItems={[]} updateCartItemQuantity={() => {}} />
-        <main className="container mx-auto py-8 sm:py-12 px-4">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-8">Checkout</h1>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
-            <div className="space-y-8">
-                {user.isAnonymous ? (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Login to Continue</CardTitle>
-                      <CardDescription>Please log in or create an account to proceed with your order.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button onClick={() => router.push('/login?redirect=/checkout')} className="w-full">
-                        Login or Sign Up
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ) : (
-                <>
-                  <Card>
-                      <CardHeader>
-                          <CardTitle>Shipping Address</CardTitle>
-                          <CardDescription>Select a saved address or add a new one.</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                          <RadioGroup value={selectedAddressId || undefined} onValueChange={setSelectedAddressId} className="space-y-4">
-                              {addresses && addresses.map(address => (
-                                  <Label key={address.id} htmlFor={address.id} className="flex items-start gap-4 border rounded-md p-4 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary">
-                                      <RadioGroupItem value={address.id} id={address.id} />
-                                      <div className="text-sm">
-                                          <p className="font-semibold">{address.name}</p>
-                                          <p className="text-muted-foreground">{address.address}</p>
-                                          <p className="text-muted-foreground">{address.city}, {address.state} - {address.pincode}</p>
-                                          <p className="text-muted-foreground">Phone: {address.phone}</p>
-                                      </div>
-                                  </Label>
-                              ))}
-                          </RadioGroup>
-                          
-                          <Separator className="my-6" />
+        <main className="container mx-auto py-8 px-4 pb-28 md:pb-12">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl mb-6">Checkout</h1>
+            <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-12">
+                <div className="space-y-6">
+                    {user.isAnonymous ? (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Login to Continue</CardTitle>
+                                <CardDescription>Please log in or create an account to proceed with your order.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Button onClick={() => router.push('/login?redirect=/checkout')} className="w-full">
+                                    Login or Sign Up
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    ) : (
+                    <>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Shipping Address</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <RadioGroup value={selectedAddressId || undefined} onValueChange={setSelectedAddressId} className="space-y-4">
+                                    {addresses && addresses.map(address => (
+                                        <Label key={address.id} htmlFor={address.id} className="flex items-start gap-4 border rounded-md p-3 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary">
+                                            <RadioGroupItem value={address.id} id={address.id} className="mt-1" />
+                                            <div className="text-sm">
+                                                <p className="font-semibold">{address.name}</p>
+                                                <p className="text-muted-foreground">{address.address}</p>
+                                                <p className="text-muted-foreground">{address.city}, {address.state} - {address.pincode}</p>
+                                                <p className="text-muted-foreground">Phone: {address.phone}</p>
+                                            </div>
+                                        </Label>
+                                    ))}
+                                </RadioGroup>
+                                
+                                <Separator className="my-4" />
 
-                            <Dialog open={showNewAddressForm} onOpenChange={setShowNewAddressForm}>
-                                <DialogTrigger asChild>
-                                    <Button variant="outline">
-                                        <PlusCircle className="mr-2 h-4 w-4" />
-                                        Add New Address
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                    <DialogHeader>
-                                        <DialogTitle>Add a New Address</DialogTitle>
-                                        <DialogDescription>Enter the details for your new shipping address.</DialogDescription>
-                                    </DialogHeader>
-                                    <AddressForm 
-                                        onSuccess={handleNewAddressSubmit} 
-                                        onCancel={() => setShowNewAddressForm(false)}
-                                        address={null}
-                                    />
-                                </DialogContent>
-                            </Dialog>
-                      </CardContent>
-                  </Card>
-                   <Card>
-                      <CardHeader>
-                          <CardTitle>Payment</CardTitle>
-                          <CardDescription>{totalAmount > 40000 ? 'An advance payment option is available for this order.' : 'Full payment is required for this order.'}</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-6">
-                          {paymentPercentages.length > 1 && (
-                              <div>
-                                  <Label className="font-semibold">Select Payment Option</Label>
-                                  <RadioGroup value={String(selectedPaymentPercentage)} onValueChange={(val) => setSelectedPaymentPercentage(Number(val))} className="flex flex-wrap gap-2 mt-2">
-                                      {paymentPercentages.map(p => (
-                                          <Label key={p.value} htmlFor={`payment-${p.value}`} className="flex items-center gap-2 border rounded-md p-3 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary flex-1 justify-center min-w-[120px]">
-                                              <RadioGroupItem value={String(p.value)} id={`payment-${p.value}`} />
-                                              <span>{p.label}</span>
-                                          </Label>
-                                      ))}
-                                  </RadioGroup>
-                              </div>
-                          )}
+                                <Dialog open={showNewAddressForm} onOpenChange={setShowNewAddressForm}>
+                                    <DialogTrigger asChild>
+                                        <Button variant="outline" size="sm">
+                                            <PlusCircle className="mr-2 h-4 w-4" />
+                                            Add New Address
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Add a New Address</DialogTitle>
+                                            <DialogDescription>Enter the details for your new shipping address.</DialogDescription>
+                                        </DialogHeader>
+                                        <AddressForm 
+                                            onSuccess={handleNewAddressSubmit} 
+                                            onCancel={() => setShowNewAddressForm(false)}
+                                            address={null}
+                                        />
+                                    </DialogContent>
+                                </Dialog>
+                            </CardContent>
+                        </Card>
 
-                          <div className="flex flex-col md:flex-row items-center gap-6 p-4 border rounded-lg bg-muted/30">
-                              <div className="w-40 h-40 p-2 bg-white rounded-md flex items-center justify-center">
-                                  {qrCodeUrl ? (
-                                      <Image src={qrCodeUrl} alt="UPI QR Code" width={150} height={150} unoptimized />
-                                  ) : (
-                                      <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                                        <PottersWheelSpinner />
-                                      </div>
-                                  )}
-                              </div>
-                              <div className="space-y-2 text-center md:text-left">
-                                  <p className="font-semibold">Scan to pay with any UPI app</p>
-                                  <p className="text-sm text-muted-foreground">You need to pay an amount of:</p>
-                                  <p className="text-2xl font-bold text-primary">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(advanceAmount)}</p>
-                                  <p className="text-xs text-muted-foreground">UPI ID: {UPI_ID}</p>
-                              </div>
-                          </div>
+                        <div className="lg:hidden">
+                            <Accordion type="single" collapsible className="w-full">
+                                <AccordionItem value="order-summary">
+                                    <AccordionTrigger className="font-semibold">Order Summary</AccordionTrigger>
+                                    <AccordionContent>
+                                        <OrderSummary />
+                                    </AccordionContent>
+                                </AccordionItem>
+                                <AccordionItem value="payment">
+                                    <AccordionTrigger className="font-semibold">Payment Details</AccordionTrigger>
+                                    <AccordionContent className="space-y-6 pt-4">
+                                         <div className="space-y-4">
+                                              <p className="font-medium text-sm">You need to pay an amount of:</p>
+                                              <p className="text-3xl font-bold text-primary">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(advanceAmount)}</p>
+                                          </div>
+                                         <div className="flex flex-col items-center gap-4 p-4 border rounded-lg bg-muted/30">
+                                              <div className="w-40 h-40 p-2 bg-white rounded-md flex items-center justify-center">
+                                                  {qrCodeUrl ? (
+                                                      <Image src={qrCodeUrl} alt="UPI QR Code" width={150} height={150} unoptimized />
+                                                  ) : (
+                                                      <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                                                        <PottersWheelSpinner />
+                                                      </div>
+                                                  )}
+                                              </div>
+                                              <div className="space-y-1 text-center">
+                                                  <p className="font-semibold text-sm">Scan to pay with any UPI app</p>
+                                                  <p className="text-xs text-muted-foreground">UPI ID: {UPI_ID}</p>
+                                              </div>
+                                          </div>
+                                        <div>
+                                            <Label htmlFor="utr-mobile" className="font-semibold">Enter UTR Number</Label>
+                                            <p className="text-xs text-muted-foreground mb-2">
+                                                After payment, find the 12-digit UTR/Transaction ID in your UPI app's history and enter it below.
+                                            </p>
+                                            <Input 
+                                                id="utr-mobile" 
+                                                value={utr}
+                                                onChange={(e) => setUtr(e.target.value)}
+                                                placeholder="12-digit UTR Number"
+                                            />
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            </Accordion>
+                        </div>
 
-                          <div>
-                              <Label htmlFor="utr" className="font-semibold">Enter UTR Number</Label>
-                               <p className="text-xs text-muted-foreground mb-2">
-                                  After payment, find the 12-digit UTR/Transaction ID in your UPI app's history and enter it below.
-                              </p>
-                              <Input 
-                                  id="utr" 
-                                  value={utr}
-                                  onChange={(e) => setUtr(e.target.value)}
-                                  placeholder="12-digit UTR Number"
-                              />
-                          </div>
-                      </CardContent>
-                  </Card>
-                </>
-              )}
+                         <Card className="hidden lg:block">
+                            <CardHeader>
+                                <CardTitle>Payment</CardTitle>
+                                <CardDescription>{totalAmount > 40000 ? 'An advance payment option is available for this order.' : 'Full payment is required for this order.'}</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                {paymentPercentages.length > 1 && (
+                                    <div>
+                                        <Label className="font-semibold">Select Payment Option</Label>
+                                        <RadioGroup value={String(selectedPaymentPercentage)} onValueChange={(val) => setSelectedPaymentPercentage(Number(val))} className="flex flex-wrap gap-2 mt-2">
+                                            {paymentPercentages.map(p => (
+                                                <Label key={p.value} htmlFor={`payment-${p.value}-desktop`} className="flex items-center gap-2 border rounded-md p-3 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary flex-1 justify-center min-w-[120px]">
+                                                    <RadioGroupItem value={String(p.value)} id={`payment-${p.value}-desktop`} />
+                                                    <span>{p.label}</span>
+                                                </Label>
+                                            ))}
+                                        </RadioGroup>
+                                    </div>
+                                )}
+                                <div className="flex items-center gap-6 p-4 border rounded-lg bg-muted/30">
+                                    <div className="w-40 h-40 p-2 bg-white rounded-md flex items-center justify-center">
+                                        {qrCodeUrl ? (
+                                            <Image src={qrCodeUrl} alt="UPI QR Code" width={150} height={150} unoptimized />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-gray-100"><PottersWheelSpinner /></div>
+                                        )}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <p className="font-semibold">Scan to pay with any UPI app</p>
+                                        <p className="text-sm text-muted-foreground">You need to pay an amount of:</p>
+                                        <p className="text-2xl font-bold text-primary">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(advanceAmount)}</p>
+                                        <p className="text-xs text-muted-foreground">UPI ID: {UPI_ID}</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label htmlFor="utr-desktop" className="font-semibold">Enter UTR Number</Label>
+                                    <p className="text-xs text-muted-foreground mb-2">
+                                        After payment, find the 12-digit UTR/Transaction ID in your UPI app's history and enter it below.
+                                    </p>
+                                    <Input id="utr-desktop" value={utr} onChange={(e) => setUtr(e.target.value)} placeholder="12-digit UTR Number" />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </>
+                    )}
+                </div>
+
+                <div className="hidden lg:block">
+                    <Card className="sticky top-28">
+                        <CardHeader>
+                            <CardTitle>Order Summary</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                           <OrderSummary />
+                        </CardContent>
+                        <CardFooter>
+                            <Button onClick={onSubmit} size="lg" className="w-full" disabled={isSubmitting || !!user?.isAnonymous || !selectedAddressId}>
+                                {isSubmitting ? <PottersWheelSpinner /> : 'Place Order'}
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                </div>
             </div>
-
-            <div className="space-y-8">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Order Summary</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                    {cartItems.map((item) => (
-                        <div key={item.cartItemId} className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="relative h-16 w-16 rounded-md overflow-hidden bg-muted">
-                            <Image src={isValidImageDomain(item.images?.[0]) ? item.images[0] : placeholderImages.product.url} alt={item.name} fill className="object-cover" />
-                            </div>
-                            <div>
-                            <p className="font-semibold">{item.name}</p>
-                            <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
-                            {item.selectedSize && <p className="text-sm text-muted-foreground">Size: {item.selectedSize}</p>}
-                            </div>
-                        </div>
-                        <p className="font-semibold">
-                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(getCartItemPrice(item) * item.quantity)}
-                        </p>
-                        </div>
-                    ))}
-                    <Separator />
-                    <div className="space-y-2">
-                        <div className="flex justify-between">
-                            <p className="text-muted-foreground">Subtotal (incl. Tax)</p>
-                            <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(subtotal)}</p>
-                        </div>
-                        <div className="flex justify-between">
-                            <p className="text-muted-foreground">Shipping Fee</p>
-                            <p>{shippingFee > 0 ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(shippingFee) : 'Free'}</p>
-                        </div>
-                         <Separator />
-                        <div className="flex justify-between font-bold text-lg">
-                            <p>Total</p>
-                            <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalAmount)}</p>
-                        </div>
-                        <div className="text-xs text-muted-foreground pt-2">
-                            <p>Includes a total of {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalGST)} in taxes.</p>
-                        </div>
-                    </div>
-                     <Separator />
-                     <div className="space-y-2">
-                        <div className="flex justify-between font-semibold text-primary">
-                            <p>{selectedPaymentPercentage === 1 ? 'Amount to Pay' : 'Advance to Pay'}</p>
-                            <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(advanceAmount)}</p>
-                        </div>
-                        <div className="flex justify-between">
-                            <p className="text-muted-foreground">Remaining Amount</p>
-                            <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(remainingAmount)}</p>
-                        </div>
-                    </div>
-                    </CardContent>
-                    <CardFooter>
-                         <Button onClick={onSubmit} size="lg" className="w-full" disabled={isSubmitting || !!user?.isAnonymous || !selectedAddressId}>
-                            {isSubmitting ? <PottersWheelSpinner /> : 'Place Order'}
-                        </Button>
-                    </CardFooter>
-                </Card>
-                 {!selectedAddressId && !user?.isAnonymous && (
-                    <Alert variant="destructive">
-                        <AlertTitle>Address Required</AlertTitle>
-                        <AlertDescription>
-                            Please select or add a shipping address to calculate taxes and place your order.
-                        </AlertDescription>
-                    </Alert>
-                )}
-            </div>
-        </div>
+             {!selectedAddressId && !user?.isAnonymous && (
+                <Alert variant="destructive" className="mt-6">
+                    <AlertTitle>Address Required</AlertTitle>
+                    <AlertDescription>
+                        Please select or add a shipping address to calculate taxes and place your order.
+                    </AlertDescription>
+                </Alert>
+            )}
         </main>
+         <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t p-4 z-40">
+            <Button onClick={onSubmit} size="lg" className="w-full" disabled={isSubmitting || !!user?.isAnonymous || !selectedAddressId}>
+                {isSubmitting ? <PottersWheelSpinner /> : 'Place Order'}
+            </Button>
+        </div>
     </div>
   );
 }
