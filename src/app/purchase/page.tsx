@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Label } from "@/components/ui/label";
 import placeholderImages from '@/lib/placeholder-images.json';
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay"
 
 
@@ -150,21 +150,28 @@ function Breadcrumbs({ categories, onClear }: { categories: string[], onClear: (
 }
 
 function ProductCarousel({ product, onClick }: { product: Product, onClick: () => void }) {
-    const autoplay = useRef(Autoplay({ delay: 1000, stopOnInteraction: false, stopOnMouseEnter: false }));
+    const plugin = useRef(
+        Autoplay({ delay: 1000, stopOnInteraction: true, stopOnMouseEnter: true })
+    );
+    const [api, setApi] = useState<CarouselApi>()
     const [isHovered, setIsHovered] = useState(false);
 
     useEffect(() => {
-        if (!autoplay.current) return;
+        if (!api) return;
+
         if (isHovered) {
-            autoplay.current.play();
+            plugin.current.play();
         } else {
-            autoplay.current.stop();
+            plugin.current.stop();
+            api.scrollTo(0, true);
         }
-    }, [isHovered]);
+    }, [isHovered, api]);
+
 
     return (
         <Carousel
-            plugins={[autoplay.current]}
+            setApi={setApi}
+            plugins={[plugin.current]}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onClick={onClick}

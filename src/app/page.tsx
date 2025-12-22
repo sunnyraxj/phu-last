@@ -23,7 +23,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle 
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import { Label } from "@/components/ui/label";
 import Autoplay from "embla-carousel-autoplay"
 import placeholderImages from '@/lib/placeholder-images.json';
@@ -143,21 +143,28 @@ function Filters({
 }
 
 function ProductCarousel({ product, onClick }: { product: Product, onClick: () => void }) {
-    const autoplay = useRef(Autoplay({ delay: 1000, stopOnInteraction: false, stopOnMouseEnter: false }));
+    const plugin = useRef(
+        Autoplay({ delay: 1000, stopOnInteraction: true, stopOnMouseEnter: true })
+    );
+    const [api, setApi] = useState<CarouselApi>()
     const [isHovered, setIsHovered] = useState(false);
 
     useEffect(() => {
-        if (!autoplay.current) return;
+        if (!api) return;
+
         if (isHovered) {
-            autoplay.current.play();
+            plugin.current.play();
         } else {
-            autoplay.current.stop();
+            plugin.current.stop();
+            api.scrollTo(0, true);
         }
-    }, [isHovered]);
+    }, [isHovered, api]);
+
 
     return (
         <Carousel
-            plugins={[autoplay.current]}
+            setApi={setApi}
+            plugins={[plugin.current]}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onClick={onClick}
@@ -755,7 +762,7 @@ export default function ProductPage() {
                         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Our Team</h2>
                     </div>
                      <div className="flex group">
-                        {(teamMembersToDisplay.length > 0 ? teamMembersToDisplay : allOtherMembers).map((member, index) => (
+                        {(allOtherMembers).map((member, index) => (
                           <div key={`${member.id}-${index}`} className="flex-shrink-0 w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5 px-2 md:px-4">
                               <Card className="w-full max-w-sm overflow-hidden rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow duration-300">
                                 <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-2xl">
