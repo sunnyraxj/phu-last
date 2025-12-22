@@ -24,7 +24,7 @@ const addressSchema = z.object({
 export type AddressFormValues = z.infer<typeof addressSchema>;
 
 interface AddressFormProps {
-  onSuccess: (data: AddressFormValues) => void;
+  onSuccess: (data: AddressFormValues) => Promise<void>;
   onCancel: () => void;
   address: AddressFormValues & { id?: string } | null;
 }
@@ -55,8 +55,9 @@ export function AddressForm({ onSuccess, onCancel, address }: AddressFormProps) 
     }
   }, [address, reset]);
 
-  const handleFormSubmit: SubmitHandler<AddressFormValues> = (data) => {
-    onSuccess(data);
+  const handleFormSubmit: SubmitHandler<AddressFormValues> = async (data) => {
+    await onSuccess(data);
+    reset();
   };
 
   return (
@@ -101,7 +102,7 @@ export function AddressForm({ onSuccess, onCancel, address }: AddressFormProps) 
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit">
+          <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Saving...' : 'Save Address'}
           </Button>
         </DialogFooter>
