@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ScrollArea } from '../ui/scroll-area';
 import { DialogFooter } from '../ui/dialog';
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
-import { X, PlusCircle, Trash2 } from 'lucide-react';
+import { X, PlusCircle, Trash2, RotateCcw } from 'lucide-react';
 import Image from 'next/image';
 import { AddOptionDialog } from './AddOptionDialog';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +25,8 @@ import { collection } from 'firebase/firestore';
 import { Separator } from '../ui/separator';
 import { cn, isValidImageDomain } from '@/lib/utils';
 import placeholderImages from '@/lib/placeholder-images.json';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
 
 const variantSchema = z.object({
   size: z.string().min(1, 'Size is required'),
@@ -82,6 +84,8 @@ type Product = {
   material: string;
 }
 
+const DRAFT_KEY = 'product-draft';
+
 const defaultFormValues: ItemFormValues = {
   name: '',
   description: '',
@@ -102,6 +106,7 @@ export function ItemForm({
 }: ItemFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
+  const [hasDraft, setHasDraft] = useState(false);
 
   const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
   const { data: allProducts } = useCollection<Product>(productsQuery);
@@ -154,24 +159,57 @@ export function ItemForm({
   });
 
   const images = watch('images', []);
+  const watchedForm = watch();
   const variants = watch('variants', []);
 
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isAddMaterialOpen, setIsAddMaterialOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
 
-
     useEffect(() => {
-        const resetValues = { ...defaultFormValues, ...item };
         if (item) {
-             reset(resetValues);
+            // Editing an existing item, no draft logic needed
+            const resetValues = { ...defaultFormValues, ...item };
+            reset(resetValues);
+            setHasDraft(false);
         } else {
-             reset(defaultFormValues);
+            // Adding a new item, check for draft
+            try {
+                const savedDraft = localStorage.getItem(DRAFT_KEY);
+                if (savedDraft) {
+                    reset(JSON.parse(savedDraft));
+                    setHasDraft(true);
+                } else {
+                    reset(defaultFormValues);
+                }
+            } catch (e) {
+                console.error("Failed to parse draft from localStorage", e);
+                reset(defaultFormValues);
+            }
         }
     }, [item, reset]);
 
+
+    // Auto-save draft logic for new items
+    useEffect(() => {
+        if (!item) { // Only run for new items
+            const subscription = watch((value) => {
+                 try {
+                    localStorage.setItem(DRAFT_KEY, JSON.stringify(value));
+                 } catch (e) {
+                    console.error("Failed to save draft to localStorage", e);
+                 }
+            });
+            return () => subscription.unsubscribe();
+        }
+    }, [watch, item]);
+
   const handleFormSubmit: SubmitHandler<ItemFormValues> = (data) => {
     onSuccess(data);
+    if (!item) { // If it was a new item, clear the draft
+        localStorage.removeItem(DRAFT_KEY);
+        setHasDraft(false);
+    }
   };
 
   const handleRemoveImage = (index: number) => {
@@ -213,11 +251,32 @@ export function ItemForm({
     }
   };
 
+  const handleDiscardDraft = () => {
+      localStorage.removeItem(DRAFT_KEY);
+      reset(defaultFormValues);
+      setHasDraft(false);
+      toast({ title: 'Draft Discarded' });
+  };
+
   return (
     <>
       <form onSubmit={handleSubmit(handleFormSubmit)}>
         <ScrollArea className="h-[70vh] pr-6 -mr-6">
           <div className="space-y-4 my-4">
+             {hasDraft && (
+                <Alert>
+                    <AlertTitle className="flex items-center justify-between">
+                        Draft Loaded
+                        <Button variant="ghost" size="sm" onClick={handleDiscardDraft}>
+                            <RotateCcw className="mr-2 h-4 w-4"/>
+                            Discard
+                        </Button>
+                    </AlertTitle>
+                    <AlertDescription>
+                        You are continuing from a previously saved draft.
+                    </AlertDescription>
+                </Alert>
+            )}
             <div className="space-y-1">
               <Label htmlFor="name">Item Name</Label>
               <Input id="name" {...register('name')} />
