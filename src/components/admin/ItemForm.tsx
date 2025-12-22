@@ -40,15 +40,16 @@ const itemSchema = z.object({
   baseMrp: z.preprocess(
     (val) => {
         if (typeof val === 'string') {
-            if (val.trim() === '') return undefined; 
+            if (val.trim() === '') return null;
             const processed = Number(val);
             return isNaN(processed) ? val : processed;
         }
+        if (val === undefined) return null;
         return val;
     },
     z.number({
-        invalid_type_error: "Base price must be a valid number." 
-    }).positive('Price must be a positive number.').optional()
+        invalid_type_error: "Base price must be a valid number."
+    }).positive('Price must be a positive number.').nullable().optional()
   ),
   images: z.array(z.string().url()).min(1, 'At least one image is required'),
   category: z.string().min(1, 'Category is required'),
@@ -64,7 +65,7 @@ const itemSchema = z.object({
     return (data.variants && data.variants.length > 0) || (typeof data.baseMrp === 'number' && data.baseMrp > 0);
 }, {
     message: "Base price is required when no size variants are present.",
-    path: ["baseMrp"], 
+    path: ["baseMrp"],
 });
 
 
@@ -84,7 +85,7 @@ type Product = {
 const defaultFormValues: ItemFormValues = {
   name: '',
   description: '',
-  baseMrp: undefined,
+  baseMrp: null,
   images: [],
   category: '',
   material: '',
@@ -151,19 +152,24 @@ export function ItemForm({
     control,
     name: "variants",
   });
-  
+
   const images = watch('images', []);
   const variants = watch('variants', []);
-  
+
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isAddMaterialOpen, setIsAddMaterialOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
 
-  
+
     useEffect(() => {
-        reset(item || defaultFormValues);
+        const resetValues = { ...defaultFormValues, ...item };
+        if (item) {
+             reset(resetValues);
+        } else {
+             reset(defaultFormValues);
+        }
     }, [item, reset]);
-  
+
   const handleFormSubmit: SubmitHandler<ItemFormValues> = (data) => {
     onSuccess(data);
   };
@@ -173,7 +179,7 @@ export function ItemForm({
     newImages.splice(index, 1);
     setValue('images', newImages, { shouldValidate: true, shouldDirty: true });
   };
-  
+
   const handleAddCategory = (value: string) => {
     if (value && !allCategories.includes(value)) {
       setAllCategories(prev => [...prev, value]);
@@ -181,7 +187,7 @@ export function ItemForm({
     setValue('category', value, { shouldValidate: true, shouldDirty: true });
     setIsAddCategoryOpen(false);
   }
-  
+
   const handleAddMaterial = (value: string) => {
     if (value && !allMaterials.includes(value)) {
       setAllMaterials(prev => [...prev, value]);
@@ -206,7 +212,7 @@ export function ItemForm({
       }
     }
   };
-  
+
   return (
     <>
       <form onSubmit={handleSubmit(handleFormSubmit)}>
@@ -222,7 +228,7 @@ export function ItemForm({
               <Textarea id="description" {...register('description')} rows={5} />
               {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
             </div>
-            
+
             <div className="space-y-2">
               <Label>Images</Label>
                <div className="flex items-center gap-2">
@@ -234,7 +240,7 @@ export function ItemForm({
                 />
                 <Button type="button" variant="outline" onClick={handleAddImageUrl}>Add URL</Button>
               </div>
-              
+
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 mt-2">
                 {images && images.map((url, index) => (
                   <div key={index} className="relative aspect-square rounded-md overflow-hidden border">
@@ -286,7 +292,7 @@ export function ItemForm({
                   </div>
               </div>
             </div>
-            
+
             <div className="space-y-2">
                 <Separator />
                 <Label>Size Variants (Optional)</Label>
@@ -385,7 +391,7 @@ export function ItemForm({
                 {errors.material && <p className="text-xs text-destructive">{errors.material.message}</p>}
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                <div className="space-y-1">
                   <Label htmlFor="hsn">HSN Code (Optional)</Label>
@@ -408,17 +414,17 @@ export function ItemForm({
             {isSubmitting ? <PottersWheelSpinner /> : (item ? 'Save Changes' : 'Add Item')}
           </Button>
         </DialogFooter>
-        
+
       </form>
-      <AddOptionDialog 
-        isOpen={isAddCategoryOpen} 
+      <AddOptionDialog
+        isOpen={isAddCategoryOpen}
         onClose={() => setIsAddCategoryOpen(false)}
         onAdd={handleAddCategory}
         title="Add New Category"
         label="Category Name"
       />
-      <AddOptionDialog 
-        isOpen={isAddMaterialOpen} 
+      <AddOptionDialog
+        isOpen={isAddMaterialOpen}
         onClose={() => setIsAddMaterialOpen(false)}
         onAdd={handleAddMaterial}
         title="Add New Material"

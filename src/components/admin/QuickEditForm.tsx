@@ -30,15 +30,16 @@ const quickEditSchema = z.object({
   baseMrp: z.preprocess(
     (val) => {
         if (typeof val === 'string') {
-            if (val.trim() === '') return undefined; 
+            if (val.trim() === '') return null;
             const processed = Number(val);
             return isNaN(processed) ? val : processed;
         }
+        if (val === undefined) return null;
         return val;
     },
     z.number({
-        invalid_type_error: "Base price must be a valid number." 
-    }).positive('Price must be a positive number.').optional()
+        invalid_type_error: "Base price must be a valid number."
+    }).positive('Price must be a positive number.').nullable().optional()
   ),
   images: z.array(z.string().url()).min(1, 'At least one image is required'),
   variants: z.array(variantSchema).optional(),
@@ -46,7 +47,7 @@ const quickEditSchema = z.object({
     return (data.variants && data.variants.length > 0) || (typeof data.baseMrp === 'number' && data.baseMrp > 0);
 }, {
     message: "Base price is required when no size variants are present.",
-    path: ["baseMrp"], 
+    path: ["baseMrp"],
 });
 
 export type QuickEditFormValues = z.infer<typeof quickEditSchema>;
@@ -76,16 +77,16 @@ export function QuickEditForm({ onSuccess, onCancel, item }: QuickEditFormProps)
     control,
     name: "variants",
   });
-  
+
   const images = getValues('images');
   const variants = getValues('variants');
-  
+
   const [imageUrl, setImageUrl] = useState('');
 
   useEffect(() => {
     reset(item);
   }, [item, reset]);
-  
+
   const handleFormSubmit: SubmitHandler<QuickEditFormValues> = (data) => {
     onSuccess(data);
   };
@@ -102,7 +103,7 @@ export function QuickEditForm({ onSuccess, onCancel, item }: QuickEditFormProps)
         z.string().url().parse(imageUrl);
         const currentImages = getValues('images') || [];
         setValue('images', [...currentImages, imageUrl], { shouldValidate: true, shouldDirty: true });
-        setImageUrl(''); 
+        setImageUrl('');
       } catch (error) {
         toast({
           variant: "destructive",
@@ -112,7 +113,7 @@ export function QuickEditForm({ onSuccess, onCancel, item }: QuickEditFormProps)
       }
     }
   };
-  
+
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)}>
       <ScrollArea className="h-[60vh] pr-6 -mr-6">
@@ -128,7 +129,7 @@ export function QuickEditForm({ onSuccess, onCancel, item }: QuickEditFormProps)
               />
               <Button type="button" variant="outline" onClick={handleAddImageUrl}>Add URL</Button>
             </div>
-            
+
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-2">
               {images && images.map((url, index) => (
                 <div key={index} className="relative aspect-square rounded-md overflow-hidden border">
@@ -155,7 +156,7 @@ export function QuickEditForm({ onSuccess, onCancel, item }: QuickEditFormProps)
           </div>
 
           <Separator />
-          
+
           {(!variants || variants.length === 0) && (
               <div className="space-y-1">
                   <Label htmlFor="baseMrp">Base Price (MRP)</Label>
@@ -164,7 +165,7 @@ export function QuickEditForm({ onSuccess, onCancel, item }: QuickEditFormProps)
                   {errors.baseMrp && <p className="text-xs text-destructive">{errors.baseMrp.message}</p>}
               </div>
           )}
-          
+
           <div className="space-y-2">
               <Label>Size Variants (Optional)</Label>
               <p className="text-xs text-muted-foreground">Add different sizes and prices for this product.</p>
