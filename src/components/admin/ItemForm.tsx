@@ -61,12 +61,10 @@ const itemSchema = z.object({
   ),
   variants: z.array(variantSchema).optional(),
 }).refine(data => {
-    // If there are no variants, baseMrp must be a positive number.
-    // If there are variants, baseMrp can be undefined.
     return (data.variants && data.variants.length > 0) || (typeof data.baseMrp === 'number' && data.baseMrp > 0);
 }, {
     message: "Base price is required when no size variants are present.",
-    path: ["baseMrp"], // Field to highlight with the error
+    path: ["baseMrp"], 
 });
 
 
@@ -152,12 +150,13 @@ export function ItemForm({
     name: "variants",
   });
   
-
+  const images = watch('images', []);
+  const variants = watch('variants', []);
+  
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isAddMaterialOpen, setIsAddMaterialOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
 
-  const images = watch('images', []);
   
     useEffect(() => {
         reset(defaultFormValues);
@@ -260,12 +259,14 @@ export function ItemForm({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label htmlFor="baseMrp">Base Price (MRP)</Label>
-                <Input id="baseMrp" type="number" {...register('baseMrp')} placeholder="e.g., 1250.00" />
-                <p className="text-xs text-muted-foreground">Required if no variants are added.</p>
-                {errors.baseMrp && <p className="text-xs text-destructive">{errors.baseMrp.message}</p>}
-              </div>
+                {(!variants || variants.length === 0) && (
+                    <div className="space-y-1">
+                        <Label htmlFor="baseMrp">Base Price (MRP)</Label>
+                        <Input id="baseMrp" type="number" {...register('baseMrp')} placeholder="e.g., 1250.00" />
+                        <p className="text-xs text-muted-foreground">Required if no variants are added.</p>
+                        {errors.baseMrp && <p className="text-xs text-destructive">{errors.baseMrp.message}</p>}
+                    </div>
+                )}
               <div className="space-y-1 pt-7">
                   <div className="flex items-center space-x-2">
                       <Controller

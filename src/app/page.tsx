@@ -28,6 +28,8 @@ import { Label } from "@/components/ui/label";
 import Autoplay from "embla-carousel-autoplay"
 import placeholderImages from '@/lib/placeholder-images.json';
 import { Badge } from "@/components/ui/badge";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
 
 type Product = {
   id: string;
@@ -170,45 +172,6 @@ function ProductImage({ product, onClick }: { product: Product; onClick: () => v
     );
 }
 
-function ProductGrid({ productsToShow, addToCart, setSelectedProduct }: { productsToShow: Product[], addToCart: (p: Product) => void, setSelectedProduct: (p: Product | null) => void }) {
-  
-  const getDisplayPrice = (product: Product): number => {
-    if (product.variants && product.variants.length > 0) {
-      return product.variants[0].price;
-    }
-    return product.baseMrp || 0;
-  };
-  
-  return (
-    <div className={cn('grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-y-8')}>
-      {productsToShow.map((product) => (
-        <div key={product.id} className="group relative text-left p-2 sm:p-4">
-          
-          <ProductImage product={product} onClick={() => setSelectedProduct(product)} />
-
-          <div className="mt-2 sm:mt-4 flex flex-col items-start">
-            <h3 className="text-sm sm:text-base text-foreground font-bold truncate w-full">{product.name}</h3>
-            <div className="flex items-center gap-2">
-                <p className="font-bold text-sm sm:text-base text-foreground">
-                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(getDisplayPrice(product))}
-                </p>
-                {product.variants && product.variants.length > 0 && <Badge variant="secondary">Multiple Sizes</Badge>}
-            </div>
-            <Button
-              variant="ghost"
-              className="w-full sm:w-auto mt-2 text-white bg-black hover:bg-black/80 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold text-sm h-auto justify-center"
-              onClick={() => addToCart(product)}
-              disabled={!product.inStock}
-            >
-              {product.inStock ? 'Add to Cart' : 'Out of Stock'}
-            </Button>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 const TypewriterHeadline = ({ headlines }: { headlines: string[] }) => {
   const [index, setIndex] = useState(0);
   const [subIndex, setSubIndex] = useState(0);
@@ -273,6 +236,7 @@ export default function ProductPage() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [variantSelection, setVariantSelection] = useState<{product: Product | null, selectedSize: string | null}>({product: null, selectedSize: null});
 
   const { firestore } = useFirebase();
   const { user, isUserLoading } = useUser();
@@ -394,27 +358,39 @@ export default function ProductPage() {
     }
   };
 
-  const addToCart = (product: Product) => {
+  const handleAddToCart = (product: Product, selectedSize: string | null) => {
     if (!user) {
         router.push('/login');
         return;
     }
-    const existingItem = cartItems.find(item => item.id === product.id);
+
+    const existingItem = cartItems.find(item => item.id === product.id && item.selectedSize === selectedSize);
+
     if (existingItem) {
-      updateCartItemQuantity(existingItem.cartItemId, existingItem.quantity + 1);
+        updateCartItemQuantity(existingItem.cartItemId, existingItem.quantity + 1);
     } else {
-      const cartCollection = collection(firestore, 'users', user.uid, 'cart');
-      const newCartItemRef = doc(cartCollection);
-      setDoc(newCartItemRef, {
-        productId: product.id,
-        quantity: 1,
-        selectedSize: product.variants && product.variants.length > 0 ? product.variants[0].size : null
-      });
+        const cartCollection = collection(firestore, 'users', user.uid, 'cart');
+        const newCartItemRef = doc(cartCollection);
+        setDoc(newCartItemRef, {
+            productId: product.id,
+            quantity: 1,
+            selectedSize: selectedSize
+        });
     }
+
     toast({
-      title: "Item Added",
-      description: `${product.name} has been added to your cart.`,
+        title: "Item Added",
+        description: `${product.name}${selectedSize ? ` (${selectedSize})` : ''} has been added to your cart.`,
     });
+    setVariantSelection({ product: null, selectedSize: null });
+  };
+  
+  const openVariantSelector = (product: Product) => {
+      if (product.variants && product.variants.length > 0) {
+          setVariantSelection({ product, selectedSize: product.variants[0].size });
+      } else {
+          handleAddToCart(product, null);
+      }
   };
 
 
@@ -478,11 +454,15 @@ export default function ProductPage() {
     return allOtherMembers;
   }, [allOtherMembers]);
 
-  const getProductPrice = (product: Product) => {
-      if (product.variants && product.variants.length > 0) {
-          return product.variants[0].price;
-      }
-      return product.baseMrp || 0;
+  const getProductPrice = (product: Product | null, size: string | null = null): number => {
+    if (!product) return 0;
+    
+    if (product.variants && product.variants.length > 0) {
+        const targetSize = size || product.variants[0].size;
+        const selectedVariant = product.variants.find(v => v.size === targetSize);
+        return selectedVariant?.price || product.variants[0].price;
+    }
+    return product.baseMrp || 0;
   };
 
   return (
@@ -607,70 +587,132 @@ export default function ProductPage() {
                   <PottersWheelSpinner />
                 </div>
               ) : (
-                <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
-                  <ProductGrid productsToShow={productsToShow} addToCart={addToCart} setSelectedProduct={setSelectedProduct} />
+                <>
+                    <div className={cn('grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-y-8')}>
+                        {productsToShow.map((product) => (
+                            <div key={product.id} className="group relative text-left p-2 sm:p-4">
+                            <ProductImage product={product} onClick={() => setSelectedProduct(product)} />
 
-                  {allProducts && allProducts.length > 20 && (
-                    <div className="text-center mt-8">
-                      <Link href="/purchase">
-                        <Button variant="outline" size="lg">View All Products</Button>
-                      </Link>
-                    </div>
-                  )}
-
-                  {selectedProduct && (
-                    <DialogContent className="sm:max-w-[800px]">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-2">
-                        <Carousel className="w-full">
-                          <CarouselContent>
-                            {(selectedProduct.images.length > 0 ? selectedProduct.images : [placeholderImages.product.url]).map((image, index) => (
-                              <CarouselItem key={index}>
-                                <div className="relative aspect-square bg-muted rounded-lg">
-                                  <Image
-                                    src={isValidImageDomain(image) ? image : placeholderImages.product.url}
-                                    alt={`${selectedProduct.name} - image ${index + 1}`}
-                                    fill
-                                    className="object-cover rounded-lg"
-                                  />
+                            <div className="mt-2 sm:mt-4 flex flex-col items-start">
+                                <h3 className="text-sm sm:text-base text-foreground font-bold truncate w-full">{product.name}</h3>
+                                <div className="flex items-center gap-2">
+                                    <p className="font-bold text-sm sm:text-base text-foreground">
+                                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(getProductPrice(product))}
+                                    </p>
+                                    {product.variants && product.variants.length > 0 && <Badge variant="secondary">Multiple Sizes</Badge>}
                                 </div>
-                              </CarouselItem>
-                            ))}
-                          </CarouselContent>
-                          <CarouselPrevious className="left-2" />
-                          <CarouselNext className="right-2" />
-                        </Carousel>
-                        <div className="flex flex-col justify-center">
-                          <DialogHeader>
-                            <DialogTitle className="text-3xl font-bold">{selectedProduct.name}</DialogTitle>
-                            <DialogDescription className="text-base pt-4">
-                              {selectedProduct.description}
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="mt-4">
-                            <p className="text-2xl font-bold">
-                              {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(getProductPrice(selectedProduct))}
-                            </p>
-                            <p className={cn("mt-2 text-sm font-semibold", selectedProduct.inStock ? "text-green-600" : "text-red-600")}>
-                              {selectedProduct.inStock ? "In Stock" : "Out of Stock"}
-                            </p>
-                          </div>
-                          <DialogFooter className="mt-6">
-                            <Button size="lg" className="w-full" onClick={() => addToCart(selectedProduct)} disabled={!selectedProduct.inStock}>
-                              <ShoppingBag className="mr-2" />
-                              Add to Cart
-                            </Button>
-                          </DialogFooter>
+                                <Button
+                                variant="ghost"
+                                className="w-full sm:w-auto mt-2 text-white bg-black hover:bg-black/80 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold text-sm h-auto justify-center"
+                                onClick={() => openVariantSelector(product)}
+                                disabled={!product.inStock}
+                                >
+                                {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                                </Button>
+                            </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {allProducts && allProducts.length > 20 && (
+                        <div className="text-center mt-8">
+                        <Link href="/purchase">
+                            <Button variant="outline" size="lg">View All Products</Button>
+                        </Link>
                         </div>
-                      </div>
-                    </DialogContent>
-                  )}
-                </Dialog>
+                    )}
+                </>
               )}
             </main>
           </div>
         </div>
       </div>
       
+      {/* Product Detail Dialog */}
+      <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
+        {selectedProduct && (
+            <DialogContent className="sm:max-w-[800px]">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-2">
+                <Carousel className="w-full">
+                    <CarouselContent>
+                    {(selectedProduct.images.length > 0 ? selectedProduct.images : [placeholderImages.product.url]).map((image, index) => (
+                        <CarouselItem key={index}>
+                        <div className="relative aspect-square bg-muted rounded-lg">
+                            <Image
+                            src={isValidImageDomain(image) ? image : placeholderImages.product.url}
+                            alt={`${selectedProduct.name} - image ${index + 1}`}
+                            fill
+                            className="object-cover rounded-lg"
+                            />
+                        </div>
+                        </CarouselItem>
+                    ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="left-2" />
+                    <CarouselNext className="right-2" />
+                </Carousel>
+                <div className="flex flex-col justify-center">
+                    <DialogHeader>
+                    <DialogTitle className="text-3xl font-bold">{selectedProduct.name}</DialogTitle>
+                    <DialogDescription className="text-base pt-4">
+                        {selectedProduct.description}
+                    </DialogDescription>
+                    </DialogHeader>
+                    <div className="mt-4">
+                    <p className="text-2xl font-bold">
+                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(getProductPrice(selectedProduct))}
+                    </p>
+                    <p className={cn("mt-2 text-sm font-semibold", selectedProduct.inStock ? "text-green-600" : "text-red-600")}>
+                        {selectedProduct.inStock ? "In Stock" : "Out of Stock"}
+                    </p>
+                    </div>
+                    <DialogFooter className="mt-6">
+                    <Button size="lg" className="w-full" onClick={() => { setSelectedProduct(null); openVariantSelector(selectedProduct); }} disabled={!selectedProduct.inStock}>
+                        <ShoppingBag className="mr-2" />
+                        Add to Cart
+                    </Button>
+                    </DialogFooter>
+                </div>
+                </div>
+            </DialogContent>
+        )}
+      </Dialog>
+      
+      {/* Variant Selection Dialog */}
+      <Dialog open={!!variantSelection.product} onOpenChange={(isOpen) => !isOpen && setVariantSelection({product: null, selectedSize: null})}>
+          {variantSelection.product && (
+              <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                      <DialogTitle>Select Size for {variantSelection.product.name}</DialogTitle>
+                      <DialogDescription>Choose an available size and add to cart.</DialogDescription>
+                  </DialogHeader>
+                  <div className="py-4">
+                      <RadioGroup 
+                          value={variantSelection.selectedSize || ''} 
+                          onValueChange={(size) => setVariantSelection(prev => ({...prev, selectedSize: size}))}
+                          className="space-y-2"
+                      >
+                          {variantSelection.product.variants?.map(variant => (
+                              <Label key={variant.size} htmlFor={variant.size} className="flex items-center justify-between gap-4 border rounded-md p-4 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary">
+                                  <div className="flex items-center gap-4">
+                                      <RadioGroupItem value={variant.size} id={variant.size} />
+                                      <span>{variant.size}</span>
+                                  </div>
+                                  <span className="font-semibold">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(variant.price)}</span>
+                              </Label>
+                          ))}
+                      </RadioGroup>
+                  </div>
+                  <DialogFooter>
+                       <Button type="button" variant="outline" onClick={() => setVariantSelection({product: null, selectedSize: null})}>Cancel</Button>
+                      <Button onClick={() => handleAddToCart(variantSelection.product!, variantSelection.selectedSize)} disabled={!variantSelection.selectedSize}>
+                          Add to Cart
+                      </Button>
+                  </DialogFooter>
+              </DialogContent>
+          )}
+      </Dialog>
+
       <section className="bg-background py-8">
           <div className="container mx-auto px-4">
               <div className="text-center mb-12">

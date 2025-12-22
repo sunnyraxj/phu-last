@@ -25,6 +25,7 @@ import placeholderImages from '@/lib/placeholder-images.json';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay"
 import { Badge } from "@/components/ui/badge";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 
 type Product = {
@@ -45,7 +46,7 @@ type Order = {
     status: 'pending' | 'shipped' | 'delivered' | 'pending-payment-approval';
 };
 
-type CartItem = Product & { quantity: number; cartItemId: string; };
+type CartItem = Product & { quantity: number; cartItemId: string; selectedSize?: string };
 
 type Store = {
     id: string;
@@ -188,6 +189,7 @@ export default function PurchasePage() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [variantSelection, setVariantSelection] = useState<{product: Product | null, selectedSize: string | null}>({product: null, selectedSize: null});
 
   const { firestore, addDocumentNonBlocking } = useFirebase();
   const { user, isUserLoading } = useUser();
@@ -220,7 +222,7 @@ export default function PurchasePage() {
     if (!cartData || !allProducts) return [];
     return cartData.map(cartItem => {
       const product = allProducts.find(p => p.id === cartItem.productId);
-      return product ? { ...product, quantity: cartItem.quantity, cartItemId: cartItem.id } : null;
+      return product ? { ...product, quantity: cartItem.quantity, cartItemId: cartItem.id, selectedSize: cartItem.selectedSize } : null;
     }).filter((item): item is CartItem => item !== null);
   }, [cartData, allProducts]);
 
@@ -304,30 +306,38 @@ export default function PurchasePage() {
     }
   };
   
-  const addToCart = (product: Product) => {
+    const handleAddToCart = (product: Product, selectedSize: string | null) => {
     if (!user) {
-       toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Could not add item to cart. Please try again.",
-        });
+        router.push('/login');
         return;
     }
-    const existingItem = cartItems.find(item => item.id === product.id);
+
+    const existingItem = cartItems.find(item => item.id === product.id && item.selectedSize === selectedSize);
+
     if (existingItem) {
-      updateCartItemQuantity(existingItem.cartItemId, existingItem.quantity + 1);
+        updateCartItemQuantity(existingItem.cartItemId, existingItem.quantity + 1);
     } else {
-      const cartCollection = collection(firestore, 'users', user.uid, 'cart');
-      addDocumentNonBlocking(cartCollection, {
-        productId: product.id,
-        quantity: 1,
-        selectedSize: product.variants && product.variants.length > 0 ? product.variants[0].size : null
-      });
+        const cartCollection = collection(firestore, 'users', user.uid, 'cart');
+        addDocumentNonBlocking(cartCollection, {
+            productId: product.id,
+            quantity: 1,
+            selectedSize: selectedSize
+        });
     }
+
     toast({
-      title: "Item Added",
-      description: `${product.name} has been added to your cart.`,
+        title: "Item Added",
+        description: `${product.name}${selectedSize ? ` (${selectedSize})` : ''} has been added to your cart.`,
     });
+    setVariantSelection({ product: null, selectedSize: null });
+  };
+  
+  const openVariantSelector = (product: Product) => {
+      if (product.variants && product.variants.length > 0) {
+          setVariantSelection({ product, selectedSize: product.variants[0].size });
+      } else {
+          handleAddToCart(product, null);
+      }
   };
 
   const handleCheckout = () => {
@@ -384,11 +394,15 @@ export default function PurchasePage() {
       });
   }, [allProducts, selectedCategories, selectedMaterials, availability, sortBy, searchTerm]);
 
-  const getProductPrice = (product: Product) => {
-      if (product.variants && product.variants.length > 0) {
-          return product.variants[0].price;
-      }
-      return product.baseMrp || 0;
+  const getProductPrice = (product: Product | null, size: string | null = null): number => {
+    if (!product) return 0;
+    
+    if (product.variants && product.variants.length > 0) {
+        const targetSize = size || product.variants[0].size;
+        const selectedVariant = product.variants.find(v => v.size === targetSize);
+        return selectedVariant?.price || product.variants[0].price;
+    }
+    return product.baseMrp || 0;
   };
 
   return (
@@ -495,7 +509,7 @@ export default function PurchasePage() {
                 <PottersWheelSpinner />
             </div>
           ) : (
-          <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
+          <>
             <div className={cn('grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-y-2 sm:gap-y-8')}>
               {filteredProducts.map((product) => (
                 <div key={product.id} className="group relative text-left p-2 sm:p-4">
@@ -512,7 +526,7 @@ export default function PurchasePage() {
                     <Button
                         variant="ghost"
                         className="w-full sm:w-auto mt-2 text-white bg-black hover:bg-black/80 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold text-sm h-auto justify-center"
-                        onClick={() => addToCart(product)}
+                        onClick={() => openVariantSelector(product)}
                         disabled={!product.inStock}
                     >
                       {product.inStock ? 'Add to Cart' : 'Out of Stock'}
@@ -522,53 +536,88 @@ export default function PurchasePage() {
               ))}
             </div>
 
-            {selectedProduct && (
-              <DialogContent className="sm:max-w-[800px]">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-2">
-                  <Carousel className="w-full">
-                    <CarouselContent>
-                      {(selectedProduct.images.length > 0 ? selectedProduct.images : [placeholderImages.product.url]).map((image, index) => (
-                        <CarouselItem key={index}>
-                          <div className="relative aspect-square bg-muted rounded-lg">
-                            <Image
-                              src={isValidImageDomain(image) ? image : placeholderImages.product.url}
-                              alt={`${selectedProduct.name} - image ${index + 1}`}
-                              fill
-                              className="object-cover rounded-lg"
-                            />
-                          </div>
-                        </CarouselItem>
-                      ))}
-                    </CarouselContent>
-                    <CarouselPrevious className="left-2" />
-                    <CarouselNext className="right-2" />
-                  </Carousel>
-                  <div className="flex flex-col justify-center">
-                    <DialogHeader>
-                      <DialogTitle className="text-3xl font-bold">{selectedProduct.name}</DialogTitle>
-                      <DialogDescription className="text-base pt-4">
-                        {selectedProduct.description}
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="mt-4">
-                      <p className="text-2xl font-bold">
-                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(getProductPrice(selectedProduct))}
-                      </p>
-                      <p className={cn("mt-2 text-sm font-semibold", selectedProduct.inStock ? "text-green-600" : "text-red-600")}>
-                        {selectedProduct.inStock ? "In Stock" : "Out of Stock"}
-                      </p>
+            <Dialog open={!!selectedProduct} onOpenChange={(isOpen) => !isOpen && setSelectedProduct(null)}>
+                {selectedProduct && (
+                <DialogContent className="sm:max-w-[800px]">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-2">
+                    <Carousel className="w-full">
+                        <CarouselContent>
+                        {(selectedProduct.images.length > 0 ? selectedProduct.images : [placeholderImages.product.url]).map((image, index) => (
+                            <CarouselItem key={index}>
+                            <div className="relative aspect-square bg-muted rounded-lg">
+                                <Image
+                                src={isValidImageDomain(image) ? image : placeholderImages.product.url}
+                                alt={`${selectedProduct.name} - image ${index + 1}`}
+                                fill
+                                className="object-cover rounded-lg"
+                                />
+                            </div>
+                            </CarouselItem>
+                        ))}
+                        </CarouselContent>
+                        <CarouselPrevious className="left-2" />
+                        <CarouselNext className="right-2" />
+                    </Carousel>
+                    <div className="flex flex-col justify-center">
+                        <DialogHeader>
+                        <DialogTitle className="text-3xl font-bold">{selectedProduct.name}</DialogTitle>
+                        <DialogDescription className="text-base pt-4">
+                            {selectedProduct.description}
+                        </DialogDescription>
+                        </DialogHeader>
+                        <div className="mt-4">
+                        <p className="text-2xl font-bold">
+                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(getProductPrice(selectedProduct))}
+                        </p>
+                        <p className={cn("mt-2 text-sm font-semibold", selectedProduct.inStock ? "text-green-600" : "text-red-600")}>
+                            {selectedProduct.inStock ? "In Stock" : "Out of Stock"}
+                        </p>
+                        </div>
+                        <DialogFooter className="mt-6">
+                        <Button size="lg" className="w-full" onClick={() => { setSelectedProduct(null); openVariantSelector(selectedProduct); }} disabled={!selectedProduct.inStock}>
+                            <ShoppingBag className="mr-2" />
+                            Add to Cart
+                        </Button>
+                        </DialogFooter>
                     </div>
-                    <DialogFooter className="mt-6">
-                      <Button size="lg" className="w-full" onClick={() => addToCart(selectedProduct)} disabled={!selectedProduct.inStock}>
-                        <ShoppingBag className="mr-2" />
-                        Add to Cart
-                      </Button>
-                    </DialogFooter>
-                  </div>
-                </div>
-              </DialogContent>
-            )}
-          </Dialog>
+                    </div>
+                </DialogContent>
+                )}
+            </Dialog>
+            <Dialog open={!!variantSelection.product} onOpenChange={(isOpen) => !isOpen && setVariantSelection({product: null, selectedSize: null})}>
+                {variantSelection.product && (
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Select Size for {variantSelection.product.name}</DialogTitle>
+                            <DialogDescription>Choose an available size and add to cart.</DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4">
+                            <RadioGroup 
+                                value={variantSelection.selectedSize || ''} 
+                                onValueChange={(size) => setVariantSelection(prev => ({...prev, selectedSize: size}))}
+                                className="space-y-2"
+                            >
+                                {variantSelection.product.variants?.map(variant => (
+                                    <Label key={variant.size} htmlFor={variant.size} className="flex items-center justify-between gap-4 border rounded-md p-4 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary">
+                                        <div className="flex items-center gap-4">
+                                            <RadioGroupItem value={variant.size} id={variant.size} />
+                                            <span>{variant.size}</span>
+                                        </div>
+                                        <span className="font-semibold">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(variant.price)}</span>
+                                    </Label>
+                                ))}
+                            </RadioGroup>
+                        </div>
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setVariantSelection({product: null, selectedSize: null})}>Cancel</Button>
+                            <Button onClick={() => handleAddToCart(variantSelection.product!, variantSelection.selectedSize)} disabled={!variantSelection.selectedSize}>
+                                Add to Cart
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                )}
+            </Dialog>
+          </>
           )}
         </main>
       </div>
