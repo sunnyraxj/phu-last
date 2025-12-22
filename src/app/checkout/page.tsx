@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -75,6 +76,13 @@ export default function CheckoutPage() {
     // Generate a unique transaction ID when the component mounts
     setTransactionId(`PHU${Date.now()}`);
   }, []);
+  
+  useEffect(() => {
+    if (addresses && addresses.length > 0 && !selectedAddressId) {
+      setSelectedAddressId(addresses[0].id);
+    }
+  }, [addresses, selectedAddressId]);
+
 
   const cartItems: CartItem[] = useMemo(() => {
     if (!cartData || !allProducts) return [];
@@ -271,6 +279,8 @@ export default function CheckoutPage() {
         </div>
     )
   }
+  
+  const noAddressAdded = addresses && addresses.length === 0;
 
   const OrderSummary = () => (
     <div className="space-y-4">
@@ -326,6 +336,22 @@ export default function CheckoutPage() {
         </div>
     </div>
   )
+  
+    const ActionButton = () => {
+        if (noAddressAdded) {
+            return (
+                <Link href="/account/add-address?redirect=/checkout" className="w-full">
+                    <Button size="lg" className="w-full">Add Address to Order</Button>
+                </Link>
+            )
+        }
+        return (
+            <Button onClick={onSubmit} size="lg" className="w-full" disabled={isSubmitting || !!user?.isAnonymous || !selectedAddressId}>
+                {isSubmitting ? <PottersWheelSpinner /> : 'Place Order'}
+            </Button>
+        )
+    };
+
 
   return (
     <div className="bg-background">
@@ -480,9 +506,7 @@ export default function CheckoutPage() {
                            <OrderSummary />
                         </CardContent>
                         <CardFooter>
-                            <Button onClick={onSubmit} size="lg" className="w-full" disabled={isSubmitting || !!user?.isAnonymous || !selectedAddressId}>
-                                {isSubmitting ? <PottersWheelSpinner /> : 'Place Order'}
-                            </Button>
+                            <ActionButton />
                         </CardFooter>
                     </Card>
                 </div>
@@ -498,9 +522,7 @@ export default function CheckoutPage() {
         </main>
         
         <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t p-4 z-40">
-            <Button onClick={onSubmit} size="lg" className="w-full" disabled={isSubmitting || !!user?.isAnonymous || !selectedAddressId}>
-                {isSubmitting ? <PottersWheelSpinner /> : 'Place Order'}
-            </Button>
+            <ActionButton />
         </div>
     </div>
   );
