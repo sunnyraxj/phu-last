@@ -65,27 +65,19 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
     const firestore = useFirestore();
     const router = useRouter();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
     
     const [purchaseMenuOpen, setPurchaseMenuOpen] = useState(false);
     const [storesMenuOpen, setStoresMenuOpen] = useState(false);
     const [adminMenuOpen, setAdminMenuOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
-
-    useEffect(() => {
-        const selectRandomProducts = () => {
-            if (products.length > 0) {
-                const shuffled = [...products].sort(() => 0.5 - Math.random());
-                setFeaturedProducts(shuffled.slice(0, 3));
-            }
-        };
-
-        selectRandomProducts(); // Initial selection
-        const intervalId = setInterval(selectRandomProducts, 5 * 60 * 1000); // Refresh every 5 minutes
-
-        return () => clearInterval(intervalId); // Cleanup on unmount
-    }, [products]);
-
+    
+    const featuredProducts = useMemo(() => {
+        if (products.length > 0) {
+            const shuffled = [...products].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, 3);
+        }
+        return [];
+    }, [products, purchaseMenuOpen]); // Re-calculate only when menu opens
 
     const handleSignOut = async () => {
         await signOut(auth);
@@ -162,24 +154,26 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                             className="w-96"
                             onMouseEnter={() => setPurchaseMenuOpen(true)} onMouseLeave={() => setPurchaseMenuOpen(false)}
                         >
-                            <div className="grid gap-4">
-                                <p className="font-semibold">Featured Products</p>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {featuredProducts.map((product) => (
-                                        <Link href="/purchase" key={product.id} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted -m-2">
-                                            <div className="relative h-20 w-20 rounded-md overflow-hidden">
-                                                <Image src={isValidImageDomain(product.images?.[0]) ? product.images[0] : placeholderImages.product.url} alt={product.name} fill className="object-cover" />
-                                            </div>
-                                            <div>
-                                                <p className="font-semibold text-xs truncate w-20 text-center">{product.name}</p>
-                                            </div>
-                                        </Link>
-                                    ))}
+                            {purchaseMenuOpen && (
+                                <div className="grid gap-4">
+                                    <p className="font-semibold">Featured Products</p>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {featuredProducts.map((product) => (
+                                            <Link href="/purchase" key={product.id} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted -m-2">
+                                                <div className="relative h-20 w-20 rounded-md overflow-hidden">
+                                                    <Image src={isValidImageDomain(product.images?.[0]) ? product.images[0] : placeholderImages.product.url} alt={product.name} fill className="object-cover" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-semibold text-xs truncate w-20 text-center">{product.name}</p>
+                                                </div>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                    <Link href="/purchase">
+                                        <Button variant="link" className="p-0 h-auto text-primary w-full justify-center">View More</Button>
+                                    </Link>
                                 </div>
-                                <Link href="/purchase">
-                                    <Button variant="link" className="p-0 h-auto text-primary w-full justify-center">View More</Button>
-                                </Link>
-                            </div>
+                            )}
                         </PopoverContent>
                     </Popover>
                     <Popover open={storesMenuOpen} onOpenChange={setStoresMenuOpen}>
@@ -194,35 +188,37 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                             className="w-80"
                              onMouseEnter={() => setStoresMenuOpen(true)} onMouseLeave={() => setStoresMenuOpen(false)}
                         >
-                            <div className="grid gap-4">
-                                <p className="font-semibold">Store Locations</p>
-                                <div className="grid gap-2">
-                                    {stores.slice(0, 3).map((store) => (
-                                        <Link href="/our-stores" key={store.id} className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted -m-2">
-                                            {store.image && isValidImageDomain(store.image) ? (
-                                                <div className="relative h-12 w-12 rounded-md overflow-hidden">
-                                                    <Image src={store.image} alt={store.name} fill className="object-cover" />
+                           {storesMenuOpen && (
+                                <div className="grid gap-4">
+                                    <p className="font-semibold">Store Locations</p>
+                                    <div className="grid gap-2">
+                                        {stores.slice(0, 3).map((store) => (
+                                            <Link href="/our-stores" key={store.id} className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted -m-2">
+                                                {store.image && isValidImageDomain(store.image) ? (
+                                                    <div className="relative h-12 w-12 rounded-md overflow-hidden">
+                                                        <Image src={store.image} alt={store.name} fill className="object-cover" />
+                                                    </div>
+                                                ) : (
+                                                    <div className="h-12 w-12 rounded-md bg-muted flex items-center justify-center">
+                                                        <Store className="h-6 w-6 text-primary"/>
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <p className="font-semibold text-sm">{store.name}</p>
                                                 </div>
-                                            ) : (
-                                                <div className="h-12 w-12 rounded-md bg-muted flex items-center justify-center">
-                                                    <Store className="h-6 w-6 text-primary"/>
-                                                </div>
-                                            )}
-                                            <div>
-                                                <p className="font-semibold text-sm">{store.name}</p>
-                                            </div>
-                                        </Link>
-                                    ))}
-                                    {stores.length > 3 && (
-                                         <Link href="/our-stores">
-                                            <Button variant="link" className="p-0 h-auto text-primary">View all stores</Button>
-                                        </Link>
-                                    )}
-                                     {stores.length === 0 && (
-                                        <p className="text-sm text-muted-foreground">No store locations added yet.</p>
-                                    )}
+                                            </Link>
+                                        ))}
+                                        {stores.length > 3 && (
+                                            <Link href="/our-stores">
+                                                <Button variant="link" className="p-0 h-auto text-primary">View all stores</Button>
+                                            </Link>
+                                        )}
+                                        {stores.length === 0 && (
+                                            <p className="text-sm text-muted-foreground">No store locations added yet.</p>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </PopoverContent>
                     </Popover>
                     <Link href="/our-team">
@@ -425,7 +421,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                 </Link>
                                 <SheetTitle className="sr-only">Main Menu</SheetTitle>
                                 <SheetClose asChild>
-                                    <Button variant="ghost">Close</Button>
+                                    <Button variant="ghost" className="text-white hover:bg-white/10">Close</Button>
                                 </SheetClose>
                             </SheetHeader>
                             <div className="flex h-full flex-col">
