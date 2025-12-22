@@ -14,15 +14,10 @@ export function isValidImageDomain(url: string | undefined | null): boolean {
         const remotePatterns = nextConfig.images?.remotePatterns || [];
         
         return remotePatterns.some(pattern => {
-            if (pattern.hostname.startsWith('**.')) {
-                // Handle wildcard subdomains like '**.media-amazon.com'
-                const mainDomain = pattern.hostname.substring(3); // e.g., 'media-amazon.com'
-                return urlObject.hostname.endsWith(mainDomain);
-            }
-            if (pattern.hostname.startsWith('*.')) {
-                // Handle wildcard like '*.example.com'
-                const mainDomain = pattern.hostname.substring(2);
-                 return urlObject.hostname.endsWith(`.${mainDomain}`) || urlObject.hostname === mainDomain;
+            const patternHostname = pattern.hostname.replace(/\\*\\*/g, '*'); // Normalize ** to *
+            if (patternHostname.startsWith('*.')) {
+                const mainDomain = patternHostname.substring(2);
+                return urlObject.hostname.endsWith(`.${mainDomain}`) || urlObject.hostname === mainDomain;
             }
             // Exact match
             return pattern.hostname === urlObject.hostname;
