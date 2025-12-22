@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useState, useMemo, useEffect, useRef } from "react"
@@ -440,13 +439,14 @@ export default function ProductPage() {
   ];
 
   const teamMembersToDisplay = useMemo(() => {
-    if (!allOtherMembers || allOtherMembers.length === 0) return [];
-    // Ensure at least 15 items for a smooth loop, duplicating if necessary
-    let repeated = [...allOtherMembers];
-    if (repeated.length > 0 && repeated.length < 15) {
-      return [...repeated, ...repeated];
+    if (!allOtherMembers) return [];
+    
+    const displayList = [...allOtherMembers];
+    // If marquee is active (more than 5 members), we duplicate for a seamless loop
+    if (allOtherMembers.length > 5 && allOtherMembers.length < 15) {
+      return [...displayList, ...displayList];
     }
-    return repeated;
+    return displayList;
   }, [allOtherMembers]);
 
   return (
