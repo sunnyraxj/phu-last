@@ -1,14 +1,16 @@
 
 'use client';
 
-import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, doc, writeBatch } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AddressForm, AddressFormValues } from '@/components/account/AddressForm';
 import { Header } from '@/components/shared/Header';
 import { useToast } from '@/hooks/use-toast';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+type ShippingAddress = AddressFormValues & { id: string };
 
 export default function AddAddressPage() {
     const firestore = useFirestore();
@@ -17,16 +19,38 @@ export default function AddAddressPage() {
     const searchParams = useSearchParams();
     const { toast } = useToast();
 
+    const addressesQuery = useMemoFirebase(
+        () => (user ? collection(firestore, 'users', user.uid, 'shippingAddresses') : null),
+        [firestore, user]
+    );
+    const { data: addresses } = useCollection<ShippingAddress>(addressesQuery);
+
     const handleAddSubmit = async (formData: AddressFormValues) => {
         if (!user || !user.email) return;
+
         const addressesCollection = collection(firestore, 'users', user.uid, 'shippingAddresses');
+        const newDocRef = doc(addressesCollection);
         
-        try {
-            await addDocumentNonBlocking(addressesCollection, { 
-                ...formData, 
-                userId: user.uid,
-                email: user.email // Also save user's email with address
+        const batch = writeBatch(firestore);
+
+        // If the new address is set as default, unset any other default address.
+        if (formData.isDefault && addresses) {
+            addresses.forEach(addr => {
+                if (addr.isDefault) {
+                    const otherAddressRef = doc(firestore, 'users', user.uid, 'shippingAddresses', addr.id);
+                    batch.update(otherAddressRef, { isDefault: false });
+                }
             });
+        }
+        
+        batch.set(newDocRef, { 
+            ...formData, 
+            userId: user.uid,
+            email: user.email,
+        });
+
+        try {
+            await batch.commit();
             toast({ title: "Address Saved", description: "Your new address has been saved." });
             const redirectUrl = searchParams.get('redirect') || '/account';
             router.push(redirectUrl);

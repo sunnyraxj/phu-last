@@ -1,3 +1,4 @@
+
 'use client';
     
 import {
@@ -8,6 +9,7 @@ import {
   CollectionReference,
   DocumentReference,
   SetOptions,
+  WriteBatch,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import {FirestorePermissionError} from '@/firebase/errors';
@@ -22,7 +24,7 @@ export function setDocumentNonBlocking(docRef: DocumentReference, data: any, opt
       'permission-error',
       new FirestorePermissionError({
         path: docRef.path,
-        operation: 'write', // or 'create'/'update' based on options
+        operation: options.merge ? 'update' : 'create',
         requestResourceData: data,
       })
     )
@@ -86,4 +88,21 @@ export function deleteDocumentNonBlocking(docRef: DocumentReference) {
         })
       )
     });
+}
+
+/**
+ * Adds a set operation to an existing WriteBatch.
+ * This function is for use with batched writes and does not handle errors directly.
+ */
+export function setDocumentInBatch(batch: WriteBatch, docRef: DocumentReference, data: any, options: SetOptions) {
+  batch.set(docRef, data, options);
+}
+
+/**
+ * Adds an add operation to an existing WriteBatch.
+ * Note: Firestore batches do not support 'add'. This function creates a doc ref and uses 'set'.
+ */
+export function addDocumentInBatch(batch: WriteBatch, colRef: CollectionReference, data: any) {
+    const newDocRef = colRef.doc();
+    batch.set(newDocRef, data);
 }

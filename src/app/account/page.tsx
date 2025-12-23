@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useCallback } from 'react';
@@ -12,7 +11,7 @@ import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Header } from '@/components/shared/Header';
 import { PlusCircle, Edit, Trash2, Home, Building, Briefcase, Star } from 'lucide-react';
 import { AddressForm, AddressFormValues } from '@/components/account/AddressForm';
-import { addDocumentNonBlocking, setDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import Link from 'next/link';
@@ -82,7 +81,8 @@ export default function AccountPage() {
           });
       }
       
-      batch.set(addressRef, { ...formData, userId: user.uid }, { merge: true });
+      batch.update(addressRef, { ...formData });
+      
       await batch.commit();
       
       toast({ title: "Address Updated", description: "Your address has been successfully updated." });
