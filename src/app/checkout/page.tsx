@@ -19,7 +19,7 @@ import Image from 'next/image';
 import { Header } from '@/components/shared/Header';
 import { AddressForm, AddressFormValues } from '@/components/account/AddressForm';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { PlusCircle, ShoppingBag, Home, Building, Briefcase } from 'lucide-react';
+import { PlusCircle, ShoppingBag, Home, Building, Briefcase, ArrowLeft } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import placeholderImages from '@/lib/placeholder-images.json';
@@ -56,6 +56,7 @@ export default function CheckoutPage() {
   const [utr, setUtr] = useState('');
   const [transactionId, setTransactionId] = useState('');
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
+  const [mobileStep, setMobileStep] = useState<'address' | 'payment'>('address');
 
 
   const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
@@ -315,66 +316,78 @@ export default function CheckoutPage() {
   }
 
   const OrderSummary = () => (
-    <div className="space-y-4">
-        {cartItems.map((item) => (
-            <div key={item.cartItemId} className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div className="relative h-16 w-16 rounded-md overflow-hidden bg-muted">
-                        <Image src={isValidImageDomain(item.images?.[0]) ? item.images[0] : placeholderImages.product.url} alt={item.name} fill className="object-cover" />
+    <Card>
+        <CardHeader>
+            <CardTitle>Order Summary</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+            {cartItems.map((item) => (
+                <div key={item.cartItemId} className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="relative h-16 w-16 rounded-md overflow-hidden bg-muted">
+                            <Image src={isValidImageDomain(item.images?.[0]) ? item.images[0] : placeholderImages.product.url} alt={item.name} fill className="object-cover" />
+                        </div>
+                        <div>
+                            <p className="font-semibold text-sm">{item.name}</p>
+                            <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                            {item.selectedSize && <p className="text-xs text-muted-foreground">Size: {item.selectedSize}</p>}
+                        </div>
                     </div>
-                    <div>
-                        <p className="font-semibold text-sm">{item.name}</p>
-                        <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
-                        {item.selectedSize && <p className="text-xs text-muted-foreground">Size: {item.selectedSize}</p>}
-                    </div>
+                    <p className="font-semibold text-sm">
+                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(getCartItemPrice(item) * item.quantity)}
+                    </p>
                 </div>
-                <p className="font-semibold text-sm">
-                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(getCartItemPrice(item) * item.quantity)}
-                </p>
-            </div>
-        ))}
-        <Separator />
-        <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-                <p className="text-muted-foreground">Subtotal</p>
-                <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(subtotal)}</p>
-            </div>
-            <div className="flex justify-between">
-                <p className="text-muted-foreground">Shipping Fee</p>
-                <p>{shippingFee > 0 ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(shippingFee) : 'Free'}</p>
-            </div>
-            <div className="flex justify-between">
-                <p className="text-muted-foreground">Taxes</p>
-                <p>Included in MRP</p>
+            ))}
+            <Separator />
+            <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                    <p className="text-muted-foreground">Subtotal</p>
+                    <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(subtotal)}</p>
+                </div>
+                <div className="flex justify-between">
+                    <p className="text-muted-foreground">Shipping Fee</p>
+                    <p>{shippingFee > 0 ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(shippingFee) : 'Free'}</p>
+                </div>
+                <div className="flex justify-between">
+                    <p className="text-muted-foreground">Taxes</p>
+                    <p>Included in MRP</p>
+                </div>
+                <Separator />
+                <div className="flex justify-between font-bold text-base">
+                    <p>Total</p>
+                    <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalAmount)}</p>
+                </div>
             </div>
             <Separator />
-            <div className="flex justify-between font-bold text-base">
-                <p>Total</p>
-                <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalAmount)}</p>
+            <div className="space-y-2 text-sm">
+                <div className="flex justify-between font-semibold text-primary">
+                    <p>{selectedPaymentPercentage === 1 ? 'Amount to Pay' : 'Advance to Pay'}</p>
+                    <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(advanceAmount)}</p>
+                </div>
+                {remainingAmount > 0 && (
+                <div className="flex justify-between text-muted-foreground">
+                    <p>Remaining Amount</p>
+                    <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(remainingAmount)}</p>
+                </div>
+                )}
             </div>
-        </div>
-        <Separator />
-         <div className="space-y-2 text-sm">
-            <div className="flex justify-between font-semibold text-primary">
-                <p>{selectedPaymentPercentage === 1 ? 'Amount to Pay' : 'Advance to Pay'}</p>
-                <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(advanceAmount)}</p>
-            </div>
-            {remainingAmount > 0 && (
-              <div className="flex justify-between text-muted-foreground">
-                  <p>Remaining Amount</p>
-                  <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(remainingAmount)}</p>
-              </div>
-            )}
-        </div>
-    </div>
+        </CardContent>
+    </Card>
   )
   
-    const ActionButton = () => {
+    const MobileActionButton = () => {
         if (noAddressAdded) {
             return (
                 <Link href="/account/add-address?redirect=/checkout" className="w-full">
                     <Button size="lg" className="w-full bg-yellow-400 text-black hover:bg-yellow-500">Add Address to Order</Button>
                 </Link>
+            )
+        }
+        if (mobileStep === 'address') {
+            return (
+                <Button onClick={() => setMobileStep('payment')} size="lg" className="w-full" disabled={isSubmitting || !!user?.isAnonymous || !selectedAddressId}>
+                    Proceed to Payment
+                </Button>
             )
         }
         return (
@@ -406,75 +419,82 @@ export default function CheckoutPage() {
                         </Card>
                     ) : (
                     <>
-                        <Card>
-                            <CardHeader className="flex flex-row justify-between items-center">
-                                <CardTitle>Shipping Address</CardTitle>
-                                <Dialog open={showNewAddressForm} onOpenChange={setShowNewAddressForm}>
-                                    <DialogTrigger asChild>
-                                        <Button variant="outline" size="sm">
-                                            <PlusCircle className="mr-2 h-4 w-4" />
-                                            Add New
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="sm:max-w-md z-50">
-                                        <DialogHeader>
-                                            <DialogTitle>Add New Address</DialogTitle>
-                                            <DialogDescription>
-                                                Enter the details for your new shipping address.
-                                            </DialogDescription>
-                                        </DialogHeader>
-                                        <AddressForm
-                                            onSuccess={handleNewAddressSubmit}
-                                            onCancel={() => setShowNewAddressForm(false)}
-                                            address={null}
-                                        />
-                                    </DialogContent>
-                                </Dialog>
-                            </CardHeader>
-                            <CardContent>
-                                {addresses && addresses.length > 0 ? (
-                                    <RadioGroup value={selectedAddressId || undefined} onValueChange={setSelectedAddressId} className="space-y-4">
-                                        {addresses.sort((a,b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0)).map(address => (
-                                            <Label key={address.id} htmlFor={address.id} className="flex items-start gap-4 border rounded-md p-3 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary">
-                                                <RadioGroupItem value={address.id} id={address.id} className="mt-1" />
-                                                <div className="text-sm">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        {getAddressIcon(address.addressType)}
-                                                        <p className="font-semibold">{address.name}</p>
-                                                        {address.isDefault && <Badge variant="secondary">Default</Badge>}
-                                                    </div>
-                                                    <p className="text-muted-foreground">{address.address}</p>
-                                                    <p className="text-muted-foreground">{address.city}, {address.state} - {address.pincode}</p>
-                                                    <p className="text-muted-foreground">Phone: {address.phone}</p>
-                                                </div>
-                                            </Label>
-                                        ))}
-                                    </RadioGroup>
-                                ) : (
-                                    <div className="text-center p-8 border-2 border-dashed rounded-lg">
-                                        <p className="text-muted-foreground mb-4">You have no saved addresses.</p>
-                                         <Link href="/account/add-address?redirect=/checkout">
-                                            <Button variant="default">
-                                                <PlusCircle className="mr-2 h-4 w-4" />
-                                                Add Your First Address
-                                            </Button>
-                                        </Link>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-
+                        {/* Mobile View */}
                         <div className="lg:hidden">
-                            <Accordion type="single" collapsible className="w-full">
-                                <AccordionItem value="order-summary">
-                                    <AccordionTrigger className="font-semibold">Order Summary</AccordionTrigger>
-                                    <AccordionContent>
-                                        <OrderSummary />
-                                    </AccordionContent>
-                                </AccordionItem>
-                                <AccordionItem value="payment">
-                                    <AccordionTrigger className="font-semibold">Payment Details</AccordionTrigger>
-                                    <AccordionContent className="space-y-6 pt-4">
+                            {mobileStep === 'address' && (
+                                <div className="space-y-6">
+                                    <OrderSummary />
+                                    <Card>
+                                        <CardHeader className="flex flex-row justify-between items-center">
+                                            <CardTitle>Shipping Address</CardTitle>
+                                             <Dialog open={showNewAddressForm} onOpenChange={setShowNewAddressForm}>
+                                                <DialogTrigger asChild>
+                                                    <Button variant="outline" size="sm">
+                                                        <PlusCircle className="mr-2 h-4 w-4" />
+                                                        Add New
+                                                    </Button>
+                                                </DialogTrigger>
+                                                <DialogContent className="sm:max-w-md">
+                                                    <DialogHeader>
+                                                        <DialogTitle>Add New Address</DialogTitle>
+                                                        <DialogDescription>
+                                                            Enter the details for your new shipping address.
+                                                        </DialogDescription>
+                                                    </DialogHeader>
+                                                    <AddressForm
+                                                        onSuccess={handleNewAddressSubmit}
+                                                        onCancel={() => setShowNewAddressForm(false)}
+                                                        address={null}
+                                                    />
+                                                </DialogContent>
+                                            </Dialog>
+                                        </CardHeader>
+                                        <CardContent>
+                                            {addresses && addresses.length > 0 ? (
+                                                <RadioGroup value={selectedAddressId || undefined} onValueChange={setSelectedAddressId} className="space-y-4">
+                                                    {addresses.sort((a,b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0)).map(address => (
+                                                        <Label key={address.id} htmlFor={address.id} className="flex items-start gap-4 border rounded-md p-3 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary">
+                                                            <RadioGroupItem value={address.id} id={address.id} className="mt-1" />
+                                                            <div className="text-sm">
+                                                                <div className="flex items-center gap-2 mb-1">
+                                                                    {getAddressIcon(address.addressType)}
+                                                                    <p className="font-semibold">{address.name}</p>
+                                                                    {address.isDefault && <Badge variant="secondary">Default</Badge>}
+                                                                </div>
+                                                                <p className="text-muted-foreground">{address.address}</p>
+                                                                <p className="text-muted-foreground">{address.city}, {address.state} - {address.pincode}</p>
+                                                                <p className="text-muted-foreground">Phone: {address.phone}</p>
+                                                            </div>
+                                                        </Label>
+                                                    ))}
+                                                </RadioGroup>
+                                            ) : (
+                                                <div className="text-center p-8 border-2 border-dashed rounded-lg">
+                                                    <p className="text-muted-foreground mb-4">You have no saved addresses.</p>
+                                                    <Link href="/account/add-address?redirect=/checkout">
+                                                        <Button variant="default">
+                                                            <PlusCircle className="mr-2 h-4 w-4" />
+                                                            Add Your First Address
+                                                        </Button>
+                                                    </Link>
+                                                </div>
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            )}
+
+                            {mobileStep === 'payment' && (
+                                <Card>
+                                    <CardHeader>
+                                        <div className='flex items-center gap-2'>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMobileStep('address')}>
+                                                <ArrowLeft />
+                                            </Button>
+                                            <CardTitle>Payment</CardTitle>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-6 pt-4">
                                          <div className="space-y-4">
                                               <p className="font-medium text-sm">You need to pay an amount of:</p>
                                               <p className="text-3xl font-bold text-primary">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(advanceAmount)}</p>
@@ -506,70 +526,136 @@ export default function CheckoutPage() {
                                                 placeholder="12-digit UTR Number"
                                             />
                                         </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                            </Accordion>
+                                    </CardContent>
+                                </Card>
+                            )}
                         </div>
 
-                         <Card className="hidden lg:block">
-                            <CardHeader>
-                                <CardTitle>Payment</CardTitle>
-                                <CardDescription>{totalAmount > 40000 ? 'An advance payment option is available for this order.' : 'Full payment is required for this order.'}</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                {paymentPercentages.length > 1 && (
-                                    <div>
-                                        <Label className="font-semibold">Select Payment Option</Label>
-                                        <RadioGroup value={String(selectedPaymentPercentage)} onValueChange={(val) => setSelectedPaymentPercentage(Number(val))} className="flex flex-wrap gap-2 mt-2">
-                                            {paymentPercentages.map(p => (
-                                                <Label key={p.value} htmlFor={`payment-${p.value}-desktop`} className="flex items-center gap-2 border rounded-md p-3 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary flex-1 justify-center min-w-[120px]">
-                                                    <RadioGroupItem value={String(p.value)} id={`payment-${p.value}-desktop`} />
-                                                    <span>{p.label}</span>
+                        {/* Desktop View */}
+                        <div className="hidden lg:block space-y-6">
+                            <Card>
+                                <CardHeader className="flex flex-row justify-between items-center">
+                                    <CardTitle>Shipping Address</CardTitle>
+                                    <Dialog open={showNewAddressForm} onOpenChange={setShowNewAddressForm}>
+                                        <DialogTrigger asChild>
+                                            <Button variant="outline" size="sm">
+                                                <PlusCircle className="mr-2 h-4 w-4" />
+                                                Add New
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-md">
+                                            <DialogHeader>
+                                                <DialogTitle>Add New Address</DialogTitle>
+                                                <DialogDescription>
+                                                    Enter the details for your new shipping address.
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <AddressForm
+                                                onSuccess={handleNewAddressSubmit}
+                                                onCancel={() => setShowNewAddressForm(false)}
+                                                address={null}
+                                            />
+                                        </DialogContent>
+                                    </Dialog>
+                                </CardHeader>
+                                <CardContent>
+                                    {addresses && addresses.length > 0 ? (
+                                        <RadioGroup value={selectedAddressId || undefined} onValueChange={setSelectedAddressId} className="space-y-4">
+                                            {addresses.sort((a,b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0)).map(address => (
+                                                <Label key={address.id} htmlFor={`desktop-${address.id}`} className="flex items-start gap-4 border rounded-md p-3 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary">
+                                                    <RadioGroupItem value={address.id} id={`desktop-${address.id}`} className="mt-1" />
+                                                    <div className="text-sm">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            {getAddressIcon(address.addressType)}
+                                                            <p className="font-semibold">{address.name}</p>
+                                                            {address.isDefault && <Badge variant="secondary">Default</Badge>}
+                                                        </div>
+                                                        <p className="text-muted-foreground">{address.address}</p>
+                                                        <p className="text-muted-foreground">{address.city}, {address.state} - {address.pincode}</p>
+                                                        <p className="text-muted-foreground">Phone: {address.phone}</p>
+                                                    </div>
                                                 </Label>
                                             ))}
                                         </RadioGroup>
+                                    ) : (
+                                        <div className="text-center p-8 border-2 border-dashed rounded-lg">
+                                            <p className="text-muted-foreground mb-4">You have no saved addresses.</p>
+                                            <Link href="/account/add-address?redirect=/checkout">
+                                                <Button variant="default">
+                                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                                    Add Your First Address
+                                                </Button>
+                                            </Link>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+
+                             <Card>
+                                <CardHeader>
+                                    <CardTitle>Payment</CardTitle>
+                                    <CardDescription>{totalAmount > 40000 ? 'An advance payment option is available for this order.' : 'Full payment is required for this order.'}</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+                                    {paymentPercentages.length > 1 && (
+                                        <div>
+                                            <Label className="font-semibold">Select Payment Option</Label>
+                                            <RadioGroup value={String(selectedPaymentPercentage)} onValueChange={(val) => setSelectedPaymentPercentage(Number(val))} className="flex flex-wrap gap-2 mt-2">
+                                                {paymentPercentages.map(p => (
+                                                    <Label key={p.value} htmlFor={`payment-${p.value}-desktop`} className="flex items-center gap-2 border rounded-md p-3 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary flex-1 justify-center min-w-[120px]">
+                                                        <RadioGroupItem value={String(p.value)} id={`payment-${p.value}-desktop`} />
+                                                        <span>{p.label}</span>
+                                                    </Label>
+                                                ))}
+                                            </RadioGroup>
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-6 p-4 border rounded-lg bg-muted/30">
+                                        <div className="w-40 h-40 p-2 bg-white rounded-md flex items-center justify-center">
+                                            {qrCodeUrl ? (
+                                                <Image src={qrCodeUrl} alt="UPI QR Code" width={150} height={150} unoptimized />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center bg-gray-100"><PottersWheelSpinner /></div>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <p className="font-semibold">Scan to pay with any UPI app</p>
+                                            <p className="text-sm text-muted-foreground">You need to pay an amount of:</p>
+                                            <p className="text-2xl font-bold text-primary">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(advanceAmount)}</p>
+                                            <p className="text-xs text-muted-foreground">UPI ID: {UPI_ID}</p>
+                                        </div>
                                     </div>
-                                )}
-                                <div className="flex items-center gap-6 p-4 border rounded-lg bg-muted/30">
-                                    <div className="w-40 h-40 p-2 bg-white rounded-md flex items-center justify-center">
-                                        {qrCodeUrl ? (
-                                            <Image src={qrCodeUrl} alt="UPI QR Code" width={150} height={150} unoptimized />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-gray-100"><PottersWheelSpinner /></div>
-                                        )}
+                                    <div>
+                                        <Label htmlFor="utr-desktop" className="font-semibold">Enter UTR Number</Label>
+                                        <p className="text-xs text-muted-foreground mb-2">
+                                            After payment, find the 12-digit UTR/Transaction ID in your UPI app's history and enter it below.
+                                        </p>
+                                        <Input id="utr-desktop" value={utr} onChange={(e) => setUtr(e.target.value)} placeholder="12-digit UTR Number" />
                                     </div>
-                                    <div className="space-y-2">
-                                        <p className="font-semibold">Scan to pay with any UPI app</p>
-                                        <p className="text-sm text-muted-foreground">You need to pay an amount of:</p>
-                                        <p className="text-2xl font-bold text-primary">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(advanceAmount)}</p>
-                                        <p className="text-xs text-muted-foreground">UPI ID: {UPI_ID}</p>
-                                    </div>
-                                </div>
-                                <div>
-                                    <Label htmlFor="utr-desktop" className="font-semibold">Enter UTR Number</Label>
-                                    <p className="text-xs text-muted-foreground mb-2">
-                                        After payment, find the 12-digit UTR/Transaction ID in your UPI app's history and enter it below.
-                                    </p>
-                                    <Input id="utr-desktop" value={utr} onChange={(e) => setUtr(e.target.value)} placeholder="12-digit UTR Number" />
-                                </div>
-                            </CardContent>
-                        </Card>
+                                </CardContent>
+                            </Card>
+                        </div>
                     </>
                     )}
                 </div>
 
                 <div className="hidden lg:block">
-                    <Card className="sticky top-28">
-                        <CardHeader>
-                            <CardTitle>Order Summary</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                           <OrderSummary />
-                        </CardContent>
-                        <CardFooter>
-                            <ActionButton />
-                        </CardFooter>
-                    </Card>
+                    <div className="sticky top-28 space-y-6">
+                        <OrderSummary />
+                         <Card>
+                            <CardFooter>
+                                {noAddressAdded ? (
+                                    <Link href="/account/add-address?redirect=/checkout" className="w-full">
+                                        <Button size="lg" className="w-full bg-yellow-400 text-black hover:bg-yellow-500">Add Address to Order</Button>
+                                    </Link>
+                                ) : (
+                                    <Button onClick={onSubmit} size="lg" className="w-full" disabled={isSubmitting || !!user?.isAnonymous || !selectedAddressId}>
+                                        {isSubmitting ? <PottersWheelSpinner /> : 'Place Order'}
+                                    </Button>
+                                )}
+                            </CardFooter>
+                        </Card>
+                    </div>
                 </div>
             </div>
              {!selectedAddressId && !user?.isAnonymous && addresses && addresses.length === 0 && (
@@ -583,7 +669,7 @@ export default function CheckoutPage() {
         </main>
         
         <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t p-4 z-40">
-            <ActionButton />
+            <MobileActionButton />
         </div>
     </div>
   );
