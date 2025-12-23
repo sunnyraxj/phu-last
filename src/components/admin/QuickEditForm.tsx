@@ -1,8 +1,9 @@
 
+
 'use client';
 
 import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm, Controller, SubmitHandler, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -12,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '../ui/scroll-area';
 import { DialogFooter } from '../ui/dialog';
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
-import { X, PlusCircle, Trash2 } from 'lucide-react';
+import { X, PlusCircle, Trash2, UploadCloud } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '../ui/separator';
@@ -60,6 +61,9 @@ interface QuickEditFormProps {
 
 export function QuickEditForm({ onSuccess, onCancel, item }: QuickEditFormProps) {
   const { toast } = useToast();
+  const inputFileRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  
   const {
     register,
     handleSubmit,
@@ -67,6 +71,7 @@ export function QuickEditForm({ onSuccess, onCancel, item }: QuickEditFormProps)
     control,
     setValue,
     getValues,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<QuickEditFormValues>({
     resolver: zodResolver(quickEditSchema),
@@ -78,10 +83,8 @@ export function QuickEditForm({ onSuccess, onCancel, item }: QuickEditFormProps)
     name: "variants",
   });
 
-  const images = getValues('images');
-  const variants = getValues('variants');
-
-  const [imageUrl, setImageUrl] = useState('');
+  const images = watch('images');
+  const variants = watch('variants');
 
   useEffect(() => {
     reset(item);
@@ -96,23 +99,41 @@ export function QuickEditForm({ onSuccess, onCancel, item }: QuickEditFormProps)
     newImages.splice(index, 1);
     setValue('images', newImages, { shouldValidate: true, shouldDirty: true });
   };
+  
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-  const handleAddImageUrl = () => {
-    if (imageUrl) {
-      try {
-        z.string().url().parse(imageUrl);
-        const currentImages = getValues('images') || [];
-        setValue('images', [...currentImages, imageUrl], { shouldValidate: true, shouldDirty: true });
-        setImageUrl('');
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Invalid URL",
-          description: "Please enter a valid image URL.",
-        });
+    setIsUploading(true);
+    try {
+      const response = await fetch(`/api/upload?filename=${file.name}`, {
+        method: 'POST',
+        body: file,
+      });
+
+      const newBlob = await response.json();
+      if (newBlob.url) {
+        const currentImages = getValues('images');
+        setValue('images', [...currentImages, newBlob.url], { shouldValidate: true, shouldDirty: true });
+        toast({ title: 'Image uploaded successfully!' });
+      } else {
+        throw new Error('Upload failed');
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Upload failed',
+        description: 'Could not upload the image. Please try again.',
+      });
+    } finally {
+      setIsUploading(false);
+      // Reset file input
+      if (inputFileRef.current) {
+        inputFileRef.current.value = '';
       }
     }
   };
+
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)}>
@@ -120,15 +141,24 @@ export function QuickEditForm({ onSuccess, onCancel, item }: QuickEditFormProps)
         <div className="space-y-4 my-4">
           <div className="space-y-2">
             <Label>Images</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                type="text"
-                placeholder="Paste an image URL"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-              />
-              <Button type="button" variant="outline" onClick={handleAddImageUrl}>Add URL</Button>
-            </div>
+            <Input
+              type="file"
+              ref={inputFileRef}
+              onChange={handleFileUpload}
+              className="hidden"
+              id="quick-edit-file-upload"
+              accept="image/*"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => inputFileRef.current?.click()}
+              disabled={isUploading}
+              className="w-full"
+            >
+              {isUploading ? <PottersWheelSpinner /> : <><UploadCloud className="mr-2 h-4 w-4" /> Upload from Device</>}
+            </Button>
+
 
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-2">
               {images && images.map((url, index) => (
@@ -219,8 +249,8 @@ export function QuickEditForm({ onSuccess, onCancel, item }: QuickEditFormProps)
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? <PottersWheelSpinner /> : 'Save Changes'}
+        <Button type="submit" disabled={isSubmitting || isUploading}>
+          {isSubmitting || isUploading ? <PottersWheelSpinner /> : 'Save Changes'}
         </Button>
       </DialogFooter>
     </form>

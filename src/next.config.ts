@@ -56,19 +56,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https' as const,
-        hostname: 'm.media-amazon.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https' as const,
-        hostname: '**.media-amazon.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https' as const,
-        hostname: '**.images-amazon.com',
+        hostname: 'bs6gijwtdzcsl8jl.public.blob.vercel-storage.com',
         port: '',
         pathname: '/**',
       }

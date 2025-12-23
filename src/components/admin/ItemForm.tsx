@@ -3,7 +3,7 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useForm, Controller, SubmitHandler, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ScrollArea } from '../ui/scroll-area';
 import { DialogFooter } from '../ui/dialog';
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
-import { X, PlusCircle, Trash2, RotateCcw } from 'lucide-react';
+import { X, PlusCircle, Trash2, RotateCcw, UploadCloud } from 'lucide-react';
 import Image from 'next/image';
 import { AddOptionDialog } from './AddOptionDialog';
 import { useToast } from '@/hooks/use-toast';
@@ -107,6 +107,8 @@ export function ItemForm({
   const { toast } = useToast();
   const firestore = useFirestore();
   const [hasDraft, setHasDraft] = useState(false);
+  const inputFileRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
   const { data: allProducts } = useCollection<Product>(productsQuery);
@@ -164,16 +166,13 @@ export function ItemForm({
 
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [isAddMaterialOpen, setIsAddMaterialOpen] = useState(false);
-  const [imageUrl, setImageUrl] = useState('');
 
     useEffect(() => {
         if (item) {
-            // Editing an existing item, no draft logic needed
             const resetValues = { ...defaultFormValues, ...item };
             reset(resetValues);
             setHasDraft(false);
         } else {
-            // Adding a new item, check for draft
             try {
                 const savedDraft = localStorage.getItem(DRAFT_KEY);
                 if (savedDraft) {
@@ -190,9 +189,8 @@ export function ItemForm({
     }, [item, reset]);
 
 
-    // Auto-save draft logic for new items
     useEffect(() => {
-        if (!item) { // Only run for new items
+        if (!item) { 
             const subscription = watch((value) => {
                  try {
                     localStorage.setItem(DRAFT_KEY, JSON.stringify(value));
@@ -206,7 +204,7 @@ export function ItemForm({
 
   const handleFormSubmit: SubmitHandler<ItemFormValues> = (data) => {
     onSuccess(data);
-    if (!item) { // If it was a new item, clear the draft
+    if (!item) { 
         localStorage.removeItem(DRAFT_KEY);
         setHasDraft(false);
     }
@@ -234,22 +232,40 @@ export function ItemForm({
     setIsAddMaterialOpen(false);
   }
 
-  const handleAddImageUrl = () => {
-    if (imageUrl) {
-      try {
-        z.string().url().parse(imageUrl);
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const response = await fetch(`/api/upload?filename=${file.name}`, {
+        method: 'POST',
+        body: file,
+      });
+
+      const newBlob = await response.json();
+      if (newBlob.url) {
         const currentImages = getValues('images');
-        setValue('images', [...currentImages, imageUrl], { shouldValidate: true, shouldDirty: true });
-        setImageUrl(''); // Clear the input field
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Invalid URL",
-          description: "Please enter a valid image URL.",
-        });
+        setValue('images', [...currentImages, newBlob.url], { shouldValidate: true, shouldDirty: true });
+        toast({ title: 'Image uploaded successfully!' });
+      } else {
+        throw new Error('Upload failed');
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Upload failed',
+        description: 'Could not upload the image. Please try again.',
+      });
+    } finally {
+      setIsUploading(false);
+      // Reset file input
+      if (inputFileRef.current) {
+        inputFileRef.current.value = '';
       }
     }
   };
+
 
   const handleDiscardDraft = () => {
       localStorage.removeItem(DRAFT_KEY);
@@ -290,15 +306,23 @@ export function ItemForm({
 
             <div className="space-y-2">
               <Label>Images</Label>
-               <div className="flex items-center gap-2">
-                 <Input
-                  type="text"
-                  placeholder="Paste an image URL"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                />
-                <Button type="button" variant="outline" onClick={handleAddImageUrl}>Add URL</Button>
-              </div>
+              <Input
+                type="file"
+                ref={inputFileRef}
+                onChange={handleFileUpload}
+                className="hidden"
+                id="file-upload"
+                accept="image/*"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => inputFileRef.current?.click()}
+                disabled={isUploading}
+                className="w-full"
+              >
+                {isUploading ? <PottersWheelSpinner /> : <><UploadCloud className="mr-2 h-4 w-4" /> Upload from Device</>}
+              </Button>
 
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 mt-2">
                 {images && images.map((url, index) => (
@@ -469,8 +493,8 @@ export function ItemForm({
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? <PottersWheelSpinner /> : (item ? 'Save Changes' : 'Add Item')}
+          <Button type="submit" disabled={isSubmitting || isUploading}>
+            {isSubmitting || isUploading ? <PottersWheelSpinner /> : (item ? 'Save Changes' : 'Add Item')}
           </Button>
         </DialogFooter>
 
