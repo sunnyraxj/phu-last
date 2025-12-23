@@ -51,7 +51,7 @@ export default function AddAddressPage() {
     }
 
     return (
-        <div className="bg-background min-h-screen">
+        <div className="bg-background">
             <Header userData={null} cartItems={[]} updateCartItemQuantity={() => {}} />
 
             <main className="container mx-auto py-4 sm:py-12 px-0 sm:px-4">
