@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -19,7 +20,7 @@ import Image from 'next/image';
 import { Header } from '@/components/shared/Header';
 import { AddressForm, AddressFormValues } from '@/components/account/AddressForm';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { PlusCircle, ShoppingBag } from 'lucide-react';
+import { PlusCircle, ShoppingBag, Home, Building, Briefcase } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import placeholderImages from '@/lib/placeholder-images.json';
@@ -78,7 +79,8 @@ export default function CheckoutPage() {
   
   useEffect(() => {
     if (addresses && addresses.length > 0 && !selectedAddressId) {
-      setSelectedAddressId(addresses[0].id);
+      const defaultAddress = addresses.find(a => a.isDefault);
+      setSelectedAddressId(defaultAddress ? defaultAddress.id : addresses[0].id);
     }
   }, [addresses, selectedAddressId]);
 
@@ -124,14 +126,13 @@ export default function CheckoutPage() {
     if (selectedAddress?.state.toLowerCase() === 'assam') {
         cgst = totalGST / 2;
         sgst = totalGST / 2;
-    } else {
+    } else if (selectedAddress) {
         igst = totalGST;
     }
 
     return { totalGST, cgst, sgst, igst };
   }, [cartItems, addresses, selectedAddressId]);
   
-  const priceBeforeTax = subtotal - totalGST;
   
   const paymentPercentages = useMemo(() => {
     const options = [{ value: 1, label: 'Full Payment' }];
@@ -281,6 +282,15 @@ export default function CheckoutPage() {
   
   const noAddressAdded = addresses && addresses.length === 0;
 
+  const getAddressIcon = (addressType: AddressFormValues['addressType']) => {
+    switch (addressType) {
+        case 'Home': return <Home className="h-4 w-4 text-muted-foreground" />;
+        case 'Work': return <Briefcase className="h-4 w-4 text-muted-foreground" />;
+        case 'Other': return <Building className="h-4 w-4 text-muted-foreground" />;
+        default: return <Home className="h-4 w-4 text-muted-foreground" />;
+    }
+  }
+
   const OrderSummary = () => (
     <div className="space-y-4">
         {cartItems.map((item) => (
@@ -374,31 +384,45 @@ export default function CheckoutPage() {
                     ) : (
                     <>
                         <Card>
-                            <CardHeader>
+                            <CardHeader className="flex flex-row justify-between items-center">
                                 <CardTitle>Shipping Address</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <RadioGroup value={selectedAddressId || undefined} onValueChange={setSelectedAddressId} className="space-y-4">
-                                    {addresses && addresses.map(address => (
-                                        <Label key={address.id} htmlFor={address.id} className="flex items-start gap-4 border rounded-md p-3 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary">
-                                            <RadioGroupItem value={address.id} id={address.id} className="mt-1" />
-                                            <div className="text-sm">
-                                                <p className="font-semibold">{address.name}</p>
-                                                <p className="text-muted-foreground">{address.address}</p>
-                                                <p className="text-muted-foreground">{address.city}, {address.state} - {address.pincode}</p>
-                                                <p className="text-muted-foreground">Phone: {address.phone}</p>
-                                            </div>
-                                        </Label>
-                                    ))}
-                                </RadioGroup>
-                                
-                                <Separator className="my-4" />
                                 <Link href="/account/add-address?redirect=/checkout">
                                     <Button variant="outline" size="sm">
                                         <PlusCircle className="mr-2 h-4 w-4" />
-                                        Add New Address
+                                        Add New
                                     </Button>
                                 </Link>
+                            </CardHeader>
+                            <CardContent>
+                                {addresses && addresses.length > 0 ? (
+                                    <RadioGroup value={selectedAddressId || undefined} onValueChange={setSelectedAddressId} className="space-y-4">
+                                        {addresses.sort((a,b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0)).map(address => (
+                                            <Label key={address.id} htmlFor={address.id} className="flex items-start gap-4 border rounded-md p-3 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary">
+                                                <RadioGroupItem value={address.id} id={address.id} className="mt-1" />
+                                                <div className="text-sm">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        {getAddressIcon(address.addressType)}
+                                                        <p className="font-semibold">{address.name}</p>
+                                                        {address.isDefault && <Badge variant="secondary">Default</Badge>}
+                                                    </div>
+                                                    <p className="text-muted-foreground">{address.address}</p>
+                                                    <p className="text-muted-foreground">{address.city}, {address.state} - {address.pincode}</p>
+                                                    <p className="text-muted-foreground">Phone: {address.phone}</p>
+                                                </div>
+                                            </Label>
+                                        ))}
+                                    </RadioGroup>
+                                ) : (
+                                    <div className="text-center p-8 border-2 border-dashed rounded-lg">
+                                        <p className="text-muted-foreground mb-4">You have no saved addresses.</p>
+                                         <Link href="/account/add-address?redirect=/checkout">
+                                            <Button variant="default">
+                                                <PlusCircle className="mr-2 h-4 w-4" />
+                                                Add Your First Address
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
 
