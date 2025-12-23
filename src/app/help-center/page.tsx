@@ -7,9 +7,10 @@ import { doc } from "firebase/firestore";
 import { Header } from "@/components/shared/Header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, MessageSquare } from "lucide-react";
+import { Mail, MessageSquare, Copy } from "lucide-react";
 import Link from "next/link";
 import { PottersWheelSpinner } from "@/components/shared/PottersWheelSpinner";
+import { useToast } from "@/hooks/use-toast";
 
 const WHATSAPP_NUMBER = '919876543210'; 
 const SUPPORT_EMAIL = 'support@purbanchal.com'; 
@@ -22,6 +23,7 @@ type UserProfile = {
 export default function HelpCenterPage() {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
+    const { toast } = useToast();
 
     const userDocRef = useMemoFirebase(
         () => (user ? doc(firestore, 'users', user.uid) : null),
@@ -37,6 +39,21 @@ export default function HelpCenterPage() {
         const template = `Hello, I have a question.\n\nName: ${name}\nEmail: ${user.email}`;
         return encodeURIComponent(template);
     }, [user, userData]);
+    
+    const copyToClipboard = (text: string, label: string) => {
+        navigator.clipboard.writeText(text).then(() => {
+            toast({
+                title: `${label} Copied!`,
+                description: `${text} has been copied to your clipboard.`
+            })
+        }, () => {
+             toast({
+                variant: 'destructive',
+                title: 'Failed to Copy',
+                description: `Could not copy ${label} to clipboard.`
+            })
+        })
+    }
 
     if (isUserLoading || userDataLoading) {
         return (
@@ -67,7 +84,13 @@ export default function HelpCenterPage() {
                             <CardTitle>Contact us on WhatsApp</CardTitle>
                             <CardDescription>Get a quick response for your queries.</CardDescription>
                         </CardHeader>
-                        <CardContent className="text-center">
+                        <CardContent className="text-center flex flex-col items-center gap-4">
+                            <div className="flex items-center gap-2 p-2 border rounded-md bg-muted">
+                                <p className="font-mono text-lg">{WHATSAPP_NUMBER}</p>
+                                <Button variant="ghost" size="icon" onClick={() => copyToClipboard(WHATSAPP_NUMBER, 'WhatsApp Number')}>
+                                    <Copy className="h-4 w-4" />
+                                </Button>
+                            </div>
                              <Link href={`https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`} target="_blank" rel="noopener noreferrer">
                                 <Button size="lg">Send Message</Button>
                             </Link>
@@ -82,7 +105,13 @@ export default function HelpCenterPage() {
                             <CardTitle>Send us an Email</CardTitle>
                             <CardDescription>We'll get back to you as soon as possible.</CardDescription>
                         </CardHeader>
-                        <CardContent className="text-center">
+                        <CardContent className="text-center flex flex-col items-center gap-4">
+                            <div className="flex items-center gap-2 p-2 border rounded-md bg-muted">
+                                <p className="font-mono text-lg">{SUPPORT_EMAIL}</p>
+                                <Button variant="ghost" size="icon" onClick={() => copyToClipboard(SUPPORT_EMAIL, 'Email Address')}>
+                                    <Copy className="h-4 w-4" />
+                                </Button>
+                            </div>
                              <Link href={`mailto:${SUPPORT_EMAIL}`}>
                                 <Button size="lg">Send Email</Button>
                             </Link>
