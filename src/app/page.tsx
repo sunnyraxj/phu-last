@@ -471,12 +471,21 @@ export default function ProductPage() {
     return product.baseMrp || 0;
   };
 
-  const materialsToShow = [
-    { name: 'Cane', label: 'Natural Rattan | Cane', image: placeholderImages.rattan.url, hint: placeholderImages.rattan['data-ai-hint'] },
-    { name: 'Bamboo', label: 'Natural Bamboo', image: placeholderImages.bamboo.url, hint: placeholderImages.bamboo['data-ai-hint'] },
-    { name: 'Water Hyacinth', label: 'Water Hyacinth', image: placeholderImages.waterHyacinth.url, hint: placeholderImages.waterHyacinth['data-ai-hint'] },
-    { name: 'Kauna Grass', label: 'Kauna Grass', image: placeholderImages.kaunaGrass.url, hint: placeholderImages.kaunaGrass['data-ai-hint'] },
-  ];
+  const materialsToShow = useMemo(() => {
+    const materialMap = {
+      'Cane': { label: 'Natural Rattan | Cane', image: placeholderImages.rattan.url, hint: placeholderImages.rattan['data-ai-hint'] },
+      'Bamboo': { label: 'Natural Bamboo', image: placeholderImages.bamboo.url, hint: placeholderImages.bamboo['data-ai-hint'] },
+      'Water Hyacinth': { label: 'Water Hyacinth', image: placeholderImages.waterHyacinth.url, hint: placeholderImages.waterHyacinth['data-ai-hint'] },
+      'Kauna Grass': { label: 'Kauna Grass', image: placeholderImages.kaunaGrass.url, hint: placeholderImages.kaunaGrass['data-ai-hint'] },
+    };
+    
+    return materials
+        .filter(material => materialMap[material as keyof typeof materialMap])
+        .map(material => ({
+            name: material,
+            ...materialMap[material as keyof typeof materialMap]
+        }));
+  }, [materials]);
 
   return (
     <div className="min-h-screen bg-background font-sans">
