@@ -348,11 +348,11 @@ export default function ProductPage() {
   }
 
   const handleMaterialChange = (materialName: string) => {
-    setSelectedMaterials(prev =>
-      prev.includes(materialName)
-        ? prev.filter(m => m !== materialName)
-        : [...prev, materialName]
-    )
+    if (selectedMaterials.includes(materialName)) {
+      setSelectedMaterials([]);
+    } else {
+      setSelectedMaterials([materialName]);
+    }
   }
 
   const updateCartItemQuantity = (cartItemId: string, newQuantity: number) => {
@@ -471,6 +471,13 @@ export default function ProductPage() {
     return product.baseMrp || 0;
   };
 
+  const materialsToShow = [
+    { name: 'Cane', label: 'Natural Rattan | Cane', image: placeholderImages.rattan.url, hint: placeholderImages.rattan['data-ai-hint'] },
+    { name: 'Bamboo', label: 'Natural Bamboo', image: placeholderImages.bamboo.url, hint: placeholderImages.bamboo['data-ai-hint'] },
+    { name: 'Water Hyacinth', label: 'Water Hyacinth', image: placeholderImages.waterHyacinth.url, hint: placeholderImages.waterHyacinth['data-ai-hint'] },
+    { name: 'Kauna Grass', label: 'Kauna Grass', image: placeholderImages.kaunaGrass.url, hint: placeholderImages.kaunaGrass['data-ai-hint'] },
+  ];
+
   return (
     <div className="min-h-screen bg-background font-sans">
       <Header
@@ -558,6 +565,31 @@ export default function ProductPage() {
         </div>
       </section>
       
+      <section className="bg-muted/30 py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Materials we deal in</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {materialsToShow.map(material => (
+              <div key={material.name} className="text-center group cursor-pointer" onClick={() => handleMaterialChange(material.name)}>
+                <div className="relative aspect-video w-full rounded-lg overflow-hidden mb-4 shadow-md transition-transform duration-300 group-hover:scale-105">
+                  <Image
+                    src={material.image}
+                    alt={material.label}
+                    fill
+                    className="object-cover"
+                    data-ai-hint={material.hint}
+                  />
+                  <div className={cn("absolute inset-0 border-4 border-transparent transition-all", selectedMaterials.includes(material.name) && "border-primary")}></div>
+                </div>
+                <p className="font-semibold text-foreground">{material.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <div className="flex items-start">
         <div className="container mx-auto px-0 sm:px-4">
           <div className="flex items-start">

@@ -14,5 +14,21 @@
   "person": {
     "url": "https://picsum.photos/seed/person/300",
     "data-ai-hint": "team member"
+  },
+  "rattan": {
+    "url": "https://picsum.photos/seed/rattan/600/400",
+    "data-ai-hint": "woven rattan"
+  },
+  "bamboo": {
+    "url": "https://picsum.photos/seed/bamboo/600/400",
+    "data-ai-hint": "bamboo texture"
+  },
+  "waterHyacinth": {
+    "url": "https://picsum.photos/seed/hyacinth/600/400",
+    "data-ai-hint": "woven hyacinth"
+  },
+  "kaunaGrass": {
+    "url": "https://picsum.photos/seed/kauna/600/400",
+    "data-ai-hint": "woven grass"
   }
 }
