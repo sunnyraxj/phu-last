@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
@@ -27,6 +26,7 @@ import placeholderImages from '@/lib/placeholder-images.json';
 import { isValidImageDomain } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
 
 type ShippingAddress = AddressFormValues & { id: string, email?: string };
 
@@ -55,6 +55,7 @@ export default function CheckoutPage() {
   const [selectedPaymentPercentage, setSelectedPaymentPercentage] = useState<number>(1);
   const [utr, setUtr] = useState('');
   const [transactionId, setTransactionId] = useState('');
+  const [showNewAddressForm, setShowNewAddressForm] = useState(false);
 
 
   const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
@@ -259,6 +260,28 @@ export default function CheckoutPage() {
     }
   };
 
+  const handleNewAddressSubmit = async (formData: AddressFormValues) => {
+      if (!user || !user.email) return;
+
+      try {
+          const addressesCollection = collection(firestore, 'users', user.uid, 'shippingAddresses');
+          const newDocRef = await addDocumentNonBlocking(addressesCollection, { 
+              ...formData, 
+              userId: user.uid,
+              email: user.email,
+          });
+          if(newDocRef?.id) {
+            setSelectedAddressId(newDocRef.id);
+          }
+          toast({ title: "Address Saved", description: "Your new address has been saved." });
+      } catch (e) {
+          console.error(e);
+          toast({variant: "destructive", title: "Could not save address"});
+      } finally {
+          setShowNewAddressForm(false);
+      }
+  };
+
   if (isUserLoading || cartLoading || addressesLoading) {
     return <div className="flex h-screen items-center justify-center"><PottersWheelSpinner /></div>;
   }
@@ -386,12 +409,27 @@ export default function CheckoutPage() {
                         <Card>
                             <CardHeader className="flex flex-row justify-between items-center">
                                 <CardTitle>Shipping Address</CardTitle>
-                                <Link href="/account/add-address?redirect=/checkout">
-                                    <Button variant="outline" size="sm">
-                                        <PlusCircle className="mr-2 h-4 w-4" />
-                                        Add New
-                                    </Button>
-                                </Link>
+                                <Dialog open={showNewAddressForm} onOpenChange={setShowNewAddressForm}>
+                                    <DialogTrigger asChild>
+                                        <Button variant="outline" size="sm">
+                                            <PlusCircle className="mr-2 h-4 w-4" />
+                                            Add New
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-md z-50">
+                                        <DialogHeader>
+                                            <DialogTitle>Add New Address</DialogTitle>
+                                            <DialogDescription>
+                                                Enter the details for your new shipping address.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <AddressForm
+                                            onSuccess={handleNewAddressSubmit}
+                                            onCancel={() => setShowNewAddressForm(false)}
+                                            address={null}
+                                        />
+                                    </DialogContent>
+                                </Dialog>
                             </CardHeader>
                             <CardContent>
                                 {addresses && addresses.length > 0 ? (
@@ -550,5 +588,3 @@ export default function CheckoutPage() {
     </div>
   );
 }
-
-    
