@@ -3,7 +3,7 @@
 "use client"
 
 import { useState, useMemo, useEffect, useRef } from "react"
-import { collection, doc, query, where, writeBatch, setDoc, deleteDoc } from "firebase/firestore";
+import { collection, doc, query, where, writeBatch, setDoc, deleteDoc, orderBy, limit } from "firebase/firestore";
 import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon, MapPin, Phone, ExternalLink, Sparkles, Wand2, CheckCircle, User, Store as StoreIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -43,6 +43,7 @@ type Product = {
   artisanId: string;
   baseMrp?: number;
   variants?: { size: string; price: number }[];
+  createdAt: { seconds: number; nanoseconds: number };
 };
 
 type Order = {
@@ -249,6 +250,12 @@ export default function ProductPage() {
     [firestore]
   );
   const { data: allProducts, isLoading: productsLoading } = useCollection<Product>(productsQuery);
+  
+  const newArrivalsQuery = useMemoFirebase(() =>
+    query(collection(firestore, 'products'), orderBy('createdAt', 'desc'), limit(4)),
+    [firestore]
+  );
+  const { data: newArrivals, isLoading: newArrivalsLoading } = useCollection<Product>(newArrivalsQuery);
 
   const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
   const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
@@ -430,8 +437,7 @@ export default function ProductPage() {
           case 'price-high-low':
             return getDisplayPrice(b) - getDisplayPrice(a);
           case 'newest':
-            // Assuming higher firestore doc id is not newer. We need a timestamp
-            return 0;
+            return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0);
           case 'Featured':
           default:
             return 0;
@@ -504,6 +510,51 @@ export default function ProductPage() {
               Shop Now
             </Button>
           </Link>
+        </div>
+      </section>
+
+      <section className="bg-background py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">New Arrivals</h2>
+            <p className="mt-4 text-base text-muted-foreground max-w-2xl mx-auto">
+              Shop our customer favorite furniture & decor to create a cozy and inviting space. Find the best selling items you've been looking for!
+            </p>
+          </div>
+          {newArrivalsLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <PottersWheelSpinner />
+            </div>
+          ) : newArrivals && newArrivals.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {newArrivals.map((product) => (
+                <div key={product.id} className="group relative text-left">
+                  <ProductImage product={product} onClick={() => setSelectedProduct(product)} />
+                  <div className="mt-4 flex flex-col items-start">
+                    <h3 className="text-base text-foreground font-bold truncate w-full">{product.name}</h3>
+                    <div className="flex items-center gap-2">
+                        <p className="font-bold text-base text-foreground">
+                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(getProductPrice(product))}
+                        </p>
+                        {product.variants && product.variants.length > 0 && <Badge variant="secondary">Multiple Sizes</Badge>}
+                    </div>
+                    <Button
+                    variant="outline"
+                    className="w-full mt-2"
+                    onClick={() => openVariantSelector(product)}
+                    disabled={!product.inStock}
+                    >
+                    {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center h-64 flex flex-col items-center justify-center">
+              <p className="text-muted-foreground">No new arrivals to show right now.</p>
+            </div>
+          )}
         </div>
       </section>
       

@@ -56,9 +56,10 @@
         },
         "category": { "type": "string", "description": "The category of the product." },
         "hsn": { "type": "string", "description": "Harmonized System of Nomenclature code for the product." },
-        "gst": { "type": "number", "description": "The applicable GST percentage for the product." }
+        "gst": { "type": "number", "description": "The applicable GST percentage for the product." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when the product was created." }
       },
-      "required": ["id", "artisanId", "name", "description", "images", "baseMrp", "category", "gst"]
+      "required": ["id", "artisanId", "name", "description", "images", "baseMrp", "category", "gst", "createdAt"]
     },
     "Order": {
       "$schema": "http://json-schema.org/draft-07/schema#",

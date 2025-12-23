@@ -21,7 +21,7 @@ import Image from 'next/image';
 import { AddOptionDialog } from './AddOptionDialog';
 import { useToast } from '@/hooks/use-toast';
 import { useCollection, useMemoFirebase, useFirestore } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { collection, serverTimestamp } from 'firebase/firestore';
 import { Separator } from '../ui/separator';
 import { cn, isValidImageDomain } from '@/lib/utils';
 import placeholderImages from '@/lib/placeholder-images.json';
@@ -63,6 +63,7 @@ const itemSchema = z.object({
     z.number().min(0).optional()
   ),
   variants: z.array(variantSchema).optional(),
+  createdAt: z.any().optional(),
 }).refine(data => {
     return (data.variants && data.variants.length > 0) || (typeof data.baseMrp === 'number' && data.baseMrp > 0);
 }, {
@@ -97,6 +98,7 @@ const defaultFormValues: ItemFormValues = {
   hsn: '',
   gst: undefined,
   variants: [],
+  createdAt: serverTimestamp(),
 };
 
 export function ItemForm({
@@ -203,7 +205,8 @@ export function ItemForm({
     }, [watch, item]);
 
   const handleFormSubmit: SubmitHandler<ItemFormValues> = (data) => {
-    onSuccess(data);
+    const dataWithTimestamp = { ...data, createdAt: serverTimestamp() };
+    onSuccess(dataWithTimestamp);
     if (!item) { 
         localStorage.removeItem(DRAFT_KEY);
         setHasDraft(false);
