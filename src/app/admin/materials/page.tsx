@@ -1,14 +1,14 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
-import { Edit } from 'lucide-react';
+import { Edit, UploadCloud } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Image from 'next/image';
@@ -28,8 +28,10 @@ type MaterialSetting = {
 export default function MaterialsPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
+    const inputFileRef = useRef<HTMLInputElement>(null);
 
     const [isEditFormOpen, setIsEditFormOpen] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const [selectedMaterial, setSelectedMaterial] = useState<MaterialSetting | { name: string; imageUrl: string } | null>(null);
 
     const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
@@ -82,6 +84,38 @@ export default function MaterialsPage() {
                 title: 'Update Failed',
                 description: 'Could not update the material image.',
             });
+        }
+    };
+
+    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file || !selectedMaterial) return;
+
+        setIsUploading(true);
+        try {
+            const response = await fetch(`/api/upload?filename=${file.name}`, {
+                method: 'POST',
+                body: file,
+            });
+
+            const newBlob = await response.json();
+            if (newBlob.url) {
+                setSelectedMaterial(prev => prev ? { ...prev, imageUrl: newBlob.url } : null);
+                toast({ title: 'Image uploaded successfully!' });
+            } else {
+                throw new Error('Upload failed');
+            }
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: 'Upload failed',
+                description: 'Could not upload the image. Please try again.',
+            });
+        } finally {
+            setIsUploading(false);
+            if (inputFileRef.current) {
+                inputFileRef.current.value = '';
+            }
         }
     };
     
@@ -154,22 +188,53 @@ export default function MaterialsPage() {
                     <DialogHeader>
                         <DialogTitle>Edit Image for: {selectedMaterial?.name}</DialogTitle>
                         <DialogDescription>
-                            Paste the URL for the image you want to associate with this material.
+                            Upload an image from your device or paste an image URL.
                         </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleFormSubmit}>
-                        <div className="py-4 space-y-2">
-                             <Label htmlFor="imageUrl">Image URL</Label>
-                             <Input
-                                id="imageUrl"
-                                value={selectedMaterial?.imageUrl || ''}
-                                onChange={(e) => setSelectedMaterial(prev => prev ? { ...prev, imageUrl: e.target.value } : null)}
-                                placeholder="https://example.com/image.jpg"
-                             />
+                        <div className="py-4 space-y-4">
+                            <div>
+                                <Input
+                                    type="file"
+                                    ref={inputFileRef}
+                                    onChange={handleFileUpload}
+                                    className="hidden"
+                                    id="file-upload"
+                                    accept="image/*"
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => inputFileRef.current?.click()}
+                                    disabled={isUploading}
+                                    className="w-full"
+                                >
+                                    {isUploading ? <PottersWheelSpinner /> : <><UploadCloud className="mr-2 h-4 w-4" /> Upload from Device</>}
+                                </Button>
+                            </div>
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                <span className="w-full border-t" />
+                                </div>
+                                <div className="relative flex justify-center text-xs uppercase">
+                                <span className="bg-background px-2 text-muted-foreground">
+                                    Or
+                                </span>
+                                </div>
+                            </div>
+                             <div>
+                                <Label htmlFor="imageUrl">Image URL</Label>
+                                <Input
+                                    id="imageUrl"
+                                    value={selectedMaterial?.imageUrl || ''}
+                                    onChange={(e) => setSelectedMaterial(prev => prev ? { ...prev, imageUrl: e.target.value } : null)}
+                                    placeholder="https://example.com/image.jpg"
+                                />
+                             </div>
                         </div>
                         <div className="flex justify-end gap-2 mt-4">
                             <Button type="button" variant="outline" onClick={() => setIsEditFormOpen(false)}>Cancel</Button>
-                            <Button type="submit">Save</Button>
+                            <Button type="submit" disabled={isUploading}>Save</Button>
                         </div>
                     </form>
                 </DialogContent>
