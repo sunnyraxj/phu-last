@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import Link from "next/link";
@@ -206,6 +205,9 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                     )}
                 </PopoverContent>
             </Popover>
+            <Link href="/about">
+                <button className="hover:opacity-80">ABOUT US</button>
+            </Link>
             <Link href="/our-team">
                 <button className="hover:opacity-80">OUR TEAM</button>
             </Link>
@@ -439,6 +441,9 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                                         </Link>
                                         <Link href="/our-stores" className="block py-4 border-b border-white/20 text-lg" onClick={() => setIsMobileMenuOpen(false)}>
                                             OUR STORES
+                                        </Link>
+                                        <Link href="/about" className="block py-4 border-b border-white/20 text-lg" onClick={() => setIsMobileMenuOpen(false)}>
+                                            ABOUT US
                                         </Link>
                                         <Link href="/our-team" className="block py-4 border-b border-white/20 text-lg" onClick={() => setIsMobileMenuOpen(false)}>
                                             OUR TEAM
