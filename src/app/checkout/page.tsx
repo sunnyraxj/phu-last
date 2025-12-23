@@ -155,22 +155,28 @@ export default function CheckoutPage() {
   const advanceAmount = useMemo(() => totalAmount * selectedPaymentPercentage, [totalAmount, selectedPaymentPercentage]);
   const remainingAmount = useMemo(() => totalAmount - advanceAmount, [totalAmount, advanceAmount]);
   
-  const qrCodeUrl = useMemo(() => {
-    if (!advanceAmount || advanceAmount <= 0 || !transactionId) return null;
+  const upiLink = useMemo(() => {
+    if (!advanceAmount || advanceAmount <= 0 || !transactionId) return '#';
     
-    const upiLink = new URL('upi://pay');
-    upiLink.searchParams.set('pa', UPI_ID);
-    upiLink.searchParams.set('pn', PAYEE_NAME);
-    upiLink.searchParams.set('am', advanceAmount.toFixed(2));
-    upiLink.searchParams.set('cu', 'INR');
-    upiLink.searchParams.set('tn', `Order for ${transactionId}`);
+    const link = new URL('upi://pay');
+    link.searchParams.set('pa', UPI_ID);
+    link.searchParams.set('pn', PAYEE_NAME);
+    link.searchParams.set('am', advanceAmount.toFixed(2));
+    link.searchParams.set('cu', 'INR');
+    link.searchParams.set('tn', `Order for ${transactionId}`);
+
+    return link.toString();
+  }, [advanceAmount, transactionId]);
+
+  const qrCodeUrl = useMemo(() => {
+    if (!upiLink || upiLink === '#') return null;
 
     const qrApiUrl = new URL('https://api.qrserver.com/v1/create-qr-code/');
     qrApiUrl.searchParams.set('size', '200x200');
-    qrApiUrl.searchParams.set('data', upiLink.toString());
+    qrApiUrl.searchParams.set('data', upiLink);
 
     return qrApiUrl.toString();
-  }, [advanceAmount, transactionId]);
+  }, [upiLink]);
 
   const onSubmit = async () => {
     if (!user || cartItems.length === 0) {
@@ -513,6 +519,9 @@ export default function CheckoutPage() {
                                                   <p className="font-semibold text-sm">Scan to pay with any UPI app</p>
                                                   <p className="text-xs text-muted-foreground">UPI ID: {UPI_ID}</p>
                                               </div>
+                                               <Button asChild size="lg" className="w-full">
+                                                    <a href={upiLink}>Pay with UPI App</a>
+                                                </Button>
                                           </div>
                                         <div>
                                             <Label htmlFor="utr-mobile" className="font-semibold">Enter UTR Number</Label>
@@ -658,7 +667,7 @@ export default function CheckoutPage() {
                     </div>
                 </div>
             </div>
-             {!selectedAddressId && !user?.isAnonymous && addresses && addresses.length === 0 && (
+             {!selectedAddressId && !user?.isAnonymous && addresses && addresses.length > 0 && (
                 <Alert variant="default" className="mt-6">
                     <AlertTitle>Address Required</AlertTitle>
                     <AlertDescription>
