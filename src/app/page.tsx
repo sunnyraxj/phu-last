@@ -477,6 +477,9 @@ export default function ProductPage() {
       'Bamboo': { label: 'Natural Bamboo', image: placeholderImages.bamboo.url, hint: placeholderImages.bamboo['data-ai-hint'] },
       'Water Hyacinth': { label: 'Water Hyacinth', image: placeholderImages.waterHyacinth.url, hint: placeholderImages.waterHyacinth['data-ai-hint'] },
       'Kauna Grass': { label: 'Kauna Grass', image: placeholderImages.kaunaGrass.url, hint: placeholderImages.kaunaGrass['data-ai-hint'] },
+      'Wood': { label: 'Wood', image: placeholderImages.wood.url, hint: placeholderImages.wood['data-ai-hint'] },
+      'Jute': { label: 'Jute', image: placeholderImages.jute.url, hint: placeholderImages.jute['data-ai-hint'] },
+      'Brass': { label: 'Brass', image: placeholderImages.brass.url, hint: placeholderImages.brass['data-ai-hint'] },
     };
     
     return materials

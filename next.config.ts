@@ -58,6 +58,12 @@ const nextConfig: NextConfig = {
         hostname: 'bs6gijwtdzcsl8jl.public.blob.vercel-storage.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https' as const,
+        hostname: 'images.pexels.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },

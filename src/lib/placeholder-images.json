@@ -30,5 +30,17 @@
   "kaunaGrass": {
     "url": "https://picsum.photos/seed/kauna/600/400",
     "data-ai-hint": "woven grass"
+  },
+  "wood": {
+    "url": "https://images.pexels.com/photos/2398356/pexels-photo-2398356.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "data-ai-hint": "wood grain"
+  },
+  "jute": {
+    "url": "https://images.pexels.com/photos/833045/pexels-photo-833045.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "data-ai-hint": "jute texture"
+  },
+  "brass": {
+    "url": "https://images.pexels.com/photos/1669417/pexels-photo-1669417.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "data-ai-hint": "brass metal"
   }
 }
