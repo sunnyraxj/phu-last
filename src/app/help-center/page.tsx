@@ -112,9 +112,6 @@ export default function HelpCenterPage() {
                                     <Copy className="h-4 w-4" />
                                 </Button>
                             </div>
-                             <Link href={`mailto:${SUPPORT_EMAIL}`}>
-                                <Button size="lg">Send Email</Button>
-                            </Link>
                         </CardContent>
                     </Card>
                 </div>
