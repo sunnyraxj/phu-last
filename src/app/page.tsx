@@ -4,7 +4,7 @@
 
 import { useState, useMemo, useEffect, useRef } from "react"
 import { collection, doc, query, where, writeBatch, setDoc, deleteDoc, orderBy, limit } from "firebase/firestore";
-import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon, MapPin, Phone, ExternalLink, Sparkles, Wand2, CheckCircle, User, Store as StoreIcon } from "lucide-react"
+import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon, MapPin, Phone, ExternalLink, Sparkles, Wand2, CheckCircle, User, Store as StoreIcon, Brush } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
@@ -69,6 +69,12 @@ type Store = {
     image?: string;
     googleMapsLink: string;
     'data-ai-hint'?: string;
+};
+
+type MaterialSetting = {
+    id: string;
+    name: string;
+    imageUrl: string;
 };
 
 function Filters({ 
@@ -287,6 +293,9 @@ export default function ProductPage() {
 
   const teamMembersQuery = useMemoFirebase(() => collection(firestore, 'teamMembers'), [firestore]);
   const { data: teamMembers, isLoading: teamMembersLoading } = useCollection<TeamMember>(teamMembersQuery);
+  
+  const materialSettingsQuery = useMemoFirebase(() => collection(firestore, 'materialSettings'), [firestore]);
+  const { data: materialSettings, isLoading: materialSettingsLoading } = useCollection<MaterialSetting>(materialSettingsQuery);
 
   const outOfStockQuery = useMemoFirebase(() => 
     (isAuthorizedAdmin) ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null,
@@ -472,23 +481,10 @@ export default function ProductPage() {
   };
 
   const materialsToShow = useMemo(() => {
-    const materialMap = {
-      'Cane': { label: 'Natural Rattan | Cane', image: placeholderImages.rattan.url, hint: placeholderImages.rattan['data-ai-hint'] },
-      'Bamboo': { label: 'Natural Bamboo', image: placeholderImages.bamboo.url, hint: placeholderImages.bamboo['data-ai-hint'] },
-      'Water Hyacinth': { label: 'Water Hyacinth', image: placeholderImages.waterHyacinth.url, hint: placeholderImages.waterHyacinth['data-ai-hint'] },
-      'Kauna Grass': { label: 'Kauna Grass', image: placeholderImages.kaunaGrass.url, hint: placeholderImages.kaunaGrass['data-ai-hint'] },
-      'Wood': { label: 'Wood', image: placeholderImages.wood.url, hint: placeholderImages.wood['data-ai-hint'] },
-      'Jute': { label: 'Jute', image: placeholderImages.jute.url, hint: placeholderImages.jute['data-ai-hint'] },
-      'Brass': { label: 'Brass', image: placeholderImages.brass.url, hint: placeholderImages.brass['data-ai-hint'] },
-    };
-    
-    return materials
-        .filter(material => materialMap[material as keyof typeof materialMap])
-        .map(material => ({
-            name: material,
-            ...materialMap[material as keyof typeof materialMap]
-        }));
-  }, [materials]);
+    if (!materialSettings || !allProducts) return [];
+    const usedMaterials = new Set(allProducts.map(p => p.material));
+    return materialSettings.filter(ms => usedMaterials.has(ms.name));
+  }, [materialSettings, allProducts]);
 
   return (
     <div className="min-h-screen bg-background font-sans">
@@ -582,23 +578,28 @@ export default function ProductPage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Materials we deal in</h2>
           </div>
+          {materialSettingsLoading ? (
+            <div className="flex justify-center items-center h-40">
+                <PottersWheelSpinner />
+            </div>
+          ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {materialsToShow.map(material => (
               <div key={material.name} className="text-center group cursor-pointer" onClick={() => handleMaterialChange(material.name)}>
                 <div className="relative aspect-video w-full rounded-lg overflow-hidden mb-4 shadow-md transition-transform duration-300 group-hover:scale-105">
                   <Image
-                    src={material.image}
-                    alt={material.label}
+                    src={material.imageUrl || placeholderImages.product.url}
+                    alt={material.name}
                     fill
                     className="object-cover"
-                    data-ai-hint={material.hint}
                   />
                   <div className={cn("absolute inset-0 border-4 border-transparent transition-all", selectedMaterials.includes(material.name) && "border-primary")}></div>
                 </div>
-                <p className="font-semibold text-foreground">{material.label}</p>
+                <p className="font-semibold text-foreground">{material.name}</p>
               </div>
             ))}
           </div>
+          )}
         </div>
       </section>
 

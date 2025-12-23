@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { collection, doc, query, where } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
-import { Home, Package, ShoppingCart, Users, Store, Menu, Settings, Undo2, LayoutDashboard, FileText, ShieldAlert } from 'lucide-react';
+import { Home, Package, ShoppingCart, Users, Store, Menu, Settings, Undo2, LayoutDashboard, FileText, ShieldAlert, Brush } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -84,6 +84,7 @@ export default function AdminLayout({
             items: [
                 { href: '/admin/team', label: 'Our Team', icon: Users },
                 { href: '/admin/store', label: 'Our Store', icon: Store },
+                { href: '/admin/materials', label: 'Materials', icon: Brush },
             ]
         },
         {
