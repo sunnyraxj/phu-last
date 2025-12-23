@@ -12,7 +12,7 @@ import Link from "next/link";
 import { PottersWheelSpinner } from "@/components/shared/PottersWheelSpinner";
 import { useToast } from "@/hooks/use-toast";
 
-const WHATSAPP_NUMBER = '919876543210'; 
+const WHATSAPP_NUMBER = '918638098776'; 
 const SUPPORT_EMAIL = 'purbanchalhastaudyog@gmail.com'; 
 
 type UserProfile = {
