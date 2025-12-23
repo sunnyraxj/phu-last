@@ -54,8 +54,8 @@ export default function AddAddressPage() {
         <div className="bg-background min-h-screen">
             <Header userData={null} cartItems={[]} updateCartItemQuantity={() => {}} />
 
-            <main className="container mx-auto py-8 sm:py-12 px-4">
-                <Card className="max-w-2xl mx-auto">
+            <main className="container mx-auto py-4 sm:py-12 px-0 sm:px-4">
+                <Card className="max-w-2xl mx-auto sm:shadow-sm sm:border rounded-none sm:rounded-lg">
                     <CardHeader>
                         <CardTitle>Add New Address</CardTitle>
                         <CardDescription>Enter the details for your new shipping address.</CardDescription>
