@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Header } from '@/components/shared/Header';
-import { PlusCircle, Edit, Trash2, Home, Building, Briefcase, Star } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Home, Building, Briefcase, Star, LifeBuoy } from 'lucide-react';
 import { AddressForm, AddressFormValues } from '@/components/account/AddressForm';
 import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -112,8 +112,8 @@ export default function AccountPage() {
     <div className="bg-background">
       <Header userData={null} cartItems={[]} updateCartItemQuantity={() => {}} />
 
-      <main className="container mx-auto py-8 sm:py-12 px-4">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-8">My Account</h1>
+      <main className="container mx-auto py-8 sm:py-12 px-4 space-y-8">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">My Account</h1>
 
         <Card>
           <CardHeader>
@@ -171,6 +171,23 @@ export default function AccountPage() {
                 <Button><PlusCircle className="mr-2 h-4 w-4" /> Add New Address</Button>
             </Link>
           </CardFooter>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle>Help Center</CardTitle>
+                <CardDescription>Need help with an order or have a question? Contact us.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <p className="text-muted-foreground">Our support team is available to assist you with any inquiries.</p>
+            </CardContent>
+            <CardFooter>
+                <Link href="/help-center">
+                    <Button variant="outline">
+                        <LifeBuoy className="mr-2 h-4 w-4" /> Get Help
+                    </Button>
+                </Link>
+            </CardFooter>
         </Card>
 
         {/* Edit Dialog */}
