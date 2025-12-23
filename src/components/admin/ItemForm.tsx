@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ScrollArea } from '../ui/scroll-area';
 import { DialogFooter } from '../ui/dialog';
 import { PottersWheelSpinner } from '../shared/PottersWheelSpinner';
-import { X, PlusCircle, Trash2, RotateCcw, UploadCloud } from 'lucide-react';
+import { X, PlusCircle, Trash2, RotateCcw, UploadCloud, Link as LinkIcon } from 'lucide-react';
 import Image from 'next/image';
 import { AddOptionDialog } from './AddOptionDialog';
 import { useToast } from '@/hooks/use-toast';
@@ -111,6 +111,7 @@ export function ItemForm({
   const [hasDraft, setHasDraft] = useState(false);
   const inputFileRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
 
   const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
   const { data: allProducts } = useCollection<Product>(productsQuery);
@@ -268,6 +269,23 @@ export function ItemForm({
       }
     }
   };
+  
+    const handleAddImageUrl = () => {
+        if (imageUrl.trim() === '') {
+            toast({ variant: 'destructive', title: 'URL is empty' });
+            return;
+        }
+        try {
+            // Basic URL validation
+            new URL(imageUrl);
+            const currentImages = getValues('images');
+            setValue('images', [...currentImages, imageUrl], { shouldValidate: true, shouldDirty: true });
+            setImageUrl('');
+            toast({ title: 'Image URL added!' });
+        } catch (_) {
+            toast({ variant: 'destructive', title: 'Invalid URL', description: 'Please enter a valid image URL.' });
+        }
+    };
 
 
   const handleDiscardDraft = () => {
@@ -309,23 +327,39 @@ export function ItemForm({
 
             <div className="space-y-2">
               <Label>Images</Label>
-              <Input
-                type="file"
-                ref={inputFileRef}
-                onChange={handleFileUpload}
-                className="hidden"
-                id="file-upload"
-                accept="image/*"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => inputFileRef.current?.click()}
-                disabled={isUploading}
-                className="w-full"
-              >
-                {isUploading ? <PottersWheelSpinner /> : <><UploadCloud className="mr-2 h-4 w-4" /> Upload from Device</>}
-              </Button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                      <Input
+                        type="file"
+                        ref={inputFileRef}
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        id="file-upload"
+                        accept="image/*"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => inputFileRef.current?.click()}
+                        disabled={isUploading}
+                        className="w-full"
+                      >
+                        {isUploading ? <PottersWheelSpinner /> : <><UploadCloud className="mr-2 h-4 w-4" /> Upload from Device</>}
+                      </Button>
+                  </div>
+                  <div className="flex gap-2">
+                       <Input
+                          type="text"
+                          placeholder="Or paste image URL"
+                          value={imageUrl}
+                          onChange={(e) => setImageUrl(e.target.value)}
+                          className="h-10"
+                       />
+                       <Button type="button" variant="outline" size="icon" onClick={handleAddImageUrl} className="h-10 w-10">
+                           <LinkIcon className="h-4 w-4" />
+                       </Button>
+                  </div>
+              </div>
 
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 mt-2">
                 {images && images.map((url, index) => (
