@@ -583,22 +583,31 @@ export default function ProductPage() {
                 <PottersWheelSpinner />
             </div>
           ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {materialsToShow.map(material => (
-              <div key={material.name} className="text-center group cursor-pointer" onClick={() => handleMaterialChange(material.name)}>
-                <div className="relative aspect-video w-full rounded-lg overflow-hidden mb-4 shadow-md transition-transform duration-300 group-hover:scale-105">
-                  <Image
-                    src={material.imageUrl || placeholderImages.product.url}
-                    alt={material.name}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className={cn("absolute inset-0 border-4 border-transparent transition-all", selectedMaterials.includes(material.name) && "border-primary")}></div>
-                </div>
-                <p className="font-semibold text-foreground">{material.name}</p>
-              </div>
-            ))}
-          </div>
+            <Carousel
+                opts={{
+                    align: "start",
+                }}
+                className="w-full"
+            >
+                <CarouselContent className="-ml-4">
+                    {materialsToShow.map(material => (
+                        <CarouselItem key={material.name} className="pl-4 basis-2/5 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
+                            <div className="text-center group cursor-pointer" onClick={() => handleMaterialChange(material.name)}>
+                                <div className="relative aspect-video w-full rounded-lg overflow-hidden mb-4 shadow-md transition-transform duration-300 group-hover:scale-105">
+                                <Image
+                                    src={material.imageUrl || placeholderImages.product.url}
+                                    alt={material.name}
+                                    fill
+                                    className="object-cover"
+                                />
+                                <div className={cn("absolute inset-0 border-4 border-transparent transition-all", selectedMaterials.includes(material.name) && "border-primary")}></div>
+                                </div>
+                                <p className="font-semibold text-foreground">{material.name}</p>
+                            </div>
+                        </CarouselItem>
+                    ))}
+                </CarouselContent>
+            </Carousel>
           )}
         </div>
       </section>
