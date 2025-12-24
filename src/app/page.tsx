@@ -258,7 +258,7 @@ export default function ProductPage() {
   const { data: allProducts, isLoading: productsLoading } = useCollection<Product>(productsQuery);
   
   const newArrivalsQuery = useMemoFirebase(() =>
-    query(collection(firestore, 'products'), orderBy('createdAt', 'desc'), limit(4)),
+    query(collection(firestore, 'products'), orderBy('createdAt', 'desc'), limit(5)),
     [firestore]
   );
   const { data: newArrivals, isLoading: newArrivalsLoading } = useCollection<Product>(newArrivalsQuery);
@@ -541,30 +541,52 @@ export default function ProductPage() {
               <PottersWheelSpinner />
             </div>
           ) : newArrivals && newArrivals.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {newArrivals.map((product) => (
-                <div key={product.id} className="group relative text-left">
-                  <ProductImage product={product} onClick={() => setSelectedProduct(product)} />
-                  <div className="mt-4 flex flex-col items-start">
-                    <h3 className="text-base text-foreground font-bold truncate w-full">{product.name}</h3>
-                    <div className="flex items-center gap-2">
-                        <p className="font-bold text-base text-foreground">
-                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(getProductPrice(product))}
-                        </p>
-                        {product.variants && product.variants.length > 0 && <Badge variant="secondary">Multiple Sizes</Badge>}
-                    </div>
-                    <Button
-                    variant="outline"
-                    className="w-full mt-2"
-                    onClick={() => openVariantSelector(product)}
-                    disabled={!product.inStock}
-                    >
-                    {product.inStock ? 'Add to Cart' : 'Out of Stock'}
-                    </Button>
+            <>
+              {/* Mobile Layout */}
+              <div className="grid grid-cols-2 gap-4 sm:hidden">
+                {newArrivals[0] && (
+                  <div key={newArrivals[0].id} className="col-span-2">
+                    <ProductImage product={newArrivals[0]} onClick={() => setSelectedProduct(newArrivals[0])} />
                   </div>
-                </div>
-              ))}
-            </div>
+                )}
+                {newArrivals.slice(1, 3).map(product => (
+                  <div key={product.id}>
+                    <ProductImage product={product} onClick={() => setSelectedProduct(product)} />
+                  </div>
+                ))}
+                {newArrivals.slice(3, 5).map(product => (
+                  <div key={product.id}>
+                    <ProductImage product={product} onClick={() => setSelectedProduct(product)} />
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Layout */}
+              <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                {newArrivals.map((product) => (
+                  <div key={product.id} className="group relative text-left">
+                    <ProductImage product={product} onClick={() => setSelectedProduct(product)} />
+                    <div className="mt-4 flex flex-col items-start">
+                      <h3 className="text-base text-foreground font-bold truncate w-full">{product.name}</h3>
+                      <div className="flex items-center gap-2">
+                          <p className="font-bold text-base text-foreground">
+                              {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(getProductPrice(product))}
+                          </p>
+                          {product.variants && product.variants.length > 0 && <Badge variant="secondary">Multiple Sizes</Badge>}
+                      </div>
+                      <Button
+                      variant="outline"
+                      className="w-full mt-2"
+                      onClick={() => openVariantSelector(product)}
+                      disabled={!product.inStock}
+                      >
+                      {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           ) : (
             <div className="text-center h-64 flex flex-col items-center justify-center">
               <p className="text-muted-foreground">No new arrivals to show right now.</p>
@@ -591,7 +613,7 @@ export default function ProductPage() {
             >
                 <CarouselContent className="-ml-4">
                     {materialsToShow.map(material => (
-                        <CarouselItem key={material.name} className="pl-4 basis-2/5 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
+                        <CarouselItem key={material.name} className="pl-4 basis-2/5 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-[15%]">
                             <div className="text-center group cursor-pointer" onClick={() => handleMaterialChange(material.name)}>
                                 <div className="relative aspect-video w-full rounded-lg overflow-hidden mb-4 shadow-md transition-transform duration-300 group-hover:scale-105">
                                 <Image
