@@ -176,9 +176,9 @@ function ProductImage({ product, onClick }: { product: Product; onClick: () => v
                 data-ai-hint={product['data-ai-hint'] || placeholderImages.product['data-ai-hint']}
             />
             {product.variants && product.variants.length > 0 && (
-              <div className="absolute bottom-2 left-2 flex flex-wrap gap-1.5 md:hidden">
+              <div className="absolute bottom-2 left-2 flex flex-wrap gap-1 md:hidden">
                 {product.variants.slice(0, 3).map(variant => (
-                  <Badge key={variant.size} variant="secondary" className="text-xs px-1.5 py-0.5">{variant.size}</Badge>
+                  <Badge key={variant.size} variant="secondary" className="text-[10px] px-1 py-0">{variant.size}</Badge>
                 ))}
               </div>
             )}
@@ -632,9 +632,7 @@ export default function ProductPage() {
       </section>
 
       <div className="flex items-start">
-        <div className="container mx-auto px-0 sm:px-4">
-          <div className="flex items-start">
-            <aside className="w-72 bg-background p-6 border-r border-border h-screen sticky top-0 overflow-y-auto hidden lg:block">
+        <aside className="w-72 bg-background p-6 border-r border-border h-screen sticky top-0 overflow-y-auto hidden lg:block">
               <Filters
                 categories={categories}
                 materials={materials}
@@ -750,8 +748,6 @@ export default function ProductPage() {
                 </>
               )}
             </main>
-          </div>
-        </div>
       </div>
       
       {/* Product Detail Dialog */}
