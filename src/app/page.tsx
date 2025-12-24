@@ -250,7 +250,7 @@ export default function ProductPage() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [variantSelection, setVariantSelection] = useState<{product: Product | null, selectedSize: string | null}>({product: null, selectedSize: null});
+  const [dialogSelectedSize, setDialogSelectedSize] = useState<string | null>(null);
 
   const { firestore } = useFirebase();
   const { user, isUserLoading } = useUser();
@@ -386,6 +386,14 @@ export default function ProductPage() {
         router.push('/login');
         return;
     }
+    
+    if(product.variants && product.variants.length > 0 && !selectedSize) {
+        toast({
+            variant: "destructive",
+            title: "Please select a size.",
+        });
+        return;
+    }
 
     const existingItem = cartItems.find(item => item.id === product.id && item.selectedSize === selectedSize);
 
@@ -405,16 +413,16 @@ export default function ProductPage() {
         title: "Item Added",
         description: `${product.name}${selectedSize ? ` (${selectedSize})` : ''} has been added to your cart.`,
     });
-    setVariantSelection({ product: null, selectedSize: null });
+    setSelectedProduct(null);
   };
   
-  const openVariantSelector = (product: Product) => {
-      if (product.variants && product.variants.length > 0) {
-          setVariantSelection({ product, selectedSize: product.variants[0].size });
-      } else {
-          handleAddToCart(product, null);
-      }
-  };
+  useEffect(() => {
+    if (selectedProduct && selectedProduct.variants && selectedProduct.variants.length > 0) {
+        setDialogSelectedSize(selectedProduct.variants[0].size);
+    } else {
+        setDialogSelectedSize(null);
+    }
+  }, [selectedProduct]);
 
 
   const filteredProducts = useMemo(() => {
@@ -480,9 +488,9 @@ export default function ProductPage() {
     if (!product) return 0;
     
     if (product.variants && product.variants.length > 0) {
-        const targetSize = size || product.variants[0].size;
+        const targetSize = size || (product.variants[0]?.size);
         const selectedVariant = product.variants.find(v => v.size === targetSize);
-        return selectedVariant?.price || product.variants[0].price;
+        return selectedVariant?.price || product.variants[0]?.price || 0;
     }
     return product.baseMrp || 0;
   };
@@ -574,7 +582,7 @@ export default function ProductPage() {
                       <Button
                       variant="outline"
                       className="w-full mt-2"
-                      onClick={() => openVariantSelector(product)}
+                      onClick={() => handleAddToCart(product, product.variants?.[0]?.size || null)}
                       disabled={!product.inStock}
                       >
                       {product.inStock ? 'Add to Cart' : 'Out of Stock'}
@@ -728,7 +736,7 @@ export default function ProductPage() {
                                 <Button
                                 variant="ghost"
                                 className="w-full sm:w-auto mt-2 text-white bg-black hover:bg-black/80 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold text-sm h-auto justify-center"
-                                onClick={() => openVariantSelector(product)}
+                                onClick={() => handleAddToCart(product, product.variants?.[0]?.size || null)}
                                 disabled={!product.inStock}
                                 >
                                 {product.inStock ? 'Add to Cart' : 'Out of Stock'}
@@ -773,26 +781,46 @@ export default function ProductPage() {
                     <CarouselPrevious className="left-2" />
                     <CarouselNext className="right-2" />
                 </Carousel>
-                <div className="flex flex-col justify-center">
+                <div className="flex flex-col">
                     <DialogHeader>
-                    <DialogTitle className="text-3xl font-bold">{selectedProduct.name}</DialogTitle>
-                    <DialogDescription className="text-base pt-4">
-                        {selectedProduct.description}
-                    </DialogDescription>
+                        <DialogTitle className="text-3xl font-bold">{selectedProduct.name}</DialogTitle>
+                        <DialogDescription className="text-base pt-4">
+                            {selectedProduct.description}
+                        </DialogDescription>
                     </DialogHeader>
-                    <div className="mt-4">
-                    <p className="text-2xl font-bold">
-                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(getProductPrice(selectedProduct))}
-                    </p>
-                    <p className={cn("mt-2 text-sm font-semibold", selectedProduct.inStock ? "text-green-600" : "text-red-600")}>
-                        {selectedProduct.inStock ? "In Stock" : "Out of Stock"}
-                    </p>
+                    
+                    <div className="mt-4 flex-1">
+                        <p className="text-2xl font-bold">
+                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(getProductPrice(selectedProduct, dialogSelectedSize))}
+                        </p>
+                        <p className={cn("mt-2 text-sm font-semibold", selectedProduct.inStock ? "text-green-600" : "text-red-600")}>
+                            {selectedProduct.inStock ? "In Stock" : "Out of Stock"}
+                        </p>
+                        
+                        {selectedProduct.variants && selectedProduct.variants.length > 0 && (
+                            <div className="mt-4">
+                                <Label className="font-semibold">Size</Label>
+                                <RadioGroup 
+                                    value={dialogSelectedSize || ''} 
+                                    onValueChange={setDialogSelectedSize}
+                                    className="flex flex-wrap gap-2 mt-2"
+                                >
+                                    {selectedProduct.variants.map(variant => (
+                                        <Label key={variant.size} htmlFor={`dialog-${variant.size}`} className="flex items-center justify-center gap-2 border rounded-md p-2 px-3 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary">
+                                            <RadioGroupItem value={variant.size} id={`dialog-${variant.size}`} className="sr-only" />
+                                            <span className="text-sm font-medium">{variant.size}</span>
+                                        </Label>
+                                    ))}
+                                </RadioGroup>
+                            </div>
+                        )}
                     </div>
+                    
                     <DialogFooter className="mt-6">
-                    <Button size="lg" className="w-full" onClick={() => { setSelectedProduct(null); openVariantSelector(selectedProduct); }} disabled={!selectedProduct.inStock}>
-                        <ShoppingBag className="mr-2" />
-                        Add to Cart
-                    </Button>
+                        <Button size="lg" className="w-full" onClick={() => handleAddToCart(selectedProduct, dialogSelectedSize)} disabled={!selectedProduct.inStock}>
+                            <ShoppingBag className="mr-2" />
+                            Add to Cart
+                        </Button>
                     </DialogFooter>
                 </div>
                 </div>
@@ -800,41 +828,6 @@ export default function ProductPage() {
         )}
       </Dialog>
       
-      {/* Variant Selection Dialog */}
-      <Dialog open={!!variantSelection.product} onOpenChange={(isOpen) => !isOpen && setVariantSelection({product: null, selectedSize: null})}>
-          {variantSelection.product && (
-              <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                      <DialogTitle>Select Size for {variantSelection.product.name}</DialogTitle>
-                      <DialogDescription>Choose an available size and add to cart.</DialogDescription>
-                  </DialogHeader>
-                  <div className="py-4">
-                      <RadioGroup 
-                          value={variantSelection.selectedSize || ''} 
-                          onValueChange={(size) => setVariantSelection(prev => ({...prev, selectedSize: size}))}
-                          className="space-y-2"
-                      >
-                          {variantSelection.product.variants?.map(variant => (
-                              <Label key={variant.size} htmlFor={variant.size} className="flex items-center justify-between gap-4 border rounded-md p-4 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary">
-                                  <div className="flex items-center gap-4">
-                                      <RadioGroupItem value={variant.size} id={variant.size} />
-                                      <span>{variant.size}</span>
-                                  </div>
-                                  <span className="font-semibold">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(variant.price)}</span>
-                              </Label>
-                          ))}
-                      </RadioGroup>
-                  </div>
-                  <DialogFooter>
-                       <Button type="button" variant="outline" onClick={() => setVariantSelection({product: null, selectedSize: null})}>Cancel</Button>
-                      <Button onClick={() => handleAddToCart(variantSelection.product!, variantSelection.selectedSize)} disabled={!variantSelection.selectedSize}>
-                          Add to Cart
-                      </Button>
-                  </DialogFooter>
-              </DialogContent>
-          )}
-      </Dialog>
-
       <section className="bg-background py-8">
           <div className="container mx-auto px-4">
               <div className="text-center mb-12">
