@@ -258,7 +258,7 @@ export default function ProductPage() {
   const { data: allProducts, isLoading: productsLoading } = useCollection<Product>(productsQuery);
   
   const newArrivalsQuery = useMemoFirebase(() =>
-    query(collection(firestore, 'products'), orderBy('createdAt', 'desc'), limit(5)),
+    query(collection(firestore, 'products'), orderBy('createdAt', 'desc'), limit(4)),
     [firestore]
   );
   const { data: newArrivals, isLoading: newArrivalsLoading } = useCollection<Product>(newArrivalsQuery);
@@ -544,17 +544,7 @@ export default function ProductPage() {
             <>
               {/* Mobile Layout */}
               <div className="grid grid-cols-2 gap-4 sm:hidden">
-                {newArrivals[0] && (
-                  <div key={newArrivals[0].id} className="col-span-2">
-                    <ProductImage product={newArrivals[0]} onClick={() => setSelectedProduct(newArrivals[0])} />
-                  </div>
-                )}
-                {newArrivals.slice(1, 3).map(product => (
-                  <div key={product.id}>
-                    <ProductImage product={product} onClick={() => setSelectedProduct(product)} />
-                  </div>
-                ))}
-                {newArrivals.slice(3, 5).map(product => (
+                {newArrivals.map(product => (
                   <div key={product.id}>
                     <ProductImage product={product} onClick={() => setSelectedProduct(product)} />
                   </div>
