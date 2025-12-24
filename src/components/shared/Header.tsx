@@ -260,7 +260,10 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
         <header className="bg-black text-white sticky top-0 z-40">
             <div className="container mx-auto flex items-center justify-between px-4 sm:px-8 py-4">
                 <Link href="/" className="flex items-center gap-3">
-                    <span className="text-lg font-semibold whitespace-nowrap">Purbanchal Hasta Udyog</span>
+                    <span className="text-lg font-semibold whitespace-nowrap">
+                        <span className="hidden sm:inline">Purbanchal Hasta Udyog</span>
+                        <span className="sm:hidden">PHU</span>
+                    </span>
                 </Link>
                 
                 {!isMobile && <DesktopNav />}
