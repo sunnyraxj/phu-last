@@ -61,7 +61,7 @@ export function FloatingWhatsAppButton() {
         },
         {
             icon: Sparkles,
-            title: 'Custom Order',
+            title: 'Customize Order',
             message: `Hello, I would like to inquire about a custom order.${baseMessage}`
         }
     ];
