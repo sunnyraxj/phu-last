@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { ScrollProgress } from '@/components/shared/ScrollProgress';
 import { Footer } from '@/components/shared/Footer';
+import { FloatingWhatsAppButton } from '@/components/shared/FloatingWhatsAppButton';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-body' });
 
@@ -54,6 +55,7 @@ export default function RootLayout({
           <ScrollProgress />
           <main className="flex-grow">{children}</main>
           <Footer />
+          <FloatingWhatsAppButton />
           <Toaster />
         </FirebaseClientProvider>
       </body>
