@@ -274,8 +274,8 @@ export function Header({ userData, cartItems, updateCartItemQuantity, stores = [
                     {!isUserLoading && user && !user.isAnonymous && (
                         <Popover open={userMenuOpen} onOpenChange={setUserMenuOpen}>
                             <PopoverTrigger asChild>
-                                <Button variant="ghost" onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)} className="hover:opacity-80 p-0 rounded-full">
-                                    <User size={24} />
+                                <Button variant="ghost" onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)} className="hover:opacity-80 p-0 rounded-full h-10 w-10">
+                                    <User size={28} />
                                 </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-48" onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)}>
