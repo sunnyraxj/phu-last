@@ -175,6 +175,13 @@ function ProductImage({ product, onClick }: { product: Product; onClick: () => v
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
                 data-ai-hint={product['data-ai-hint'] || placeholderImages.product['data-ai-hint']}
             />
+            {product.variants && product.variants.length > 0 && (
+              <div className="absolute bottom-2 left-2 flex flex-wrap gap-1.5 md:hidden">
+                {product.variants.slice(0, 3).map(variant => (
+                  <Badge key={variant.size} variant="secondary" className="text-xs px-1.5 py-0.5">{variant.size}</Badge>
+                ))}
+              </div>
+            )}
         </div>
     );
 }
@@ -521,7 +528,9 @@ export default function PurchasePage() {
                         <p className="font-bold text-sm sm:text-base text-black">
                             {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(getProductPrice(product))}
                         </p>
-                         {product.variants && product.variants.length > 0 && <Badge variant="secondary">Multiple Sizes</Badge>}
+                         <div className="hidden md:block">
+                            {product.variants && product.variants.length > 0 && <Badge variant="secondary">Multiple Sizes</Badge>}
+                        </div>
                     </div>
                     <Button
                         variant="ghost"

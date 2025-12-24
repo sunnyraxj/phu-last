@@ -175,6 +175,13 @@ function ProductImage({ product, onClick }: { product: Product; onClick: () => v
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
                 data-ai-hint={product['data-ai-hint'] || placeholderImages.product['data-ai-hint']}
             />
+            {product.variants && product.variants.length > 0 && (
+              <div className="absolute bottom-2 left-2 flex flex-wrap gap-1.5 md:hidden">
+                {product.variants.slice(0, 3).map(variant => (
+                  <Badge key={variant.size} variant="secondary" className="text-xs px-1.5 py-0.5">{variant.size}</Badge>
+                ))}
+              </div>
+            )}
         </div>
     );
 }
@@ -543,13 +550,13 @@ export default function ProductPage() {
           ) : newArrivals && newArrivals.length > 0 ? (
             <>
               {/* Mobile Layout */}
-              <div className="grid grid-cols-2 gap-4 sm:hidden">
-                {newArrivals.map(product => (
-                  <div key={product.id}>
-                    <ProductImage product={product} onClick={() => setSelectedProduct(product)} />
-                  </div>
-                ))}
-              </div>
+                <div className="grid grid-cols-2 gap-4 sm:hidden">
+                    {newArrivals.slice(0, 4).map(product => (
+                        <div key={product.id}>
+                           <ProductImage product={product} onClick={() => setSelectedProduct(product)} />
+                        </div>
+                    ))}
+                </div>
 
               {/* Desktop Layout */}
               <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -585,7 +592,7 @@ export default function ProductPage() {
         </div>
       </section>
       
-      <section className="bg-muted/30 py-12">
+      <section className="bg-muted/30 py-8">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Materials we deal in</h2>
@@ -603,7 +610,7 @@ export default function ProductPage() {
             >
                 <CarouselContent className="-ml-4">
                     {materialsToShow.map(material => (
-                        <CarouselItem key={material.name} className="pl-4 basis-2/5 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-[15%]">
+                        <CarouselItem key={material.name} className="pl-4 basis-[45%] sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-[15%]">
                             <div className="text-center group cursor-pointer" onClick={() => handleMaterialChange(material.name)}>
                                 <div className="relative aspect-video w-full rounded-lg overflow-hidden mb-4 shadow-md transition-transform duration-300 group-hover:scale-105">
                                 <Image
@@ -716,7 +723,9 @@ export default function ProductPage() {
                                     <p className="font-bold text-sm sm:text-base text-foreground">
                                         {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(getProductPrice(product))}
                                     </p>
-                                    {product.variants && product.variants.length > 0 && <Badge variant="secondary">Multiple Sizes</Badge>}
+                                    <div className="hidden md:block">
+                                        {product.variants && product.variants.length > 0 && <Badge variant="secondary">Multiple Sizes</Badge>}
+                                    </div>
                                 </div>
                                 <Button
                                 variant="ghost"
