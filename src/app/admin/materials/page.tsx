@@ -34,6 +34,8 @@ export default function MaterialsPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
     const inputFileRef = useRef<HTMLInputElement>(null);
+    const heroDesktopInputRef = useRef<HTMLInputElement>(null);
+    const heroMobileInputRef = useRef<HTMLInputElement>(null);
 
     const [isEditFormOpen, setIsEditFormOpen] = useState(false);
     const [isHeroEditFormOpen, setIsHeroEditFormOpen] = useState(false);
@@ -161,8 +163,8 @@ export default function MaterialsPage() {
             });
         } finally {
             setIsUploading(false);
-            if (inputFileRef.current) {
-                inputFileRef.current.value = '';
+            if (event.target) {
+                event.target.value = '';
             }
         }
     };
@@ -348,7 +350,7 @@ export default function MaterialsPage() {
                                         type="button"
                                         variant="outline"
                                         size="icon"
-                                        onClick={() => inputFileRef.current?.click()}
+                                        onClick={() => heroDesktopInputRef.current?.click()}
                                         disabled={isUploading}
                                     >
                                         {isUploading ? <PottersWheelSpinner /> : <UploadCloud className="h-4 w-4" />}
@@ -368,7 +370,7 @@ export default function MaterialsPage() {
                                         type="button"
                                         variant="outline"
                                         size="icon"
-                                        onClick={() => inputFileRef.current?.click()}
+                                        onClick={() => heroMobileInputRef.current?.click()}
                                         disabled={isUploading}
                                     >
                                         {isUploading ? <PottersWheelSpinner /> : <UploadCloud className="h-4 w-4" />}
@@ -377,10 +379,18 @@ export default function MaterialsPage() {
                             </div>
                             <Input
                                 type="file"
-                                ref={inputFileRef}
-                                onChange={(e) => handleFileUpload(e, 'hero')} // Simplified to only one upload button for now
+                                ref={heroDesktopInputRef}
+                                onChange={(e) => handleFileUpload(e, 'hero')}
                                 className="hidden"
-                                id="hero-file-upload"
+                                id="hero-desktop-file-upload"
+                                accept="image/*"
+                            />
+                            <Input
+                                type="file"
+                                ref={heroMobileInputRef}
+                                onChange={(e) => handleFileUpload(e, 'heroMobile')}
+                                className="hidden"
+                                id="hero-mobile-file-upload"
                                 accept="image/*"
                             />
                         </div>
