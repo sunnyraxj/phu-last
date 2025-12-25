@@ -465,9 +465,7 @@ export default function ProductPage() {
             />
             <div className="absolute inset-0 bg-black/50" />
             <div className="relative z-10 p-4 md:p-12">
-                <h1 className="text-lg md:text-3xl font-bold mb-2 tracking-tight text-white max-w-md italic -rotate-1">
-                  Handmade items to add authentic look to your home
-                </h1>
+                
                 <Link href="/purchase">
                     <Button size="sm" className="bg-[--brand-green] text-white hover:bg-[--brand-green]/90 h-8 text-xs px-3">
                         Shop our collection
