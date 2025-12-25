@@ -198,7 +198,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
   );
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50">
+    <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-500" style={{ transform: isScrolled ? 'translateY(0)' : 'translateY(0)' }}>
        {showAnnouncement && (
          <div className={cn("bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium transition-all duration-300", isScrolled ? "h-0 py-0 opacity-0" : "h-auto")}>
           <div className="w-full md:w-1/3 flex-1 flex justify-start items-center gap-4">
@@ -234,8 +234,8 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
       )}
 
        <div className={cn(
-           "bg-transparent text-white relative z-10 py-2 md:py-6 px-4 md:px-12 shadow-md md:shadow-none transition-all duration-300",
-            isScrolled ? "!bg-white !text-foreground !py-3.5 !px-12 !rounded-b-lg !shadow-lg" : ""
+           "bg-transparent text-white relative z-10 py-2 md:py-6 px-4 md:px-12 shadow-md md:shadow-none transition-all duration-500",
+            isScrolled ? "bg-white text-foreground py-3.5 px-12 rounded-b-lg shadow-lg" : ""
        )}>
         <div className="w-full flex flex-col items-center justify-center">
           
@@ -461,7 +461,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
 
               <div className={cn("flex justify-center w-1/3 transition-all duration-300", isScrolled && 'absolute left-1/2 -translate-x-1/2')}>
                 <Link href="/" className="flex flex-col items-center">
-                   <span className={cn("font-serif tracking-tighter leading-none flex items-center gap-1 whitespace-nowrap transition-all duration-300", isScrolled ? '!text-2xl !text-[--brand-brown]' : 'text-3xl')}>
+                   <span className={cn("font-serif tracking-tighter leading-none flex items-center gap-1 whitespace-nowrap transition-all duration-300", isScrolled ? 'text-2xl text-[--brand-brown]' : 'text-3xl')}>
                     {isScrolled ? 'Purbanchal Hasta Udyog' : 'Purbanchal'}
                   </span>
                   <span className={cn("text-[10px] uppercase tracking-[0.2em] mt-1 font-medium transition-opacity duration-300", isScrolled ? 'opacity-0 h-0' : 'opacity-100')}>
