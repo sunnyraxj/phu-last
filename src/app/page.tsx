@@ -202,7 +202,7 @@ export default function ProductPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [dialogSelectedSize, setDialogSelectedSize] = useState<string | null>(null);
 
-  const { firestore } = useFirebase();
+  const { firestore, updateCartItemSize } = useFirebase();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const router = useRouter();
@@ -334,7 +334,7 @@ export default function ProductPage() {
     }
   };
 
-  const handleAddToCart = (product: Product, selectedSize: string | null) => {
+  const handleAddToCart = async (product: Product, selectedSize: string | null) => {
     if (!user) {
         router.push('/login');
         return;
@@ -355,7 +355,7 @@ export default function ProductPage() {
     } else {
         const cartCollection = collection(firestore, 'users', user.uid, 'cart');
         const newCartItemRef = doc(cartCollection);
-        setDoc(newCartItemRef, {
+        await setDoc(newCartItemRef, {
             productId: product.id,
             quantity: 1,
             selectedSize: selectedSize
@@ -467,6 +467,7 @@ export default function ProductPage() {
         userData={userData}
         cartItems={cartItems}
         updateCartItemQuantity={updateCartItemQuantity}
+        updateCartItemSize={updateCartItemSize}
         products={allProducts || []}
       />
       

@@ -199,7 +199,7 @@ export default function PurchasePage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [dialogSelectedSize, setDialogSelectedSize] = useState<string | null>(null);
 
-  const { firestore, addDocumentNonBlocking } = useFirebase();
+  const { firestore, addDocumentNonBlocking, updateCartItemSize } = useFirebase();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const router = useRouter();
@@ -314,7 +314,7 @@ export default function PurchasePage() {
     }
   };
   
-    const handleAddToCart = (product: Product, selectedSize: string | null) => {
+    const handleAddToCart = async (product: Product, selectedSize: string | null) => {
     if (!user) {
         router.push('/login');
         return;
@@ -334,7 +334,7 @@ export default function PurchasePage() {
         updateCartItemQuantity(existingItem.cartItemId, existingItem.quantity + 1);
     } else {
         const cartCollection = collection(firestore, 'users', user.uid, 'cart');
-        addDocumentNonBlocking(cartCollection, {
+        await addDocumentNonBlocking(cartCollection, {
             productId: product.id,
             quantity: 1,
             selectedSize: selectedSize
@@ -435,6 +435,7 @@ export default function PurchasePage() {
         userData={userData}
         cartItems={cartItems}
         updateCartItemQuantity={updateCartItemQuantity}
+        updateCartItemSize={updateCartItemSize}
         stores={stores || []}
         products={allProducts || []}
         adminActionCounts={adminActionCounts}

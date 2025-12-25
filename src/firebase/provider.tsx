@@ -3,12 +3,13 @@
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
-import { Firestore, collection, doc, getDocs, writeBatch } from 'firebase/firestore';
+import { Firestore, collection, doc, getDocs, writeBatch, setDoc } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { FirebaseStorage } from 'firebase/storage';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
 import { addDocumentNonBlocking } from './non-blocking-updates';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
+import { useToast } from '@/hooks/use-toast';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -156,12 +157,20 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   );
 };
 
+// Define more specific type for the hook's return value
+type UseFirebaseHookResult = FirebaseContextState & {
+    addDocumentNonBlocking: typeof addDocumentNonBlocking;
+    mergeCarts: (anonymousUid: string, permanentUid: string) => Promise<void>;
+    updateCartItemSize: (cartItemId: string, newSize: string) => Promise<void>;
+};
+
 /**
  * Hook to access core Firebase services and user authentication state.
  * Throws error if used outside a ready FirebaseProvider.
  */
-export const useFirebase = (): FirebaseContextState & { addDocumentNonBlocking: typeof addDocumentNonBlocking, mergeCarts: (anonymousUid: string, permanentUid: string) => Promise<void> } => {
+export const useFirebase = (): UseFirebaseHookResult => {
   const context = useContext(FirebaseContext);
+  const { toast } = useToast();
 
   if (context === undefined) {
     throw new Error('useFirebase must be used within a FirebaseProvider and after initial auth check.');
@@ -173,10 +182,33 @@ export const useFirebase = (): FirebaseContextState & { addDocumentNonBlocking: 
     return (anonymousUid: string, permanentUid: string) => mergeCarts(context.firestore!, anonymousUid, permanentUid);
   }, [context.firestore]);
 
+  const updateCartItemSize = useMemo(() => {
+    return async (cartItemId: string, newSize: string) => {
+      if (!context.user) return;
+      const cartItemRef = doc(context.firestore, 'users', context.user.uid, 'cart', cartItemId);
+      
+      try {
+        await setDoc(cartItemRef, { selectedSize: newSize }, { merge: true });
+        toast({
+          title: 'Size Updated',
+          description: `The item size has been changed to ${newSize}.`,
+        });
+      } catch (error) {
+        console.error("Error updating cart item size: ", error);
+        toast({
+          variant: 'destructive',
+          title: 'Update Failed',
+          description: 'Could not update the item size.',
+        });
+      }
+    };
+  }, [context.user, context.firestore, toast]);
+
   return {
     ...context,
     addDocumentNonBlocking: memoizedAddDoc,
     mergeCarts: memoizedMergeCarts,
+    updateCartItemSize,
   };
 };
 

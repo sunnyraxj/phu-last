@@ -55,6 +55,9 @@ import {
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay"
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Label } from "../ui/label";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 
 
 // Simple X icon replacement
@@ -90,11 +93,12 @@ interface HeaderProps {
     userData: { role: string } | null | undefined;
     cartItems: CartItem[];
     updateCartItemQuantity: (cartItemId: string, newQuantity: number) => void;
+    updateCartItemSize?: (cartItemId: string, newSize: string) => void;
     showAnnouncement?: boolean;
     products: Product[];
 }
 
-export function Header({ userData, cartItems, updateCartItemQuantity, showAnnouncement = true, products = [] }: HeaderProps) {
+export function Header({ userData, cartItems, updateCartItemQuantity, updateCartItemSize, showAnnouncement = true, products = [] }: HeaderProps) {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
@@ -103,6 +107,8 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
   const [isScrolled, setIsScrolled] = useState(false);
   const [showExtraButtons, setShowExtraButtons] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [itemToChangeSize, setItemToChangeSize] = useState<CartItem | null>(null);
+  const [newSize, setNewSize] = useState<string | null>(null);
 
   const suggestedProducts = useMemo(() => {
     return products.slice(0, 4);
@@ -149,6 +155,19 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
         return item.variants[0].price;
     }
     return item.baseMrp || 0;
+  };
+
+  const handleChangeSizeClick = (item: CartItem) => {
+    setItemToChangeSize(item);
+    setNewSize(item.selectedSize || (item.variants && item.variants.length > 0 ? item.variants[0].size : null));
+  }
+
+  const handleConfirmSizeChange = () => {
+    if (itemToChangeSize && newSize && updateCartItemSize) {
+      updateCartItemSize(itemToChangeSize.cartItemId, newSize);
+    }
+    setItemToChangeSize(null);
+    setNewSize(null);
   };
 
   const cartCount = useMemo(() => cartItems.reduce((acc, item) => acc + item.quantity, 0), [cartItems]);
@@ -198,7 +217,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
   );
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-500" style={{ transform: isScrolled ? 'translateY(0)' : 'translateY(0)' }}>
+    <header className={cn("fixed top-0 left-0 right-0 z-50 transition-all duration-300", isScrolled ? 'bg-white shadow-md' : 'bg-transparent')}>
        {showAnnouncement && (
          <div className={cn("bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium transition-all duration-300", isScrolled ? "h-0 py-0 opacity-0" : "h-auto")}>
           <div className="w-full md:w-1/3 flex-1 flex justify-start items-center gap-4">
@@ -234,8 +253,8 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
       )}
 
        <div className={cn(
-           "bg-transparent text-white relative z-10 py-2 md:py-6 px-4 md:px-12 shadow-md md:shadow-none transition-all duration-500",
-            isScrolled ? "bg-white text-foreground py-3.5 px-12 rounded-b-lg shadow-lg" : ""
+           "relative z-10 py-2 md:py-4 px-4 md:px-0 transition-all duration-300",
+            isScrolled ? "text-foreground" : "text-white"
        )}>
         <div className="w-full flex flex-col items-center justify-center">
           
@@ -269,7 +288,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
             
             <div className="w-1/3 flex justify-center">
                 <Link href="/" className="flex flex-col items-center">
-                    <span className="text-xl font-serif text-[--brand-brown] tracking-tighter leading-none whitespace-nowrap">
+                    <span className={cn("text-xl font-serif tracking-tighter leading-none whitespace-nowrap", isScrolled ? 'text-[--brand-brown]' : 'text-white')}>
                         Purbanchal
                     </span>
                 </Link>
@@ -279,7 +298,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                 {!isUserLoading && user && !user.isAnonymous ? (
                    <Popover>
                       <PopoverTrigger asChild>
-                        <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset ring-foreground/50")}>
+                        <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isScrolled ? "ring-foreground/50" : "ring-white/50")}>
                             <User size={18} strokeWidth={1.5} />
                         </button>
                       </PopoverTrigger>
@@ -306,14 +325,14 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                       </PopoverContent>
                    </Popover>
                 ) : (
-                  <Link href="/login" className="hover:text-[--brand-brown] transition-colors">
+                  <Link href="/login" className="hover:opacity-80 transition-colors">
                       <User size={22} strokeWidth={1.5} />
                   </Link>
                 )}
                
                 <Sheet>
                     <SheetTrigger asChild>
-                        <button className="relative hover:text-[--brand-brown] transition-colors">
+                        <button className="relative hover:opacity-80 transition-colors">
                             <ShoppingBag size={22} strokeWidth={1.5} />
                             {cartCount > 0 && (
                                 <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -343,6 +362,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                                                 </div>
                                                 <div className="flex-1 space-y-2">
                                                     <p className="font-semibold text-sm">{item.name}</p>
+                                                    {item.selectedSize && <p className="text-xs text-muted-foreground">Size: {item.selectedSize}</p>}
                                                     <p className="text-muted-foreground text-sm font-bold">
                                                         {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(getCartItemPrice(item))}
                                                     </p>
@@ -360,9 +380,14 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                                                             <Plus size={14} />
                                                         </Button>
                                                     </div>
+                                                    {item.variants && item.variants.length > 1 && (
+                                                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => handleChangeSizeClick(item)}>
+                                                        Change Size
+                                                      </Button>
+                                                    )}
                                                 </div>
                                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => updateCartItemQuantity(item.cartItemId, 0)}>
-                                                    <X size={16} />
+                                                    <X className="h-5 w-5" />
                                                 </Button>
                                             </div>
                                         ))}
@@ -399,11 +424,11 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
           </div>
           
           {/* Desktop Header */}
-           <div className="w-full hidden md:flex items-center justify-between">
+           <div className="w-full hidden md:flex items-center justify-between px-12 py-3.5">
               <div className="flex items-center gap-2 md:gap-4 w-1/3">
                  <Sheet>
                     <SheetTrigger asChild>
-                        <button className={cn("hover:opacity-80 transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
+                        <button className="hover:opacity-80 transition-colors">
                             <Search size={22} strokeWidth={1.5} />
                         </button>
                     </SheetTrigger>
@@ -457,6 +482,20 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                         </div>
                     </SheetContent>
                  </Sheet>
+                 <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="p-0 h-auto hover:bg-transparent">
+                            <Menu/>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        {navItems.map((item) => (
+                          <DropdownMenuItem key={item.href} asChild>
+                            <Link href={item.href}>{item.label}</Link>
+                          </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuContent>
+                 </DropdownMenu>
               </div>
 
               <div className={cn("flex justify-center w-1/3 transition-all duration-300", isScrolled && 'absolute left-1/2 -translate-x-1/2')}>
@@ -475,7 +514,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                    <Popover>
                       <PopoverTrigger asChild>
                         <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isScrolled ? "ring-foreground/50" : "ring-white")}>
-                            <User size={18} strokeWidth={1.5} className={cn(isScrolled ? 'text-foreground' : 'text-white')} />
+                            <User size={18} strokeWidth={1.5} />
                         </button>
                       </PopoverTrigger>
                       <PopoverContent className="w-48">
@@ -493,6 +532,16 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                               </Button>
                           </Link>
                           <Separator />
+                           {userData?.role === 'admin' && (
+                            <>
+                                <Link href="/admin/dashboard">
+                                    <Button variant="ghost" className="w-full justify-start p-2 h-auto">
+                                        Admin Dashboard
+                                    </Button>
+                                </Link>
+                                <Separator />
+                            </>
+                           )}
                           <Button variant="ghost" onClick={handleSignOut} className="justify-start p-2 h-auto text-destructive">
                               <LogOut className="mr-2 h-4 w-4" />
                               Logout
@@ -501,14 +550,14 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                       </PopoverContent>
                    </Popover>
                 ) : (
-                  <Link href="/login" className={cn("hover:opacity-80 transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
+                  <Link href="/login" className="hover:opacity-80 transition-colors">
                       <User size={22} strokeWidth={1.5} />
                   </Link>
                 )}
                
                 <Sheet>
                     <SheetTrigger asChild>
-                        <button className={cn("relative hover:opacity-80 transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
+                        <button className="relative hover:opacity-80 transition-colors">
                             <ShoppingBag size={22} strokeWidth={1.5} />
                             {cartCount > 0 && (
                                 <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -538,6 +587,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                                                 </div>
                                                 <div className="flex-1 space-y-2">
                                                     <p className="font-semibold text-sm">{item.name}</p>
+                                                    {item.selectedSize && <p className="text-xs text-muted-foreground">Size: {item.selectedSize}</p>}
                                                     <p className="text-muted-foreground text-sm font-bold">
                                                         {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(getCartItemPrice(item))}
                                                     </p>
@@ -555,9 +605,14 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                                                             <Plus size={14} />
                                                         </Button>
                                                     </div>
+                                                     {item.variants && item.variants.length > 1 && (
+                                                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => handleChangeSizeClick(item)}>
+                                                        Change Size
+                                                      </Button>
+                                                    )}
                                                 </div>
                                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => updateCartItemQuantity(item.cartItemId, 0)}>
-                                                    <X size={16} />
+                                                    <X className="h-5 w-5" />
                                                 </Button>
                                             </div>
                                         ))}
@@ -593,20 +648,42 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
               </div>
           </div>
           
-          <nav className={cn("hidden md:flex items-center justify-center gap-8 text-[13px] font-medium transition-opacity duration-500", !isScrolled && "mt-4", isScrolled && "opacity-0 h-0")}>
-            {navItems.map((item) => (
-              <Link key={item.href} href={item.href} className={cn("hover:text-[--brand-green] transition-colors text-base", isScrolled ? 'text-foreground' : 'text-white')}>
-                  {item.label}
-              </Link>
-            ))}
-            {userData?.role === 'admin' && (
-              <Link href="/admin/dashboard" className={cn("hover:text-[--brand-green] transition-colors text-base", isScrolled ? 'text-foreground' : 'text-white')}>
-                Admin Dashboard
-              </Link>
-            )}
-          </nav>
         </div>
       </div>
+       <Dialog open={!!itemToChangeSize} onOpenChange={() => setItemToChangeSize(null)}>
+        {itemToChangeSize && (
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Change Size for {itemToChangeSize.name}</DialogTitle>
+                    <DialogDescription>
+                        Select a new size for this item.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                  <RadioGroup
+                      value={newSize || ''}
+                      onValueChange={setNewSize}
+                      className="flex flex-wrap gap-2"
+                  >
+                      {itemToChangeSize.variants?.map((variant) => (
+                          <Label
+                              key={variant.size}
+                              htmlFor={`size-change-${variant.size}`}
+                              className="flex items-center justify-center gap-2 border rounded-md p-3 px-4 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary transition-colors"
+                          >
+                              <RadioGroupItem value={variant.size} id={`size-change-${variant.size}`} className="sr-only" />
+                              <span className="text-sm font-medium">{variant.size}</span>
+                          </Label>
+                      ))}
+                  </RadioGroup>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setItemToChangeSize(null)}>Cancel</Button>
+                    <Button onClick={handleConfirmSizeChange}>Confirm Change</Button>
+                </DialogFooter>
+            </DialogContent>
+        )}
+      </Dialog>
     </header>
   )
 }
