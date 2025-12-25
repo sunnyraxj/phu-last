@@ -475,7 +475,7 @@ export default function ProductPage() {
             <div className="relative z-10 p-4 md:p-12">
                 
                 <Link href="/purchase">
-                    <Button size="sm" className="bg-[--brand-green] text-white hover:bg-[--brand-green]/90 h-8 text-xs px-3">
+                    <Button size="sm" className="bg-[--brand-green] text-white hover:bg-[--brand-green]/90 h-8 text-xs px-3 md:h-11 md:px-8 md:text-sm">
                         Shop our collection
                     </Button>
                 </Link>
@@ -937,3 +937,4 @@ export default function ProductPage() {
     
 
     
+
