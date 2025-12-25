@@ -1,10 +1,10 @@
 {
   "hero": {
-    "url": "https://i.pinimg.com/1200x/dd/78/2f/dd782fab487c0b714178b44ab5bd0531.jpg",
+    "url": "https://picsum.photos/seed/hero-landscape/1600/900",
     "data-ai-hint": "handicraft store"
   },
   "heroMobile": {
-    "url": "https://i.pinimg.com/736x/fd/cc/67/fdcc67da16d4ebeb00058032a03d7f9c.jpg",
+    "url": "https://picsum.photos/seed/hero-mobile-landscape/900/1600",
     "data-ai-hint": "bamboo handicrafts"
   },
   "product": {
