@@ -468,7 +468,7 @@ export default function ProductPage() {
                   Handmade items to add authentic look to your home
                 </h1>
                 <Link href="/purchase">
-                    <Button size="lg" variant="secondary">
+                    <Button size="default" className="bg-[--brand-green] text-white hover:bg-[--brand-green]/90">
                         Shop our collection
                     </Button>
                 </Link>
@@ -511,8 +511,8 @@ export default function ProductPage() {
                           {product.variants && product.variants.length > 0 && <Badge variant="secondary">Multiple Sizes</Badge>}
                       </div>
                       <Button
-                      variant="outline"
-                      className="w-full mt-2 bg-foreground text-background hover:bg-foreground/90"
+                      variant="ghost"
+                      className="w-full mt-2 text-background bg-foreground hover:bg-foreground/90 disabled:bg-muted disabled:text-muted-foreground"
                       onClick={() => handleAddToCart(product, product.variants?.[0]?.size || null)}
                       disabled={!product.inStock}
                       >
