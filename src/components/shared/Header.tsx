@@ -2,26 +2,59 @@
 'use client';
 
 import Link from "next/link";
-import { ChevronDown, ShoppingBag, User, LogOut, Settings, Store, Package, Users, ShoppingCart, Menu, X as CloseIcon, UserCog, Undo2, LayoutDashboard } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from "@/components/ui/sheet";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Facebook,
+  Instagram,
+  Youtube,
+  Linkedin,
+  Search,
+  User,
+  ShoppingBag,
+  ChevronLeft,
+  ChevronRight,
+  Compass,
+  LogOut
+} from "lucide-react";
 import { signOut } from "firebase/auth";
-import { useAuth, useUser, useFirestore } from "@/firebase";
-import { useMemo, useState, useRef, useEffect } from "react";
+import { useAuth, useUser } from "@/firebase";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import { Separator } from "../ui/separator";
 import { Input } from "../ui/input";
 import { Plus, Minus, X } from "lucide-react";
-import { Badge } from "../ui/badge";
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "../ui/accordion";
-import { cn, isValidImageDomain } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetFooter,
+  SheetClose,
+} from "@/components/ui/sheet";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useRouter } from "next/navigation";
+import { cn, isValidImageDomain } from "@/lib/utils";
 import placeholderImages from '@/lib/placeholder-images.json';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../ui/select";
-import { doc, setDoc } from 'firebase/firestore';
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useToast } from "@/hooks/use-toast";
 
+
+// Simple X icon replacement
+const XIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+  </svg>
+)
+
+const PinterestIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">
+    <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.965 1.406-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.259 7.929-7.259 4.164 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146 1.124.347 2.317.535 3.554.535 6.621 0 11.988-5.367 11.988-11.987C24.005 5.367 18.638 0 12.017 0z" />
+  </svg>
+)
 
 type Product = {
     id: string;
@@ -39,442 +72,255 @@ type Product = {
 
 type CartItem = Product & { quantity: number; cartItemId: string; selectedSize?: string };
 
-type Store = {
-    id: string;
-    name: string;
-    image?: string;
-};
-
 interface HeaderProps {
     userData: { role: string } | null | undefined;
     cartItems: CartItem[];
     updateCartItemQuantity: (cartItemId: string, newQuantity: number) => void;
-    stores?: Store[];
-    products?: Product[];
-    adminActionCounts?: {
-        pendingOrders: number;
-        outOfStockProducts: number;
-        pendingReturns: number;
-    };
-    showAnnouncement?: boolean;
-    className?: string;
 }
 
-export function Header({ userData, cartItems, updateCartItemQuantity, stores = [], products = [], adminActionCounts = { pendingOrders: 0, outOfStockProducts: 0, pendingReturns: 0 }, showAnnouncement = true, className }: HeaderProps) {
-    const { user, isUserLoading } = useUser();
-    const auth = useAuth();
-    const firestore = useFirestore();
-    const router = useRouter();
-    const isMobile = useIsMobile();
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    
-    const [purchaseMenuOpen, setPurchaseMenuOpen] = useState(false);
-    const [storesMenuOpen, setStoresMenuOpen] = useState(false);
-    const [adminMenuOpen, setAdminMenuOpen] = useState(false);
-    const [userMenuOpen, setUserMenuOpen] = useState(false);
-    
-    const featuredProducts = useMemo(() => {
-        if (!purchaseMenuOpen || isMobile) return [];
-        if (products.length > 0) {
-            const shuffled = [...products].sort(() => 0.5 - Math.random());
-            return shuffled.slice(0, 3);
+export function Header({ userData, cartItems, updateCartItemQuantity }: HeaderProps) {
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+    router.push('/');
+  };
+
+  const handleCheckout = () => {
+    if (user?.isAnonymous) {
+        router.push('/login?redirect=/checkout');
+    } else {
+        router.push('/checkout');
+    }
+  };
+
+  const getCartItemPrice = (item: CartItem): number => {
+    if (item.variants && item.variants.length > 0) {
+        const selectedVariant = item.variants.find(v => v.size === item.selectedSize);
+        if (selectedVariant) {
+            return selectedVariant.price;
         }
-        return [];
-    }, [products, purchaseMenuOpen, isMobile]);
+        return item.variants[0].price;
+    }
+    return item.baseMrp || 0;
+  };
 
-    const handleSignOut = async () => {
-        await signOut(auth);
-        router.push('/');
-    };
+  const cartCount = useMemo(() => cartItems.reduce((acc, item) => acc + item.quantity, 0), [cartItems]);
+  const cartSubtotal = useMemo(() => {
+    return cartItems.reduce((acc, item) => {
+        const price = getCartItemPrice(item);
+        return acc + price * item.quantity;
+    }, 0);
+  }, [cartItems]);
 
-    const handleCheckout = () => {
-        if (user?.isAnonymous) {
-            router.push('/login?redirect=/checkout');
-        } else {
-            router.push('/checkout');
-        }
-    };
-    
-    const updateCartItemSize = (cartItemId: string, newSize: string) => {
-        if (!user) return;
-        const itemRef = doc(firestore, 'users', user.uid, 'cart', cartItemId);
-        setDoc(itemRef, { selectedSize: newSize }, { merge: true });
-    };
+  return (
+    <header className="w-full bg-[--brand-green] text-white">
+      {/* Announcement Bar */}
+      <div className="py-2 px-4 flex items-center justify-between text-xs font-medium">
+        <div className="flex items-center gap-4">
+          <Link href="#" className="hover:opacity-80 transition-opacity">
+            <Facebook size={16} />
+          </Link>
+          <Link href="#" className="hover:opacity-80 transition-opacity">
+            <XIcon className="w-4 h-4" />
+          </Link>
+          <Link href="#" className="hover:opacity-80 transition-opacity">
+            <Instagram size={16} />
+          </Link>
+          <Link href="#" className="hover:opacity-80 transition-opacity">
+            <Youtube size={16} />
+          </Link>
+          <Link href="#" className="hover:opacity-80 transition-opacity">
+            <PinterestIcon className="w-4 h-4" />
+          </Link>
+          <Link href="#" className="hover:opacity-80 transition-opacity">
+            <Linkedin size={16} />
+          </Link>
+        </div>
 
-    const getCartItemPrice = (item: CartItem): number => {
-        if (item.variants && item.variants.length > 0) {
-            const selectedVariant = item.variants.find(v => v.size === item.selectedSize);
-            if (selectedVariant) {
-                return selectedVariant.price;
-            }
-            // If no size is selected, or selected size is invalid, default to first variant's price
-            return item.variants[0].price;
-        }
-        return item.baseMrp || 0;
-    };
+        <div className="hidden md:flex items-center gap-8">
+          <button className="hover:opacity-80">
+            <ChevronLeft size={16} />
+          </button>
+          <div className="flex items-center gap-2 tracking-wide uppercase">
+            <Compass size={14} />
+            <span>Clearance Sale is Live!</span>
+          </div>
+          <button className="hover:opacity-80">
+            <ChevronRight size={16} />
+          </button>
+        </div>
 
-    const cartCount = useMemo(() => cartItems.reduce((acc, item) => acc + item.quantity, 0), [cartItems]);
-    const cartSubtotal = useMemo(() => {
-        return cartItems.reduce((acc, item) => {
-            const price = getCartItemPrice(item);
-            return acc + price * item.quantity;
-        }, 0);
-    }, [cartItems]);
+        <div className="w-[120px]" />
+      </div>
 
-    const totalAdminActionCount = useMemo(() => {
-        return (adminActionCounts?.pendingOrders || 0) + (adminActionCounts?.pendingReturns || 0);
-    }, [adminActionCounts]);
-    
-    const DesktopNav = () => (
-         <nav className="hidden lg:flex items-center gap-6 text-base font-semibold">
-             <Popover open={purchaseMenuOpen} onOpenChange={setPurchaseMenuOpen}>
-                <PopoverTrigger asChild>
-                    <Link href="/purchase" onMouseEnter={() => setPurchaseMenuOpen(true)} onMouseLeave={() => setPurchaseMenuOpen(false)}>
-                        <button className="flex items-center gap-1 hover:opacity-80">
-                            PURCHASE <ChevronDown size={16} />
-                        </button>
-                    </Link>
-                </PopoverTrigger>
-                 <PopoverContent 
-                    className="w-96"
-                    onMouseEnter={() => setPurchaseMenuOpen(true)} onMouseLeave={() => setPurchaseMenuOpen(false)}
-                >
-                    {purchaseMenuOpen && (
-                        <div className="grid gap-4">
-                            <p className="font-semibold">Featured Products</p>
-                            <div className="grid grid-cols-3 gap-2">
-                                {featuredProducts.map((product) => (
-                                    <Link href="/purchase" key={product.id} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted -m-2">
-                                        <div className="relative h-20 w-20 rounded-md overflow-hidden">
-                                            <Image src={isValidImageDomain(product.images?.[0]) ? product.images[0] : placeholderImages.product.url} alt={product.name} fill className="object-cover" />
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-xs truncate w-20 text-center">{product.name}</p>
-                                        </div>
-                                    </Link>
-                                ))}
-                            </div>
-                            <Link href="/purchase">
-                                <Button variant="link" className="p-0 h-auto text-primary w-full justify-center">View More</Button>
-                            </Link>
-                        </div>
-                    )}
-                </PopoverContent>
-            </Popover>
-            <Popover open={storesMenuOpen} onOpenChange={setStoresMenuOpen}>
-                <PopoverTrigger asChild>
-                     <Link href="/our-stores" onMouseEnter={() => setStoresMenuOpen(true)} onMouseLeave={() => setStoresMenuOpen(false)}>
-                        <button className="flex items-center gap-1 hover:opacity-80">
-                            OUR STORES <ChevronDown size={16} />
-                        </button>
-                    </Link>
-                </PopoverTrigger>
-                 <PopoverContent 
-                    className="w-80"
-                     onMouseEnter={() => setStoresMenuOpen(true)} onMouseLeave={() => setStoresMenuOpen(false)}
-                >
-                   {storesMenuOpen && (
-                        <div className="grid gap-4">
-                            <p className="font-semibold">Store Locations</p>
-                            <div className="grid gap-2">
-                                {stores.slice(0, 3).map((store) => (
-                                    <Link href="/our-stores" key={store.id} className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted -m-2">
-                                        {store.image && isValidImageDomain(store.image) ? (
-                                            <div className="relative h-12 w-12 rounded-md overflow-hidden">
-                                                <Image src={store.image} alt={store.name} fill className="object-cover" />
-                                            </div>
-                                        ) : (
-                                            <div className="h-12 w-12 rounded-md bg-muted flex items-center justify-center">
-                                                <Store className="h-6 w-6 text-primary"/>
-                                            </div>
-                                        )}
-                                        <div>
-                                            <p className="font-semibold text-sm">{store.name}</p>
-                                        </div>
-                                    </Link>
-                                ))}
-                                {stores.length > 3 && (
-                                    <Link href="/our-stores">
-                                        <Button variant="link" className="p-0 h-auto text-primary">View all stores</Button>
-                                    </Link>
-                                )}
-                                {stores.length === 0 && (
-                                    <p className="text-sm text-muted-foreground">No store locations added yet.</p>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </PopoverContent>
-            </Popover>
-            <Link href="/about">
-                <button className="hover:opacity-80">ABOUT US</button>
+      {/* Main Navigation */}
+      <div className="bg-background text-foreground rounded-t-[2.5rem] -mt-4 relative z-10 pt-8 pb-6 px-4 md:px-12 shadow-sm">
+        <div className="flex flex-col items-center">
+          <div className="w-full flex items-center justify-between mb-6">
+            <button className="hover:text-[--brand-brown] transition-colors">
+              <Search size={22} strokeWidth={1.5} />
+            </button>
+
+            <Link href="/" className="flex flex-col items-center">
+              <span className="text-4xl font-serif text-[--brand-brown] tracking-tighter leading-none flex items-center gap-1">
+                Purbanchal
+                <span className="text-[--brand-green]">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C12 2 12 7 7 12C2 17 12 22 12 22C12 22 22 17 17 12C12 7 12 2 12 2Z" />
+                  </svg>
+                </span>
+              </span>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-[--brand-brown]/70 mt-1 font-medium">
+                Rooted in Craft, Inspired by People
+              </span>
             </Link>
-            <Link href="/our-team">
-                <button className="hover:opacity-80">OUR TEAM</button>
-            </Link>
-             {user && !user.isAnonymous && userData?.role === 'admin' && (
-                <Popover open={adminMenuOpen} onOpenChange={setAdminMenuOpen}>
+
+            <div className="flex items-center gap-5">
+              {!isUserLoading && user && !user.isAnonymous ? (
+                 <Popover>
                     <PopoverTrigger asChild>
-                        <Link href="/admin/dashboard" onMouseEnter={() => setAdminMenuOpen(true)} onMouseLeave={() => setAdminMenuOpen(false)}>
-                            <div className="flex items-center relative">
-                                <button className="flex items-center gap-1 hover:opacity-80">
-                                    ADMIN <ChevronDown size={16} />
-                                </button>
-                                {totalAdminActionCount > 0 && (
-                                    <Badge variant="destructive" className="absolute -top-2 -right-3 z-10 px-1.5 py-0 h-4 leading-none text-xs">
-                                        {totalAdminActionCount}
-                                    </Badge>
-                                )}
-                            </div>
-                        </Link>
+                       <button className="hover:text-[--brand-brown] transition-colors">
+                            <User size={22} strokeWidth={1.5} />
+                        </button>
                     </PopoverTrigger>
-                    <PopoverContent 
-                        className="w-auto"
-                        onMouseEnter={() => setAdminMenuOpen(true)} onMouseLeave={() => setAdminMenuOpen(false)}
-                    >
-                        <Link href="/admin/orders">
-                            <Button variant="ghost" className="w-full justify-start">
-                                <ShoppingCart className="mr-2 h-4 w-4" />
-                                Orders
-                                {(adminActionCounts?.pendingOrders || 0) > 0 && <Badge className="ml-auto">{adminActionCounts?.pendingOrders}</Badge>}
+                    <PopoverContent className="w-48">
+                      <div className="flex flex-col gap-1">
+                        <p className="font-semibold text-sm p-2 truncate">{user.email}</p>
+                        <Link href="/account">
+                            <Button variant="ghost" className="w-full justify-start p-2 h-auto">
+                                My Account
                             </Button>
                         </Link>
-                        <Link href="/admin/items">
-                             <Button variant="ghost" className="w-full justify-start">
-                                <Package className="mr-2 h-4 w-4" />
-                                Items
+                        <Link href="/orders">
+                            <Button variant="ghost" className="w-full justify-start p-2 h-auto">
+                                My Orders
                             </Button>
                         </Link>
-                        <Link href="/admin/dashboard">
-                            <Button variant="ghost" className="w-full justify-start">
-                                <LayoutDashboard className="mr-2 h-4 w-4" />
-                                Dashboard
-                            </Button>
-                        </Link>
+                        <Button variant="ghost" onClick={handleSignOut} className="justify-start p-2 h-auto text-destructive">
+                            <LogOut className="mr-2 h-4 w-4" />
+                            Logout
+                        </Button>
+                      </div>
                     </PopoverContent>
-                </Popover>
-            )}
-        </nav>
-    );
-
-    return (
-        <header className={cn("sticky top-0 z-40 bg-black text-white", className)}>
-            <div className="container mx-auto flex items-center justify-between px-4 sm:px-8 py-4">
-                <Link href="/" className="flex items-center gap-3">
-                    <span className="text-lg font-semibold whitespace-nowrap">
-                        <span className="hidden sm:inline">Purbanchal Hasta Udyog</span>
-                        <span className="sm:hidden">PHU</span>
-                    </span>
+                 </Popover>
+              ) : (
+                <Link href="/login" className="hover:text-[--brand-brown] transition-colors">
+                    <User size={22} strokeWidth={1.5} />
                 </Link>
-                
-                {!isMobile && <DesktopNav />}
-
-                <div className="flex items-center gap-4 sm:gap-6">
-                    {!isUserLoading && (!user || user.isAnonymous) && (
-                        <Link href="/login" className="hidden sm:block">
-                            <Button variant="secondary" size="sm">Login</Button>
-                        </Link>
-                    )}
-                    {!isUserLoading && user && !user.isAnonymous && (
-                        <Popover open={userMenuOpen} onOpenChange={setUserMenuOpen}>
-                            <PopoverTrigger asChild>
-                                <Button variant="ghost" onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)} className="hover:opacity-80 p-0 rounded-full h-10 w-10">
-                                    <div className="h-8 w-8 rounded-full flex items-center justify-center ring-1 ring-white">
-                                        <User size={20} />
-                                    </div>
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-48" onMouseEnter={() => setUserMenuOpen(true)} onMouseLeave={() => setUserMenuOpen(false)}>
-                                <div className="flex flex-col gap-1">
-                                    <p className="font-semibold text-sm p-2 truncate">{user.email}</p>
-                                    <Link href="/account">
-                                        <Button variant="ghost" className="w-full justify-start p-2 h-auto">
-                                            <UserCog className="mr-2 h-4 w-4" />
-                                            My Account
-                                        </Button>
-                                    </Link>
-                                    <Link href="/orders">
-                                        <Button variant="ghost" className="w-full justify-start p-2 h-auto">
-                                            <ShoppingBag className="mr-2 h-4 w-4" />
-                                            My Orders
-                                        </Button>
-                                    </Link>
-                                    <Button variant="ghost" onClick={handleSignOut} className="justify-start p-2 h-auto text-destructive">
-                                        <LogOut className="mr-2 h-4 w-4" />
-                                        Logout
-                                    </Button>
-                                </div>
-                            </PopoverContent>
-                        </Popover>
-                    )}
-
-                    <Sheet>
-                        <SheetTrigger asChild>
-                            <button className="relative hover:opacity-80">
-                                <ShoppingBag size={24} />
-                                {cartCount > 0 && (
-                                    <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                                        {cartCount}
-                                    </span>
-                                )}
-                            </button>
-                        </SheetTrigger>
-                        <SheetContent className="flex flex-col w-full sm:max-w-sm">
-                            <SheetHeader>
-                                <SheetTitle>Your Cart ({cartCount})</SheetTitle>
-                            </SheetHeader>
-                            {cartItems.length > 0 ? (
-                                <>
-                                    <div className="flex-1 overflow-y-auto -mx-6 px-6">
-                                        <Separator className="my-4" />
-                                        <div className="flex flex-col gap-6">
-                                            {cartItems.map(item => (
-                                                <div key={item.cartItemId} className="flex items-start gap-4">
-                                                    <div className="relative h-20 w-20 rounded-md overflow-hidden bg-muted">
-                                                        <Image
-                                                            src={isValidImageDomain(item.images?.[0]) ? item.images[0] : placeholderImages.product.url}
-                                                            alt={item.name}
-                                                            fill
-                                                            className="object-cover"
-                                                        />
-                                                    </div>
-                                                    <div className="flex-1 space-y-2">
-                                                        <p className="font-semibold text-sm">{item.name}</p>
-                                                        {item.selectedSize && <p className="text-xs text-muted-foreground">Size: {item.selectedSize}</p>}
-                                                        <p className="text-muted-foreground text-sm font-bold">
-                                                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(getCartItemPrice(item))}
-                                                        </p>
-                                                        {item.variants && item.variants.length > 0 && (
-                                                            <Select 
-                                                                value={item.selectedSize || item.variants[0].size} 
-                                                                onValueChange={(newSize) => updateCartItemSize(item.cartItemId, newSize)}
-                                                            >
-                                                                <SelectTrigger className="h-8 text-xs">
-                                                                    <SelectValue placeholder="Select size" />
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    {item.variants.map(variant => (
-                                                                        <SelectItem key={variant.size} value={variant.size} className="text-xs">
-                                                                            {variant.size} - {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(variant.price)}
-                                                                        </SelectItem>
-                                                                    ))}
-                                                                </SelectContent>
-                                                            </Select>
-                                                        )}
-                                                        <div className="flex items-center gap-2">
-                                                            <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartItemQuantity(item.cartItemId, item.quantity - 1)}>
-                                                                <Minus size={14} />
-                                                            </Button>
-                                                            <Input
-                                                                type="number"
-                                                                value={item.quantity}
-                                                                onChange={(e) => updateCartItemQuantity(item.cartItemId, parseInt(e.target.value) || 0)}
-                                                                className="h-7 w-12 text-center"
-                                                            />
-                                                            <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartItemQuantity(item.cartItemId, item.quantity + 1)}>
-                                                                <Plus size={14} />
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => updateCartItemQuantity(item.cartItemId, 0)}>
-                                                        <X size={16} />
-                                                    </Button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <SheetFooter className="mt-auto pt-6">
-                                        <div className="w-full space-y-4">
-                                            <div className="flex justify-between font-semibold">
-                                                <span>Subtotal</span>
-                                                <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(cartSubtotal)}</span>
-                                            </div>
-                                            <p className="text-xs text-muted-foreground">Shipping & taxes calculated at checkout.</p>
-                                            <SheetClose asChild>
-                                                <Button size="lg" className="w-full" onClick={handleCheckout}>Checkout</Button>
-                                            </SheetClose>
-                                        </div>
-                                    </SheetFooter>
-                                </>
-                            ) : (
-                                <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center">
-                                    <ShoppingBag size={48} className="text-muted-foreground" />
-                                    <h3 className="text-xl font-semibold">Your cart is empty</h3>
-                                    <p className="text-muted-foreground">Looks like you haven't added anything to your cart yet.</p>
-                                    <SheetClose asChild>
-                                      <Link href="/purchase">
-                                        <Button>Continue Shopping</Button>
-                                      </Link>
-                                    </SheetClose>
-                                </div>
-                            )}
-                        </SheetContent>
-                    </Sheet>
-                     <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-                        <SheetTrigger asChild>
-                            <Button variant="ghost" size="icon" className="lg:hidden">
-                                <Menu />
-                                <span className="sr-only">Open menu</span>
-                            </Button>
-                        </SheetTrigger>
-                        <SheetContent side="left" className="w-full max-w-xs bg-black text-white p-0">
-                             <SheetHeader className="p-4 flex flex-row items-center justify-between border-b border-white/20">
-                                <Link href="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
-                                    <p className="font-bold">Purbanchal Hasta Udyog</p>
+              )}
+             
+              <Sheet>
+                  <SheetTrigger asChild>
+                      <button className="relative hover:text-[--brand-brown] transition-colors">
+                          <ShoppingBag size={22} strokeWidth={1.5} />
+                          {cartCount > 0 && (
+                              <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                  {cartCount}
+                              </span>
+                          )}
+                      </button>
+                  </SheetTrigger>
+                  <SheetContent className="flex flex-col w-full sm:max-w-sm">
+                      <SheetHeader>
+                          <SheetTitle>Your Cart ({cartCount})</SheetTitle>
+                      </SheetHeader>
+                      {cartItems.length > 0 ? (
+                          <>
+                              <div className="flex-1 overflow-y-auto -mx-6 px-6">
+                                  <Separator className="my-4" />
+                                  <div className="flex flex-col gap-6">
+                                      {cartItems.map(item => (
+                                          <div key={item.cartItemId} className="flex items-start gap-4">
+                                              <div className="relative h-20 w-20 rounded-md overflow-hidden bg-muted">
+                                                  <Image
+                                                      src={isValidImageDomain(item.images?.[0]) ? item.images[0] : placeholderImages.product.url}
+                                                      alt={item.name}
+                                                      fill
+                                                      className="object-cover"
+                                                  />
+                                              </div>
+                                              <div className="flex-1 space-y-2">
+                                                  <p className="font-semibold text-sm">{item.name}</p>
+                                                  <p className="text-muted-foreground text-sm font-bold">
+                                                      {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(getCartItemPrice(item))}
+                                                  </p>
+                                                  <div className="flex items-center gap-2">
+                                                      <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartItemQuantity(item.cartItemId, item.quantity - 1)}>
+                                                          <Minus size={14} />
+                                                      </Button>
+                                                      <Input
+                                                          type="number"
+                                                          value={item.quantity}
+                                                          onChange={(e) => updateCartItemQuantity(item.cartItemId, parseInt(e.target.value) || 0)}
+                                                          className="h-7 w-12 text-center"
+                                                      />
+                                                      <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartItemQuantity(item.cartItemId, item.quantity + 1)}>
+                                                          <Plus size={14} />
+                                                      </Button>
+                                                  </div>
+                                              </div>
+                                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => updateCartItemQuantity(item.cartItemId, 0)}>
+                                                  <X size={16} />
+                                              </Button>
+                                          </div>
+                                      ))}
+                                  </div>
+                              </div>
+                              <SheetFooter className="mt-auto pt-6">
+                                  <div className="w-full space-y-4">
+                                      <div className="flex justify-between font-semibold">
+                                          <span>Subtotal</span>
+                                          <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(cartSubtotal)}</span>
+                                      </div>
+                                      <p className="text-xs text-muted-foreground">Shipping & taxes calculated at checkout.</p>
+                                      <SheetClose asChild>
+                                          <Button size="lg" className="w-full" onClick={handleCheckout}>Checkout</Button>
+                                      </SheetClose>
+                                  </div>
+                              </SheetFooter>
+                          </>
+                      ) : (
+                          <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center">
+                              <ShoppingBag size={48} className="text-muted-foreground" />
+                              <h3 className="text-xl font-semibold">Your cart is empty</h3>
+                              <p className="text-muted-foreground">Looks like you haven't added anything to your cart yet.</p>
+                              <SheetClose asChild>
+                                <Link href="/purchase">
+                                  <Button>Continue Shopping</Button>
                                 </Link>
-                                <SheetTitle className="sr-only">Main Menu</SheetTitle>
-                                <SheetClose asChild>
-                                    <Button variant="ghost" className="text-white hover:bg-white/10">Close</Button>
-                                </SheetClose>
-                            </SheetHeader>
-                            <div className="flex h-full flex-col">
-                                <div className="flex-1 overflow-y-auto p-4">
-                                    <Accordion type="multiple" className="w-full text-lg">
-                                        <Link href="/purchase" className="block py-4 border-b border-white/20 text-lg" onClick={() => setIsMobileMenuOpen(false)}>
-                                            PURCHASE
-                                        </Link>
-                                        <Link href="/our-stores" className="block py-4 border-b border-white/20 text-lg" onClick={() => setIsMobileMenuOpen(false)}>
-                                            OUR STORES
-                                        </Link>
-                                        <Link href="/about" className="block py-4 border-b border-white/20 text-lg" onClick={() => setIsMobileMenuOpen(false)}>
-                                            ABOUT US
-                                        </Link>
-                                        <Link href="/our-team" className="block py-4 border-b border-white/20 text-lg" onClick={() => setIsMobileMenuOpen(false)}>
-                                            OUR TEAM
-                                        </Link>
-
-                                        {userData?.role === 'admin' && (
-                                            <AccordionItem value="admin">
-                                                <AccordionTrigger className="py-4">ADMIN</AccordionTrigger>
-                                                <AccordionContent className="pl-4">
-                                                    <div className="grid gap-2 mt-2">
-                                                        <Link href="/admin/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="block p-2 rounded-lg hover:bg-white/10 -m-2">Dashboard</Link>
-                                                        <Link href="/admin/items" onClick={() => setIsMobileMenuOpen(false)} className="block p-2 rounded-lg hover:bg-white/10 -m-2">Items</Link>
-                                                        <Link href="/admin/orders" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-2 rounded-lg hover:bg-white/10 -m-2">
-                                                            <p>Orders</p>
-                                                            {(adminActionCounts?.pendingOrders || 0) > 0 && <Badge>{adminActionCounts?.pendingOrders}</Badge>}
-                                                        </Link>
-                                                        <Link href="/admin/team" onClick={() => setIsMobileMenuOpen(false)} className="block p-2 rounded-lg hover:bg-white/10 -m-2">Our Team</Link>
-                                                        <Link href="/admin/store" onClick={() => setIsMobileMenuOpen(false)} className="block p-2 rounded-lg hover:bg-white/10 -m-2">Our Store</Link>
-                                                        <Link href="/admin/settings" onClick={() => setIsMobileMenuOpen(false)} className="block p-2 rounded-lg hover:bg-white/10 -m-2">Settings</Link>
-                                                    </div>
-                                                </AccordionContent>
-                                            </AccordionItem>
-                                        )}
-                                    </Accordion>
-                                </div>
-                                {!isUserLoading && (!user || user.isAnonymous) && (
-                                    <div className="p-4 border-t border-white/20">
-                                        <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                                            <Button variant="secondary" className="w-full">Login</Button>
-                                        </Link>
-                                    </div>
-                                )}
-                            </div>
-                        </SheetContent>
-                    </Sheet>
-                </div>
+                              </SheetClose>
+                          </div>
+                      )}
+                  </SheetContent>
+              </Sheet>
             </div>
-        </header>
-    );
+          </div>
+
+          <nav className="hidden md:flex items-center gap-8 text-[13px] font-medium text-[--brand-brown]">
+            <Link href="/purchase" className="hover:text-[--brand-green] transition-colors">
+              All Products
+            </Link>
+            <Link href="/our-stores" className="hover:text-[--brand-green] transition-colors">
+              Our Stores
+            </Link>
+            <Link href="/about" className="hover:text-[--brand-green] transition-colors">
+              About Us
+            </Link>
+            <Link href="/our-team" className="hover:text-[--brand-green] transition-colors">
+              Our Team
+            </Link>
+            {userData?.role === 'admin' && (
+              <Link href="/admin/dashboard" className="hover:text-[--brand-green] transition-colors">
+                Admin Dashboard
+              </Link>
+            )}
+          </nav>
+        </div>
+      </div>
+    </header>
+  )
 }

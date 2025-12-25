@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useState, useMemo, useEffect, useRef } from "react"
@@ -480,7 +479,6 @@ export default function ProductPage() {
 
   const teamMembersToDisplay = useMemo(() => {
     if (!allOtherMembers) return [];
-    // No duplication, just show the members
     return allOtherMembers;
   }, [allOtherMembers]);
 
@@ -503,49 +501,42 @@ export default function ProductPage() {
 
   return (
     <div className="min-h-screen bg-background font-sans">
-      <div className="relative">
-          <Header
-              userData={userData}
-              cartItems={cartItems}
-              updateCartItemQuantity={updateCartItemQuantity}
-              stores={stores || []}
-              products={allProducts || []}
-              adminActionCounts={adminActionCounts}
-              showAnnouncement={false}
-              className="absolute top-0 left-0 right-0 z-50 bg-transparent text-white"
-          />
+      <Header
+          userData={userData}
+          cartItems={cartItems}
+          updateCartItemQuantity={updateCartItemQuantity}
+      />
 
-          <section className="relative h-[60vh] w-full flex items-center justify-center text-white">
-              <Image
-                  src={placeholderImages.hero.url}
-                  alt="Authentic handicrafts from North-East India"
-                  fill
-                  className="object-cover hidden md:block"
-                  data-ai-hint={placeholderImages.hero['data-ai-hint']}
-                  priority
-              />
-              <Image
-                  src={placeholderImages.heroMobile.url}
-                  alt="Authentic handicrafts from North-East India"
-                  fill
-                  className="object-cover md:hidden"
-                  data-ai-hint={placeholderImages.heroMobile['data-ai-hint']}
-                  priority
-              />
-              <div className="absolute inset-0 bg-black/50" />
-              <div className="relative z-10 text-center px-4">
-                  <TypewriterHeadline headlines={heroHeadlines} />
-                  <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
-                      Discover handcrafted treasures that tell a story. Explore unique bamboo, jute, and cane items.
-                  </p>
-                  <Link href="/purchase">
-                      <Button size="lg" variant="secondary">
-                          Shop Now
-                      </Button>
-                  </Link>
-              </div>
-          </section>
-      </div>
+      <section className="relative h-[60vh] w-full flex items-center justify-center text-white -mt-40">
+          <Image
+              src={placeholderImages.hero.url}
+              alt="Authentic handicrafts from North-East India"
+              fill
+              className="object-cover hidden md:block"
+              data-ai-hint={placeholderImages.hero['data-ai-hint']}
+              priority
+          />
+          <Image
+              src={placeholderImages.heroMobile.url}
+              alt="Authentic handicrafts from North-East India"
+              fill
+              className="object-cover md:hidden"
+              data-ai-hint={placeholderImages.heroMobile['data-ai-hint']}
+              priority
+          />
+          <div className="absolute inset-0 bg-black/50" />
+          <div className="relative z-10 text-center px-4">
+              <TypewriterHeadline headlines={heroHeadlines} />
+              <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
+                  Discover handcrafted treasures that tell a story. Explore unique bamboo, jute, and cane items.
+              </p>
+              <Link href="/purchase">
+                  <Button size="lg" variant="secondary">
+                      Shop Now
+                  </Button>
+              </Link>
+          </div>
+      </section>
 
       <section className="bg-background py-16">
         <div className="container mx-auto px-4">
@@ -561,7 +552,6 @@ export default function ProductPage() {
             </div>
           ) : newArrivals && newArrivals.length > 0 ? (
             <>
-              {/* Mobile Layout */}
                 <div className="grid grid-cols-2 gap-4 sm:hidden">
                     {newArrivals.slice(0, 4).map(product => (
                         <div key={product.id}>
@@ -570,7 +560,6 @@ export default function ProductPage() {
                     ))}
                 </div>
 
-              {/* Desktop Layout */}
               <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 {newArrivals.map((product) => (
                   <div key={product.id} className="group relative text-left">
@@ -999,5 +988,3 @@ export default function ProductPage() {
     </div>
   )
 }
-    
-    
