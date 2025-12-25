@@ -467,8 +467,16 @@ export default function ProductPage() {
                 src={siteSettings?.heroImageUrl || "https://lh3.googleusercontent.com/gg-dl/ABS2GSmQECS0AGKCKdqHF1VVFCUOKMbqynFJJdxA-dCjEpkA6sJ_lirje3aQSxNUSPwlnsFBrll88zu9L7ZjcaCEsoiMJLqofFPqs1kJo0MecbExy6LPSbpaxyycf7T-VULVZn71CUwvW3iCrhkrhDAAiv6xH4HSqhlQUvFdSQhiN-d0VR1cCQ=s1600-rj"}
                 alt="Authentic handicrafts from North-East India"
                 fill
-                className="object-cover"
+                className="object-cover hidden md:block"
                 data-ai-hint={placeholderImages.hero['data-ai-hint']}
+                priority
+            />
+            <Image
+                src={siteSettings?.heroImageUrlMobile || siteSettings?.heroImageUrl || placeholderImages.heroMobile.url}
+                alt="Authentic handicrafts from North-East India"
+                fill
+                className="object-cover md:hidden"
+                data-ai-hint={placeholderImages.heroMobile['data-ai-hint']}
                 priority
             />
             
