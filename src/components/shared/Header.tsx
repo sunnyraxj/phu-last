@@ -96,6 +96,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
   const router = useRouter();
   const { toast } = useToast();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showExtraButtons, setShowExtraButtons] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -213,29 +214,35 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
   ];
   const autoplayPlugin = useRef(Autoplay({ delay: 3000, stopOnInteraction: false }));
 
+  const SocialButtons = () => (
+    <div className="flex items-center gap-4">
+      <Link href="#" className="hover:opacity-80 transition-opacity">
+        <Facebook size={16} />
+      </Link>
+      <Link href="#" className="hover:opacity-80 transition-opacity">
+        <XIcon className="w-4 h-4" />
+      </Link>
+      <Link href="#" className="hover:opacity-80 transition-opacity">
+        <Instagram size={16} />
+      </Link>
+      <Link href="#" className="hover:opacity-80 transition-opacity hidden sm:inline-flex">
+        <Youtube size={16} />
+      </Link>
+      <Link href="#" className="hover:opacity-80 transition-opacity hidden sm:inline-flex">
+        <PinterestIcon className="w-4 h-4" />
+      </Link>
+      <Link href="#" className="hover:opacity-80 transition-opacity hidden sm:inline-flex">
+        <Linkedin size={16} />
+      </Link>
+    </div>
+  );
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
        {showAnnouncement && (
          <div className="bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium">
           <div className="w-1/3 flex-1 flex justify-start items-center gap-4">
-            <Link href="#" className="hover:opacity-80 transition-opacity">
-              <Facebook size={16} />
-            </Link>
-            <Link href="#" className="hover:opacity-80 transition-opacity">
-              <XIcon className="w-4 h-4" />
-            </Link>
-            <Link href="#" className="hover:opacity-80 transition-opacity">
-              <Instagram size={16} />
-            </Link>
-            <Link href="#" className="hover:opacity-80 transition-opacity hidden sm:inline-flex">
-              <Youtube size={16} />
-            </Link>
-            <Link href="#" className="hover:opacity-80 transition-opacity hidden sm:inline-flex">
-              <PinterestIcon className="w-4 h-4" />
-            </Link>
-            <Link href="#" className="hover:opacity-80 transition-opacity hidden sm:inline-flex">
-              <Linkedin size={16} />
-            </Link>
+            <SocialButtons />
           </div>
         
           <div className="w-1/3 flex-1 justify-center hidden md:flex items-center gap-8 overflow-hidden">
@@ -433,14 +440,20 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
           
           {/* Desktop Header */}
           <div className="w-full hidden md:flex items-center justify-between">
-              <div className={cn("flex items-center gap-2 md:gap-4 w-1/3 transition-opacity duration-300", isScrolled ? 'opacity-0' : 'opacity-100')}>
-                 {/* Search icon can be here if needed */}
+              <div className={cn("flex items-center gap-2 md:gap-4 w-1/3 transition-opacity duration-300", isScrolled ? 'opacity-100' : 'opacity-0')}>
+                 <Button variant="ghost" size="icon" onClick={() => setShowExtraButtons(!showExtraButtons)}>
+                    <Menu />
+                 </Button>
+                 {showExtraButtons && <SocialButtons />}
+                 <button className="hover:opacity-80 transition-colors">
+                    <Search size={22} strokeWidth={1.5} />
+                </button>
               </div>
 
-              <div className={cn("flex justify-center w-1/3 transition-all duration-300", isScrolled && 'absolute left-4 top-1/2 -translate-y-1/2')}>
+              <div className={cn("flex justify-center w-1/3 transition-all duration-300", isScrolled && 'absolute left-1/2 -translate-x-1/2')}>
                 <Link href="/" className="flex flex-col items-center">
-                   <span className={cn("text-3xl font-serif tracking-tighter leading-none flex items-center gap-1 whitespace-nowrap transition-all duration-300", isScrolled ? '!text-2xl !text-[--brand-brown]' : 'text-3xl')}>
-                    Purbanchal
+                   <span className={cn("font-serif tracking-tighter leading-none flex items-center gap-1 whitespace-nowrap transition-all duration-300", isScrolled ? '!text-xl !text-[--brand-brown]' : 'text-3xl')}>
+                    {isScrolled ? 'Purbanchal Hasta Udyog' : 'Purbanchal'}
                   </span>
                   <span className={cn("text-[10px] uppercase tracking-[0.2em] mt-1 font-medium transition-opacity duration-300", isScrolled ? 'opacity-0 h-0' : 'opacity-100')}>
                     Rooted in Craft, Inspired by People
@@ -449,7 +462,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
               </div>
 
               <div className="flex justify-end items-center gap-5 w-1/3">
-                <button className={cn("hover:opacity-80 transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
+                <button className={cn("hover:opacity-80 transition-colors", isScrolled ? 'text-foreground opacity-0' : 'text-white opacity-100')}>
                     <Search size={22} strokeWidth={1.5} />
                 </button>
                 {!isUserLoading && user && !user.isAnonymous ? (
