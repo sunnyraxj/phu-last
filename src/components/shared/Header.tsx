@@ -91,9 +91,10 @@ interface HeaderProps {
     cartItems: CartItem[];
     updateCartItemQuantity: (cartItemId: string, newQuantity: number) => void;
     showAnnouncement?: boolean;
+    products: Product[];
 }
 
-export function Header({ userData, cartItems, updateCartItemQuantity, showAnnouncement = true }: HeaderProps) {
+export function Header({ userData, cartItems, updateCartItemQuantity, showAnnouncement = true, products = [] }: HeaderProps) {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
@@ -101,6 +102,18 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
   const isMobile = useIsMobile();
   const [isScrolled, setIsScrolled] = useState(false);
   const [showExtraButtons, setShowExtraButtons] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const suggestedProducts = useMemo(() => {
+    return products.slice(0, 4);
+  }, [products]);
+
+  const searchResults = useMemo(() => {
+    if (!searchQuery) {
+      return [];
+    }
+    return products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [searchQuery, products]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -222,7 +235,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
 
        <div className={cn(
            "bg-transparent text-white relative z-10 py-2 md:py-6 px-4 md:px-12 shadow-md md:shadow-none transition-all duration-300",
-            isScrolled ? "!bg-white !text-foreground !py-3.5 shadow-md rounded-b-lg" : ""
+            isScrolled ? "!bg-white !text-foreground !py-3.5 !px-12 !rounded-b-lg !shadow-lg" : ""
        )}>
         <div className="w-full flex flex-col items-center justify-center">
           
@@ -388,9 +401,62 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
           {/* Desktop Header */}
            <div className="w-full hidden md:flex items-center justify-between">
               <div className="flex items-center gap-2 md:gap-4 w-1/3">
-                 <button className={cn("hover:opacity-80 transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
-                    <Search size={22} strokeWidth={1.5} />
-                </button>
+                 <Sheet>
+                    <SheetTrigger asChild>
+                        <button className={cn("hover:opacity-80 transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
+                            <Search size={22} strokeWidth={1.5} />
+                        </button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="flex flex-col w-full sm:max-w-md">
+                        <SheetHeader>
+                            <SheetTitle>Search Products</SheetTitle>
+                        </SheetHeader>
+                        <div className="relative">
+                            <Input 
+                                placeholder="What are you looking for?"
+                                className="pl-10 text-base h-12"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <div className="flex-1 overflow-y-auto -mx-6 px-6">
+                            {(searchQuery ? searchResults : suggestedProducts).length > 0 ? (
+                                <>
+                                    <h3 className="text-sm font-semibold text-muted-foreground my-4">
+                                        {searchQuery ? 'Search Results' : 'Suggestions for you'}
+                                    </h3>
+                                    <div className="flex flex-col gap-4">
+                                        {(searchQuery ? searchResults : suggestedProducts).map(product => (
+                                            <Link href={`/purchase#${product.id}`} key={product.id} className="flex items-center gap-4 group">
+                                                 <div className="relative h-16 w-16 rounded-md overflow-hidden bg-muted">
+                                                    <Image
+                                                        src={isValidImageDomain(product.images?.[0]) ? product.images[0] : placeholderImages.product.url}
+                                                        alt={product.name}
+                                                        fill
+                                                        className="object-cover"
+                                                    />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <p className="font-semibold text-sm group-hover:underline">{product.name}</p>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(product.baseMrp || 0)}
+                                                    </p>
+                                                </div>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="text-center py-10">
+                                    <p className="text-muted-foreground">
+                                        {searchQuery ? 'No products found.' : 'No suggestions available.'}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </SheetContent>
+                 </Sheet>
               </div>
 
               <div className={cn("flex justify-center w-1/3 transition-all duration-300", isScrolled && 'absolute left-1/2 -translate-x-1/2')}>
