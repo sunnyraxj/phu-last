@@ -147,69 +147,8 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
   }, [cartItems]);
   
   const navItems = [
-    { 
-      href: "/purchase", 
-      label: "All Products",
-      megaMenu: (
-        <div className="p-8 grid grid-cols-3 gap-8 max-w-7xl mx-auto">
-          <div className="col-span-1 grid grid-cols-2 gap-8">
-            <div>
-              <h3 className="font-semibold text-sm mb-4">Accent Tables</h3>
-              <ul className="space-y-3 text-sm text-muted-foreground">
-                <li><Link href="#" className="hover:text-foreground">Coffee Tables</Link></li>
-                <li><Link href="#" className="hover:text-foreground">Bed Tables</Link></li>
-                <li><Link href="#" className="hover:text-foreground">Side Tables</Link></li>
-              </ul>
-            </div>
-             <div>
-              <h3 className="font-semibold text-sm mb-4">Shelves & Storages</h3>
-              <ul className="space-y-3 text-sm text-muted-foreground">
-                <li><Link href="#" className="hover:text-foreground">Racks</Link></li>
-                <li><Link href="#" className="hover:text-foreground">Consoles</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-sm mb-4">Dining Furniture</h3>
-              <ul className="space-y-3 text-sm text-muted-foreground">
-                <li><Link href="#" className="hover:text-foreground">Dining Table Sets</Link></li>
-              </ul>
-            </div>
-             <div>
-              <h3 className="font-semibold text-sm mb-4">Bedroom Furnitures</h3>
-              <ul className="space-y-3 text-sm text-muted-foreground">
-                <li><Link href="#" className="hover:text-foreground">Headboards</Link></li>
-              </ul>
-            </div>
-             <div className="col-span-2 mt-4 border-t pt-4">
-                <Link href="#" className="flex items-center justify-between font-semibold text-sm group">
-                    <span>Experience Furniture</span>
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-             </div>
-          </div>
-          <div className="col-span-2 grid grid-cols-2 gap-8">
-            <Link href="#" className="group relative">
-                <div className="relative aspect-[3/4] w-full bg-muted rounded-lg overflow-hidden">
-                    <Image src="https://picsum.photos/seed/nexus-seater/600/800" alt="Nexus Single Seater" fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
-                </div>
-                <div className="mt-2">
-                    <p className="font-semibold">Nexus Single Seater</p>
-                    <p className="text-sm text-muted-foreground">All Time Favorite</p>
-                </div>
-            </Link>
-             <Link href="#" className="group relative">
-                <div className="relative aspect-[3/4] w-full bg-muted rounded-lg overflow-hidden">
-                    <Image src="https://picsum.photos/seed/rhapsody-seater/600/800" alt="Rhapsody Single Seater" fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
-                </div>
-                <div className="mt-2">
-                    <p className="font-semibold">Rhapsody Single Seater</p>
-                    <p className="text-sm text-muted-foreground">All Time Favorite</p>
-                </div>
-            </Link>
-          </div>
-        </div>
-      )
-    },
+    { href: "/", label: "Home" },
+    { href: "/purchase", label: "All Products" },
     { href: "/our-stores", label: "Our Stores" },
     { href: "/about", label: "About Us" },
     { href: "/our-team", label: "Our Team" },
@@ -248,8 +187,8 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
        {showAnnouncement && (
-         <div className={cn("bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium transition-all duration-500", isScrolled ? "h-0 py-0 opacity-0" : "h-auto")}>
-          <div className="w-1/3 flex-1 flex justify-start items-center gap-4">
+         <div className={cn("bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium transition-all duration-300", isScrolled ? "h-0 py-0 opacity-0" : "h-auto")}>
+          <div className="w-full md:w-1/3 flex-1 flex justify-start items-center gap-4">
             <SocialButtons />
           </div>
         
@@ -282,8 +221,8 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
       )}
 
        <div className={cn(
-           "bg-background md:bg-transparent text-foreground md:text-white relative z-10 py-2 md:py-6 px-4 md:px-12 shadow-md md:shadow-none transition-all duration-300",
-            isScrolled && "md:bg-white md:text-foreground md:py-3.5 shadow-md",
+           "bg-transparent text-white relative z-10 py-2 md:py-6 px-4 md:px-12 shadow-md md:shadow-none transition-all duration-300",
+            isScrolled && !isMobile && "md:bg-white md:text-foreground md:py-3.5 shadow-md",
             isMobile && '!bg-white !text-foreground !py-2'
        )}>
         <div className="w-full flex flex-col items-center justify-center">
@@ -611,16 +550,6 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                         {item.label}
                     </Link>
                   </PopoverTrigger>
-                  {item.megaMenu && (
-                    <PopoverContent 
-                      side="bottom" 
-                      align="center" 
-                      sideOffset={isScrolled ? 12 : 20}
-                      className="w-screen max-w-7xl"
-                    >
-                      {item.megaMenu}
-                    </PopoverContent>
-                  )}
               </Popover>
             ))}
             {userData?.role === 'admin' && (
