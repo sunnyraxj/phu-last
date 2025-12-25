@@ -54,7 +54,7 @@ export default function RootLayout({
       <body className={cn('min-h-screen bg-background font-body antialiased flex flex-col', inter.variable)}>
         <FirebaseClientProvider>
           <ScrollProgress />
-          <main className="flex-grow pt-[140px] md:pt-0">{children}</main>
+          <main className="flex-grow pt-[88px] md:pt-0">{children}</main>
           <Footer />
           <FloatingWhatsAppButton />
           <Toaster />
