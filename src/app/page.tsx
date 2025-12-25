@@ -77,6 +77,11 @@ type MaterialSetting = {
     imageUrl: string;
 };
 
+type SiteSettings = {
+    heroImageUrl?: string;
+    heroImageUrlMobile?: string;
+};
+
 function Filters({ 
   categories, 
   materials,
@@ -248,6 +253,9 @@ export default function ProductPage() {
   
   const materialSettingsQuery = useMemoFirebase(() => collection(firestore, 'materialSettings'), [firestore]);
   const { data: materialSettings, isLoading: materialSettingsLoading } = useCollection<MaterialSetting>(materialSettingsQuery);
+  
+  const siteSettingsRef = useMemoFirebase(() => doc(firestore, 'siteSettings', 'homepage'), [firestore]);
+  const { data: siteSettings, isLoading: siteSettingsLoading } = useDoc<SiteSettings>(siteSettingsRef);
 
   const outOfStockQuery = useMemoFirebase(() => 
     (isAuthorizedAdmin) ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null,
@@ -456,7 +464,7 @@ export default function ProductPage() {
 
         <section className="relative aspect-[16/9] w-full flex items-end justify-start text-white">
             <Image
-                src={placeholderImages.hero.url}
+                src={siteSettings?.heroImageUrl || placeholderImages.hero.url}
                 alt="Authentic handicrafts from North-East India"
                 fill
                 className="object-cover"

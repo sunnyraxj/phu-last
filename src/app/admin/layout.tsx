@@ -84,7 +84,7 @@ export default function AdminLayout({
             items: [
                 { href: '/admin/team', label: 'Our Team', icon: Users },
                 { href: '/admin/store', label: 'Our Store', icon: Store },
-                { href: '/admin/materials', label: 'Materials', icon: Brush },
+                { href: '/admin/materials', label: 'Content Settings', icon: Brush },
             ]
         },
         {
