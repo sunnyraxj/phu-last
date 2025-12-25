@@ -214,9 +214,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
   const autoplayPlugin = useRef(Autoplay({ delay: 3000, stopOnInteraction: false }));
 
   return (
-    <header className={cn("w-full transition-colors duration-300",
-        isScrolled && "sticky top-0 z-50"
-    )}>
+    <header className="sticky top-0 z-50">
        {showAnnouncement && (
          <div className="bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium">
           <div className="w-1/3 flex-1 flex justify-start items-center gap-4">
@@ -269,8 +267,8 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
       )}
 
       {/* Main Navigation */}
-       <div className={cn("bg-white/0 text-foreground md:text-white relative z-10 py-2 md:py-6 px-4 md:px-12 shadow-none transition-all duration-300",
-            isScrolled && "md:!bg-white md:!text-foreground md:!rounded-none shadow-md"
+       <div className={cn("bg-transparent text-white relative z-10 py-2 md:py-6 px-4 md:px-12 shadow-none transition-all duration-300",
+            isScrolled && "md:!bg-white md:!text-foreground md:!py-2 shadow-md"
        )}>
         <div className="w-full flex flex-col items-center justify-center">
           
@@ -441,17 +439,17 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
 
               <div className={cn("flex justify-center w-1/3 transition-all duration-300", isScrolled && 'absolute left-4 top-1/2 -translate-y-1/2')}>
                 <Link href="/" className="flex flex-col items-center">
-                   <span className={cn("text-3xl font-serif text-[--brand-brown] tracking-tighter leading-none flex items-center gap-1 whitespace-nowrap transition-all duration-300", isScrolled ? '!text-2xl' : 'text-3xl')}>
+                   <span className={cn("text-3xl font-serif tracking-tighter leading-none flex items-center gap-1 whitespace-nowrap transition-all duration-300", isScrolled ? '!text-2xl !text-[--brand-brown]' : 'text-3xl')}>
                     Purbanchal
                   </span>
-                  <span className={cn("text-[10px] uppercase tracking-[0.2em] text-[--brand-brown]/70 mt-1 font-medium transition-opacity duration-300", isScrolled ? 'opacity-0 h-0' : 'opacity-100')}>
+                  <span className={cn("text-[10px] uppercase tracking-[0.2em] mt-1 font-medium transition-opacity duration-300", isScrolled ? 'opacity-0 h-0' : 'opacity-100')}>
                     Rooted in Craft, Inspired by People
                   </span>
                 </Link>
               </div>
 
               <div className="flex justify-end items-center gap-5 w-1/3">
-                <button className={cn("hover:text-[--brand-brown] transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
+                <button className={cn("hover:opacity-80 transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
                     <Search size={22} strokeWidth={1.5} />
                 </button>
                 {!isUserLoading && user && !user.isAnonymous ? (
@@ -484,14 +482,14 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                       </PopoverContent>
                    </Popover>
                 ) : (
-                  <Link href="/login" className={cn("hover:text-[--brand-brown] transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
+                  <Link href="/login" className={cn("hover:opacity-80 transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
                       <User size={22} strokeWidth={1.5} />
                   </Link>
                 )}
                
                 <Sheet>
                     <SheetTrigger asChild>
-                        <button className={cn("relative hover:text-[--brand-brown] transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
+                        <button className={cn("relative hover:opacity-80 transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
                             <ShoppingBag size={22} strokeWidth={1.5} />
                             {cartCount > 0 && (
                                 <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -588,7 +586,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                     <PopoverContent 
                       side="bottom" 
                       align="center" 
-                      sideOffset={20} 
+                      sideOffset={isScrolled ? 12 : 20}
                       className="w-screen max-w-7xl"
                     >
                       {item.megaMenu}
