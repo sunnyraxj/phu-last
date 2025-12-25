@@ -473,7 +473,7 @@ export default function ProductPage() {
                 data-ai-hint={placeholderImages.hero['data-ai-hint']}
                 priority
             />
-            <div className="absolute inset-0 bg-black/50" />
+            
             <div className="relative z-10 p-4 md:p-12">
                 
                 <Link href="/purchase">
@@ -939,5 +939,6 @@ export default function ProductPage() {
     
 
     
+
 
 
