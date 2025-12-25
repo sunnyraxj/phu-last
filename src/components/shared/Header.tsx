@@ -143,7 +143,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
 
   return (
     <header className="w-full">
-      {showAnnouncement && (
+       {showAnnouncement && (
          <div className="bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium">
           <div className="w-1/3 flex-1 flex justify-start items-center gap-4">
             <Link href="#" className="hover:opacity-80 transition-opacity">
@@ -166,7 +166,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
             </Link>
           </div>
         
-          <div className="w-auto flex-1 justify-center hidden md:flex overflow-hidden">
+          <div className="w-1/3 flex-1 justify-center hidden md:flex items-center gap-8 overflow-hidden">
              <Carousel
                 opts={{
                     align: "start",
@@ -195,51 +195,188 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
       )}
 
       {/* Main Navigation */}
-       <div className="bg-white rounded-t-none md:rounded-t-[2.5rem] relative z-10 py-4 px-4 md:px-12 shadow-sm">
+       <div className="bg-white rounded-t-none md:rounded-t-[2.5rem] relative z-10 py-2 md:py-6 px-4 md:px-12 shadow-sm">
         <div className="w-full flex flex-col items-center justify-center">
           
-          <div className="w-full flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2 md:gap-4 w-1/3">
-                   <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="md:hidden">
-                          <Menu />
-                          <span className="sr-only">Open menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start">
-                        {navItems.map((item) => (
-                          <DropdownMenuItem key={item.href} asChild>
-                            <Link href={item.href}>{item.label}</Link>
-                          </DropdownMenuItem>
-                        ))}
-                        {userData?.role === 'admin' && (
-                          <>
-                           <DropdownMenuSeparator />
-                            <DropdownMenuItem asChild>
-                              <Link href="/admin/dashboard">Admin Dashboard</Link>
-                            </DropdownMenuItem>
-                          </>
+          {/* Mobile Header */}
+          <div className="w-full flex items-center justify-between md:hidden">
+            <div className="w-1/3">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Menu />
+                    <span className="sr-only">Open menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  {navItems.map((item) => (
+                    <DropdownMenuItem key={item.href} asChild>
+                      <Link href={item.href}>{item.label}</Link>
+                    </DropdownMenuItem>
+                  ))}
+                  {userData?.role === 'admin' && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin/dashboard">Admin Dashboard</Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            
+            <div className="w-1/3 flex justify-center">
+                <Link href="/" className="flex flex-col items-center">
+                    <span className="text-xl font-serif text-[--brand-brown] tracking-tighter leading-none whitespace-nowrap">
+                        Purbanchal
+                    </span>
+                </Link>
+            </div>
+
+            <div className="w-1/3 flex justify-end items-center gap-4">
+                {!isUserLoading && user && !user.isAnonymous ? (
+                   <Popover>
+                      <PopoverTrigger asChild>
+                        <button className="hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset ring-white">
+                            <User size={18} strokeWidth={1.5} />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-48">
+                        <div className="flex flex-col gap-1">
+                          <p className="font-semibold text-sm p-2 truncate">{user.email}</p>
+                          <Separator />
+                          <Link href="/account">
+                              <Button variant="ghost" className="w-full justify-start p-2 h-auto">
+                                  My Account
+                              </Button>
+                          </Link>
+                          <Link href="/orders">
+                              <Button variant="ghost" className="w-full justify-start p-2 h-auto">
+                                  My Orders
+                              </Button>
+                          </Link>
+                          <Separator />
+                          <Button variant="ghost" onClick={handleSignOut} className="justify-start p-2 h-auto text-destructive">
+                              <LogOut className="mr-2 h-4 w-4" />
+                              Logout
+                          </Button>
+                        </div>
+                      </PopoverContent>
+                   </Popover>
+                ) : (
+                  <Link href="/login" className="hover:text-[--brand-brown] transition-colors">
+                      <User size={22} strokeWidth={1.5} />
+                  </Link>
+                )}
+               
+                <Sheet>
+                    <SheetTrigger asChild>
+                        <button className="relative hover:text-[--brand-brown] transition-colors">
+                            <ShoppingBag size={22} strokeWidth={1.5} />
+                            {cartCount > 0 && (
+                                <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                    {cartCount}
+                                </span>
+                            )}
+                        </button>
+                    </SheetTrigger>
+                    <SheetContent className="flex flex-col w-full sm:max-w-sm">
+                        <SheetHeader>
+                            <SheetTitle>Your Cart ({cartCount})</SheetTitle>
+                        </SheetHeader>
+                        {cartItems.length > 0 ? (
+                            <>
+                                <div className="flex-1 overflow-y-auto -mx-6 px-6">
+                                    <Separator className="my-4" />
+                                    <div className="flex flex-col gap-6">
+                                        {cartItems.map(item => (
+                                            <div key={item.cartItemId} className="flex items-start gap-4">
+                                                <div className="relative h-20 w-20 rounded-md overflow-hidden bg-muted">
+                                                    <Image
+                                                        src={isValidImageDomain(item.images?.[0]) ? item.images[0] : placeholderImages.product.url}
+                                                        alt={item.name}
+                                                        fill
+                                                        className="object-cover"
+                                                    />
+                                                </div>
+                                                <div className="flex-1 space-y-2">
+                                                    <p className="font-semibold text-sm">{item.name}</p>
+                                                    <p className="text-muted-foreground text-sm font-bold">
+                                                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(getCartItemPrice(item))}
+                                                    </p>
+                                                    <div className="flex items-center gap-2">
+                                                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartItemQuantity(item.cartItemId, item.quantity - 1)}>
+                                                            <Minus size={14} />
+                                                        </Button>
+                                                        <Input
+                                                            type="number"
+                                                            value={item.quantity}
+                                                            onChange={(e) => updateCartItemQuantity(item.cartItemId, parseInt(e.target.value) || 0)}
+                                                            className="h-7 w-12 text-center"
+                                                        />
+                                                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartItemQuantity(item.cartItemId, item.quantity + 1)}>
+                                                            <Plus size={14} />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => updateCartItemQuantity(item.cartItemId, 0)}>
+                                                    <X size={16} />
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <SheetFooter className="mt-auto pt-6">
+                                    <div className="w-full space-y-4">
+                                        <div className="flex justify-between font-semibold">
+                                            <span>Subtotal</span>
+                                            <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(cartSubtotal)}</span>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground">Shipping & taxes calculated at checkout.</p>
+                                        <SheetClose asChild>
+                                            <Button size="lg" className="w-full" onClick={handleCheckout}>Checkout</Button>
+                                        </SheetClose>
+                                    </div>
+                                </SheetFooter>
+                            </>
+                        ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center">
+                                <ShoppingBag size={48} className="text-muted-foreground" />
+                                <h3 className="text-xl font-semibold">Your cart is empty</h3>
+                                <p className="text-muted-foreground">Looks like you haven't added anything to your cart yet.</p>
+                                <SheetClose asChild>
+                                  <Link href="/purchase">
+                                    <Button>Continue Shopping</Button>
+                                  </Link>
+                                </SheetClose>
+                            </div>
                         )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  <button className="hover:text-[--brand-brown] transition-colors hidden md:block">
+                    </SheetContent>
+                </Sheet>
+            </div>
+          </div>
+          
+          {/* Desktop Header */}
+          <div className="w-full hidden md:flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2 md:gap-4 w-1/3">
+                  <button className="hover:text-[--brand-brown] transition-colors">
                       <Search size={22} strokeWidth={1.5} />
                   </button>
               </div>
 
               <div className="flex justify-center w-1/3">
                 <Link href="/" className="flex flex-col items-center">
-                   <span className="text-xl md:text-3xl font-serif text-[--brand-brown] tracking-tighter leading-none flex items-center gap-1 whitespace-nowrap">
+                   <span className="text-3xl font-serif text-[--brand-brown] tracking-tighter leading-none flex items-center gap-1 whitespace-nowrap">
                     Purbanchal
                   </span>
-                  <span className="hidden md:block text-[10px] uppercase tracking-[0.2em] text-[--brand-brown]/70 mt-1 font-medium">
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-[--brand-brown]/70 mt-1 font-medium">
                     Rooted in Craft, Inspired by People
                   </span>
                 </Link>
               </div>
 
-              <div className="flex justify-end items-center gap-2 sm:gap-5 w-1/3">
+              <div className="flex justify-end items-center gap-5 w-1/3">
                 {!isUserLoading && user && !user.isAnonymous ? (
                    <Popover>
                       <PopoverTrigger asChild>
@@ -362,7 +499,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
               </div>
           </div>
           
-          <nav className="hidden md:flex items-center justify-center gap-6 text-[13px] font-medium text-[--brand-brown]">
+          <nav className="hidden md:flex items-center justify-center gap-8 text-[13px] font-medium text-[--brand-brown]">
             {navItems.map((item) => (
                <Link key={item.href} href={item.href} className="hover:text-[--brand-green] transition-colors">
                   {item.label}
