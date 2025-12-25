@@ -15,7 +15,9 @@ import {
   Compass,
   LogOut,
   Menu,
-  ArrowRight
+  ArrowRight,
+  PanelLeft,
+  Share2
 } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { useAuth, useUser } from "@/firebase";
@@ -102,8 +104,6 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
 
   useEffect(() => {
     if(isMobile) {
-      // On mobile, we don't need the scroll effect, so we can just set it to true
-      // which will give it the solid white background.
       setIsScrolled(true);
       return;
     }
@@ -233,13 +233,13 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
       <Link href="#" className="hover:opacity-80 transition-opacity">
         <Instagram size={16} />
       </Link>
-      <Link href="#" className="hover:opacity-80 transition-opacity hidden sm:inline-flex">
+      <Link href="#" className="hover:opacity-80 transition-opacity">
         <Youtube size={16} />
       </Link>
-      <Link href="#" className="hover:opacity-80 transition-opacity hidden sm:inline-flex">
+      <Link href="#" className="hover:opacity-80 transition-opacity">
         <PinterestIcon className="w-4 h-4" />
       </Link>
-      <Link href="#" className="hover:opacity-80 transition-opacity hidden sm:inline-flex">
+      <Link href="#" className="hover:opacity-80 transition-opacity">
         <Linkedin size={16} />
       </Link>
     </div>
@@ -248,7 +248,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
        {showAnnouncement && (
-         <div className={cn("bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium transition-all duration-300", isScrolled ? "h-0 py-0 opacity-0" : "h-auto")}>
+         <div className={cn("bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium transition-all duration-500", isScrolled ? "h-0 py-0 opacity-0" : "h-auto")}>
           <div className="w-1/3 flex-1 flex justify-start items-center gap-4">
             <SocialButtons />
           </div>
@@ -281,9 +281,10 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
         </div>
       )}
 
-      {/* Main Navigation */}
-       <div className={cn("bg-background md:bg-transparent text-foreground md:text-white relative z-10 py-2 md:py-6 px-4 md:px-12 shadow-md md:shadow-none transition-all duration-300",
-            isScrolled && "md:!bg-white md:!text-foreground md:!py-3.5 shadow-md"
+       <div className={cn(
+           "bg-background md:bg-transparent text-foreground md:text-white relative z-10 py-2 md:py-6 px-4 md:px-12 shadow-md md:shadow-none transition-all duration-300",
+            isScrolled && "md:bg-white md:text-foreground md:py-3.5 shadow-md",
+            isMobile && '!bg-white !text-foreground !py-2'
        )}>
         <div className="w-full flex flex-col items-center justify-center">
           
@@ -463,9 +464,6 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                         ))}
                     </DropdownMenuContent>
                  </DropdownMenu>
-                 <button className="hover:opacity-80 transition-colors">
-                    <Search size={22} strokeWidth={1.5} />
-                </button>
               </div>
 
               <div className={cn("flex justify-center w-1/3 transition-all duration-300", isScrolled && 'absolute left-1/2 -translate-x-1/2')}>
@@ -480,7 +478,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
               </div>
 
               <div className="flex justify-end items-center gap-5 w-1/3">
-                <button className={cn("hover:opacity-80 transition-colors", isScrolled ? 'text-foreground opacity-0' : 'text-white opacity-100')}>
+                <button className={cn("hover:opacity-80 transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
                     <Search size={22} strokeWidth={1.5} />
                 </button>
                 {!isUserLoading && user && !user.isAnonymous ? (
@@ -609,7 +607,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
             {navItems.map((item) => (
               <Popover key={item.href}>
                   <PopoverTrigger asChild>
-                    <Link href={item.href} className={cn("hover:text-[--brand-green] transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
+                    <Link href={item.href} className={cn("hover:text-[--brand-green] transition-colors text-base", isScrolled ? 'text-foreground' : 'text-white')}>
                         {item.label}
                     </Link>
                   </PopoverTrigger>
@@ -626,26 +624,11 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
               </Popover>
             ))}
             {userData?.role === 'admin' && (
-              <Link href="/admin/dashboard" className={cn("hover:text-[--brand-green] transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
+              <Link href="/admin/dashboard" className={cn("hover:text-[--brand-green] transition-colors text-base", isScrolled ? 'text-foreground' : 'text-white')}>
                 Admin Dashboard
               </Link>
             )}
           </nav>
-
-          <div className={cn("w-full transition-all duration-300 overflow-hidden", isScrolled && showExtraButtons ? "h-14" : "h-0")}>
-            <div className="bg-white text-foreground flex items-center justify-center gap-8 text-[13px] font-medium h-14">
-              {navItems.map((item) => (
-                <Link key={item.href} href={item.href} className="hover:text-primary transition-colors">
-                  {item.label}
-                </Link>
-              ))}
-              {userData?.role === 'admin' && (
-                <Link href="/admin/dashboard" className="hover:text-primary transition-colors">
-                  Admin Dashboard
-                </Link>
-              )}
-            </div>
-          </div>
         </div>
       </div>
     </header>
