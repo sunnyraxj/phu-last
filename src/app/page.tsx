@@ -263,7 +263,7 @@ export default function ProductPage() {
   const { founder, allOtherMembers } = useMemo(() => {
     if (!teamMembers) return { founder: null, allOtherMembers: [] };
     const founderMember = teamMembers.find(member => member.role === 'Founder');
-    const otherMembers = teamMembers.filter(member => member.role === 'Management' || member.role === 'Team Member');
+    const otherMembers = teamMembers.filter(member => member.role === 'Management' || 'Team Member');
     return { founder: founderMember, allOtherMembers: otherMembers };
 }, [teamMembers]);
 
@@ -545,7 +545,7 @@ export default function ProductPage() {
       <section className="bg-muted/30 py-8">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">Materials we deal in</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">our products made with</h2>
           </div>
           {materialSettingsLoading ? (
             <div className="flex justify-center items-center h-40">
@@ -937,3 +937,5 @@ export default function ProductPage() {
     </div>
   )
 }
+
+    
