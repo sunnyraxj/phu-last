@@ -379,12 +379,12 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
                                                         <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartItemQuantity(item.cartItemId, item.quantity + 1)}>
                                                             <Plus size={14} />
                                                         </Button>
+                                                         {item.variants && item.variants.length > 1 && (
+                                                          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => handleChangeSizeClick(item)}>
+                                                            Change Size
+                                                          </Button>
+                                                        )}
                                                     </div>
-                                                    {item.variants && item.variants.length > 1 && (
-                                                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => handleChangeSizeClick(item)}>
-                                                        Change Size
-                                                      </Button>
-                                                    )}
                                                 </div>
                                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => updateCartItemQuantity(item.cartItemId, 0)}>
                                                     <X className="h-5 w-5" />
@@ -604,12 +604,12 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
                                                         <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartItemQuantity(item.cartItemId, item.quantity + 1)}>
                                                             <Plus size={14} />
                                                         </Button>
+                                                         {item.variants && item.variants.length > 1 && (
+                                                          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => handleChangeSizeClick(item)}>
+                                                            Change Size
+                                                          </Button>
+                                                        )}
                                                     </div>
-                                                     {item.variants && item.variants.length > 1 && (
-                                                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => handleChangeSizeClick(item)}>
-                                                        Change Size
-                                                      </Button>
-                                                    )}
                                                 </div>
                                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => updateCartItemQuantity(item.cartItemId, 0)}>
                                                     <X className="h-5 w-5" />
