@@ -185,61 +185,6 @@ function ProductImage({ product, onClick }: { product: Product; onClick: () => v
     );
 }
 
-const TypewriterHeadline = ({ headlines }: { headlines: string[] }) => {
-  const [index, setIndex] = useState(0);
-  const [subIndex, setSubIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [text, setText] = useState('');
-  const typingSpeed = 100;
-  const deletingSpeed = 50;
-  const pauseDuration = 2000;
-
-  useEffect(() => {
-    if (index >= headlines.length) {
-        setIndex(0); // Loop back to the start
-        return;
-    }
-
-    const currentHeadline = headlines[index];
-
-    if (!isDeleting && subIndex < currentHeadline.length) {
-      const timeout = setTimeout(() => {
-        setText(currentHeadline.substring(0, subIndex + 1));
-        setSubIndex(subIndex + 1);
-      }, typingSpeed);
-      return () => clearTimeout(timeout);
-    }
-
-    if (!isDeleting && subIndex === currentHeadline.length) {
-      const timeout = setTimeout(() => {
-        setIsDeleting(true);
-      }, pauseDuration);
-      return () => clearTimeout(timeout);
-    }
-
-    if (isDeleting && subIndex > 0) {
-      const timeout = setTimeout(() => {
-        setText(currentHeadline.substring(0, subIndex - 1));
-        setSubIndex(subIndex - 1);
-      }, deletingSpeed);
-      return () => clearTimeout(timeout);
-    }
-
-    if (isDeleting && subIndex === 0) {
-      setIsDeleting(false);
-      setIndex((prev) => (prev + 1));
-    }
-  }, [subIndex, isDeleting, index, headlines]);
-
-  return (
-    <h1 className="text-4xl md:text-6xl font-bold mb-4 tracking-tight h-24 md:h-36">
-      {text}
-      <span className="animate-pulse">|</span>
-    </h1>
-  );
-};
-
-
 export default function ProductPage() {
   const [sortBy, setSortBy] = useState("Featured")
 
@@ -501,42 +446,46 @@ export default function ProductPage() {
 
   return (
     <div className="min-h-screen bg-background font-sans">
-      <Header
+      <div className="relative">
+        <Header
           userData={userData}
           cartItems={cartItems}
           updateCartItemQuantity={updateCartItemQuantity}
-      />
+        />
 
-      <section className="relative h-[60vh] w-full flex items-center justify-center text-white -mt-40">
-          <Image
-              src={placeholderImages.hero.url}
-              alt="Authentic handicrafts from North-East India"
-              fill
-              className="object-cover hidden md:block"
-              data-ai-hint={placeholderImages.hero['data-ai-hint']}
-              priority
-          />
-          <Image
-              src={placeholderImages.heroMobile.url}
-              alt="Authentic handicrafts from North-East India"
-              fill
-              className="object-cover md:hidden"
-              data-ai-hint={placeholderImages.heroMobile['data-ai-hint']}
-              priority
-          />
-          <div className="absolute inset-0 bg-black/50" />
-          <div className="relative z-10 text-center px-4">
-              <TypewriterHeadline headlines={heroHeadlines} />
-              <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
-                  Discover handcrafted treasures that tell a story. Explore unique bamboo, jute, and cane items.
-              </p>
-              <Link href="/purchase">
-                  <Button size="lg" variant="secondary">
-                      Shop Now
-                  </Button>
-              </Link>
-          </div>
-      </section>
+        <section className="relative h-[60vh] w-full flex items-center justify-center text-white -mt-[150px] md:-mt-40">
+            <Image
+                src={placeholderImages.hero.url}
+                alt="Authentic handicrafts from North-East India"
+                fill
+                className="object-cover hidden md:block"
+                data-ai-hint={placeholderImages.hero['data-ai-hint']}
+                priority
+            />
+            <Image
+                src={placeholderImages.heroMobile.url}
+                alt="Authentic handicrafts from North-East India"
+                fill
+                className="object-cover md:hidden"
+                data-ai-hint={placeholderImages.heroMobile['data-ai-hint']}
+                priority
+            />
+            <div className="absolute inset-0 bg-black/50" />
+            <div className="relative z-10 text-center px-4">
+                <h1 className="text-4xl md:text-6xl font-bold mb-4 tracking-tight text-white">
+                  Handcrafted Treasures
+                </h1>
+                <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
+                    Discover handcrafted treasures that tell a story. Explore unique bamboo, jute, and cane items.
+                </p>
+                <Link href="/purchase">
+                    <Button size="lg" variant="secondary">
+                        Shop Now
+                    </Button>
+                </Link>
+            </div>
+        </section>
+      </div>
 
       <section className="bg-background py-16">
         <div className="container mx-auto px-4">
