@@ -444,11 +444,6 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                  <Button variant="ghost" size="icon" onClick={() => setShowExtraButtons(!showExtraButtons)}>
                     <Menu />
                  </Button>
-                 {showExtraButtons && (isScrolled ? (
-                    <div className="flex items-center gap-4">
-                        <SocialButtons />
-                    </div>
-                 ) : null)}
                  <button className="hover:opacity-80 transition-colors">
                     <Search size={22} strokeWidth={1.5} />
                 </button>
