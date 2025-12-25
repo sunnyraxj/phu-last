@@ -94,6 +94,15 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
   const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleSignOut = async () => {
     await signOut(auth);
@@ -142,7 +151,9 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
   const autoplayPlugin = useRef(Autoplay({ delay: 3000, stopOnInteraction: false }));
 
   return (
-    <header className="w-full">
+    <header className={cn("w-full transition-colors duration-300",
+        isScrolled && "sticky top-0 z-50"
+    )}>
        {showAnnouncement && (
          <div className="bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium">
           <div className="w-1/3 flex-1 flex justify-start items-center gap-4">
@@ -195,7 +206,9 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
       )}
 
       {/* Main Navigation */}
-       <div className="bg-white rounded-t-none md:rounded-t-[2.5rem] relative z-10 py-2 md:py-6 px-4 md:px-12 shadow-sm">
+       <div className={cn("bg-white/0 text-foreground md:text-white rounded-t-none md:rounded-t-[2.5rem] relative z-10 py-2 md:py-6 px-4 md:px-12 shadow-none transition-all duration-300",
+            isScrolled && "md:!bg-white md:!text-foreground md:!rounded-none shadow-md"
+       )}>
         <div className="w-full flex flex-col items-center justify-center">
           
           {/* Mobile Header */}
@@ -365,7 +378,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                   </button>
               </div>
 
-              <div className="flex justify-center w-1/3">
+              <div className={cn("flex justify-center w-1/3 transition-opacity duration-300", isScrolled && "opacity-0")}>
                 <Link href="/" className="flex flex-col items-center">
                    <span className="text-3xl font-serif text-[--brand-brown] tracking-tighter leading-none flex items-center gap-1 whitespace-nowrap">
                     Purbanchal
@@ -499,7 +512,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
               </div>
           </div>
           
-          <nav className="hidden md:flex items-center justify-center gap-8 text-[13px] font-medium text-[--brand-brown]">
+          <nav className={cn("hidden md:flex items-center justify-center gap-8 text-[13px] font-medium transition-opacity duration-300", isScrolled ? "opacity-0 h-0" : "opacity-100")}>
             {navItems.map((item) => (
                <Link key={item.href} href={item.href} className="hover:text-[--brand-green] transition-colors">
                   {item.label}
