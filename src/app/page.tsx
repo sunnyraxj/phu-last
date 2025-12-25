@@ -456,11 +456,13 @@ export default function ProductPage() {
   return (
     <div className="min-h-screen bg-background font-sans">
       <div className="relative">
-        <Header
-          userData={userData}
-          cartItems={cartItems}
-          updateCartItemQuantity={updateCartItemQuantity}
-        />
+        <div className="md:absolute md:top-0 md:left-0 md:right-0 md:z-20">
+            <Header
+              userData={userData}
+              cartItems={cartItems}
+              updateCartItemQuantity={updateCartItemQuantity}
+            />
+        </div>
 
         <section className="relative aspect-[16/9] w-full flex items-end justify-start text-white">
             <Image
@@ -937,4 +939,5 @@ export default function ProductPage() {
     
 
     
+
 
