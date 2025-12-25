@@ -100,7 +100,6 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isNavVisible, setIsNavVisible] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -384,10 +383,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
           {/* Desktop Header */}
            <div className="w-full hidden md:flex items-center justify-between">
               <div className="flex items-center gap-2 md:gap-4 w-1/3">
-                <Button variant="ghost" size="icon" onClick={() => setIsNavVisible(!isNavVisible)} className={cn(isScrolled ? 'text-foreground' : 'text-white')}>
-                  <Menu />
-                </Button>
-                <button className={cn("hover:opacity-80 transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
+                 <button className={cn("hover:opacity-80 transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
                     <Search size={22} strokeWidth={1.5} />
                 </button>
               </div>
@@ -526,7 +522,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
               </div>
           </div>
           
-          <nav className={cn("hidden md:flex items-center justify-center gap-8 text-[13px] font-medium transition-opacity duration-500", isNavVisible ? 'opacity-100' : 'opacity-0 h-0', !isScrolled ? 'mt-4' : '')}>
+          <nav className={cn("hidden md:flex items-center justify-center gap-8 text-[13px] font-medium transition-opacity duration-500 opacity-100", !isScrolled ? 'mt-4' : '')}>
             {navItems.map((item) => (
               <Link key={item.href} href={item.href} className={cn("hover:text-[--brand-green] transition-colors text-base", isScrolled ? 'text-foreground' : 'text-white')}>
                   {item.label}
