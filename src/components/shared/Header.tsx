@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { useAuth, useUser } from "@/firebase";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { Separator } from "../ui/separator";
 import { Input } from "../ui/input";
@@ -48,6 +48,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay"
 
 
 // Simple X icon replacement
@@ -131,10 +133,17 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
     { href: "/our-team", label: "Our Team" },
   ];
 
+  const announcements = [
+    "Free shipping over ₹1000",
+    "Up to 20% off on orders over ₹20,000",
+    "Best quality at the lowest price"
+  ];
+  const autoplayPlugin = useRef(Autoplay({ delay: 3000, stopOnInteraction: false }));
+
   return (
-    <header className="w-full sticky top-0 z-50">
+    <header className="w-full">
       {showAnnouncement && (
-        <div className="bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium">
+         <div className="bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium">
           <div className="w-1/3 flex-1 flex justify-start items-center gap-4">
             <Link href="#" className="hover:opacity-80 transition-opacity">
               <Facebook size={16} />
@@ -155,18 +164,29 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
               <Linkedin size={16} />
             </Link>
           </div>
-
-          <div className="w-1/3 flex-1 justify-center hidden md:flex items-center gap-8">
-            <button className="hover:opacity-80">
-              <ChevronLeft size={16} />
-            </button>
-            <div className="flex items-center gap-2 tracking-wide uppercase">
-              <Compass size={14} />
-              <span>Clearance Sale is Live!</span>
-            </div>
-            <button className="hover:opacity-80">
-              <ChevronRight size={16} />
-            </button>
+        
+          <div className="w-auto flex-1 justify-center hidden md:flex overflow-hidden">
+             <Carousel
+                opts={{
+                    align: "start",
+                    loop: true,
+                }}
+                plugins={[autoplayPlugin.current]}
+                onMouseEnter={autoplayPlugin.current.stop}
+                onMouseLeave={autoplayPlugin.current.reset}
+                className="w-full max-w-xs"
+             >
+                <CarouselContent>
+                    {announcements.map((text, index) => (
+                        <CarouselItem key={index}>
+                             <div className="flex items-center justify-center gap-2 tracking-wide uppercase text-center">
+                                <Compass size={14} />
+                                <span>{text}</span>
+                            </div>
+                        </CarouselItem>
+                    ))}
+                </CarouselContent>
+             </Carousel>
           </div>
 
           <div className="w-1/3 flex-1" />
@@ -174,16 +194,14 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
       )}
 
       {/* Main Navigation */}
-      <div className="bg-background relative z-10 shadow-sm py-3 px-4 md:px-6">
+       <div className="bg-white rounded-t-none md:rounded-t-[2.5rem] relative z-10 pt-4 pb-4 px-4 md:px-12 shadow-sm">
         <div className="w-full flex flex-col items-center justify-center">
           
-          {/* Top Row: Search, Logo, User/Cart */}
           <div className="w-full flex items-center justify-between mb-4">
               <div className="flex items-center gap-2 md:gap-4 w-1/3">
-                  <div className="md:hidden">
-                    <DropdownMenu>
+                   <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" className="md:hidden">
                           <Menu />
                           <span className="sr-only">Open menu</span>
                         </Button>
@@ -204,7 +222,6 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                         )}
                       </DropdownMenuContent>
                     </DropdownMenu>
-                  </div>
                   <button className="hover:text-[--brand-brown] transition-colors hidden md:block">
                       <Search size={22} strokeWidth={1.5} />
                   </button>
@@ -212,7 +229,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
 
               <div className="flex justify-center w-1/3">
                 <Link href="/" className="flex flex-col items-center">
-                   <span className="text-2xl md:text-3xl font-serif text-[--brand-brown] tracking-tighter leading-none flex items-center gap-1 whitespace-nowrap">
+                   <span className="text-xl md:text-3xl font-serif text-[--brand-brown] tracking-tighter leading-none flex items-center gap-1 whitespace-nowrap">
                     Purbanchal
                   </span>
                   <span className="hidden md:block text-[10px] uppercase tracking-[0.2em] text-[--brand-brown]/70 mt-1 font-medium">
@@ -225,9 +242,9 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                 {!isUserLoading && user && !user.isAnonymous ? (
                    <Popover>
                       <PopoverTrigger asChild>
-                         <button className="hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset ring-white">
-                              <User size={20} strokeWidth={1.5} />
-                          </button>
+                        <button className="hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset ring-foreground/20">
+                            <User size={18} strokeWidth={1.5} />
+                        </button>
                       </PopoverTrigger>
                       <PopoverContent className="w-48">
                         <div className="flex flex-col gap-1">
@@ -342,7 +359,6 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
               </div>
           </div>
           
-          {/* Navigation Menu */}
           <nav className="hidden md:flex items-center justify-center gap-6 text-[13px] font-medium text-[--brand-brown]">
             {navItems.map((item) => (
                <Link key={item.href} href={item.href} className="hover:text-[--brand-green] transition-colors">
