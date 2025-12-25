@@ -609,7 +609,7 @@ export default function PurchasePage() {
                                             className="flex flex-wrap gap-2 mt-2"
                                         >
                                             {selectedProduct.variants.map(variant => (
-                                                <Label key={variant.size} htmlFor={`dialog-purchase-${variant.size}`} className="flex items-center justify-center gap-2 border rounded-md p-2 px-3 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-muted has-[:checked]:border-primary">
+                                                <Label key={variant.size} htmlFor={`dialog-purchase-${variant.size}`} className="flex items-center justify-center gap-2 border rounded-md p-2 px-3 cursor-pointer hover:bg-muted/50 has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:checked]:border-primary transition-colors">
                                                     <RadioGroupItem value={variant.size} id={`dialog-purchase-${variant.size}`} className="sr-only" />
                                                     <span className="text-sm font-medium">{variant.size}</span>
                                                 </Label>
