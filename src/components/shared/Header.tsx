@@ -14,7 +14,8 @@ import {
   ChevronRight,
   Compass,
   LogOut,
-  Menu
+  Menu,
+  ArrowRight
 } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { useAuth, useUser } from "@/firebase";
@@ -135,9 +136,71 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
         return acc + price * item.quantity;
     }, 0);
   }, [cartItems]);
-
+  
   const navItems = [
-    { href: "/purchase", label: "All Products" },
+    { 
+      href: "/purchase", 
+      label: "All Products",
+      megaMenu: (
+        <div className="p-8 grid grid-cols-3 gap-8 max-w-7xl mx-auto">
+          <div className="col-span-1 grid grid-cols-2 gap-8">
+            <div>
+              <h3 className="font-semibold text-sm mb-4">Accent Tables</h3>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li><Link href="#" className="hover:text-foreground">Coffee Tables</Link></li>
+                <li><Link href="#" className="hover:text-foreground">Bed Tables</Link></li>
+                <li><Link href="#" className="hover:text-foreground">Side Tables</Link></li>
+              </ul>
+            </div>
+             <div>
+              <h3 className="font-semibold text-sm mb-4">Shelves & Storages</h3>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li><Link href="#" className="hover:text-foreground">Racks</Link></li>
+                <li><Link href="#" className="hover:text-foreground">Consoles</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold text-sm mb-4">Dining Furniture</h3>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li><Link href="#" className="hover:text-foreground">Dining Table Sets</Link></li>
+              </ul>
+            </div>
+             <div>
+              <h3 className="font-semibold text-sm mb-4">Bedroom Furnitures</h3>
+              <ul className="space-y-3 text-sm text-muted-foreground">
+                <li><Link href="#" className="hover:text-foreground">Headboards</Link></li>
+              </ul>
+            </div>
+             <div className="col-span-2 mt-4 border-t pt-4">
+                <Link href="#" className="flex items-center justify-between font-semibold text-sm group">
+                    <span>Experience Furniture</span>
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+             </div>
+          </div>
+          <div className="col-span-2 grid grid-cols-2 gap-8">
+            <Link href="#" className="group relative">
+                <div className="relative aspect-[3/4] w-full bg-muted rounded-lg overflow-hidden">
+                    <Image src="https://picsum.photos/seed/nexus-seater/600/800" alt="Nexus Single Seater" fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
+                </div>
+                <div className="mt-2">
+                    <p className="font-semibold">Nexus Single Seater</p>
+                    <p className="text-sm text-muted-foreground">All Time Favorite</p>
+                </div>
+            </Link>
+             <Link href="#" className="group relative">
+                <div className="relative aspect-[3/4] w-full bg-muted rounded-lg overflow-hidden">
+                    <Image src="https://picsum.photos/seed/rhapsody-seater/600/800" alt="Rhapsody Single Seater" fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
+                </div>
+                <div className="mt-2">
+                    <p className="font-semibold">Rhapsody Single Seater</p>
+                    <p className="text-sm text-muted-foreground">All Time Favorite</p>
+                </div>
+            </Link>
+          </div>
+        </div>
+      )
+    },
     { href: "/our-stores", label: "Our Stores" },
     { href: "/about", label: "About Us" },
     { href: "/our-team", label: "Our Team" },
@@ -206,7 +269,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
       )}
 
       {/* Main Navigation */}
-       <div className={cn("bg-white/0 text-foreground md:text-white rounded-t-none md:rounded-t-[2.5rem] relative z-10 py-2 md:py-6 px-4 md:px-12 shadow-none transition-all duration-300",
+       <div className={cn("bg-white/0 text-foreground md:text-white relative z-10 py-2 md:py-6 px-4 md:px-12 shadow-none transition-all duration-300",
             isScrolled && "md:!bg-white md:!text-foreground md:!rounded-none shadow-md"
        )}>
         <div className="w-full flex flex-col items-center justify-center">
@@ -251,7 +314,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                 {!isUserLoading && user && !user.isAnonymous ? (
                    <Popover>
                       <PopoverTrigger asChild>
-                        <button className="hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset ring-white">
+                        <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isScrolled ? "ring-foreground/50" : "ring-white")}>
                             <User size={18} strokeWidth={1.5} />
                         </button>
                       </PopoverTrigger>
@@ -371,30 +434,31 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
           </div>
           
           {/* Desktop Header */}
-          <div className="w-full hidden md:flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2 md:gap-4 w-1/3">
-                  <button className="hover:text-[--brand-brown] transition-colors">
-                      <Search size={22} strokeWidth={1.5} />
-                  </button>
+          <div className="w-full hidden md:flex items-center justify-between">
+              <div className={cn("flex items-center gap-2 md:gap-4 w-1/3 transition-opacity duration-300", isScrolled ? 'opacity-0' : 'opacity-100')}>
+                 {/* Search icon can be here if needed */}
               </div>
 
-              <div className={cn("flex justify-center w-1/3 transition-opacity duration-300", isScrolled && "opacity-0")}>
+              <div className={cn("flex justify-center w-1/3 transition-all duration-300", isScrolled && 'absolute left-4 top-1/2 -translate-y-1/2')}>
                 <Link href="/" className="flex flex-col items-center">
-                   <span className="text-3xl font-serif text-[--brand-brown] tracking-tighter leading-none flex items-center gap-1 whitespace-nowrap">
+                   <span className={cn("text-3xl font-serif text-[--brand-brown] tracking-tighter leading-none flex items-center gap-1 whitespace-nowrap transition-all duration-300", isScrolled ? '!text-2xl' : 'text-3xl')}>
                     Purbanchal
                   </span>
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-[--brand-brown]/70 mt-1 font-medium">
+                  <span className={cn("text-[10px] uppercase tracking-[0.2em] text-[--brand-brown]/70 mt-1 font-medium transition-opacity duration-300", isScrolled ? 'opacity-0 h-0' : 'opacity-100')}>
                     Rooted in Craft, Inspired by People
                   </span>
                 </Link>
               </div>
 
               <div className="flex justify-end items-center gap-5 w-1/3">
+                <button className={cn("hover:text-[--brand-brown] transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
+                    <Search size={22} strokeWidth={1.5} />
+                </button>
                 {!isUserLoading && user && !user.isAnonymous ? (
                    <Popover>
                       <PopoverTrigger asChild>
-                        <button className="hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset ring-white">
-                            <User size={18} strokeWidth={1.5} />
+                        <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isScrolled ? "ring-foreground/50" : "ring-white")}>
+                            <User size={18} strokeWidth={1.5} className={cn(isScrolled ? 'text-foreground' : 'text-white')} />
                         </button>
                       </PopoverTrigger>
                       <PopoverContent className="w-48">
@@ -420,14 +484,14 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                       </PopoverContent>
                    </Popover>
                 ) : (
-                  <Link href="/login" className="hover:text-[--brand-brown] transition-colors">
+                  <Link href="/login" className={cn("hover:text-[--brand-brown] transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
                       <User size={22} strokeWidth={1.5} />
                   </Link>
                 )}
                
                 <Sheet>
                     <SheetTrigger asChild>
-                        <button className="relative hover:text-[--brand-brown] transition-colors">
+                        <button className={cn("relative hover:text-[--brand-brown] transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
                             <ShoppingBag size={22} strokeWidth={1.5} />
                             {cartCount > 0 && (
                                 <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -512,14 +576,28 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
               </div>
           </div>
           
-          <nav className={cn("hidden md:flex items-center justify-center gap-8 text-[13px] font-medium transition-opacity duration-300", isScrolled ? "opacity-0 h-0" : "opacity-100")}>
+          <nav className={cn("hidden md:flex items-center justify-center gap-8 text-[13px] font-medium transition-opacity duration-300", isScrolled ? 'opacity-0 h-0' : 'opacity-100')}>
             {navItems.map((item) => (
-               <Link key={item.href} href={item.href} className="hover:text-[--brand-green] transition-colors">
-                  {item.label}
-               </Link>
+              <Popover key={item.href}>
+                  <PopoverTrigger asChild>
+                    <Link href={item.href} className={cn("hover:text-[--brand-green] transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
+                        {item.label}
+                    </Link>
+                  </PopoverTrigger>
+                  {item.megaMenu && (
+                    <PopoverContent 
+                      side="bottom" 
+                      align="center" 
+                      sideOffset={20} 
+                      className="w-screen max-w-7xl"
+                    >
+                      {item.megaMenu}
+                    </PopoverContent>
+                  )}
+              </Popover>
             ))}
             {userData?.role === 'admin' && (
-              <Link href="/admin/dashboard" className="hover:text-[--brand-green] transition-colors">
+              <Link href="/admin/dashboard" className={cn("hover:text-[--brand-green] transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
                 Admin Dashboard
               </Link>
             )}
