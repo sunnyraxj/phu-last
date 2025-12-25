@@ -100,19 +100,15 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [showExtraButtons, setShowExtraButtons] = useState(false);
+  const [isNavVisible, setIsNavVisible] = useState(false);
 
   useEffect(() => {
-    if(isMobile) {
-      setIsScrolled(true);
-      return;
-    }
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isMobile]);
+  }, []);
 
   const handleSignOut = async () => {
     await signOut(auth);
@@ -187,7 +183,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
        {showAnnouncement && (
-         <div className={cn("bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium transition-all duration-300", isScrolled ? "h-0 py-0 opacity-0" : "h-auto")}>
+         <div className={cn("bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium transition-all duration-500", isScrolled ? "h-0 py-0 opacity-0" : "h-auto")}>
           <div className="w-full md:w-1/3 flex-1 flex justify-start items-center gap-4">
             <SocialButtons />
           </div>
@@ -221,9 +217,8 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
       )}
 
        <div className={cn(
-           "bg-transparent text-white relative z-10 py-2 md:py-6 px-4 md:px-12 shadow-md md:shadow-none transition-all duration-300",
-            isScrolled && !isMobile && "md:bg-white md:text-foreground md:py-3.5 shadow-md",
-            isMobile && '!bg-white !text-foreground !py-2'
+           "bg-transparent text-white relative z-10 py-2 md:py-6 px-4 md:px-12 shadow-md md:shadow-none transition-all duration-500",
+            isScrolled ? "!bg-white !text-foreground !py-3.5 shadow-md" : ""
        )}>
         <div className="w-full flex flex-col items-center justify-center">
           
@@ -387,39 +382,28 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
           </div>
           
           {/* Desktop Header */}
-          <div className="w-full hidden md:flex items-center justify-between">
-              <div className={cn("flex items-center gap-2 md:gap-4 w-1/3 transition-opacity duration-300", isScrolled ? 'opacity-100' : 'opacity-0 pointer-events-none')}>
-                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                            <Menu />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        {navItems.map((item) => (
-                            <DropdownMenuItem key={item.href} asChild>
-                                <Link href={item.href}>{item.label}</Link>
-                            </DropdownMenuItem>
-                        ))}
-                    </DropdownMenuContent>
-                 </DropdownMenu>
+           <div className="w-full hidden md:flex items-center justify-between">
+              <div className="flex items-center gap-2 md:gap-4 w-1/3">
+                <Button variant="ghost" size="icon" onClick={() => setIsNavVisible(!isNavVisible)} className={cn(isScrolled ? 'text-foreground' : 'text-white')}>
+                  <Menu />
+                </Button>
+                <button className={cn("hover:opacity-80 transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
+                    <Search size={22} strokeWidth={1.5} />
+                </button>
               </div>
 
-              <div className={cn("flex justify-center w-1/3 transition-all duration-300", isScrolled && 'absolute left-1/2 -translate-x-1/2')}>
+              <div className={cn("flex justify-center w-1/3 transition-all duration-500", isScrolled && 'absolute left-1/2 -translate-x-1/2')}>
                 <Link href="/" className="flex flex-col items-center">
-                   <span className={cn("font-serif tracking-tighter leading-none flex items-center gap-1 whitespace-nowrap transition-all duration-300", isScrolled ? '!text-xl !text-[--brand-brown]' : 'text-3xl')}>
+                   <span className={cn("font-serif tracking-tighter leading-none flex items-center gap-1 whitespace-nowrap transition-all duration-500", isScrolled ? '!text-xl !text-[--brand-brown]' : 'text-3xl')}>
                     {isScrolled ? 'Purbanchal Hasta Udyog' : 'Purbanchal'}
                   </span>
-                  <span className={cn("text-[10px] uppercase tracking-[0.2em] mt-1 font-medium transition-opacity duration-300", isScrolled ? 'opacity-0 h-0' : 'opacity-100')}>
+                  <span className={cn("text-[10px] uppercase tracking-[0.2em] mt-1 font-medium transition-opacity duration-500", isScrolled ? 'opacity-0 h-0' : 'opacity-100')}>
                     Rooted in Craft, Inspired by People
                   </span>
                 </Link>
               </div>
 
               <div className="flex justify-end items-center gap-5 w-1/3">
-                <button className={cn("hover:opacity-80 transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
-                    <Search size={22} strokeWidth={1.5} />
-                </button>
                 {!isUserLoading && user && !user.isAnonymous ? (
                    <Popover>
                       <PopoverTrigger asChild>
@@ -542,15 +526,11 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
               </div>
           </div>
           
-          <nav className={cn("hidden md:flex items-center justify-center gap-8 text-[13px] font-medium transition-opacity duration-300", isScrolled ? 'opacity-0 h-0' : 'opacity-100')}>
+          <nav className={cn("hidden md:flex items-center justify-center gap-8 text-[13px] font-medium transition-opacity duration-500", isNavVisible ? 'opacity-100' : 'opacity-0 h-0', !isScrolled ? 'mt-4' : '')}>
             {navItems.map((item) => (
-              <Popover key={item.href}>
-                  <PopoverTrigger asChild>
-                    <Link href={item.href} className={cn("hover:text-[--brand-green] transition-colors text-base", isScrolled ? 'text-foreground' : 'text-white')}>
-                        {item.label}
-                    </Link>
-                  </PopoverTrigger>
-              </Popover>
+              <Link key={item.href} href={item.href} className={cn("hover:text-[--brand-green] transition-colors text-base", isScrolled ? 'text-foreground' : 'text-white')}>
+                  {item.label}
+              </Link>
             ))}
             {userData?.role === 'admin' && (
               <Link href="/admin/dashboard" className={cn("hover:text-[--brand-green] transition-colors text-base", isScrolled ? 'text-foreground' : 'text-white')}>
