@@ -462,7 +462,7 @@ export default function ProductPage() {
       />
       
       <div className="relative">
-        <section className="relative aspect-[16/9] w-full flex items-end justify-start text-white">
+        <section className="relative aspect-[21/9] w-full flex items-end justify-start text-white">
             <Image
                 src={siteSettings?.heroImageUrl || "https://lh3.googleusercontent.com/gg-dl/ABS2GSmQECS0AGKCKdqHF1VVFCUOKMbqynFJJdxA-dCjEpkA6sJ_lirje3aQSxNUSPwlnsFBrll88zu9L7ZjcaCEsoiMJLqofFPqs1kJo0MecbExy6LPSbpaxyycf7T-VULVZn71CUwvW3iCrhkrhDAAiv6xH4HSqhlQUvFdSQhiN-d0VR1cCQ=s1600-rj"}
                 alt="Authentic handicrafts from North-East India"
