@@ -76,9 +76,10 @@ interface HeaderProps {
     userData: { role: string } | null | undefined;
     cartItems: CartItem[];
     updateCartItemQuantity: (cartItemId: string, newQuantity: number) => void;
+    showAnnouncement?: boolean;
 }
 
-export function Header({ userData, cartItems, updateCartItemQuantity }: HeaderProps) {
+export function Header({ userData, cartItems, updateCartItemQuantity, showAnnouncement = true }: HeaderProps) {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
@@ -118,47 +119,48 @@ export function Header({ userData, cartItems, updateCartItemQuantity }: HeaderPr
 
   return (
     <header className="w-full">
-      {/* Announcement Bar */}
-      <div className="bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium">
-        <div className="flex-1 flex justify-start items-center gap-4">
-          <Link href="#" className="hover:opacity-80 transition-opacity">
-            <Facebook size={16} />
-          </Link>
-          <Link href="#" className="hover:opacity-80 transition-opacity">
-            <XIcon className="w-4 h-4" />
-          </Link>
-          <Link href="#" className="hover:opacity-80 transition-opacity">
-            <Instagram size={16} />
-          </Link>
-          <Link href="#" className="hover:opacity-80 transition-opacity hidden sm:inline-flex">
-            <Youtube size={16} />
-          </Link>
-          <Link href="#" className="hover:opacity-80 transition-opacity hidden sm:inline-flex">
-            <PinterestIcon className="w-4 h-4" />
-          </Link>
-          <Link href="#" className="hover:opacity-80 transition-opacity hidden sm:inline-flex">
-            <Linkedin size={16} />
-          </Link>
-        </div>
-
-        <div className="flex-1 justify-center hidden md:flex items-center gap-8">
-          <button className="hover:opacity-80">
-            <ChevronLeft size={16} />
-          </button>
-          <div className="flex items-center gap-2 tracking-wide uppercase">
-            <Compass size={14} />
-            <span>Clearance Sale is Live!</span>
+      {showAnnouncement && (
+        <div className="bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium">
+          <div className="flex-1 flex justify-start items-center gap-4">
+            <Link href="#" className="hover:opacity-80 transition-opacity">
+              <Facebook size={16} />
+            </Link>
+            <Link href="#" className="hover:opacity-80 transition-opacity">
+              <XIcon className="w-4 h-4" />
+            </Link>
+            <Link href="#" className="hover:opacity-80 transition-opacity">
+              <Instagram size={16} />
+            </Link>
+            <Link href="#" className="hover:opacity-80 transition-opacity hidden sm:inline-flex">
+              <Youtube size={16} />
+            </Link>
+            <Link href="#" className="hover:opacity-80 transition-opacity hidden sm:inline-flex">
+              <PinterestIcon className="w-4 h-4" />
+            </Link>
+            <Link href="#" className="hover:opacity-80 transition-opacity hidden sm:inline-flex">
+              <Linkedin size={16} />
+            </Link>
           </div>
-          <button className="hover:opacity-80">
-            <ChevronRight size={16} />
-          </button>
-        </div>
 
-        <div className="flex-1" />
-      </div>
+          <div className="flex-1 justify-center hidden md:flex items-center gap-8">
+            <button className="hover:opacity-80">
+              <ChevronLeft size={16} />
+            </button>
+            <div className="flex items-center gap-2 tracking-wide uppercase">
+              <Compass size={14} />
+              <span>Clearance Sale is Live!</span>
+            </div>
+            <button className="hover:opacity-80">
+              <ChevronRight size={16} />
+            </button>
+          </div>
+
+          <div className="flex-1" />
+        </div>
+      )}
 
       {/* Main Navigation */}
-      <div className="bg-background text-foreground rounded-t-[2.5rem] relative z-10 pt-8 pb-6 px-4 md:px-12 shadow-sm">
+      <div className="bg-background rounded-t-[2.5rem] relative z-10 pt-8 pb-6 px-4 md:px-12 shadow-sm">
         <div className="flex flex-col items-center">
           <div className="w-full flex items-center justify-between mb-6">
             <div className="w-1/3 flex justify-start">
@@ -173,11 +175,6 @@ export function Header({ userData, cartItems, updateCartItemQuantity }: HeaderPr
                    <span className="text-2xl sm:text-4xl font-serif text-[--brand-brown] tracking-tighter leading-none flex items-center gap-1 whitespace-nowrap">
                     <span className="hidden sm:inline">Purbanchal</span>
                     <span className="sm:hidden">PHU</span>
-                    <span className="text-[--brand-green]">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C12 2 12 7 7 12C2 17 12 22 12 22C12 22 22 17 17 12C12 7 12 2 12 2Z" />
-                      </svg>
-                    </span>
                   </span>
                   <span className="text-[10px] uppercase tracking-[0.2em] text-[--brand-brown]/70 mt-1 font-medium hidden sm:block">
                     Rooted in Craft, Inspired by People
