@@ -542,7 +542,7 @@ export default function PurchasePage() {
                     </div>
                     <Button
                         variant="ghost"
-                        className="w-full sm:w-auto mt-2 text-white bg-black hover:bg-black/80 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold text-sm h-auto justify-center"
+                        className="w-full sm:w-auto mt-2 text-background bg-foreground hover:bg-foreground/90 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold text-sm h-auto justify-center"
                         onClick={() => handleAddToCart(product, product.variants?.[0]?.size || null)}
                         disabled={!product.inStock}
                     >
