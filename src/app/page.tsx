@@ -453,34 +453,23 @@ export default function ProductPage() {
           updateCartItemQuantity={updateCartItemQuantity}
         />
 
-        <section className="relative aspect-[16/9] w-full flex items-center justify-center text-white">
+        <section className="relative aspect-[16/9] w-full flex items-center justify-start text-white">
             <Image
                 src={placeholderImages.hero.url}
                 alt="Authentic handicrafts from North-East India"
                 fill
-                className="object-cover hidden md:block"
+                className="object-cover"
                 data-ai-hint={placeholderImages.hero['data-ai-hint']}
                 priority
             />
-            <Image
-                src={placeholderImages.heroMobile.url}
-                alt="Authentic handicrafts from North-East India"
-                fill
-                className="object-cover md:hidden"
-                data-ai-hint={placeholderImages.heroMobile['data-ai-hint']}
-                priority
-            />
             <div className="absolute inset-0 bg-black/50" />
-            <div className="relative z-10 text-center px-4">
-                <h1 className="text-4xl md:text-6xl font-bold mb-4 tracking-tight text-white">
-                  Handcrafted Treasures
+            <div className="relative z-10 text-left px-4 md:px-12">
+                <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight text-white max-w-lg">
+                  Handmade items to add authentic look to your home
                 </h1>
-                <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
-                    Discover handcrafted treasures that tell a story. Explore unique bamboo, jute, and cane items.
-                </p>
                 <Link href="/purchase">
                     <Button size="lg" variant="secondary">
-                        Shop Now
+                        Shop our collection
                     </Button>
                 </Link>
             </div>
