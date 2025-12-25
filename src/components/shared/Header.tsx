@@ -222,7 +222,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
 
        <div className={cn(
            "bg-transparent text-white relative z-10 py-2 md:py-6 px-4 md:px-12 shadow-md md:shadow-none transition-all duration-300",
-            isScrolled ? "!bg-white !text-foreground !py-3.5 shadow-md" : ""
+            isScrolled ? "!bg-white !text-foreground !py-3.5 shadow-md rounded-b-lg" : ""
        )}>
         <div className="w-full flex flex-col items-center justify-center">
           
@@ -527,7 +527,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
               </div>
           </div>
           
-          <nav className={cn("hidden md:flex items-center justify-center gap-8 text-[13px] font-medium transition-opacity duration-500", !isScrolled ? 'mt-4' : 'opacity-0 h-0')}>
+          <nav className={cn("hidden md:flex items-center justify-center gap-8 text-[13px] font-medium transition-opacity duration-500", !isScrolled && "mt-4", isScrolled && "opacity-0 h-0")}>
             {navItems.map((item) => (
               <Link key={item.href} href={item.href} className={cn("hover:text-[--brand-green] transition-colors text-base", isScrolled ? 'text-foreground' : 'text-white')}>
                   {item.label}
