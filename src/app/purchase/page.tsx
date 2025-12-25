@@ -348,6 +348,14 @@ export default function PurchasePage() {
     setSelectedProduct(null);
   };
   
+  const handleCartAction = (product: Product) => {
+    if (product.variants && product.variants.length > 0) {
+      setSelectedProduct(product);
+    } else {
+      handleAddToCart(product, null);
+    }
+  };
+  
   useEffect(() => {
     if (selectedProduct && selectedProduct.variants && selectedProduct.variants.length > 0) {
         setDialogSelectedSize(selectedProduct.variants[0].size);
@@ -544,7 +552,7 @@ export default function PurchasePage() {
                     <Button
                         variant="ghost"
                         className="w-full sm:w-auto mt-2 text-background bg-foreground hover:bg-foreground/90 disabled:bg-muted disabled:text-muted-foreground p-2 rounded-md font-bold text-sm h-auto justify-center"
-                        onClick={() => handleAddToCart(product, product.variants?.[0]?.size || null)}
+                        onClick={() => handleCartAction(product)}
                         disabled={!product.inStock}
                     >
                       {product.inStock ? 'Add to Cart' : 'Out of Stock'}
