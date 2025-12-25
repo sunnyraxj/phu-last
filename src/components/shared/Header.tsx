@@ -104,10 +104,6 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
 
   useEffect(() => {
     const handleScroll = () => {
-      if(isMobile) {
-        setIsScrolled(true);
-        return;
-      }
       setIsScrolled(window.scrollY > 50);
     };
     window.addEventListener('scroll', handleScroll);
@@ -116,7 +112,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
     handleScroll();
 
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isMobile]);
+  }, []);
 
   const handleSignOut = async () => {
     await signOut(auth);
@@ -392,9 +388,6 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
           {/* Desktop Header */}
            <div className="w-full hidden md:flex items-center justify-between">
               <div className="flex items-center gap-2 md:gap-4 w-1/3">
-                 <Button variant="ghost" size="icon" onClick={() => setShowExtraButtons(!showExtraButtons)} className={cn(isScrolled ? 'text-foreground' : 'text-white')}>
-                    <Menu/>
-                  </Button>
                  <button className={cn("hover:opacity-80 transition-colors", isScrolled ? 'text-foreground' : 'text-white')}>
                     <Search size={22} strokeWidth={1.5} />
                 </button>
@@ -534,7 +527,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
               </div>
           </div>
           
-          <nav className={cn("hidden md:flex items-center justify-center gap-8 text-[13px] font-medium transition-opacity duration-300", !isScrolled ? 'mt-4' : 'opacity-0 h-0', showExtraButtons && !isScrolled ? 'opacity-100' : 'opacity-0 h-0')}>
+          <nav className={cn("hidden md:flex items-center justify-center gap-8 text-[13px] font-medium transition-opacity duration-500", !isScrolled ? 'mt-4' : '')}>
             {navItems.map((item) => (
               <Link key={item.href} href={item.href} className={cn("hover:text-[--brand-green] transition-colors text-base", isScrolled ? 'text-foreground' : 'text-white')}>
                   {item.label}
