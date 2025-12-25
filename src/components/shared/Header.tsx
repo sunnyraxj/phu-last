@@ -174,7 +174,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
       )}
 
       {/* Main Navigation */}
-      <div className="bg-background rounded-t-[2.5rem] relative z-10 pt-8 pb-6 px-4 md:px-12 shadow-sm">
+      <div className="bg-background rounded-t-[2.5rem] relative z-10 py-4 px-4 md:pt-8 md:pb-6 md:px-12 shadow-sm">
         <div className="flex flex-col items-center">
           <div className="w-full flex items-center justify-between mb-6">
             <div className="w-1/3 flex justify-start items-center gap-2">
