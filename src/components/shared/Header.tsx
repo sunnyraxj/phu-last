@@ -52,6 +52,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay"
+import { useIsMobile } from "@/hooks/use-mobile";
 
 
 // Simple X icon replacement
@@ -95,16 +96,23 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
   const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [isScrolled, setIsScrolled] = useState(false);
   const [showExtraButtons, setShowExtraButtons] = useState(false);
 
   useEffect(() => {
+    if(isMobile) {
+      // On mobile, we don't need the scroll effect, so we can just set it to true
+      // which will give it the solid white background.
+      setIsScrolled(true);
+      return;
+    }
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [isMobile]);
 
   const handleSignOut = async () => {
     await signOut(auth);
@@ -240,7 +248,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
        {showAnnouncement && (
-         <div className="bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium">
+         <div className={cn("bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium transition-all duration-300", isScrolled ? "h-0 py-0 opacity-0" : "h-auto")}>
           <div className="w-1/3 flex-1 flex justify-start items-center gap-4">
             <SocialButtons />
           </div>
@@ -275,7 +283,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
 
       {/* Main Navigation */}
        <div className={cn("bg-background md:bg-transparent text-foreground md:text-white relative z-10 py-2 md:py-6 px-4 md:px-12 shadow-md md:shadow-none transition-all duration-300",
-            isScrolled && "md:!bg-white md:!text-foreground md:!py-3 shadow-md"
+            isScrolled && "md:!bg-white md:!text-foreground md:!py-3.5 shadow-md"
        )}>
         <div className="w-full flex flex-col items-center justify-center">
           
@@ -441,9 +449,20 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
           {/* Desktop Header */}
           <div className="w-full hidden md:flex items-center justify-between">
               <div className={cn("flex items-center gap-2 md:gap-4 w-1/3 transition-opacity duration-300", isScrolled ? 'opacity-100' : 'opacity-0 pointer-events-none')}>
-                 <Button variant="ghost" size="icon" onClick={() => setShowExtraButtons(!showExtraButtons)}>
-                    <Menu />
-                 </Button>
+                 <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                            <Menu />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        {navItems.map((item) => (
+                            <DropdownMenuItem key={item.href} asChild>
+                                <Link href={item.href}>{item.label}</Link>
+                            </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuContent>
+                 </DropdownMenu>
                  <button className="hover:opacity-80 transition-colors">
                     <Search size={22} strokeWidth={1.5} />
                 </button>
