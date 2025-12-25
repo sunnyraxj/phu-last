@@ -455,18 +455,16 @@ export default function ProductPage() {
 
   return (
     <div className="min-h-screen bg-background font-sans">
+      <Header
+        userData={userData}
+        cartItems={cartItems}
+        updateCartItemQuantity={updateCartItemQuantity}
+      />
+      
       <div className="relative">
-        <div className="absolute top-0 left-0 right-0 z-20">
-            <Header
-              userData={userData}
-              cartItems={cartItems}
-              updateCartItemQuantity={updateCartItemQuantity}
-            />
-        </div>
-
         <section className="relative aspect-[16/9] w-full flex items-end justify-start text-white">
             <Image
-                src={siteSettings?.heroImageUrl || placeholderImages.hero.url}
+                src={siteSettings?.heroImageUrl || "https://lh3.googleusercontent.com/gg-dl/ABS2GSmQECS0AGKCKdqHF1VVFCUOKMbqynFJJdxA-dCjEpkA6sJ_lirje3aQSxNUSPwlnsFBrll88zu9L7ZjcaCEsoiMJLqofFPqs1kJo0MecbExy6LPSbpaxyycf7T-VULVZn71CUwvW3iCrhkrhDAAiv6xH4HSqhlQUvFdSQhiN-d0VR1cCQ=s1600-rj"}
                 alt="Authentic handicrafts from North-East India"
                 fill
                 className="object-cover"
@@ -475,7 +473,6 @@ export default function ProductPage() {
             />
             
             <div className="relative z-10 p-4 md:p-12">
-                
                 <Link href="/purchase">
                     <Button size="sm" className="bg-[--brand-green] text-white hover:bg-[--brand-green]/90 h-8 text-xs px-3 md:h-11 md:px-8 md:text-sm">
                         Shop our collection
@@ -935,12 +932,3 @@ export default function ProductPage() {
     </div>
   )
 }
-
-    
-
-    
-
-
-
-
-
