@@ -13,7 +13,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Compass,
-  LogOut
+  LogOut,
+  Menu
 } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { useAuth, useUser } from "@/firebase";
@@ -41,6 +42,12 @@ import { useRouter } from "next/navigation";
 import { cn, isValidImageDomain } from "@/lib/utils";
 import placeholderImages from '@/lib/placeholder-images.json';
 import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 
 // Simple X icon replacement
@@ -117,11 +124,18 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
     }, 0);
   }, [cartItems]);
 
+  const navItems = [
+    { href: "/purchase", label: "All Products" },
+    { href: "/our-stores", label: "Our Stores" },
+    { href: "/about", label: "About Us" },
+    { href: "/our-team", label: "Our Team" },
+  ];
+
   return (
-    <header className="w-full">
+    <header className="w-full sticky top-0 z-50">
       {showAnnouncement && (
         <div className="bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium">
-          <div className="flex-1 flex justify-start items-center gap-4">
+          <div className="w-1/3 flex-1 flex justify-start items-center gap-4">
             <Link href="#" className="hover:opacity-80 transition-opacity">
               <Facebook size={16} />
             </Link>
@@ -142,7 +156,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
             </Link>
           </div>
 
-          <div className="flex-1 justify-center hidden md:flex items-center gap-8">
+          <div className="w-1/3 flex-1 justify-center hidden md:flex items-center gap-8">
             <button className="hover:opacity-80">
               <ChevronLeft size={16} />
             </button>
@@ -155,7 +169,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
             </button>
           </div>
 
-          <div className="flex-1" />
+          <div className="w-1/3 flex-1" />
         </div>
       )}
 
@@ -163,8 +177,33 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
       <div className="bg-background rounded-t-[2.5rem] relative z-10 pt-8 pb-6 px-4 md:px-12 shadow-sm">
         <div className="flex flex-col items-center">
           <div className="w-full flex items-center justify-between mb-6">
-            <div className="w-1/3 flex justify-start">
-                <button className="hover:text-[--brand-brown] transition-colors">
+            <div className="w-1/3 flex justify-start items-center gap-2">
+                 <div className="md:hidden">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <Menu />
+                        <span className="sr-only">Open menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      {navItems.map((item) => (
+                        <DropdownMenuItem key={item.href} asChild>
+                          <Link href={item.href}>{item.label}</Link>
+                        </DropdownMenuItem>
+                      ))}
+                      {userData?.role === 'admin' && (
+                        <>
+                         <Separator />
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin/dashboard">Admin Dashboard</Link>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                <button className="hover:text-[--brand-brown] transition-colors hidden md:block">
                     <Search size={22} strokeWidth={1.5} />
                 </button>
             </div>
@@ -173,8 +212,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
             <div className="w-1/3 flex justify-center">
                 <Link href="/" className="flex flex-col items-center">
                    <span className="text-2xl sm:text-4xl font-serif text-[--brand-brown] tracking-tighter leading-none flex items-center gap-1 whitespace-nowrap">
-                    <span className="hidden sm:inline">Purbanchal</span>
-                    <span className="sm:hidden">PHU</span>
+                    Purbanchal
                   </span>
                   <span className="text-[10px] uppercase tracking-[0.2em] text-[--brand-brown]/70 mt-1 font-medium hidden sm:block">
                     Rooted in Craft, Inspired by People
@@ -182,7 +220,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                 </Link>
             </div>
 
-            <div className="w-1/3 flex justify-end items-center gap-5">
+            <div className="w-1/3 flex justify-end items-center gap-2 sm:gap-5">
               {!isUserLoading && user && !user.isAnonymous ? (
                  <Popover>
                     <PopoverTrigger asChild>
@@ -304,18 +342,11 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
           </div>
 
           <nav className="hidden md:flex items-center gap-8 text-[13px] font-medium text-[--brand-brown]">
-            <Link href="/purchase" className="hover:text-[--brand-green] transition-colors">
-              All Products
-            </Link>
-            <Link href="/our-stores" className="hover:text-[--brand-green] transition-colors">
-              Our Stores
-            </Link>
-            <Link href="/about" className="hover:text-[--brand-green] transition-colors">
-              About Us
-            </Link>
-            <Link href="/our-team" className="hover:text-[--brand-green] transition-colors">
-              Our Team
-            </Link>
+            {navItems.map((item) => (
+               <Link key={item.href} href={item.href} className="hover:text-[--brand-green] transition-colors">
+                  {item.label}
+               </Link>
+            ))}
             {userData?.role === 'admin' && (
               <Link href="/admin/dashboard" className="hover:text-[--brand-green] transition-colors">
                 Admin Dashboard
