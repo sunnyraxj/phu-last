@@ -453,7 +453,7 @@ export default function ProductPage() {
           updateCartItemQuantity={updateCartItemQuantity}
         />
 
-        <section className="relative aspect-[16/9] w-full flex items-center justify-start text-white">
+        <section className="relative aspect-[16/9] w-full flex items-end justify-start text-white">
             <Image
                 src={placeholderImages.hero.url}
                 alt="Authentic handicrafts from North-East India"
@@ -463,12 +463,12 @@ export default function ProductPage() {
                 priority
             />
             <div className="absolute inset-0 bg-black/50" />
-            <div className="relative z-10 text-left px-4 md:px-12">
-                <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight text-white max-w-lg">
+            <div className="relative z-10 p-4 md:p-12">
+                <h1 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight text-white max-w-md">
                   Handmade items to add authentic look to your home
                 </h1>
                 <Link href="/purchase">
-                    <Button size="default" className="bg-[--brand-green] text-white hover:bg-[--brand-green]/90">
+                    <Button size="sm" className="bg-[--brand-green] text-white hover:bg-[--brand-green]/90">
                         Shop our collection
                     </Button>
                 </Link>
