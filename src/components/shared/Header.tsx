@@ -275,7 +275,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
 
       {/* Main Navigation */}
        <div className={cn("bg-transparent text-white relative z-10 py-2 md:py-6 px-4 md:px-12 shadow-none transition-all duration-300",
-            isScrolled && "md:!bg-white md:!text-foreground md:!py-2 shadow-md"
+            isScrolled && "md:!bg-white md:!text-foreground md:!py-4 shadow-md"
        )}>
         <div className="w-full flex flex-col items-center justify-center">
           
@@ -440,7 +440,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
           
           {/* Desktop Header */}
           <div className="w-full hidden md:flex items-center justify-between">
-              <div className={cn("flex items-center gap-2 md:gap-4 w-1/3 transition-opacity duration-300", isScrolled ? 'opacity-100' : 'opacity-0')}>
+              <div className={cn("flex items-center gap-2 md:gap-4 w-1/3 transition-opacity duration-300", isScrolled ? 'opacity-100' : 'opacity-0 pointer-events-none')}>
                  <Button variant="ghost" size="icon" onClick={() => setShowExtraButtons(!showExtraButtons)}>
                     <Menu />
                  </Button>
