@@ -453,7 +453,7 @@ export default function ProductPage() {
           updateCartItemQuantity={updateCartItemQuantity}
         />
 
-        <section className="relative h-[60vh] w-full flex items-center justify-center text-white -mt-[150px] md:-mt-40">
+        <section className="relative h-[60vh] w-full flex items-center justify-center text-white">
             <Image
                 src={placeholderImages.hero.url}
                 alt="Authentic handicrafts from North-East India"
