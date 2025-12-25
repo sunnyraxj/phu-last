@@ -444,7 +444,11 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                  <Button variant="ghost" size="icon" onClick={() => setShowExtraButtons(!showExtraButtons)}>
                     <Menu />
                  </Button>
-                 {showExtraButtons && <SocialButtons />}
+                 {showExtraButtons && (isScrolled ? (
+                    <div className="flex items-center gap-4">
+                        <SocialButtons />
+                    </div>
+                 ) : null)}
                  <button className="hover:opacity-80 transition-colors">
                     <Search size={22} strokeWidth={1.5} />
                 </button>
@@ -613,6 +617,21 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
               </Link>
             )}
           </nav>
+
+          <div className={cn("w-full transition-all duration-300 overflow-hidden", isScrolled && showExtraButtons ? "h-14" : "h-0")}>
+            <div className="bg-white text-foreground flex items-center justify-center gap-8 text-[13px] font-medium h-14">
+              {navItems.map((item) => (
+                <Link key={item.href} href={item.href} className="hover:text-primary transition-colors">
+                  {item.label}
+                </Link>
+              ))}
+              {userData?.role === 'admin' && (
+                <Link href="/admin/dashboard" className="hover:text-primary transition-colors">
+                  Admin Dashboard
+                </Link>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </header>
