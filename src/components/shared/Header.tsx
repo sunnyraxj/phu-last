@@ -395,7 +395,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
 
               <div className={cn("flex justify-center w-1/3 transition-all duration-300", isScrolled && 'absolute left-1/2 -translate-x-1/2')}>
                 <Link href="/" className="flex flex-col items-center">
-                   <span className={cn("font-serif tracking-tighter leading-none flex items-center gap-1 whitespace-nowrap transition-all duration-300", isScrolled ? '!text-xl !text-[--brand-brown]' : 'text-3xl')}>
+                   <span className={cn("font-serif tracking-tighter leading-none flex items-center gap-1 whitespace-nowrap transition-all duration-300", isScrolled ? '!text-2xl !text-[--brand-brown]' : 'text-3xl')}>
                     {isScrolled ? 'Purbanchal Hasta Udyog' : 'Purbanchal'}
                   </span>
                   <span className={cn("text-[10px] uppercase tracking-[0.2em] mt-1 font-medium transition-opacity duration-300", isScrolled ? 'opacity-0 h-0' : 'opacity-100')}>
