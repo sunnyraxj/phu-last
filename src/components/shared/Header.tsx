@@ -274,8 +274,8 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
       )}
 
       {/* Main Navigation */}
-       <div className={cn("bg-transparent text-white relative z-10 py-2 md:py-6 px-4 md:px-12 shadow-none transition-all duration-300",
-            isScrolled && "md:!bg-white md:!text-foreground md:!py-4 shadow-md"
+       <div className={cn("bg-background md:bg-transparent text-foreground md:text-white relative z-10 py-2 md:py-6 px-4 md:px-12 shadow-md md:shadow-none transition-all duration-300",
+            isScrolled && "md:!bg-white md:!text-foreground md:!py-3 shadow-md"
        )}>
         <div className="w-full flex flex-col items-center justify-center">
           
@@ -319,7 +319,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                 {!isUserLoading && user && !user.isAnonymous ? (
                    <Popover>
                       <PopoverTrigger asChild>
-                        <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isScrolled ? "ring-foreground/50" : "ring-white")}>
+                        <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset ring-foreground/50")}>
                             <User size={18} strokeWidth={1.5} />
                         </button>
                       </PopoverTrigger>
