@@ -47,6 +47,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay"
@@ -194,7 +195,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
       )}
 
       {/* Main Navigation */}
-       <div className="bg-white rounded-t-none md:rounded-t-[2.5rem] relative z-10 pt-4 pb-4 px-4 md:px-12 shadow-sm">
+       <div className="bg-white rounded-t-none md:rounded-t-[2.5rem] relative z-10 py-4 px-4 md:px-12 shadow-sm">
         <div className="w-full flex flex-col items-center justify-center">
           
           <div className="w-full flex items-center justify-between mb-4">
@@ -214,7 +215,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                         ))}
                         {userData?.role === 'admin' && (
                           <>
-                           <Separator />
+                           <DropdownMenuSeparator />
                             <DropdownMenuItem asChild>
                               <Link href="/admin/dashboard">Admin Dashboard</Link>
                             </DropdownMenuItem>
@@ -242,13 +243,14 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                 {!isUserLoading && user && !user.isAnonymous ? (
                    <Popover>
                       <PopoverTrigger asChild>
-                        <button className="hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset ring-foreground/20">
+                        <button className="hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset ring-white">
                             <User size={18} strokeWidth={1.5} />
                         </button>
                       </PopoverTrigger>
                       <PopoverContent className="w-48">
                         <div className="flex flex-col gap-1">
                           <p className="font-semibold text-sm p-2 truncate">{user.email}</p>
+                          <Separator />
                           <Link href="/account">
                               <Button variant="ghost" className="w-full justify-start p-2 h-auto">
                                   My Account
@@ -259,6 +261,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, showAnnoun
                                   My Orders
                               </Button>
                           </Link>
+                          <Separator />
                           <Button variant="ghost" onClick={handleSignOut} className="justify-start p-2 h-auto text-destructive">
                               <LogOut className="mr-2 h-4 w-4" />
                               Logout
