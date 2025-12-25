@@ -459,6 +459,7 @@ export default function ProductPage() {
         userData={userData}
         cartItems={cartItems}
         updateCartItemQuantity={updateCartItemQuantity}
+        products={allProducts || []}
       />
       
       <div className="relative">
