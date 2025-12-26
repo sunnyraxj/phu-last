@@ -4,7 +4,7 @@
 
 import { useState, useMemo, useEffect, useRef } from "react"
 import { collection, doc, query, where, writeBatch, setDoc, deleteDoc, orderBy, limit } from "firebase/firestore";
-import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon, MapPin, Phone, ExternalLink, Sparkles, Wand2, CheckCircle, User, Store as StoreIcon, Brush, Globe, Leaf, Truck } from "lucide-react"
+import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon, MapPin, Phone, ExternalLink, Sparkles, Wand2, CheckCircle, User, Store as StoreIcon, Brush, Globe, Leaf, Truck, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
@@ -137,7 +137,7 @@ const FeaturesSection = () => {
                 >
                     <CarouselContent className="-ml-4">
                         {features.map((feature, index) => (
-                           <CarouselItem key={index} className="pl-4 basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/5">
+                           <CarouselItem key={index} className="pl-4 basis-1/2 sm:basis-1/4 md:basis-1/5 lg:basis-1/5">
                                 <div className="flex flex-col items-center p-2 text-center">
                                     <feature.icon className="h-6 w-6 sm:h-8 sm:w-8 text-primary mb-2" />
                                     <h3 className="text-xs sm:text-sm font-semibold text-foreground">{feature.title}</h3>
@@ -547,9 +547,9 @@ export default function ProductPage() {
       />
       
       <main>
-          {isMobile ? (
-            <section className="md:hidden relative pt-[18%]">
-                <div className="relative aspect-[16/9] w-full">
+        {isMobile ? (
+            <div className="relative pt-[18%]">
+                 <div className="relative aspect-[16/9] w-full">
                     <Image
                         src={siteSettings?.heroImageUrlMobile || siteSettings?.heroImageUrl || placeholderImages.heroMobile.url}
                         alt="Authentic handicrafts from North-East India"
@@ -559,9 +559,9 @@ export default function ProductPage() {
                         priority
                     />
                 </div>
-            </section>
-          ) : (
-            <section className="relative aspect-[21/9] w-full hidden md:flex items-end justify-start text-white">
+            </div>
+        ) : (
+            <div className="relative aspect-[21/9] w-full hidden md:flex items-end justify-start text-white">
                 <Image
                     src={siteSettings?.heroImageUrl || placeholderImages.hero.url}
                     alt="Authentic handicrafts from North-East India"
@@ -577,8 +577,8 @@ export default function ProductPage() {
                         </Button>
                     </Link>
                 </div>
-            </section>
-          )}
+            </div>
+        )}
       </main>
       
       <FeaturesSection />

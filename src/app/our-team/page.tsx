@@ -1,18 +1,14 @@
 
 
-'use client';
-
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, doc, query, where } from 'firebase/firestore';
-import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
-import { Header } from "@/components/shared/Header";
-import { useMemo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle } from "lucide-react";
+import { collection } from 'firebase/firestore';
+import { Card } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { initializeAdminApp } from "@/firebase/admin";
+import { Header } from "@/components/shared/Header";
+import { PottersWheelSpinner } from "@/components/shared/PottersWheelSpinner";
 
 type TeamMember = {
     id: string;
@@ -23,113 +19,34 @@ type TeamMember = {
     socialLink?: string;
 };
 
-type Product = {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  "data-ai-hint": string;
-  collection: string;
-  material: string;
-  inStock: boolean;
-  description: string;
-  artisanId: string;
-};
+async function getTeamMembers() {
+    try {
+        const { firestore } = initializeAdminApp();
+        const teamSnapshot = await firestore.collection('teamMembers').get();
+        const teamMembers = teamSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as TeamMember[];
+        return teamMembers;
+    } catch (error) {
+        console.error("Error fetching team members: ", error);
+        return [];
+    }
+}
 
-type Order = {
-    status: 'pending' | 'shipped' | 'delivered' | 'pending-payment-approval';
-};
+export default async function OurTeamPage() {
+    const teamMembers = await getTeamMembers();
 
-type CartItem = Product & { quantity: number; cartItemId: string; };
-
-type Store = {
-    id: string;
-    name: string;
-    image?: string;
-};
-
-export default function OurTeamPage() {
-    const firestore = useFirestore();
-    const teamMembersQuery = useMemoFirebase(() => collection(firestore, 'teamMembers'), [firestore]);
-    const { data: teamMembers, isLoading: teamMembersLoading } = useCollection<TeamMember>(teamMembersQuery);
-
-    const { user } = useUser();
-    const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
-    const { data: userData } = useDoc<{ role: string }>(userDocRef);
-
-    const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
-    const { data: allProducts } = useCollection<Product>(productsQuery);
-    
-    const isAuthorizedAdmin = userData?.role === 'admin';
-
-    const ordersQuery = useMemoFirebase(() => 
-      (isAuthorizedAdmin) ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval'])) : null,
-      [firestore, isAuthorizedAdmin]
-    );
-    const { data: orders } = useCollection<Order>(ordersQuery);
-
-    const outOfStockQuery = useMemoFirebase(() => 
-        (isAuthorizedAdmin) ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null,
-        [firestore, isAuthorizedAdmin]
-    );
-    const { data: outOfStockProducts } = useCollection<Product>(outOfStockQuery);
-
-    const returnsQuery = useMemoFirebase(() => 
-        (isAuthorizedAdmin) ? query(collection(firestore, 'returnRequests'), where('status', '==', 'pending-review')) : null,
-        [firestore, isAuthorizedAdmin]
-    );
-    const { data: returnRequests } = useCollection<any>(returnsQuery);
-
-    const cartItemsQuery = useMemoFirebase(() =>
-      user ? collection(firestore, 'users', user.uid, 'cart') : null,
-      [firestore, user]
-    );
-    const { data: cartData } = useCollection<{ productId: string; quantity: number }>(cartItemsQuery);
-
-    const cartItems = useMemo(() => {
-      if (!cartData || !allProducts) return [];
-      return cartData.map(cartItem => {
-        const product = allProducts.find(p => p.id === cartItem.productId);
-        return product ? { ...product, quantity: cartItem.quantity, cartItemId: cartItem.id } : null;
-      }).filter((item): item is CartItem => item !== null);
-    }, [cartData, allProducts]);
-
-    const storesQuery = useMemoFirebase(() => collection(firestore, 'stores'), [firestore]);
-    const { data: stores } = useCollection<Store>(storesQuery);
-    
-    const adminActionCounts = useMemo(() => {
-        if (userData?.role !== 'admin') {
-            return { pendingOrders: 0, outOfStockProducts: 0, pendingReturns: 0 };
-        }
-        return { 
-            pendingOrders: orders?.length || 0,
-            outOfStockProducts: outOfStockProducts?.length || 0,
-            pendingReturns: returnRequests?.length || 0
-        };
-    }, [orders, outOfStockProducts, returnRequests, userData]);
-
-    const updateCartItemQuantity = (cartItemId: string, newQuantity: number) => {
-      // Dummy function, as cart management is handled elsewhere.
-    };
-
-    const { founder, managementMembers, teamMembers: otherTeamMembers } = useMemo(() => {
-        if (!teamMembers) return { founder: null, managementMembers: [], teamMembers: [] };
-        const founderMember = teamMembers.find(member => member.role === 'Founder');
-        const management = teamMembers.filter(member => member.role === 'Management');
-        const others = teamMembers.filter(member => member.role === 'Team Member');
-        return { founder: founderMember, managementMembers: management, teamMembers: others };
-    }, [teamMembers]);
-
+    const founder = teamMembers.find(member => member.role === 'Founder');
+    const managementMembers = teamMembers.filter(member => member.role === 'Management');
+    const otherTeamMembers = teamMembers.filter(member => member.role === 'Team Member');
 
   return (
     <div className="bg-background">
       <Header 
-        userData={userData}
-        cartItems={cartItems}
-        updateCartItemQuantity={updateCartItemQuantity}
-        stores={stores || []}
-        products={allProducts || []}
-        adminActionCounts={adminActionCounts}
+        userData={null}
+        cartItems={[]}
+        updateCartItemQuantity={() => {}}
+        stores={[]}
+        products={[]}
+        adminActionCounts={{ pendingOrders: 0, outOfStockProducts: 0, pendingReturns: 0 }}
       />
 
       <main className="container mx-auto py-8 sm:py-16 px-4">
@@ -140,11 +57,7 @@ export default function OurTeamPage() {
           </p>
         </div>
 
-        {teamMembersLoading ? (
-            <div className="flex justify-center items-center h-64">
-                <PottersWheelSpinner />
-            </div>
-        ) : teamMembers && teamMembers.length > 0 ? (
+        {teamMembers.length > 0 ? (
           <>
             {founder && (
               <div className="mb-12 md:mb-16">
@@ -174,7 +87,7 @@ export default function OurTeamPage() {
                      <Carousel opts={{ align: "start" }} className="w-full">
                       <CarouselContent className="-ml-2 md:-ml-4">
                         {managementMembers.map((member) => (
-                          <CarouselItem key={member.id} className="pl-4 md:pl-6 basis-1/2 sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                          <CarouselItem key={member.id} className="pl-4 md:pl-6 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
                               <Card className="w-full max-w-sm overflow-hidden rounded-2xl shadow-lg group">
                                 <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-2xl">
                                   <Image

@@ -1,19 +1,14 @@
 
 
-'use client';
-
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, doc, query, where } from 'firebase/firestore';
+import { initializeAdminApp } from "@/firebase/admin";
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Header } from "@/components/shared/Header";
-import { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Phone, ExternalLink } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
-
 
 type Store = {
     id: string;
@@ -25,96 +20,31 @@ type Store = {
     'data-ai-hint'?: string;
 };
 
-type Product = {
-  id: string;
-  name: string;
-  price: number;
-  images: string[];
-  "data-ai-hint": string;
-  collection: string;
-  material: string;
-  inStock: boolean;
-  description: string;
-  artisanId: string;
-};
-
-type Order = {
-    status: 'pending' | 'shipped' | 'delivered' | 'pending-payment-approval';
-};
-
-type CartItem = Product & { quantity: number; cartItemId: string; };
-
-export default function OurStoresPage() {
-    const firestore = useFirestore();
-    const storesQuery = useMemoFirebase(() => collection(firestore, 'stores'), [firestore]);
-    const { data: stores, isLoading: storesLoading } = useCollection<Store>(storesQuery);
-
-    const { user } = useUser();
-    const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
-    const { data: userData } = useDoc<{ role: string }>(userDocRef);
-
-    const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
-    const { data: allProducts } = useCollection<Product>(productsQuery);
-
-    const isAuthorizedAdmin = userData?.role === 'admin';
-
-    const ordersQuery = useMemoFirebase(() =>
-        (isAuthorizedAdmin) ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval'])) : null,
-        [firestore, isAuthorizedAdmin]
-    );
-    const { data: orders } = useCollection<Order>(ordersQuery);
-    
-    const outOfStockQuery = useMemoFirebase(() => 
-        (isAuthorizedAdmin) ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null,
-        [firestore, isAuthorizedAdmin]
-    );
-    const { data: outOfStockProducts } = useCollection<Product>(outOfStockQuery);
-
-    const returnsQuery = useMemoFirebase(() => 
-        (isAuthorizedAdmin) ? query(collection(firestore, 'returnRequests'), where('status', '==', 'pending-review')) : null,
-        [firestore, isAuthorizedAdmin]
-    );
-    const { data: returnRequests } = useCollection<any>(returnsQuery);
+async function getStores() {
+    try {
+        const { firestore } = initializeAdminApp();
+        const storesSnapshot = await firestore.collection('stores').get();
+        const stores = storesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Store[];
+        return stores;
+    } catch (error) {
+        console.error("Error fetching stores: ", error);
+        return [];
+    }
+}
 
 
-    const cartItemsQuery = useMemoFirebase(() =>
-      user ? collection(firestore, 'users', user.uid, 'cart') : null,
-      [firestore, user]
-    );
-    const { data: cartData } = useCollection<{ productId: string; quantity: number }>(cartItemsQuery);
-
-    const cartItems = useMemo(() => {
-      if (!cartData || !allProducts) return [];
-      return cartData.map(cartItem => {
-        const product = allProducts.find(p => p.id === cartItem.productId);
-        return product ? { ...product, quantity: cartItem.quantity, cartItemId: cartItem.id } : null;
-      }).filter((item): item is CartItem => item !== null);
-    }, [cartData, allProducts]);
-    
-    const adminActionCounts = useMemo(() => {
-        if (userData?.role !== 'admin') {
-            return { pendingOrders: 0, outOfStockProducts: 0, pendingReturns: 0 };
-        }
-        return { 
-            pendingOrders: orders?.length || 0,
-            outOfStockProducts: outOfStockProducts?.length || 0,
-            pendingReturns: returnRequests?.length || 0
-        };
-    }, [orders, outOfStockProducts, returnRequests, userData]);
-
-    const updateCartItemQuantity = (cartItemId: string, newQuantity: number) => {
-      // Dummy function, as this is handled elsewhere.
-    };
+export default async function OurStoresPage() {
+    const stores = await getStores();
 
   return (
     <div className="bg-background">
       <Header 
-        userData={userData}
-        cartItems={cartItems}
-        updateCartItemQuantity={updateCartItemQuantity}
-        stores={stores || []}
-        products={allProducts || []}
-        adminActionCounts={adminActionCounts}
+        userData={null}
+        cartItems={[]}
+        updateCartItemQuantity={() => {}}
+        stores={[]}
+        products={[]}
+        adminActionCounts={{ pendingOrders: 0, outOfStockProducts: 0, pendingReturns: 0 }}
       />
 
       <main className="container mx-auto py-8 sm:py-16 px-4">
@@ -125,11 +55,7 @@ export default function OurStoresPage() {
           </p>
         </div>
 
-        {storesLoading ? (
-            <div className="flex justify-center items-center h-64">
-                <PottersWheelSpinner />
-            </div>
-        ) : stores && stores.length > 0 ? (
+        {stores.length > 0 ? (
             <Carousel
                 opts={{
                     align: "start",

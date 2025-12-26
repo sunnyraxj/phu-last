@@ -1,112 +1,21 @@
 
-'use client';
 
-import { useMemo } from 'react';
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
-import { collection, doc, query, where } from 'firebase/firestore';
 import { Header } from "@/components/shared/Header";
-import placeholderImages from '@/lib/placeholder-images.json';
 import { Card } from '@/components/ui/card';
 
-type Product = {
-  id: string;
-  name: string;
-  price: number;
-  images: string[];
-  "data-ai-hint": string;
-  collection: string;
-  material: string;
-  inStock: boolean;
-  description: string;
-  artisanId: string;
-};
-
-type Order = {
-    status: 'pending' | 'shipped' | 'delivered' | 'pending-payment-approval';
-};
-
-type CartItem = Product & { quantity: number; cartItemId: string; };
-
-type Store = {
-    id:string;
-    name:string;
-    image?:string;
-}
-
 export default function AboutPage() {
-    const firestore = useFirestore();
-    const { user } = useUser();
-    const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
-    const { data: userData } = useDoc<{ role: string }>(userDocRef);
-
-    const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
-    const { data: allProducts } = useCollection<Product>(productsQuery);
-
-    const isAuthorizedAdmin = userData?.role === 'admin';
-
-    const ordersQuery = useMemoFirebase(() =>
-        (isAuthorizedAdmin) ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval'])) : null,
-        [firestore, isAuthorizedAdmin]
-    );
-    const { data: orders } = useCollection<Order>(ordersQuery);
-
-    const outOfStockQuery = useMemoFirebase(() => 
-        (isAuthorizedAdmin) ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null,
-        [firestore, isAuthorizedAdmin]
-    );
-    const { data: outOfStockProducts } = useCollection<Product>(outOfStockQuery);
-
-    const returnsQuery = useMemoFirebase(() => 
-        (isAuthorizedAdmin) ? query(collection(firestore, 'returnRequests'), where('status', '==', 'pending-review')) : null,
-        [firestore, isAuthorizedAdmin]
-    );
-    const { data: returnRequests } = useCollection<any>(returnsQuery);
-
-
-    const cartItemsQuery = useMemoFirebase(() =>
-      user ? collection(firestore, 'users', user.uid, 'cart') : null,
-      [firestore, user]
-    );
-    const { data: cartData } = useCollection<{ productId: string; quantity: number }>(cartItemsQuery);
-
-    const cartItems = useMemo(() => {
-      if (!cartData || !allProducts) return [];
-      return cartData.map(cartItem => {
-        const product = allProducts.find(p => p.id === cartItem.productId);
-        return product ? { ...product, quantity: cartItem.quantity, cartItemId: cartItem.id } : null;
-      }).filter((item): item is CartItem => item !== null);
-    }, [cartData, allProducts]);
-    
-    const storesQuery = useMemoFirebase(() => collection(firestore, 'stores'), [firestore]);
-    const { data: stores } = useCollection<Store>(storesQuery);
-    
-    const adminActionCounts = useMemo(() => {
-        if (userData?.role !== 'admin') {
-            return { pendingOrders: 0, outOfStockProducts: 0, pendingReturns: 0 };
-        }
-        return { 
-            pendingOrders: orders?.length || 0,
-            outOfStockProducts: outOfStockProducts?.length || 0,
-            pendingReturns: returnRequests?.length || 0
-        };
-    }, [orders, outOfStockProducts, returnRequests, userData]);
-
-    const updateCartItemQuantity = (cartItemId: string, newQuantity: number) => {
-      // Dummy function
-    };
-
     return (
         <div className="bg-background">
             <Header 
-                userData={userData}
-                cartItems={cartItems}
-                updateCartItemQuantity={updateCartItemQuantity}
-                stores={stores || []}
-                products={allProducts || []}
-                adminActionCounts={adminActionCounts}
+                userData={null}
+                cartItems={[]}
+                updateCartItemQuantity={() => {}}
+                stores={[]}
+                products={[]}
+                adminActionCounts={{ pendingOrders: 0, outOfStockProducts: 0, pendingReturns: 0 }}
             />
 
             <section className="bg-primary text-primary-foreground py-20">
