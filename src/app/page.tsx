@@ -4,7 +4,7 @@
 
 import { useState, useMemo, useEffect, useRef } from "react"
 import { collection, doc, query, where, writeBatch, setDoc, deleteDoc, orderBy, limit } from "firebase/firestore";
-import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon, MapPin, Phone, ExternalLink, Sparkles, Wand2, CheckCircle, User, Store as StoreIcon, Brush } from "lucide-react"
+import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon, MapPin, Phone, ExternalLink, Sparkles, Wand2, CheckCircle, User, Store as StoreIcon, Brush, Globe, Leaf, Truck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
@@ -94,32 +94,58 @@ const FeaturesSection = () => {
       {
         icon: Sparkles,
         title: "Authentic Craftsmanship",
-        description: "Every piece is handmade by skilled artisans from Northeast India.",
+        description: "Handmade by skilled artisans from Northeast India.",
       },
       {
         icon: Wand2,
         title: "Customizable Designs",
-        description: "Tailor our products to fit your unique style and needs.",
+        description: "Tailor our products to fit your unique style.",
       },
       {
         icon: CheckCircle,
         title: "Quality Guaranteed",
-        description: "We use the finest materials to ensure durability and beauty.",
+        description: "The finest materials for durability and beauty.",
+      },
+      {
+        icon: Leaf,
+        title: "Ethically Sourced",
+        description: "Sustainably sourced materials, supporting communities.",
+      },
+      {
+        icon: Globe,
+        title: "Worldwide Shipping",
+        description: "We deliver handcrafted joy to your doorstep, globally.",
       },
     ];
   
     return (
-        <section className="bg-background py-4 sm:py-8">
+        <section className="bg-muted/30 py-4 sm:py-6">
             <div className="container mx-auto px-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                {features.map((feature, index) => (
-                    <div key={index} className="flex flex-col items-center p-2">
-                    <feature.icon className="h-8 w-8 text-primary mb-3" />
-                    <h3 className="text-md font-semibold text-foreground">{feature.title}</h3>
-                    <p className="text-xs text-muted-foreground mt-1">{feature.description}</p>
-                    </div>
-                ))}
-                </div>
+                 <Carousel
+                    opts={{
+                        align: "start",
+                        loop: true,
+                    }}
+                    plugins={[
+                        Autoplay({
+                            delay: 3000,
+                            stopOnInteraction: false,
+                        })
+                    ]}
+                    className="w-full"
+                >
+                    <CarouselContent className="-ml-4">
+                        {features.map((feature, index) => (
+                           <CarouselItem key={index} className="pl-4 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
+                                <div className="flex flex-col items-center p-2 text-center">
+                                    <feature.icon className="h-8 w-8 text-primary mb-2" />
+                                    <h3 className="text-sm font-semibold text-foreground">{feature.title}</h3>
+                                    <p className="text-xs text-muted-foreground mt-1">{feature.description}</p>
+                                </div>
+                            </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                 </Carousel>
             </div>
         </section>
     );
