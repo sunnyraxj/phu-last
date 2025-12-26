@@ -90,26 +90,16 @@ type BrandLogo = {
 
 
 const BrandCarousel = ({logos}: {logos: BrandLogo[]}) => {
-    const allLogos = logos.map(l => l.logoUrl);
     return (
-        <section className="bg-background py-6 sm:py-8 overflow-hidden">
+        <section className="bg-background py-6 sm:py-8">
             <div className="container mx-auto px-4 text-center mb-6">
                 <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">We deal in</h2>
             </div>
-            <div className="relative">
-                <div className="flex animate-marquee-right-to-left">
-                    {[...allLogos, ...allLogos].map((logo, index) => (
-                        <div key={`rtl-${index}`} className="relative flex-shrink-0 w-32 h-16 mx-4">
-                            <Image src={logo} alt={`Brand Logo ${index + 1}`} fill className="object-contain" />
-                        </div>
-                    ))}
-                </div>
-            </div>
-            <div className="relative mt-4">
-                <div className="flex animate-marquee-left-to-right">
-                     {[...allLogos.slice().reverse(), ...allLogos.slice().reverse()].map((logo, index) => (
-                        <div key={`ltr-${index}`} className="relative flex-shrink-0 w-32 h-16 mx-4">
-                            <Image src={logo} alt={`Brand Logo ${index + 1}`} fill className="object-contain" />
+             <div className="container mx-auto px-4">
+                <div className="flex flex-wrap justify-center items-center gap-x-8 gap-y-4">
+                    {logos.map((logo) => (
+                        <div key={logo.id} className="relative w-28 h-14">
+                            <Image src={logo.logoUrl} alt={logo.name} fill className="object-contain" />
                         </div>
                     ))}
                 </div>
