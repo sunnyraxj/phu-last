@@ -95,6 +95,9 @@ const BrandCarousel = () => {
     ];
     return (
         <section className="bg-background py-6 sm:py-8 overflow-hidden">
+            <div className="container mx-auto px-4 text-center mb-6">
+                <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">We deal in</h2>
+            </div>
             <div className="relative">
                 <div className="flex animate-marquee-right-to-left">
                     {[...logos, ...logos].map((logo, index) => (
