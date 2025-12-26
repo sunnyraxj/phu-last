@@ -82,6 +82,42 @@ type SiteSettings = {
     heroImageUrlMobile?: string;
 };
 
+const BrandCarousel = () => {
+    const logos = [
+        "https://picsum.photos/seed/brand1/150/60",
+        "https://picsum.photos/seed/brand2/150/60",
+        "https://picsum.photos/seed/brand3/150/60",
+        "https://picsum.photos/seed/brand4/150/60",
+        "https://picsum.photos/seed/brand5/150/60",
+        "https://picsum.photos/seed/brand6/150/60",
+        "https://picsum.photos/seed/brand7/150/60",
+        "https://picsum.photos/seed/brand8/150/60",
+    ];
+    return (
+        <section className="bg-background py-8 sm:py-12 overflow-hidden">
+            <div className="relative">
+                <div className="flex animate-marquee-right-to-left">
+                    {[...logos, ...logos].map((logo, index) => (
+                        <div key={`rtl-${index}`} className="flex-shrink-0 w-36 mx-4">
+                            <Image src={logo} alt={`Brand Logo ${index + 1}`} width={150} height={60} className="object-contain filter grayscale opacity-60" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+            <div className="relative mt-8">
+                <div className="flex animate-marquee-left-to-right">
+                     {[...logos.slice().reverse(), ...logos.slice().reverse()].map((logo, index) => (
+                        <div key={`ltr-${index}`} className="flex-shrink-0 w-36 mx-4">
+                            <Image src={logo} alt={`Brand Logo ${index + 1}`} width={150} height={60} className="object-contain filter grayscale opacity-60" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+};
+
+
 function Filters({ 
   categories, 
   materials,
@@ -471,7 +507,7 @@ export default function ProductPage() {
         products={allProducts || []}
       />
       
-      <main>
+      <main className="pt-24 md:pt-0">
         <div className="md:hidden text-center py-2 bg-[--brand-green] text-white text-xs">Free shipping on orders over ₹1000</div>
         {/* Desktop Hero */}
         <section className="relative aspect-[21/9] w-full hidden md:flex items-end justify-start text-white">
@@ -494,6 +530,7 @@ export default function ProductPage() {
 
         {/* Mobile Hero */}
         <section className="md:hidden relative">
+          <div className="text-center py-2 bg-[--brand-green] text-white text-xs">Handcrafted with love in India</div>
           <div className="relative aspect-[16/9] w-full">
             <Image
                 src={siteSettings?.heroImageUrlMobile || siteSettings?.heroImageUrl || placeholderImages.heroMobile.url}
@@ -506,6 +543,8 @@ export default function ProductPage() {
           </div>
         </section>
       </main>
+      
+      <BrandCarousel />
 
       <section className="bg-background py-8 sm:py-16">
         <div className="container mx-auto px-4">

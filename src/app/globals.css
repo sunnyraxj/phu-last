@@ -63,12 +63,19 @@
 }
 
 @layer utilities {
-  @keyframes marquee {
+  @keyframes marquee-right-to-left {
     from { transform: translateX(0); }
     to { transform: translateX(-50%); }
   }
-
-  .animate-marquee {
-    animation: marquee 40s linear infinite;
+  .animate-marquee-right-to-left {
+    animation: marquee-right-to-left 40s linear infinite;
+  }
+  
+  @keyframes marquee-left-to-right {
+    from { transform: translateX(-50%); }
+    to { transform: translateX(0); }
+  }
+  .animate-marquee-left-to-right {
+    animation: marquee-left-to-right 40s linear infinite;
   }
 }
