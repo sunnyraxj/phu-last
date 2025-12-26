@@ -551,7 +551,7 @@ export default function ProductPage() {
       
       <BrandCarousel />
 
-      <section className="bg-background py-8 sm:py-16">
+      <section className="bg-background pt-8 sm:pt-12 pb-8 sm:pb-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-6 sm:mb-8">
             <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-foreground">New Arrivals</h2>
