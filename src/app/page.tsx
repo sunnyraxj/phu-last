@@ -99,8 +99,8 @@ const BrandCarousel = ({logos}: {logos: BrandLogo[]}) => {
             <div className="relative">
                 <div className="flex animate-marquee-right-to-left">
                     {[...allLogos, ...allLogos].map((logo, index) => (
-                        <div key={`rtl-${index}`} className="flex-shrink-0 w-28 mx-4">
-                            <Image src={logo} alt={`Brand Logo ${index + 1}`} width={120} height={50} className="object-contain filter grayscale opacity-60" />
+                        <div key={`rtl-${index}`} className="relative flex-shrink-0 w-32 h-16 mx-4">
+                            <Image src={logo} alt={`Brand Logo ${index + 1}`} fill className="object-contain" />
                         </div>
                     ))}
                 </div>
@@ -108,8 +108,8 @@ const BrandCarousel = ({logos}: {logos: BrandLogo[]}) => {
             <div className="relative mt-4">
                 <div className="flex animate-marquee-left-to-right">
                      {[...allLogos.slice().reverse(), ...allLogos.slice().reverse()].map((logo, index) => (
-                        <div key={`ltr-${index}`} className="flex-shrink-0 w-28 mx-4">
-                            <Image src={logo} alt={`Brand Logo ${index + 1}`} width={120} height={50} className="object-contain filter grayscale opacity-60" />
+                        <div key={`ltr-${index}`} className="relative flex-shrink-0 w-32 h-16 mx-4">
+                            <Image src={logo} alt={`Brand Logo ${index + 1}`} fill className="object-contain" />
                         </div>
                     ))}
                 </div>
