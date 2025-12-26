@@ -476,7 +476,7 @@ export default function ProductPage() {
       </div>
       
       <main>
-        <section className="relative aspect-[4/3] md:aspect-[21/9] w-full flex items-end justify-start text-white">
+        <section className="relative aspect-[16/9] md:aspect-[21/9] w-full flex items-end justify-start text-white">
             {/* Desktop Image */}
             <div className="hidden md:block w-full h-full">
                 <Image
