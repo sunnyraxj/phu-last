@@ -199,16 +199,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
         <Facebook size={16} />
       </Link>
       <Link href="#" className="hover:opacity-80 transition-opacity">
-        <XIcon className="w-4 h-4" />
-      </Link>
-      <Link href="#" className="hover:opacity-80 transition-opacity">
         <Instagram size={16} />
-      </Link>
-      <Link href="#" className="hover:opacity-80 transition-opacity">
-        <Youtube size={16} />
-      </Link>
-      <Link href="#" className="hover:opacity-80 transition-opacity">
-        <PinterestIcon className="w-4 h-4" />
       </Link>
     </div>
   );
