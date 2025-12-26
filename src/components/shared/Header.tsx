@@ -217,7 +217,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
   );
 
   return (
-    <header className={cn("fixed top-0 left-0 right-0 z-50 transition-all duration-300", isScrolled ? 'bg-white shadow-md' : 'bg-transparent')}>
+    <header className={cn("fixed top-0 left-0 right-0 z-50 transition-all duration-300", isScrolled ? 'bg-white shadow-md' : 'bg-transparent', isMobile ? '!bg-white' : '')}>
        {showAnnouncement && (
          <div className={cn("bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium transition-all duration-300", isScrolled ? "h-0 py-0 opacity-0" : "h-auto")}>
           <div className="w-full md:w-1/3 flex-1 flex justify-start items-center gap-4">
@@ -254,7 +254,8 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
 
        <div className={cn(
            "relative z-10 py-2 md:py-4 px-4 md:px-0 transition-all duration-300",
-            isScrolled ? "text-foreground" : "text-white"
+            isScrolled ? "text-foreground" : "text-white",
+            isMobile ? "!text-foreground" : ""
        )}>
         <div className="w-full flex flex-col items-center justify-center">
           
@@ -288,7 +289,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
             
             <div className="w-1/3 flex justify-center">
                 <Link href="/" className="flex flex-col items-center">
-                    <span className={cn("text-xl font-serif tracking-tighter leading-none whitespace-nowrap", isScrolled ? 'text-[--brand-brown]' : 'text-white')}>
+                    <span className={cn("text-xl font-serif tracking-tighter leading-none whitespace-nowrap", isScrolled || isMobile ? 'text-[--brand-brown]' : 'text-white')}>
                         Purbanchal
                     </span>
                 </Link>
@@ -298,7 +299,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
                 {!isUserLoading && user && !user.isAnonymous ? (
                    <Popover>
                       <PopoverTrigger asChild>
-                        <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isScrolled ? "ring-foreground/50" : "ring-white/50")}>
+                        <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isScrolled || isMobile ? "ring-foreground/50" : "ring-white/50")}>
                             <User size={18} strokeWidth={1.5} />
                         </button>
                       </PopoverTrigger>
@@ -482,20 +483,11 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
                         </div>
                     </SheetContent>
                  </Sheet>
-                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="p-0 h-auto hover:bg-transparent">
-                            <Menu/>
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        {navItems.map((item) => (
-                          <DropdownMenuItem key={item.href} asChild>
-                            <Link href={item.href}>{item.label}</Link>
-                          </DropdownMenuItem>
-                        ))}
-                    </DropdownMenuContent>
-                 </DropdownMenu>
+                 <nav className="flex items-center gap-6 text-sm font-medium">
+                   {navItems.map((item) => (
+                      <Link href={item.href} key={item.href} className="hover:opacity-80 transition-opacity">{item.label}</Link>
+                   ))}
+                 </nav>
               </div>
 
               <div className={cn("flex justify-center w-1/3 transition-all duration-300", isScrolled && 'absolute left-1/2 -translate-x-1/2')}>
