@@ -532,10 +532,7 @@ export default function ProductPage() {
         </section>
 
         {/* Mobile Hero */}
-        <section className="md:hidden relative">
-          <div className="px-4 pb-4 bg-background text-center">
-            <h1 className="text-2xl font-serif tracking-tight text-foreground">Handcrafted Treasures, Timeless Stories</h1>
-          </div>
+        <section className="md:hidden relative -mt-4">
           <div className="relative aspect-[16/9] w-full">
             <Image
                 src={siteSettings?.heroImageUrlMobile || siteSettings?.heroImageUrl || placeholderImages.heroMobile.url}
