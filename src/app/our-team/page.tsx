@@ -185,15 +185,15 @@ export default function OurTeamPage() {
                                       data-ai-hint={member['data-ai-hint']}
                                   />
                                 </div>
-                                <div className="p-4 text-left bg-white">
-                                  <h3 className="text-lg font-bold text-slate-900">{member.name}</h3>
-                                  <p className="text-sm text-muted-foreground mt-1 mb-3">{member.role}</p>
+                                <div className="p-3 text-left bg-white">
+                                  <h3 className="text-base sm:text-lg font-bold text-slate-900">{member.name}</h3>
+                                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 mb-2">{member.role}</p>
                                   {member.socialLink ? (
                                         <Link href={member.socialLink} target="_blank" rel="noopener noreferrer" className="w-full">
-                                            <Button size="sm" className="w-full rounded-full">Follow +</Button>
+                                            <Button size="sm" className="w-full rounded-full h-8 text-xs">Follow +</Button>
                                         </Link>
                                     ) : (
-                                        <Button size="sm" className="w-full rounded-full" disabled>Follow +</Button>
+                                        <Button size="sm" className="w-full rounded-full h-8 text-xs" disabled>Follow +</Button>
                                     )}
                                 </div>
                               </Card>
