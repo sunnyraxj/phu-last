@@ -471,22 +471,18 @@ export default function ProductPage() {
         products={allProducts || []}
       />
       
-      <div className="relative pt-[64px] md:pt-0">
-        <section className="relative aspect-[21/9] w-full flex items-end justify-start text-white">
+      <div className="md:hidden text-center py-2 bg-[--brand-green] text-white text-xs">
+          Free shipping on orders over ₹1000
+      </div>
+      
+      <main className="pt-0 md:pt-[140px]">
+        <section className="relative aspect-[4/3] md:aspect-[21/9] w-full flex items-end justify-start text-white">
             <Image
                 src={siteSettings?.heroImageUrl || "https://lh3.googleusercontent.com/gg-dl/ABS2GSmQECS0AGKCKdqHF1VVFCUOKMbqynFJJdxA-dCjEpkA6sJ_lirje3aQSxNUSPwlnsFBrll88zu9L7ZjcaCEsoiMJLqofFPqs1kJo0MecbExy6LPSbpaxyycf7T-VULVZn71CUwvW3iCrhkrhDAAiv6xH4HSqhlQUvFdSQhiN-d0VR1cCQ=s1600-rj"}
                 alt="Authentic handicrafts from North-East India"
                 fill
-                className="object-cover hidden md:block"
+                className="object-cover"
                 data-ai-hint={placeholderImages.hero['data-ai-hint']}
-                priority
-            />
-            <Image
-                src={siteSettings?.heroImageUrlMobile || siteSettings?.heroImageUrl || placeholderImages.heroMobile.url}
-                alt="Authentic handicrafts from North-East India"
-                fill
-                className="object-cover md:hidden"
-                data-ai-hint={placeholderImages.heroMobile['data-ai-hint']}
                 priority
             />
             
@@ -498,7 +494,7 @@ export default function ProductPage() {
                 </Link>
             </div>
         </section>
-      </div>
+      </main>
 
       <section className="bg-background py-16">
         <div className="container mx-auto px-4">
