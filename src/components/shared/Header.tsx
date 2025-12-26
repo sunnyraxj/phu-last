@@ -21,7 +21,7 @@ import {
   X
 } from "lucide-react";
 import { signOut } from "firebase/auth";
-import { useAuth, useUser, useFirebase, useCollection } from "@/firebase";
+import { useAuth, useUser, useFirebase, useCollection, useDoc, useMemoFirebase } from "@/firebase";
 import { useMemo, useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { Separator } from "../ui/separator";
@@ -105,7 +105,8 @@ export function Header({ showAnnouncement = true }: HeaderProps) {
   const [itemToChangeSize, setItemToChangeSize] = useState<CartItem | null>(null);
   const [newSize, setNewSize] = useState<string | null>(null);
 
-  const { data: allProducts } = useCollection<Product>(collection(firestore, 'products'));
+  const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
+  const { data: allProducts } = useCollection<Product>(productsQuery);
 
   const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
   const { data: userData } = useDoc<{ role: string }>(userDocRef);
