@@ -462,7 +462,7 @@ export default function ProductPage() {
   }, [materialSettings, allProducts]);
 
   return (
-    <div className="min-h-screen bg-background font-sans pt-[64px] md:pt-0">
+    <div className="min-h-screen bg-background font-sans">
       <Header
         userData={userData}
         cartItems={cartItems}
@@ -471,7 +471,7 @@ export default function ProductPage() {
         products={allProducts || []}
       />
       
-      <div className="relative">
+      <div className="relative pt-[64px] md:pt-0">
         <section className="relative aspect-[21/9] w-full flex items-end justify-start text-white">
             <Image
                 src={siteSettings?.heroImageUrl || "https://lh3.googleusercontent.com/gg-dl/ABS2GSmQECS0AGKCKdqHF1VVFCUOKMbqynFJJdxA-dCjEpkA6sJ_lirje3aQSxNUSPwlnsFBrll88zu9L7ZjcaCEsoiMJLqofFPqs1kJo0MecbExy6LPSbpaxyycf7T-VULVZn71CUwvW3iCrhkrhDAAiv6xH4HSqhlQUvFdSQhiN-d0VR1cCQ=s1600-rj"}
