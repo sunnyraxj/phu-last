@@ -475,16 +475,30 @@ export default function ProductPage() {
           Free shipping on orders over ₹1000
       </div>
       
-      <main className="pt-0 md:pt-[140px]">
+      <main>
         <section className="relative aspect-[4/3] md:aspect-[21/9] w-full flex items-end justify-start text-white">
-            <Image
-                src={siteSettings?.heroImageUrl || "https://lh3.googleusercontent.com/gg-dl/ABS2GSmQECS0AGKCKdqHF1VVFCUOKMbqynFJJdxA-dCjEpkA6sJ_lirje3aQSxNUSPwlnsFBrll88zu9L7ZjcaCEsoiMJLqofFPqs1kJo0MecbExy6LPSbpaxyycf7T-VULVZn71CUwvW3iCrhkrhDAAiv6xH4HSqhlQUvFdSQhiN-d0VR1cCQ=s1600-rj"}
-                alt="Authentic handicrafts from North-East India"
-                fill
-                className="object-cover"
-                data-ai-hint={placeholderImages.hero['data-ai-hint']}
-                priority
-            />
+            {/* Desktop Image */}
+            <div className="hidden md:block w-full h-full">
+                <Image
+                    src={siteSettings?.heroImageUrl || placeholderImages.hero.url}
+                    alt="Authentic handicrafts from North-East India"
+                    fill
+                    className="object-cover"
+                    data-ai-hint={placeholderImages.hero['data-ai-hint']}
+                    priority
+                />
+            </div>
+            {/* Mobile Image */}
+            <div className="block md:hidden w-full h-full">
+                 <Image
+                    src={siteSettings?.heroImageUrlMobile || placeholderImages.heroMobile.url}
+                    alt="Authentic handicrafts from North-East India"
+                    fill
+                    className="object-cover"
+                    data-ai-hint={placeholderImages.heroMobile['data-ai-hint']}
+                    priority
+                />
+            </div>
             
             <div className="relative z-10 p-4 md:p-12">
                 <Link href="/purchase">
