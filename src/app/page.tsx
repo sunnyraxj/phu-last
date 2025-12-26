@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useState, useMemo, useEffect, useRef } from "react"
@@ -948,7 +947,7 @@ export default function ProductPage() {
           </div>
       </section>
 
-      <section className="py-16 bg-muted/30">
+      <section className="py-8 bg-muted/30">
         <div className="container mx-auto px-4">
           {teamMembersLoading ? (
             <div className="flex justify-center items-center h-64">
@@ -1031,3 +1030,5 @@ export default function ProductPage() {
     </div>
   )
 }
+
+    
