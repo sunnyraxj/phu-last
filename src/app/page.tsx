@@ -463,6 +463,7 @@ export default function ProductPage() {
 
   return (
     <div className="min-h-screen bg-background font-sans">
+      <div className="md:hidden pt-[56px]" />
       <Header
         userData={userData}
         cartItems={cartItems}
@@ -491,7 +492,7 @@ export default function ProductPage() {
             {/* Mobile Image */}
             <div className="block md:hidden w-full h-full">
                  <Image
-                    src={siteSettings?.heroImageUrlMobile || placeholderImages.heroMobile.url}
+                    src={siteSettings?.heroImageUrlMobile || siteSettings?.heroImageUrl || placeholderImages.heroMobile.url}
                     alt="Authentic handicrafts from North-East India"
                     fill
                     className="object-cover"
