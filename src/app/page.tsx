@@ -463,7 +463,6 @@ export default function ProductPage() {
 
   return (
     <div className="min-h-screen bg-background font-sans">
-      <div className="md:hidden pt-[56px]" />
       <Header
         userData={userData}
         cartItems={cartItems}
@@ -471,10 +470,6 @@ export default function ProductPage() {
         updateCartItemSize={updateCartItemSize}
         products={allProducts || []}
       />
-      
-      <div className="md:hidden text-center py-2 bg-[--brand-green] text-white text-xs">
-          Free shipping on orders over ₹1000
-      </div>
       
       <main>
         <section className="relative aspect-[16/9] md:aspect-[21/9] w-full flex items-end justify-start text-white">
