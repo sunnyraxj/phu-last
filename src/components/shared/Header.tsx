@@ -106,11 +106,9 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [showExtraButtons, setShowExtraButtons] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [itemToChangeSize, setItemToChangeSize] = useState<CartItem | null>(null);
   const [newSize, setNewSize] = useState<string | null>(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const suggestedProducts = useMemo(() => {
     return products.slice(0, 4);
@@ -208,9 +206,8 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
 
   return (
     <header className={cn(
-      "fixed top-0 left-0 right-0 z-50 transition-all duration-300", 
+      "fixed top-0 left-0 right-0 z-50 transition-colors duration-300", 
       isScrolled ? 'bg-white shadow-md' : 'bg-transparent',
-      isMobileMenuOpen && 'bg-white shadow-md'
     )}>
        {showAnnouncement && (
          <div className={cn("bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium transition-all duration-300", isScrolled ? "h-0 py-0 opacity-0 overflow-hidden" : "h-auto")}>
@@ -247,231 +244,240 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
       )}
 
        <div className={cn(
-           "relative z-10 py-2 md:py-0 px-4 transition-all duration-300",
-            (isScrolled || isMobileMenuOpen) ? "text-foreground" : "text-white",
-            isMobile && !isMobileMenuOpen && '!bg-white !text-foreground'
+           "relative z-10 py-2 md:py-0 px-4",
+            isScrolled ? "text-foreground" : "text-white",
+            isMobile && 'bg-white !text-foreground'
        )}>
         <div className="w-full flex flex-col items-center justify-center">
           
           {/* Mobile Header */}
-          <div className={cn("w-full flex items-center justify-between md:hidden transition-all duration-300", isMobileMenuOpen && "flex-col")}>
-            <div className="w-full flex items-center justify-between">
-              <div className="w-1/3">
-                <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-                  {isMobileMenuOpen ? <X/> : <Menu />}
-                  <span className="sr-only">Open menu</span>
-                </Button>
-              </div>
-              
-              <div className="w-1/3 flex justify-center">
-                  <Link href="/" className="flex flex-col items-center">
-                      <span className={cn("text-xl font-serif tracking-tighter leading-none whitespace-nowrap", (isScrolled || isMobile) ? 'text-[--brand-brown]' : 'text-white')}>
-                          Purbanchal
-                      </span>
-                  </Link>
-              </div>
+          <div className="w-full flex items-center justify-between md:hidden">
+            <div className="w-1/3">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Menu />
+                    <span className="sr-only">Open menu</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[300px]">
+                   <SheetHeader>
+                        <SheetTitle>Menu</SheetTitle>
+                    </SheetHeader>
+                    <div className="flex flex-col items-start gap-2 py-4">
+                      {navItems.map((item) => (
+                        <SheetClose asChild key={item.href}>
+                          <Link href={item.href} >
+                            <Button variant="ghost" className="w-full justify-start text-base">{item.label}</Button>
+                          </Link>
+                        </SheetClose>
+                      ))}
+                      {userData?.role === 'admin' && (
+                        <SheetClose asChild>
+                          <Link href="/admin/dashboard">
+                            <Button variant="ghost" className="w-full justify-start text-base">Admin Dashboard</Button>
+                          </Link>
+                        </SheetClose>
+                      )}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+            
+            <div className="w-1/3 flex justify-center">
+                <Link href="/" className="flex flex-col items-center">
+                    <span className={cn("text-xl font-serif tracking-tighter leading-none whitespace-nowrap", (isScrolled || isMobile) ? 'text-[--brand-brown]' : 'text-white')}>
+                        Purbanchal
+                    </span>
+                </Link>
+            </div>
 
-              <div className="w-1/3 flex justify-end items-center gap-4">
-                  <Sheet>
-                      <SheetTrigger asChild>
-                          <button className="hover:opacity-80 transition-colors">
-                              <Search size={22} strokeWidth={1.5} />
-                          </button>
-                      </SheetTrigger>
-                      <SheetContent side="left" className="flex flex-col w-full sm:max-w-md">
-                          <SheetHeader>
-                              <SheetTitle>Search Products</SheetTitle>
-                          </SheetHeader>
-                          <div className="relative">
-                              <Input 
-                                  placeholder="What are you looking for?"
-                                  className="pl-10 text-base h-12"
-                                  value={searchQuery}
-                                  onChange={(e) => setSearchQuery(e.target.value)}
-                              />
-                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                          </div>
-                          <div className="flex-1 overflow-y-auto -mx-6 px-6">
-                              {(searchQuery ? searchResults : suggestedProducts).length > 0 ? (
-                                  <>
-                                      <h3 className="text-sm font-semibold text-muted-foreground my-4">
-                                          {searchQuery ? 'Search Results' : 'Suggestions for you'}
-                                      </h3>
-                                      <div className="flex flex-col gap-4">
-                                          {(searchQuery ? searchResults : suggestedProducts).map(product => (
-                                              <SheetClose asChild key={product.id}>
-                                                <Link href={`/purchase#${product.id}`} className="flex items-center gap-4 group">
-                                                    <div className="relative h-16 w-16 rounded-md overflow-hidden bg-muted">
-                                                        <Image
-                                                            src={isValidImageDomain(product.images?.[0]) ? product.images[0] : placeholderImages.product.url}
-                                                            alt={product.name}
-                                                            fill
-                                                            className="object-cover"
-                                                        />
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <p className="font-semibold text-sm group-hover:underline">{product.name}</p>
-                                                        <p className="text-sm text-muted-foreground">
-                                                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(product.baseMrp || 0)}
-                                                        </p>
-                                                    </div>
-                                                </Link>
-                                              </SheetClose>
-                                          ))}
-                                      </div>
-                                  </>
-                              ) : (
-                                  <div className="text-center py-10">
-                                      <p className="text-muted-foreground">
-                                          {searchQuery ? 'No products found.' : 'No suggestions available.'}
-                                      </p>
-                                  </div>
-                              )}
-                          </div>
-                      </SheetContent>
-                  </Sheet>
-
-                  {!isUserLoading && user && !user.isAnonymous ? (
-                    <Popover>
-                        <PopoverTrigger asChild>
-                          <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", (isScrolled || isMobileMenuOpen) ? "ring-foreground/50" : "ring-white/50")}>
-                              <User size={18} strokeWidth={1.5} />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-48">
-                          <div className="flex flex-col gap-1">
-                            <p className="font-semibold text-sm p-2 truncate">{user.email}</p>
-                            <Separator />
-                            <Link href="/account">
-                                <Button variant="ghost" className="w-full justify-start p-2 h-auto">
-                                    My Account
-                                </Button>
-                            </Link>
-                            <Link href="/orders">
-                                <Button variant="ghost" className="w-full justify-start p-2 h-auto">
-                                    My Orders
-                                </Button>
-                            </Link>
-                            <Separator />
-                            <Button variant="ghost" onClick={handleSignOut} className="justify-start p-2 h-auto text-destructive">
-                                <LogOut className="mr-2 h-4 w-4" />
-                                Logout
-                            </Button>
-                          </div>
-                        </PopoverContent>
-                    </Popover>
-                  ) : (
-                    <Link href="/login" className="hover:opacity-80 transition-colors">
-                        <User size={22} strokeWidth={1.5} />
-                    </Link>
-                  )}
-                
-                  <Sheet>
-                      <SheetTrigger asChild>
-                          <button className="relative hover:opacity-80 transition-colors">
-                              <ShoppingBag size={22} strokeWidth={1.5} />
-                              {cartCount > 0 && (
-                                  <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                                      {cartCount}
-                                  </span>
-                              )}
-                          </button>
-                      </SheetTrigger>
-                      <SheetContent className="flex flex-col w-full sm:max-w-sm">
-                          <SheetHeader>
-                              <SheetTitle>Your Cart ({cartCount})</SheetTitle>
-                          </SheetHeader>
-                          {cartItems.length > 0 ? (
-                              <>
-                                  <div className="flex-1 overflow-y-auto -mx-6 px-6">
-                                      <Separator className="my-4" />
-                                      <div className="flex flex-col gap-6">
-                                          {cartItems.map(item => (
-                                              <div key={item.cartItemId} className="flex items-start gap-4">
-                                                  <div className="relative h-20 w-20 rounded-md overflow-hidden bg-muted">
+            <div className="w-1/3 flex justify-end items-center gap-4">
+                <Sheet>
+                    <SheetTrigger asChild>
+                        <button className="hover:opacity-80 transition-colors">
+                            <Search size={22} strokeWidth={1.5} />
+                        </button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="flex flex-col w-full sm:max-w-md">
+                        <SheetHeader>
+                            <SheetTitle>Search Products</SheetTitle>
+                        </SheetHeader>
+                        <div className="relative">
+                            <Input 
+                                placeholder="What are you looking for?"
+                                className="pl-10 text-base h-12"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <div className="flex-1 overflow-y-auto -mx-6 px-6">
+                            {(searchQuery ? searchResults : suggestedProducts).length > 0 ? (
+                                <>
+                                    <h3 className="text-sm font-semibold text-muted-foreground my-4">
+                                        {searchQuery ? 'Search Results' : 'Suggestions for you'}
+                                    </h3>
+                                    <div className="flex flex-col gap-4">
+                                        {(searchQuery ? searchResults : suggestedProducts).map(product => (
+                                            <SheetClose asChild key={product.id}>
+                                              <Link href={`/purchase#${product.id}`} className="flex items-center gap-4 group">
+                                                  <div className="relative h-16 w-16 rounded-md overflow-hidden bg-muted">
                                                       <Image
-                                                          src={isValidImageDomain(item.images?.[0]) ? item.images[0] : placeholderImages.product.url}
-                                                          alt={item.name}
+                                                          src={isValidImageDomain(product.images?.[0]) ? product.images[0] : placeholderImages.product.url}
+                                                          alt={product.name}
                                                           fill
                                                           className="object-cover"
                                                       />
                                                   </div>
-                                                  <div className="flex-1 space-y-2">
-                                                      <p className="font-semibold text-sm">{item.name}</p>
-                                                      {item.selectedSize && <p className="text-xs text-muted-foreground">Size: {item.selectedSize}</p>}
-                                                      <p className="text-muted-foreground text-sm font-bold">
-                                                          {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(getCartItemPrice(item))}
+                                                  <div className="flex-1">
+                                                      <p className="font-semibold text-sm group-hover:underline">{product.name}</p>
+                                                      <p className="text-sm text-muted-foreground">
+                                                          {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(product.baseMrp || 0)}
                                                       </p>
-                                                      <div className="flex items-center gap-2">
-                                                          <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartItemQuantity(item.cartItemId, item.quantity - 1)}>
-                                                              <Minus size={14} />
-                                                          </Button>
-                                                          <Input
-                                                              type="number"
-                                                              value={item.quantity}
-                                                              onChange={(e) => updateCartItemQuantity(item.cartItemId, parseInt(e.target.value) || 0)}
-                                                              className="h-7 w-12 text-center"
-                                                          />
-                                                          <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartItemQuantity(item.cartItemId, item.quantity + 1)}>
-                                                              <Plus size={14} />
-                                                          </Button>
-                                                          {item.variants && item.variants.length > 1 && (
-                                                            <Button variant="outline" size="sm" className="h-7 text-xs ml-2" onClick={() => handleChangeSizeClick(item)}>
-                                                              Change Size
-                                                            </Button>
-                                                          )}
-                                                      </div>
                                                   </div>
-                                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => updateCartItemQuantity(item.cartItemId, 0)}>
-                                                      <X className="h-5 w-5" />
-                                                  </Button>
-                                              </div>
-                                          ))}
-                                      </div>
-                                  </div>
-                                  <SheetFooter className="mt-auto pt-6">
-                                      <div className="w-full space-y-4">
-                                          <div className="flex justify-between font-semibold">
-                                              <span>Subtotal</span>
-                                              <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(cartSubtotal)}</span>
-                                          </div>
-                                          <p className="text-xs text-muted-foreground">Shipping & taxes calculated at checkout.</p>
-                                          <SheetClose asChild>
-                                              <Button size="lg" className="w-full" onClick={handleCheckout}>Checkout</Button>
-                                          </SheetClose>
-                                      </div>
-                                  </SheetFooter>
-                              </>
-                          ) : (
-                              <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center">
-                                  <ShoppingBag size={48} className="text-muted-foreground" />
-                                  <h3 className="text-xl font-semibold">Your cart is empty</h3>
-                                  <p className="text-muted-foreground">Looks like you haven't added anything to your cart yet.</p>
-                                  <SheetClose asChild>
-                                    <Link href="/purchase">
-                                      <Button>Continue Shopping</Button>
-                                    </Link>
-                                  </SheetClose>
-                              </div>
-                          )}
-                      </SheetContent>
-                  </Sheet>
-              </div>
-            </div>
-            {isMobileMenuOpen && (
-              <div className="w-full flex flex-col items-start gap-2 py-4 border-t border-border mt-2">
-                {navItems.map((item) => (
-                  <Link href={item.href} key={item.href} onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button variant="ghost" className="w-full justify-start text-base">{item.label}</Button>
+                                              </Link>
+                                            </SheetClose>
+                                        ))}
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="text-center py-10">
+                                    <p className="text-muted-foreground">
+                                        {searchQuery ? 'No products found.' : 'No suggestions available.'}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </SheetContent>
+                </Sheet>
+
+                {!isUserLoading && user && !user.isAnonymous ? (
+                  <Popover>
+                      <PopoverTrigger asChild>
+                        <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isScrolled ? "ring-foreground/50" : "ring-white/50")}>
+                            <User size={18} strokeWidth={1.5} />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-48">
+                        <div className="flex flex-col gap-1">
+                          <p className="font-semibold text-sm p-2 truncate">{user.email}</p>
+                          <Separator />
+                          <Link href="/account">
+                              <Button variant="ghost" className="w-full justify-start p-2 h-auto">
+                                  My Account
+                              </Button>
+                          </Link>
+                          <Link href="/orders">
+                              <Button variant="ghost" className="w-full justify-start p-2 h-auto">
+                                  My Orders
+                              </Button>
+                          </Link>
+                          <Separator />
+                          <Button variant="ghost" onClick={handleSignOut} className="justify-start p-2 h-auto text-destructive">
+                              <LogOut className="mr-2 h-4 w-4" />
+                              Logout
+                          </Button>
+                        </div>
+                      </PopoverContent>
+                  </Popover>
+                ) : (
+                  <Link href="/login" className="hover:opacity-80 transition-colors">
+                      <User size={22} strokeWidth={1.5} />
                   </Link>
-                ))}
-                 {userData?.role === 'admin' && (
-                    <Link href="/admin/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start text-base">Admin Dashboard</Button>
-                    </Link>
-                  )}
-              </div>
-            )}
+                )}
+              
+                <Sheet>
+                    <SheetTrigger asChild>
+                        <button className="relative hover:opacity-80 transition-colors">
+                            <ShoppingBag size={22} strokeWidth={1.5} />
+                            {cartCount > 0 && (
+                                <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                    {cartCount}
+                                </span>
+                            )}
+                        </button>
+                    </SheetTrigger>
+                    <SheetContent className="flex flex-col w-full sm:max-w-sm">
+                        <SheetHeader>
+                            <SheetTitle>Your Cart ({cartCount})</SheetTitle>
+                        </SheetHeader>
+                        {cartItems.length > 0 ? (
+                            <>
+                                <div className="flex-1 overflow-y-auto -mx-6 px-6">
+                                    <Separator className="my-4" />
+                                    <div className="flex flex-col gap-6">
+                                        {cartItems.map(item => (
+                                            <div key={item.cartItemId} className="flex items-start gap-4">
+                                                <div className="relative h-20 w-20 rounded-md overflow-hidden bg-muted">
+                                                    <Image
+                                                        src={isValidImageDomain(item.images?.[0]) ? item.images[0] : placeholderImages.product.url}
+                                                        alt={item.name}
+                                                        fill
+                                                        className="object-cover"
+                                                    />
+                                                </div>
+                                                <div className="flex-1 space-y-2">
+                                                    <p className="font-semibold text-sm">{item.name}</p>
+                                                    {item.selectedSize && <p className="text-xs text-muted-foreground">Size: {item.selectedSize}</p>}
+                                                    <p className="text-muted-foreground text-sm font-bold">
+                                                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(getCartItemPrice(item))}
+                                                    </p>
+                                                    <div className="flex items-center gap-2">
+                                                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartItemQuantity(item.cartItemId, item.quantity - 1)}>
+                                                            <Minus size={14} />
+                                                        </Button>
+                                                        <Input
+                                                            type="number"
+                                                            value={item.quantity}
+                                                            onChange={(e) => updateCartItemQuantity(item.cartItemId, parseInt(e.target.value) || 0)}
+                                                            className="h-7 w-12 text-center"
+                                                        />
+                                                        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateCartItemQuantity(item.cartItemId, item.quantity + 1)}>
+                                                            <Plus size={14} />
+                                                        </Button>
+                                                        {item.variants && item.variants.length > 1 && (
+                                                          <Button variant="outline" size="sm" className="h-7 text-xs ml-2" onClick={() => handleChangeSizeClick(item)}>
+                                                            Change Size
+                                                          </Button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => updateCartItemQuantity(item.cartItemId, 0)}>
+                                                    <X className="h-5 w-5" />
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <SheetFooter className="mt-auto pt-6">
+                                    <div className="w-full space-y-4">
+                                        <div className="flex justify-between font-semibold">
+                                            <span>Subtotal</span>
+                                            <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(cartSubtotal)}</span>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground">Shipping & taxes calculated at checkout.</p>
+                                        <SheetClose asChild>
+                                            <Button size="lg" className="w-full" onClick={handleCheckout}>Checkout</Button>
+                                        </SheetClose>
+                                    </div>
+                                </SheetFooter>
+                            </>
+                        ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center">
+                                <ShoppingBag size={48} className="text-muted-foreground" />
+                                <h3 className="text-xl font-semibold">Your cart is empty</h3>
+                                <p className="text-muted-foreground">Looks like you haven't added anything to your cart yet.</p>
+                                <SheetClose asChild>
+                                  <Link href="/purchase">
+                                    <Button>Continue Shopping</Button>
+                                  </Link>
+                                </SheetClose>
+                            </div>
+                        )}
+                    </SheetContent>
+                </Sheet>
+            </div>
           </div>
           
           {/* Desktop Header */}
