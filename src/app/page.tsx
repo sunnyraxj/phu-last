@@ -109,14 +109,14 @@ const FeaturesSection = () => {
     ];
   
     return (
-        <section className="bg-background py-8 sm:py-12">
+        <section className="bg-background py-4 sm:py-8">
             <div className="container mx-auto px-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                 {features.map((feature, index) => (
-                    <div key={index} className="flex flex-col items-center p-4">
-                    <feature.icon className="h-10 w-10 text-primary mb-4" />
-                    <h3 className="text-lg font-semibold text-foreground">{feature.title}</h3>
-                    <p className="text-sm text-muted-foreground mt-2">{feature.description}</p>
+                    <div key={index} className="flex flex-col items-center p-2">
+                    <feature.icon className="h-8 w-8 text-primary mb-3" />
+                    <h3 className="text-md font-semibold text-foreground">{feature.title}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">{feature.description}</p>
                     </div>
                 ))}
                 </div>
