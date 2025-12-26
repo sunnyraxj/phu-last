@@ -472,37 +472,38 @@ export default function ProductPage() {
       />
       
       <main>
-        <section className="relative aspect-[16/9] md:aspect-[21/9] w-full flex items-end justify-start text-white">
-            {/* Desktop Image */}
-            <div className="hidden md:block w-full h-full">
-                <Image
-                    src={siteSettings?.heroImageUrl || placeholderImages.hero.url}
-                    alt="Authentic handicrafts from North-East India"
-                    fill
-                    className="object-cover"
-                    data-ai-hint={placeholderImages.hero['data-ai-hint']}
-                    priority
-                />
-            </div>
-            {/* Mobile Image */}
-            <div className="block md:hidden w-full h-full">
-                 <Image
-                    src={siteSettings?.heroImageUrlMobile || siteSettings?.heroImageUrl || placeholderImages.heroMobile.url}
-                    alt="Authentic handicrafts from North-East India"
-                    fill
-                    className="object-cover"
-                    data-ai-hint={placeholderImages.heroMobile['data-ai-hint']}
-                    priority
-                />
-            </div>
-            
-            <div className="relative z-10 p-4 md:p-12">
+        {/* Desktop Hero */}
+        <section className="relative aspect-[21/9] w-full hidden md:flex items-end justify-start text-white">
+            <Image
+                src={siteSettings?.heroImageUrl || placeholderImages.hero.url}
+                alt="Authentic handicrafts from North-East India"
+                fill
+                className="object-cover"
+                data-ai-hint={placeholderImages.hero['data-ai-hint']}
+                priority
+            />
+            <div className="relative z-10 p-12">
                 <Link href="/purchase">
-                    <Button size="sm" className="bg-[--brand-green] text-white hover:bg-[--brand-green]/90 h-8 text-xs px-3 md:h-11 md:px-8 md:text-sm">
+                    <Button size="lg" className="bg-[--brand-green] text-white hover:bg-[--brand-green]/90">
                         Shop our collection
                     </Button>
                 </Link>
             </div>
+        </section>
+
+        {/* Mobile Hero */}
+        <section className="md:hidden">
+          <div className="text-center py-2 bg-[--brand-green] text-white text-xs">Free shipping on orders over ₹1000</div>
+          <div className="relative aspect-[16/9] w-full">
+            <Image
+                src={siteSettings?.heroImageUrlMobile || siteSettings?.heroImageUrl || placeholderImages.heroMobile.url}
+                alt="Authentic handicrafts from North-East India"
+                fill
+                className="object-cover"
+                data-ai-hint={placeholderImages.heroMobile['data-ai-hint']}
+                priority
+            />
+          </div>
         </section>
       </main>
 
