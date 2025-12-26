@@ -472,6 +472,7 @@ export default function ProductPage() {
       />
       
       <main>
+        <div className="md:hidden text-center py-2 bg-[--brand-green] text-white text-xs">Free shipping on orders over ₹1000</div>
         {/* Desktop Hero */}
         <section className="relative aspect-[21/9] w-full hidden md:flex items-end justify-start text-white">
             <Image
@@ -492,8 +493,7 @@ export default function ProductPage() {
         </section>
 
         {/* Mobile Hero */}
-        <section className="md:hidden">
-          <div className="text-center py-2 bg-[--brand-green] text-white text-xs">Free shipping on orders over ₹1000</div>
+        <section className="md:hidden relative">
           <div className="relative aspect-[16/9] w-full">
             <Image
                 src={siteSettings?.heroImageUrlMobile || siteSettings?.heroImageUrl || placeholderImages.heroMobile.url}
@@ -507,11 +507,11 @@ export default function ProductPage() {
         </section>
       </main>
 
-      <section className="bg-background py-16">
+      <section className="bg-background py-8 sm:py-16">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">New Arrivals</h2>
-            <p className="mt-4 text-base text-muted-foreground max-w-2xl mx-auto">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-foreground">New Arrivals</h2>
+            <p className="mt-2 sm:mt-4 text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
               Shop our customer favorite furniture & decor to create a cozy and inviting space. Find the best selling items you've been looking for!
             </p>
           </div>
