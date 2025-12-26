@@ -182,12 +182,6 @@ export default function AdminLayout({
             </aside>
             <div className="flex flex-col">
                  <Header
-                    userData={null}
-                    cartItems={[]} // Cart is handled outside admin
-                    updateCartItemQuantity={() => {}}
-                    stores={stores || []}
-                    products={[]}
-                    adminActionCounts={adminActionCounts}
                     showAnnouncement={false}
                 />
                 <main className="flex-1 overflow-auto bg-background">

@@ -142,7 +142,7 @@ export default function ReturnRequestPage() {
 
     return (
         <div className="bg-background">
-            <Header userData={null} cartItems={[]} updateCartItemQuantity={() => {}} />
+            <Header />
 
             <main className="container mx-auto py-8 sm:py-12 px-4">
                 <Card className="max-w-3xl mx-auto">
@@ -207,7 +207,7 @@ export default function ReturnRequestPage() {
                              <p className="text-xs text-muted-foreground">If your item is damaged, please paste URLs to clear photos, one URL per line.</p>
                              <Textarea
                                 id="damage-images"
-                                placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"
+                                placeholder="https://example.com/image1.jpg\nhttps://example.com/image2.jpg"
                                 value={damageImageUrls}
                                 onChange={(e) => setDamageImageUrls(e.target.value)}
                                 rows={4}

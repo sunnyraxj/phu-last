@@ -1,22 +1,14 @@
 
-
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Header } from "@/components/shared/Header";
 import { Card } from '@/components/ui/card';
+import { ServerHeaderWrapper } from "@/components/shared/ServerHeaderWrapper";
 
 export default function AboutPage() {
     return (
         <div className="bg-background">
-            <Header 
-                userData={null}
-                cartItems={[]}
-                updateCartItemQuantity={() => {}}
-                stores={[]}
-                products={[]}
-                adminActionCounts={{ pendingOrders: 0, outOfStockProducts: 0, pendingReturns: 0 }}
-            />
+            <ServerHeaderWrapper />
 
             <section className="bg-primary text-primary-foreground py-20">
                 <div className="container mx-auto text-center px-4">

@@ -118,7 +118,7 @@ export default function OrdersPage() {
 
     return (
         <div className="bg-background">
-            <Header userData={null} cartItems={[]} updateCartItemQuantity={() => {}} />
+            <Header />
 
             <main className="container mx-auto py-8 sm:py-12 px-4">
                 <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-8">My Orders</h1>

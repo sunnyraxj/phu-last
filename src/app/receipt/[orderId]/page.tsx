@@ -84,7 +84,7 @@ export default function ReceiptPage() {
 
   return (
     <div className="bg-background min-h-screen">
-      <Header userData={null} cartItems={[]} updateCartItemQuantity={() => {}} />
+      <Header />
       <main className="container mx-auto py-8 sm:py-12 px-4">
         {isLoading ? (
             <div className="flex justify-center items-center h-96">

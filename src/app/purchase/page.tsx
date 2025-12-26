@@ -431,15 +431,7 @@ export default function PurchasePage() {
 
   return (
     <div className="min-h-screen bg-background font-sans">
-      <Header 
-        userData={userData}
-        cartItems={cartItems}
-        updateCartItemQuantity={updateCartItemQuantity}
-        updateCartItemSize={updateCartItemSize}
-        stores={stores || []}
-        products={allProducts || []}
-        adminActionCounts={adminActionCounts}
-      />
+      <Header />
       
       <div className="container mx-auto flex items-start px-0 sm:px-4 mt-8">
         <aside className="w-72 bg-background p-6 border-r border-border h-screen sticky top-[88px] overflow-y-auto hidden lg:block">

@@ -76,8 +76,7 @@ export default function AddAddressPage() {
 
     return (
         <div className="bg-background">
-            <Header userData={null} cartItems={[]} updateCartItemQuantity={() => {}} />
-
+            <Header />
             <main className="container mx-auto py-4 sm:py-12 px-0 sm:px-4">
                 <Card className="max-w-2xl mx-auto sm:shadow-sm sm:border rounded-none sm:rounded-lg">
                     <CardHeader>

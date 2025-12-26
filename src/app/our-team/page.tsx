@@ -1,5 +1,4 @@
 
-
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { collection } from 'firebase/firestore';
 import { Card } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { initializeAdminApp } from "@/firebase/admin";
-import { Header } from "@/components/shared/Header";
+import { ServerHeaderWrapper } from "@/components/shared/ServerHeaderWrapper";
 import { PottersWheelSpinner } from "@/components/shared/PottersWheelSpinner";
 
 type TeamMember = {
@@ -40,14 +39,7 @@ export default async function OurTeamPage() {
 
   return (
     <div className="bg-background">
-      <Header 
-        userData={null}
-        cartItems={[]}
-        updateCartItemQuantity={() => {}}
-        stores={[]}
-        products={[]}
-        adminActionCounts={{ pendingOrders: 0, outOfStockProducts: 0, pendingReturns: 0 }}
-      />
+      <ServerHeaderWrapper />
 
       <main className="container mx-auto py-8 sm:py-16 px-4">
         <div className="text-center mb-12">

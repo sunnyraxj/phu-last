@@ -65,7 +65,7 @@ export default function HelpCenterPage() {
 
     return (
         <div className="bg-background">
-            <Header userData={null} cartItems={[]} updateCartItemQuantity={() => {}} />
+            <Header />
 
             <main className="container mx-auto py-8 sm:py-12 px-4">
                 <div className="text-center mb-12">

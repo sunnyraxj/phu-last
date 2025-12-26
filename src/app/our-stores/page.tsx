@@ -1,11 +1,10 @@
 
-
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { initializeAdminApp } from "@/firebase/admin";
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
-import { Header } from "@/components/shared/Header";
+import { ServerHeaderWrapper } from "@/components/shared/ServerHeaderWrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Phone, ExternalLink } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
@@ -38,14 +37,7 @@ export default async function OurStoresPage() {
 
   return (
     <div className="bg-background">
-      <Header 
-        userData={null}
-        cartItems={[]}
-        updateCartItemQuantity={() => {}}
-        stores={[]}
-        products={[]}
-        adminActionCounts={{ pendingOrders: 0, outOfStockProducts: 0, pendingReturns: 0 }}
-      />
+      <ServerHeaderWrapper />
 
       <main className="container mx-auto py-8 sm:py-16 px-4">
         <div className="text-center mb-12">

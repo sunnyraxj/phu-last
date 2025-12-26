@@ -300,7 +300,7 @@ export default function CheckoutPage() {
   if (cartItems.length === 0 && !cartLoading) {
     return (
         <div className="bg-background">
-            <Header userData={null} cartItems={[]} updateCartItemQuantity={() => {}} />
+            <Header />
             <div className="flex h-[calc(100vh-80px)] items-center justify-center flex-col gap-4">
                 <ShoppingBag className="h-16 w-16 text-muted-foreground" />
                 <h2 className="text-2xl font-semibold">Your cart is empty</h2>
@@ -406,7 +406,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="bg-background">
-        <Header userData={null} cartItems={[]} updateCartItemQuantity={() => {}} />
+        <Header />
         <main className="container mx-auto py-8 px-4 pb-28 md:pb-12">
             <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl mb-6">Checkout</h1>
             <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-12">
