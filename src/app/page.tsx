@@ -536,7 +536,6 @@ export default function ProductPage() {
 
   return (
     <div className="min-h-screen bg-background font-sans">
-      <div className="md:hidden text-center py-2 bg-[--brand-green] text-white text-xs">Free shipping on orders over ₹1000</div>
       <Header
         userData={userData}
         cartItems={cartItems}
@@ -989,7 +988,7 @@ export default function ProductPage() {
                      >
                         <CarouselContent className="-ml-2 md:-ml-4">
                         {teamMembersToDisplay.map((member, index) => (
-                          <CarouselItem key={`${member.id}-${index}`} className="pl-4 md:pl-6 basis-1/3 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
+                          <CarouselItem key={`${member.id}-${index}`} className="pl-4 md:pl-6 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
                               <Card className="w-full max-w-sm overflow-hidden rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow duration-300">
                                 <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-2xl">
                                     <Image
@@ -1001,9 +1000,9 @@ export default function ProductPage() {
                                     />
                                 </div>
                                 <div className="p-4 text-left bg-white">
-                                  <h3 className="text-lg font-bold text-slate-900 truncate h-7">{member.name}</h3>
-                                  <p className="text-sm text-muted-foreground mt-1 mb-3">{member.role}</p>
-                                    <Button size="sm" className="w-full rounded-full" disabled={!member.socialLink} asChild>
+                                  <h3 className="text-base sm:text-lg font-bold text-slate-900 truncate h-7">{member.name}</h3>
+                                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 mb-3">{member.role}</p>
+                                    <Button size="sm" className="w-full rounded-full h-8 text-xs" disabled={!member.socialLink} asChild>
                                         {member.socialLink ? (
                                             <Link href={member.socialLink} target="_blank" rel="noopener noreferrer">Follow +</Link>
                                         ) : (
