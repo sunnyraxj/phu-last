@@ -564,7 +564,7 @@ export default function ProductPage() {
         </section>
 
         {/* Mobile Hero */}
-        <section className="md:hidden relative pt-[16%]">
+        <section className="md:hidden relative pt-[18%]">
           <div className="relative aspect-[16/9] w-full">
             <Image
                 src={siteSettings?.heroImageUrlMobile || siteSettings?.heroImageUrl || placeholderImages.heroMobile.url}
