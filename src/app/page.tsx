@@ -94,21 +94,21 @@ const BrandCarousel = () => {
         "https://picsum.photos/seed/brand8/150/60",
     ];
     return (
-        <section className="bg-background py-8 sm:py-12 overflow-hidden">
+        <section className="bg-background py-6 sm:py-8 overflow-hidden">
             <div className="relative">
                 <div className="flex animate-marquee-right-to-left">
                     {[...logos, ...logos].map((logo, index) => (
-                        <div key={`rtl-${index}`} className="flex-shrink-0 w-36 mx-4">
-                            <Image src={logo} alt={`Brand Logo ${index + 1}`} width={150} height={60} className="object-contain filter grayscale opacity-60" />
+                        <div key={`rtl-${index}`} className="flex-shrink-0 w-28 mx-4">
+                            <Image src={logo} alt={`Brand Logo ${index + 1}`} width={120} height={50} className="object-contain filter grayscale opacity-60" />
                         </div>
                     ))}
                 </div>
             </div>
-            <div className="relative mt-8">
+            <div className="relative mt-4">
                 <div className="flex animate-marquee-left-to-right">
                      {[...logos.slice().reverse(), ...logos.slice().reverse()].map((logo, index) => (
-                        <div key={`ltr-${index}`} className="flex-shrink-0 w-36 mx-4">
-                            <Image src={logo} alt={`Brand Logo ${index + 1}`} width={150} height={60} className="object-contain filter grayscale opacity-60" />
+                        <div key={`ltr-${index}`} className="flex-shrink-0 w-28 mx-4">
+                            <Image src={logo} alt={`Brand Logo ${index + 1}`} width={120} height={50} className="object-contain filter grayscale opacity-60" />
                         </div>
                     ))}
                 </div>
@@ -530,6 +530,9 @@ export default function ProductPage() {
 
         {/* Mobile Hero */}
         <section className="md:hidden relative">
+          <div className="p-4 bg-background text-center">
+            <h1 className="text-2xl font-serif tracking-tight text-foreground">Handcrafted Treasures, Timeless Stories</h1>
+          </div>
           <div className="relative aspect-[16/9] w-full">
             <Image
                 src={siteSettings?.heroImageUrlMobile || siteSettings?.heroImageUrl || placeholderImages.heroMobile.url}
@@ -547,9 +550,9 @@ export default function ProductPage() {
 
       <section className="bg-background py-8 sm:py-16">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-8 sm:mb-12">
+          <div className="text-center mb-6 sm:mb-8">
             <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-foreground">New Arrivals</h2>
-            <p className="mt-2 sm:mt-4 text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
+            <p className="mt-2 text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
               Shop our customer favorite furniture & decor to create a cozy and inviting space. Find the best selling items you've been looking for!
             </p>
           </div>
