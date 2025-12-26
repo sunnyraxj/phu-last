@@ -1,13 +1,16 @@
 
+'use client';
+
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { initializeAdminApp } from "@/firebase/admin";
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
-import { ServerHeaderWrapper } from "@/components/shared/ServerHeaderWrapper";
+import { Header } from "@/components/shared/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Phone, ExternalLink } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { useCollection, useFirebase } from "@/firebase";
+import { collection } from "firebase/firestore";
 
 type Store = {
     id: string;
@@ -19,25 +22,13 @@ type Store = {
     'data-ai-hint'?: string;
 };
 
-async function getStores() {
-    try {
-        const { firestore } = initializeAdminApp();
-        const storesSnapshot = await firestore.collection('stores').get();
-        const stores = storesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Store[];
-        return stores;
-    } catch (error) {
-        console.error("Error fetching stores: ", error);
-        return [];
-    }
-}
-
-
-export default async function OurStoresPage() {
-    const stores = await getStores();
+export default function OurStoresPage() {
+    const { firestore } = useFirebase();
+    const { data: stores, isLoading } = useCollection<Store>(collection(firestore, 'stores'));
 
   return (
     <div className="bg-background">
-      <ServerHeaderWrapper />
+      <Header />
 
       <main className="container mx-auto py-8 sm:py-16 px-4">
         <div className="text-center mb-12">
@@ -47,7 +38,11 @@ export default async function OurStoresPage() {
           </p>
         </div>
 
-        {stores.length > 0 ? (
+        {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+                <PottersWheelSpinner />
+            </div>
+        ) : stores && stores.length > 0 ? (
             <Carousel
                 opts={{
                     align: "start",

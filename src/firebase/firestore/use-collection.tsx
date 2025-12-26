@@ -59,7 +59,7 @@ interface UseCollectionOptions {
  */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
-    options: UseCollectionOptions = { realtime: false }
+    options: UseCollectionOptions = { realtime: true }
 ): UseCollectionResult<T> {
   type ResultItemType = WithId<T>;
   type StateDataType = ResultItemType[] | null;

@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useMemo, useEffect, useRef } from "react"
@@ -86,16 +87,6 @@ type BrandLogo = {
     id: string;
     name: string;
     logoUrl: string;
-};
-
-type HomePageClientProps = {
-  allProducts: Product[];
-  newArrivals: Product[];
-  teamMembers: TeamMember[];
-  stores: Store[];
-  materialSettings: MaterialSetting[];
-  siteSettings: SiteSettings | null;
-  brandLogos: BrandLogo[];
 };
 
 
@@ -271,15 +262,7 @@ function ProductImage({ product, onClick }: { product: Product; onClick: () => v
     );
 }
 
-export function HomePageClient({
-  allProducts,
-  newArrivals,
-  teamMembers,
-  stores,
-  materialSettings,
-  siteSettings,
-  brandLogos,
-}: HomePageClientProps) {
+export function HomePageClient() {
   const [sortBy, setSortBy] = useState("Featured")
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -295,6 +278,27 @@ export function HomePageClient({
   const { toast } = useToast();
   const router = useRouter();
   const isMobile = useIsMobile();
+  
+  const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
+  const { data: allProducts } = useCollection<Product>(productsQuery);
+
+  const newArrivalsQuery = useMemoFirebase(() => query(collection(firestore, 'products'), orderBy('createdAt', 'desc'), limit(5)), [firestore]);
+  const { data: newArrivals } = useCollection<Product>(newArrivalsQuery);
+
+  const teamMembersQuery = useMemoFirebase(() => collection(firestore, 'teamMembers'), [firestore]);
+  const { data: teamMembers } = useCollection<TeamMember>(teamMembersQuery);
+
+  const storesQuery = useMemoFirebase(() => collection(firestore, 'stores'), [firestore]);
+  const { data: stores } = useCollection<Store>(storesQuery);
+  
+  const materialSettingsQuery = useMemoFirebase(() => collection(firestore, 'materialSettings'), [firestore]);
+  const { data: materialSettings } = useCollection<MaterialSetting>(materialSettingsQuery);
+
+  const siteSettingsRef = useMemoFirebase(() => doc(firestore, 'siteSettings', 'homepage'), [firestore]);
+  const { data: siteSettings } = useDoc<SiteSettings>(siteSettingsRef);
+
+  const brandLogosQuery = useMemoFirebase(() => collection(firestore, 'brandLogos'), [firestore]);
+  const { data: brandLogos } = useCollection<BrandLogo>(brandLogosQuery);
 
 
   const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
@@ -528,40 +532,60 @@ export function HomePageClient({
 
   return (
     <div className="min-h-screen bg-background font-sans">
-      <Header
-        userData={userData}
-        cartItems={cartItems}
-        updateCartItemQuantity={updateCartItemQuantity}
-        updateCartItemSize={updateCartItemSize}
-        products={allProducts || []}
-        stores={stores || []}
-        adminActionCounts={adminActionCounts}
-      />
+      <Header />
       
       <main>
         {isMobile ? (
             <div className="relative pt-[18%]">
                  <div className="relative aspect-[16/9] w-full">
-                    <Image
-                        src={siteSettings?.heroImageUrlMobile || siteSettings?.heroImageUrl || placeholderImages.heroMobile.url}
-                        alt="Authentic handicrafts from North-East India"
-                        fill
-                        className="object-cover"
-                        data-ai-hint={placeholderImages.heroMobile['data-ai-hint']}
-                        priority
-                    />
+                    {siteSettings?.heroImageUrlMobile ? (
+                         <Image
+                            src={siteSettings.heroImageUrlMobile}
+                            alt="Authentic handicrafts from North-East India"
+                            fill
+                            className="object-cover"
+                            priority
+                        />
+                    ) : siteSettings?.heroImageUrl ? (
+                        <Image
+                            src={siteSettings.heroImageUrl}
+                            alt="Authentic handicrafts from North-East India"
+                            fill
+                            className="object-cover"
+                            priority
+                        />
+                    ) : (
+                         <Image
+                            src={placeholderImages.heroMobile.url}
+                            alt="Authentic handicrafts from North-East India"
+                            fill
+                            className="object-cover"
+                            data-ai-hint={placeholderImages.heroMobile['data-ai-hint']}
+                            priority
+                        />
+                    )}
                 </div>
             </div>
         ) : (
             <div className="relative aspect-[21/9] w-full hidden md:flex items-end justify-start text-white">
-                <Image
-                    src={siteSettings?.heroImageUrl || placeholderImages.hero.url}
-                    alt="Authentic handicrafts from North-East India"
-                    fill
-                    className="object-cover"
-                    data-ai-hint={placeholderImages.hero['data-ai-hint']}
-                    priority
-                />
+                {siteSettings?.heroImageUrl ? (
+                    <Image
+                        src={siteSettings.heroImageUrl}
+                        alt="Authentic handicrafts from North-East India"
+                        fill
+                        className="object-cover"
+                        priority
+                    />
+                ) : (
+                    <Image
+                        src={placeholderImages.hero.url}
+                        alt="Authentic handicrafts from North-East India"
+                        fill
+                        className="object-cover"
+                        data-ai-hint={placeholderImages.hero['data-ai-hint']}
+                        priority
+                    />
+                )}
                 <div className="relative z-10 p-12">
                     <Link href="/purchase">
                         <Button size="lg" className="bg-[--brand-green] text-white hover:bg-[--brand-green]/90">

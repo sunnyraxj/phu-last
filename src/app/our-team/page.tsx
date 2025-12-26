@@ -1,13 +1,15 @@
 
+'use client';
+
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { collection } from 'firebase/firestore';
 import { Card } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
-import { initializeAdminApp } from "@/firebase/admin";
-import { ServerHeaderWrapper } from "@/components/shared/ServerHeaderWrapper";
 import { PottersWheelSpinner } from "@/components/shared/PottersWheelSpinner";
+import { useCollection, useFirebase } from "@/firebase";
+import { collection } from "firebase/firestore";
+import { Header } from "@/components/shared/Header";
 
 type TeamMember = {
     id: string;
@@ -18,28 +20,17 @@ type TeamMember = {
     socialLink?: string;
 };
 
-async function getTeamMembers() {
-    try {
-        const { firestore } = initializeAdminApp();
-        const teamSnapshot = await firestore.collection('teamMembers').get();
-        const teamMembers = teamSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as TeamMember[];
-        return teamMembers;
-    } catch (error) {
-        console.error("Error fetching team members: ", error);
-        return [];
-    }
-}
+export default function OurTeamPage() {
+    const { firestore } = useFirebase();
+    const { data: teamMembers, isLoading } = useCollection<TeamMember>(collection(firestore, 'teamMembers'));
 
-export default async function OurTeamPage() {
-    const teamMembers = await getTeamMembers();
-
-    const founder = teamMembers.find(member => member.role === 'Founder');
-    const managementMembers = teamMembers.filter(member => member.role === 'Management');
-    const otherTeamMembers = teamMembers.filter(member => member.role === 'Team Member');
+    const founder = teamMembers?.find(member => member.role === 'Founder');
+    const managementMembers = teamMembers?.filter(member => member.role === 'Management') || [];
+    const otherTeamMembers = teamMembers?.filter(member => member.role === 'Team Member') || [];
 
   return (
     <div className="bg-background">
-      <ServerHeaderWrapper />
+      <Header />
 
       <main className="container mx-auto py-8 sm:py-16 px-4">
         <div className="text-center mb-12">
@@ -49,7 +40,11 @@ export default async function OurTeamPage() {
           </p>
         </div>
 
-        {teamMembers.length > 0 ? (
+        {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+                <PottersWheelSpinner />
+            </div>
+        ) : teamMembers && teamMembers.length > 0 ? (
           <>
             {founder && (
               <div className="mb-12 md:mb-16">

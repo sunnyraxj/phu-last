@@ -21,7 +21,7 @@ import {
   X
 } from "lucide-react";
 import { signOut } from "firebase/auth";
-import { useAuth, useUser } from "@/firebase";
+import { useAuth, useUser, useFirebase } from "@/firebase";
 import { useMemo, useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { Separator } from "../ui/separator";
@@ -91,17 +91,11 @@ type Product = {
 type CartItem = Product & { quantity: number; cartItemId: string; selectedSize?: string };
 
 interface HeaderProps {
-    userData: { role: string } | null | undefined;
-    cartItems: CartItem[];
-    updateCartItemQuantity: (cartItemId: string, newQuantity: number) => void;
-    updateCartItemSize?: (cartItemId: string, newSize: string) => void;
     showAnnouncement?: boolean;
-    products: Product[];
 }
 
-export function Header({ userData, cartItems, updateCartItemQuantity, updateCartItemSize, showAnnouncement = true, products = [] }: HeaderProps) {
-  const { user, isUserLoading } = useUser();
-  const auth = useAuth();
+export function Header({ showAnnouncement = true }: HeaderProps) {
+  const { firestore, user, isUserLoading, auth, updateCartItemSize } = useFirebase();
   const router = useRouter();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -110,16 +104,33 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
   const [itemToChangeSize, setItemToChangeSize] = useState<CartItem | null>(null);
   const [newSize, setNewSize] = useState<string | null>(null);
 
+  const { data: allProducts } = useCollection<Product>(collection(firestore, 'products'));
+
+  const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
+  const { data: userData } = useDoc<{ role: string }>(userDocRef);
+
+  const cartItemsQuery = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'cart') : null, [firestore, user]);
+  const { data: cartData } = useCollection<{ productId: string; quantity: number, selectedSize?: string }>(cartItemsQuery);
+
+  const cartItems = useMemo(() => {
+    if (!cartData || !allProducts) return [];
+    return cartData.map(cartItem => {
+      const product = allProducts.find(p => p.id === cartItem.productId);
+      return product ? { ...product, ...cartItem, cartItemId: cartItem.id } : null;
+    }).filter((item): item is CartItem => item !== null);
+  }, [cartData, allProducts]);
+  
   const suggestedProducts = useMemo(() => {
-    return products.slice(0, 4);
-  }, [products]);
+    if(!allProducts) return [];
+    return allProducts.slice(0, 4);
+  }, [allProducts]);
 
   const searchResults = useMemo(() => {
-    if (!searchQuery) {
+    if (!searchQuery || !allProducts) {
       return [];
     }
-    return products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
-  }, [searchQuery, products]);
+    return allProducts.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [searchQuery, allProducts]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -143,6 +154,16 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
         router.push('/login?redirect=/checkout');
     } else {
         router.push('/checkout');
+    }
+  };
+  
+    const updateCartItemQuantity = (cartItemId: string, newQuantity: number) => {
+    if (!user) return;
+    const itemRef = doc(firestore, 'users', user.uid, 'cart', cartItemId);
+    if (newQuantity > 0) {
+      setDoc(itemRef, { quantity: newQuantity }, { merge: true });
+    } else {
+      deleteDoc(itemRef);
     }
   };
 
