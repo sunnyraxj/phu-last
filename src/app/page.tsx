@@ -254,7 +254,7 @@ export default function ProductPage() {
   const { data: allProducts, isLoading: productsLoading } = useCollection<Product>(productsQuery);
   
   const newArrivalsQuery = useMemoFirebase(() =>
-    query(collection(firestore, 'products'), orderBy('createdAt', 'desc'), limit(4)),
+    query(collection(firestore, 'products'), orderBy('createdAt', 'desc'), limit(5)),
     [firestore]
   );
   const { data: newArrivals, isLoading: newArrivalsLoading } = useCollection<Product>(newArrivalsQuery);
@@ -533,7 +533,7 @@ export default function ProductPage() {
 
         {/* Mobile Hero */}
         <section className="md:hidden relative">
-          <div className="p-4 bg-background text-center">
+          <div className="px-4 pb-4 bg-background text-center">
             <h1 className="text-2xl font-serif tracking-tight text-foreground">Handcrafted Treasures, Timeless Stories</h1>
           </div>
           <div className="relative aspect-[16/9] w-full">
@@ -573,7 +573,7 @@ export default function ProductPage() {
                     ))}
                 </div>
 
-              <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-5 gap-8">
                 {newArrivals.map((product) => (
                   <div key={product.id} className="group relative text-left">
                     <ProductImage product={product} onClick={() => setSelectedProduct(product)} />
@@ -958,7 +958,7 @@ export default function ProductPage() {
                      >
                         <CarouselContent className="-ml-2 md:-ml-4">
                         {teamMembersToDisplay.map((member, index) => (
-                          <CarouselItem key={`${member.id}-${index}`} className="pl-4 md:pl-6 basis-1/2 sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
+                          <CarouselItem key={`${member.id}-${index}`} className="pl-4 md:pl-6 basis-1/3 sm:basis-1/3 md:basis-1/4 lg:basis-1/5">
                               <Card className="w-full max-w-sm overflow-hidden rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow duration-300">
                                 <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-2xl">
                                     <Image
