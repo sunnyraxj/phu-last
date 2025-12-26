@@ -137,7 +137,7 @@ const FeaturesSection = () => {
                 >
                     <CarouselContent className="-ml-4">
                         {features.map((feature, index) => (
-                           <CarouselItem key={index} className="pl-4 basis-1/2 sm:basis-1/4 md:basis-1/5 lg:basis-1/5">
+                           <CarouselItem key={index} className="pl-4 basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/5">
                                 <div className="flex flex-col items-center p-2 text-center">
                                     <feature.icon className="h-6 w-6 sm:h-8 sm:w-8 text-primary mb-2" />
                                     <h3 className="text-xs sm:text-sm font-semibold text-foreground">{feature.title}</h3>
