@@ -21,7 +21,7 @@ import {
   X
 } from "lucide-react";
 import { signOut } from "firebase/auth";
-import { useAuth, useUser, useFirebase } from "@/firebase";
+import { useAuth, useUser, useFirebase, useCollection } from "@/firebase";
 import { useMemo, useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { Separator } from "../ui/separator";
@@ -59,6 +59,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import { collection, doc, setDoc, deleteDoc } from 'firebase/firestore';
 
 
 // Simple X icon replacement
