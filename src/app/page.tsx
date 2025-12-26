@@ -112,9 +112,9 @@ const FeaturesSection = () => {
         description: "Sustainably sourced materials, supporting communities.",
       },
       {
-        icon: Globe,
-        title: "Worldwide Shipping",
-        description: "We deliver handcrafted joy to your doorstep, globally.",
+        icon: Truck,
+        title: "Shipping Across India",
+        description: "We deliver handcrafted joy to every corner of India.",
       },
     ];
   
