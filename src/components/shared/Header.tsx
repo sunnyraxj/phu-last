@@ -217,9 +217,12 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
   );
 
   return (
-    <header className={cn("fixed top-0 left-0 right-0 z-50 transition-all duration-300", isScrolled ? 'bg-white shadow-md' : 'bg-transparent', isMobile ? '!bg-white' : '')}>
+    <header className={cn(
+      "fixed top-0 left-0 right-0 z-50 transition-all duration-300", 
+      isScrolled ? 'bg-white shadow-md' : 'bg-transparent'
+    )}>
        {showAnnouncement && (
-         <div className={cn("bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium transition-all duration-300", isScrolled ? "h-0 py-0 opacity-0" : "h-auto")}>
+         <div className={cn("bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium transition-all duration-300", isScrolled ? "h-0 py-0 opacity-0 overflow-hidden" : "h-auto")}>
           <div className="w-full md:w-1/3 flex-1 flex justify-start items-center gap-4">
             <SocialButtons />
           </div>
@@ -253,9 +256,9 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
       )}
 
        <div className={cn(
-           "relative z-10 py-2 md:py-4 px-4 md:px-0 transition-all duration-300",
+           "relative z-10 py-2 md:py-4 px-4 transition-all duration-300",
             isScrolled ? "text-foreground" : "text-white",
-            isMobile ? "!text-foreground" : ""
+            isMobile && '!bg-white !text-foreground'
        )}>
         <div className="w-full flex flex-col items-center justify-center">
           
@@ -296,6 +299,65 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
             </div>
 
             <div className="w-1/3 flex justify-end items-center gap-4">
+                <Sheet>
+                    <SheetTrigger asChild>
+                        <button className="hover:opacity-80 transition-colors">
+                            <Search size={22} strokeWidth={1.5} />
+                        </button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="flex flex-col w-full sm:max-w-md">
+                        <SheetHeader>
+                            <SheetTitle>Search Products</SheetTitle>
+                        </SheetHeader>
+                        <div className="relative">
+                            <Input 
+                                placeholder="What are you looking for?"
+                                className="pl-10 text-base h-12"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <div className="flex-1 overflow-y-auto -mx-6 px-6">
+                            {(searchQuery ? searchResults : suggestedProducts).length > 0 ? (
+                                <>
+                                    <h3 className="text-sm font-semibold text-muted-foreground my-4">
+                                        {searchQuery ? 'Search Results' : 'Suggestions for you'}
+                                    </h3>
+                                    <div className="flex flex-col gap-4">
+                                        {(searchQuery ? searchResults : suggestedProducts).map(product => (
+                                            <SheetClose asChild key={product.id}>
+                                              <Link href={`/purchase#${product.id}`} className="flex items-center gap-4 group">
+                                                  <div className="relative h-16 w-16 rounded-md overflow-hidden bg-muted">
+                                                      <Image
+                                                          src={isValidImageDomain(product.images?.[0]) ? product.images[0] : placeholderImages.product.url}
+                                                          alt={product.name}
+                                                          fill
+                                                          className="object-cover"
+                                                      />
+                                                  </div>
+                                                  <div className="flex-1">
+                                                      <p className="font-semibold text-sm group-hover:underline">{product.name}</p>
+                                                      <p className="text-sm text-muted-foreground">
+                                                          {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(product.baseMrp || 0)}
+                                                      </p>
+                                                  </div>
+                                              </Link>
+                                            </SheetClose>
+                                        ))}
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="text-center py-10">
+                                    <p className="text-muted-foreground">
+                                        {searchQuery ? 'No products found.' : 'No suggestions available.'}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </SheetContent>
+                 </Sheet>
+
                 {!isUserLoading && user && !user.isAnonymous ? (
                    <Popover>
                       <PopoverTrigger asChild>
@@ -425,7 +487,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
           </div>
           
           {/* Desktop Header */}
-           <div className="w-full hidden md:flex items-center justify-between px-12 py-3.5">
+           <div className="container mx-auto w-full hidden md:flex items-center justify-between px-12 py-3.5">
               <div className="flex items-center gap-2 md:gap-4 w-1/3">
                  <Sheet>
                     <SheetTrigger asChild>
@@ -454,8 +516,9 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
                                     </h3>
                                     <div className="flex flex-col gap-4">
                                         {(searchQuery ? searchResults : suggestedProducts).map(product => (
-                                            <Link href={`/purchase#${product.id}`} key={product.id} className="flex items-center gap-4 group">
-                                                 <div className="relative h-16 w-16 rounded-md overflow-hidden bg-muted">
+                                          <SheetClose asChild key={product.id}>
+                                            <Link href={`/purchase#${product.id}`} className="flex items-center gap-4 group">
+                                                <div className="relative h-16 w-16 rounded-md overflow-hidden bg-muted">
                                                     <Image
                                                         src={isValidImageDomain(product.images?.[0]) ? product.images[0] : placeholderImages.product.url}
                                                         alt={product.name}
@@ -470,6 +533,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
                                                     </p>
                                                 </div>
                                             </Link>
+                                          </SheetClose>
                                         ))}
                                     </div>
                                 </>
@@ -483,7 +547,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
                         </div>
                     </SheetContent>
                  </Sheet>
-                 <nav className="flex items-center gap-6 text-sm font-medium">
+                 <nav className={cn("flex items-center gap-6 text-sm font-medium transition-all duration-300", isScrolled ? "opacity-0 invisible" : "opacity-100 visible")}>
                    {navItems.map((item) => (
                       <Link href={item.href} key={item.href} className="hover:opacity-80 transition-opacity">{item.label}</Link>
                    ))}
@@ -597,7 +661,7 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
                                                             <Plus size={14} />
                                                         </Button>
                                                          {item.variants && item.variants.length > 1 && (
-                                                          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => handleChangeSizeClick(item)}>
+                                                          <Button variant="outline" size="sm" className="h-7 text-xs ml-2" onClick={() => handleChangeSizeClick(item)}>
                                                             Change Size
                                                           </Button>
                                                         )}
