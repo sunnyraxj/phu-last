@@ -89,19 +89,36 @@ type BrandLogo = {
 };
 
 
-const BrandCarousel = ({logos}: {logos: BrandLogo[]}) => {
+const FeaturesSection = () => {
+    const features = [
+      {
+        icon: Sparkles,
+        title: "Authentic Craftsmanship",
+        description: "Every piece is handmade by skilled artisans from Northeast India.",
+      },
+      {
+        icon: Wand2,
+        title: "Customizable Designs",
+        description: "Tailor our products to fit your unique style and needs.",
+      },
+      {
+        icon: CheckCircle,
+        title: "Quality Guaranteed",
+        description: "We use the finest materials to ensure durability and beauty.",
+      },
+    ];
+  
     return (
-        <section className="bg-background py-6 sm:py-8">
-            <div className="container mx-auto px-4 text-center mb-6">
-                <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">We deal in</h2>
-            </div>
-             <div className="container mx-auto px-4">
-                <div className="flex flex-wrap justify-center items-center gap-x-8 gap-y-4">
-                    {logos.map((logo) => (
-                        <div key={logo.id} className="relative w-28 h-14">
-                            <Image src={logo.logoUrl} alt={logo.name} fill className="object-contain" />
-                        </div>
-                    ))}
+        <section className="bg-background py-8 sm:py-12">
+            <div className="container mx-auto px-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                {features.map((feature, index) => (
+                    <div key={index} className="flex flex-col items-center p-4">
+                    <feature.icon className="h-10 w-10 text-primary mb-4" />
+                    <h3 className="text-lg font-semibold text-foreground">{feature.title}</h3>
+                    <p className="text-sm text-muted-foreground mt-2">{feature.description}</p>
+                    </div>
+                ))}
                 </div>
             </div>
         </section>
@@ -537,7 +554,7 @@ export default function ProductPage() {
         </section>
       </main>
       
-      {brandLogos && brandLogos.length > 0 && <BrandCarousel logos={brandLogos} />}
+      <FeaturesSection />
 
       <section className="bg-background pt-4 sm:pt-8 pb-8 sm:pb-16">
         <div className="container mx-auto px-4">
