@@ -499,6 +499,7 @@ export default function ProductPage() {
 
   return (
     <div className="min-h-screen bg-background font-sans">
+      <div className="md:hidden text-center py-2 bg-[--brand-green] text-white text-xs">Free shipping on orders over ₹1000</div>
       <Header
         userData={userData}
         cartItems={cartItems}
@@ -507,8 +508,7 @@ export default function ProductPage() {
         products={allProducts || []}
       />
       
-      <main className="pt-24 md:pt-0">
-        <div className="md:hidden text-center py-2 bg-[--brand-green] text-white text-xs">Free shipping on orders over ₹1000</div>
+      <main>
         {/* Desktop Hero */}
         <section className="relative aspect-[21/9] w-full hidden md:flex items-end justify-start text-white">
             <Image
@@ -530,7 +530,6 @@ export default function ProductPage() {
 
         {/* Mobile Hero */}
         <section className="md:hidden relative">
-          <div className="text-center py-2 bg-[--brand-green] text-white text-xs">Handcrafted with love in India</div>
           <div className="relative aspect-[16/9] w-full">
             <Image
                 src={siteSettings?.heroImageUrlMobile || siteSettings?.heroImageUrl || placeholderImages.heroMobile.url}
