@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useMemo, useEffect, useRef } from "react"
@@ -28,6 +29,7 @@ import Autoplay from "embla-carousel-autoplay"
 import placeholderImages from '@/lib/placeholder-images.json';
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 
 type Product = {
@@ -275,6 +277,7 @@ export default function ProductPage() {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const router = useRouter();
+  const isMobile = useIsMobile();
 
 
   const productsQuery = useMemoFirebase(() =>
@@ -544,38 +547,38 @@ export default function ProductPage() {
       />
       
       <main>
-        {/* Desktop Hero */}
-        <section className="relative aspect-[21/9] w-full hidden md:flex items-end justify-start text-white">
-            <Image
-                src={siteSettings?.heroImageUrl || placeholderImages.hero.url}
-                alt="Authentic handicrafts from North-East India"
-                fill
-                className="object-cover"
-                data-ai-hint={placeholderImages.hero['data-ai-hint']}
-                priority
-            />
-            <div className="relative z-10 p-12">
-                <Link href="/purchase">
-                    <Button size="lg" className="bg-[--brand-green] text-white hover:bg-[--brand-green]/90">
-                        Shop our collection
-                    </Button>
-                </Link>
-            </div>
-        </section>
-
-        {/* Mobile Hero */}
-        <section className="md:hidden relative pt-[18%]">
-          <div className="relative aspect-[16/9] w-full">
-            <Image
-                src={siteSettings?.heroImageUrlMobile || siteSettings?.heroImageUrl || placeholderImages.heroMobile.url}
-                alt="Authentic handicrafts from North-East India"
-                fill
-                className="object-cover"
-                data-ai-hint={placeholderImages.heroMobile['data-ai-hint']}
-                priority
-            />
-          </div>
-        </section>
+          {isMobile ? (
+            <section className="md:hidden relative pt-[18%]">
+                <div className="relative aspect-[16/9] w-full">
+                    <Image
+                        src={siteSettings?.heroImageUrlMobile || siteSettings?.heroImageUrl || placeholderImages.heroMobile.url}
+                        alt="Authentic handicrafts from North-East India"
+                        fill
+                        className="object-cover"
+                        data-ai-hint={placeholderImages.heroMobile['data-ai-hint']}
+                        priority
+                    />
+                </div>
+            </section>
+          ) : (
+            <section className="relative aspect-[21/9] w-full hidden md:flex items-end justify-start text-white">
+                <Image
+                    src={siteSettings?.heroImageUrl || placeholderImages.hero.url}
+                    alt="Authentic handicrafts from North-East India"
+                    fill
+                    className="object-cover"
+                    data-ai-hint={placeholderImages.hero['data-ai-hint']}
+                    priority
+                />
+                <div className="relative z-10 p-12">
+                    <Link href="/purchase">
+                        <Button size="lg" className="bg-[--brand-green] text-white hover:bg-[--brand-green]/90">
+                            Shop our collection
+                        </Button>
+                    </Link>
+                </div>
+            </section>
+          )}
       </main>
       
       <FeaturesSection />
@@ -1030,3 +1033,5 @@ export default function ProductPage() {
     </div>
   )
 }
+
+    
