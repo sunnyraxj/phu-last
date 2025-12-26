@@ -209,7 +209,7 @@ export default function OurTeamPage() {
                      <div className="text-center mb-8">
                         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Our Dedicated Team</h2>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
+                    <div className="grid grid-cols-3 md:grid-cols-5 gap-4 sm:gap-6">
                     {otherTeamMembers.map((member) => (
                         <div key={member.id} className="relative aspect-square rounded-full overflow-hidden group shadow-lg">
                             <Image
