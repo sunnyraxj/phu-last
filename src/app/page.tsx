@@ -462,7 +462,7 @@ export default function ProductPage() {
   }, [materialSettings, allProducts]);
 
   return (
-    <div className="min-h-screen bg-background font-sans">
+    <div className="min-h-screen bg-background font-sans pt-[64px] md:pt-0">
       <Header
         userData={userData}
         cartItems={cartItems}
