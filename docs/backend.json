@@ -240,6 +240,18 @@
           "format": "uri"
         }
       }
+    },
+    "BrandLogo": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "BrandLogo",
+      "type": "object",
+      "description": "Represents a brand logo for the 'We deal in' carousel.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the brand logo." },
+        "name": { "type": "string", "description": "Name of the brand." },
+        "logoUrl": { "type": "string", "description": "URL of the brand logo.", "format": "uri" }
+      },
+      "required": ["id", "name", "logoUrl"]
     }
   },
   "auth": {
@@ -298,8 +310,12 @@
       {
         "path": "/siteSettings/homepage",
         "definition": { "entityName": "SiteSettings", "schema": { "$ref": "#/backend/entities/SiteSettings" }, "description": "A singleton document for storing homepage-specific settings like the hero image." }
+      },
+      {
+        "path": "/brandLogos/{logoId}",
+        "definition": { "entityName": "BrandLogo", "schema": { "$ref": "#/backend/entities/BrandLogo" }, "description": "Stores brand logos for the 'We deal in' carousel on the homepage.", "params": [{ "name": "logoId", "description": "The unique identifier for the brand logo." }] }
       }
     ],
-    "reasoning": "The Firestore structure is designed to manage users, artisans, products, orders, reviews, team members, store details, and material settings for the 'purbanchal hasta udyog' application. It prioritizes security, scalability, and ease of debugging.\n\n**Authorization Independence:** User roles are stored in the `/users` collection, allowing security rules to validate admin privileges with a single `get()` call.\n\n**Structural Segregation:** Each data model is in its own top-level collection. This isolates security concerns. A new `/materialSettings` collection is added to store image URLs for product materials, writable only by admins, allowing for dynamic homepage content management. User data is in `/users`, products in `/products`, and admin-managed content like `/teamMembers` and `/stores` are also in top-level collections. A new `/returnRequests` collection is added to manage customer returns, with rules to ensure customers can only manage their own requests while admins have full access.\n\n**Access Modeling:** Path-based ownership secures user data. A user's shipping addresses are stored in a subcollection `/users/{userId}/shippingAddresses` to ensure they are private and can only be accessed by the user or an admin. Role-based access control (RBAC) is used for the admin panel, with the `isAdmin()` function checking the `role` field in a user's document. The new `/teamMembers`, `/stores`, and `/materialSettings` collections are publicly readable but writable only by admins, ensuring content integrity. A new singleton document at `/companySettings/main` is added to store invoice and company details, writable only by admins. A new singleton document at `/siteSettings/homepage` is added to store site-wide settings like the hero image, writable only by admins."
+    "reasoning": "The Firestore structure is designed to manage users, artisans, products, orders, reviews, team members, store details, and material settings for the 'purbanchal hasta udyog' application. It prioritizes security, scalability, and ease of debugging.\n\n**Authorization Independence:** User roles are stored in the `/users` collection, allowing security rules to validate admin privileges with a single `get()` call.\n\n**Structural Segregation:** Each data model is in its own top-level collection. This isolates security concerns. A new `/materialSettings` collection is added to store image URLs for product materials, writable only by admins, allowing for dynamic homepage content management. User data is in `/users`, products in `/products`, and admin-managed content like `/teamMembers` and `/stores` are also in top-level collections. A new `/returnRequests` collection is added to manage customer returns, with rules to ensure customers can only manage their own requests while admins have full access. A new `/brandLogos` collection is added to manage logos for the 'We deal in' section, writable only by admins.\n\n**Access Modeling:** Path-based ownership secures user data. A user's shipping addresses are stored in a subcollection `/users/{userId}/shippingAddresses` to ensure they are private and can only be accessed by the user or an admin. Role-based access control (RBAC) is used for the admin panel, with the `isAdmin()` function checking the `role` field in a user's document. The new `/teamMembers`, `/stores`, and `/materialSettings` collections are publicly readable but writable only by admins, ensuring content integrity. A new singleton document at `/companySettings/main` is added to store invoice and company details, writable only by admins. A new singleton document at `/siteSettings/homepage` is added to store site-wide settings like the hero image, writable only by admins."
   }
 }

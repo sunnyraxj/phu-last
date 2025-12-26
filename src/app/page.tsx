@@ -82,17 +82,15 @@ type SiteSettings = {
     heroImageUrlMobile?: string;
 };
 
-const BrandCarousel = () => {
-    const logos = [
-        "https://picsum.photos/seed/brand1/150/60",
-        "https://picsum.photos/seed/brand2/150/60",
-        "https://picsum.photos/seed/brand3/150/60",
-        "https://picsum.photos/seed/brand4/150/60",
-        "https://picsum.photos/seed/brand5/150/60",
-        "https://picsum.photos/seed/brand6/150/60",
-        "https://picsum.photos/seed/brand7/150/60",
-        "https://picsum.photos/seed/brand8/150/60",
-    ];
+type BrandLogo = {
+    id: string;
+    name: string;
+    logoUrl: string;
+};
+
+
+const BrandCarousel = ({logos}: {logos: BrandLogo[]}) => {
+    const allLogos = logos.map(l => l.logoUrl);
     return (
         <section className="bg-background py-6 sm:py-8 overflow-hidden">
             <div className="container mx-auto px-4 text-center mb-6">
@@ -100,7 +98,7 @@ const BrandCarousel = () => {
             </div>
             <div className="relative">
                 <div className="flex animate-marquee-right-to-left">
-                    {[...logos, ...logos].map((logo, index) => (
+                    {[...allLogos, ...allLogos].map((logo, index) => (
                         <div key={`rtl-${index}`} className="flex-shrink-0 w-28 mx-4">
                             <Image src={logo} alt={`Brand Logo ${index + 1}`} width={120} height={50} className="object-contain filter grayscale opacity-60" />
                         </div>
@@ -109,7 +107,7 @@ const BrandCarousel = () => {
             </div>
             <div className="relative mt-4">
                 <div className="flex animate-marquee-left-to-right">
-                     {[...logos.slice().reverse(), ...logos.slice().reverse()].map((logo, index) => (
+                     {[...allLogos.slice().reverse(), ...allLogos.slice().reverse()].map((logo, index) => (
                         <div key={`ltr-${index}`} className="flex-shrink-0 w-28 mx-4">
                             <Image src={logo} alt={`Brand Logo ${index + 1}`} width={120} height={50} className="object-contain filter grayscale opacity-60" />
                         </div>
@@ -295,6 +293,9 @@ export default function ProductPage() {
   
   const siteSettingsRef = useMemoFirebase(() => doc(firestore, 'siteSettings', 'homepage'), [firestore]);
   const { data: siteSettings, isLoading: siteSettingsLoading } = useDoc<SiteSettings>(siteSettingsRef);
+
+  const brandLogosQuery = useMemoFirebase(() => collection(firestore, 'brandLogos'), [firestore]);
+  const { data: brandLogos, isLoading: brandLogosLoading } = useCollection<BrandLogo>(brandLogosQuery);
 
   const outOfStockQuery = useMemoFirebase(() => 
     (isAuthorizedAdmin) ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null,
@@ -546,7 +547,7 @@ export default function ProductPage() {
         </section>
       </main>
       
-      <BrandCarousel />
+      {brandLogos && brandLogos.length > 0 && <BrandCarousel logos={brandLogos} />}
 
       <section className="bg-background pt-4 sm:pt-8 pb-8 sm:pb-16">
         <div className="container mx-auto px-4">
