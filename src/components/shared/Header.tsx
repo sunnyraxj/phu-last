@@ -210,9 +210,6 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
       <Link href="#" className="hover:opacity-80 transition-opacity">
         <PinterestIcon className="w-4 h-4" />
       </Link>
-      <Link href="#" className="hover:opacity-80 transition-opacity">
-        <Linkedin size={16} />
-      </Link>
     </div>
   );
 
