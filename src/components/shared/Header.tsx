@@ -260,22 +260,22 @@ export function Header({ userData, cartItems, updateCartItemQuantity, updateCart
                     <span className="sr-only">Open menu</span>
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-[300px]">
+                <SheetContent side="left" className="w-full max-w-sm">
                    <SheetHeader>
                         <SheetTitle>Menu</SheetTitle>
                     </SheetHeader>
-                    <div className="flex flex-col items-start gap-2 py-4">
+                    <div className="grid grid-cols-2 gap-2 py-4">
                       {navItems.map((item) => (
                         <SheetClose asChild key={item.href}>
                           <Link href={item.href} >
-                            <Button variant="ghost" className="w-full justify-start text-base">{item.label}</Button>
+                            <Button variant="outline" className="w-full justify-center text-base py-6">{item.label}</Button>
                           </Link>
                         </SheetClose>
                       ))}
                       {userData?.role === 'admin' && (
                         <SheetClose asChild>
                           <Link href="/admin/dashboard">
-                            <Button variant="ghost" className="w-full justify-start text-base">Admin Dashboard</Button>
+                            <Button variant="outline" className="w-full justify-center text-base py-6 col-span-2">Admin Dashboard</Button>
                           </Link>
                         </SheetClose>
                       )}
