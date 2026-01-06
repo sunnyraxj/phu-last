@@ -248,7 +248,7 @@
                     "required": ["materialId", "materialName", "quantity"]
                 }
             },
-            "requirementDate": { "type": "string", "format": "date-time" },
+            "requirementDate": { "type": "string", "description": "The desired timeline for the order (e.g., '2 Weeks', '1 Month')." },
             "customerDetails": {
                 "type": "object",
                 "properties": {

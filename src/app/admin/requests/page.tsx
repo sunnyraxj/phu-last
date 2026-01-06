@@ -22,7 +22,7 @@ type RequestStatus = 'pending' | 'approved' | 'rejected';
 type OrderRequest = {
     id: string;
     orderType: 'bulk' | 'customize';
-    requirementDate: { seconds: number; nanoseconds: number; };
+    requirementDate: string;
     createdAt: { seconds: number; nanoseconds: number; };
     status: RequestStatus;
     customerDetails: {
@@ -185,8 +185,8 @@ export default function RequestsPage() {
                                                             </div>
                                                         </div>
                                                         <div>
-                                                            <h4 className="font-semibold mb-2">Requirement Date</h4>
-                                                            <p className="text-sm">{formatDate(req.requirementDate)}</p>
+                                                            <h4 className="font-semibold mb-2">Delivery Timeline</h4>
+                                                            <p className="text-sm font-semibold">{req.requirementDate}</p>
                                                         </div>
                                                         {req.adminNote && (
                                                              <div>

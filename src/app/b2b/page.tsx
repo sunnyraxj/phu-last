@@ -36,8 +36,8 @@ const materialRequestSchema = z.object({
 const b2bRequestSchema = z.object({
     orderType: z.enum(['bulk', 'customize']),
     materials: z.array(materialRequestSchema).min(1, 'At least one material must be added.'),
-    requirementDate: z.date({
-        required_error: 'A requirement date is required.',
+    requirementDate: z.string({
+        required_error: 'A delivery timeline is required.',
     }),
     customerDetails: z.object({
         name: z.string().min(1, 'Your name is required.'),
@@ -290,36 +290,24 @@ export default function B2BPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <Card>
                              <CardHeader>
-                                <CardTitle>Step 3: Requirement Date</CardTitle>
+                                <CardTitle>Step 3: Delivery Timeline</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <Controller
                                     control={control}
                                     name="requirementDate"
                                     render={({ field }) => (
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <Button
-                                                    variant={"outline"}
-                                                    className={cn(
-                                                        "w-full justify-start text-left font-normal",
-                                                        !field.value && "text-muted-foreground"
-                                                    )}
-                                                >
-                                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                                    {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0">
-                                                <Calendar
-                                                    mode="single"
-                                                    selected={field.value}
-                                                    onSelect={field.onChange}
-                                                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                                                    initialFocus
-                                                />
-                                            </PopoverContent>
-                                        </Popover>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select a delivery timeline" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="2 Weeks">2 Weeks</SelectItem>
+                                                <SelectItem value="1 Month">1 Month</SelectItem>
+                                                <SelectItem value="2 Months">2 Months</SelectItem>
+                                                <SelectItem value="3+ Months">3+ Months</SelectItem>
+                                            </SelectContent>
+                                        </Select>
                                     )}
                                 />
                                 {errors.requirementDate && <p className="text-sm text-destructive mt-2">{errors.requirementDate.message}</p>}
