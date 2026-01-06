@@ -352,6 +352,9 @@ export function HomePageClient() {
         materialSet.add(product.material);
       }
     });
+    
+    // Always include core materials
+    ["Cane", "Bamboo", "Jute"].forEach(m => materialSet.add(m));
 
     return {
       categories: Object.entries(categoryCounts).map(([name, count]) => ({ name, count })),
