@@ -253,6 +253,7 @@ export default function B2BPage() {
                                                     <SelectValue placeholder="Select a delivery timeline" />
                                                 </SelectTrigger>
                                                 <SelectContent>
+                                                    <SelectItem value="1 Week">1 Week</SelectItem>
                                                     <SelectItem value="2 Weeks">2 Weeks</SelectItem>
                                                     <SelectItem value="1 Month">1 Month</SelectItem>
                                                     <SelectItem value="2 Months">2 Months</SelectItem>
@@ -360,6 +361,7 @@ export default function B2BPage() {
                                                     <SelectValue placeholder="Select a delivery timeline" />
                                                 </SelectTrigger>
                                                 <SelectContent>
+                                                    <SelectItem value="1 Week">1 Week</SelectItem>
                                                     <SelectItem value="2 Weeks">2 Weeks</SelectItem>
                                                     <SelectItem value="1 Month">1 Month</SelectItem>
                                                     <SelectItem value="2 Months">2 Months</SelectItem>
@@ -418,4 +420,3 @@ export default function B2BPage() {
         </div>
     );
 }
-
