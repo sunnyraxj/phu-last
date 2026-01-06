@@ -39,10 +39,10 @@ const materialRequestSchema = z.object({
 
 const b2bRequestSchema = z.object({
     orderType: z.enum(['bulk', 'customize']),
-    materials: z.array(materialRequestSchema).min(1, 'At least one material must be added.'),
+    materials: z.array(materialRequestSchema).min(1, 'At least one product must be added.'),
     requirementDate: z.string({
         required_error: 'A delivery timeline is required.',
-    }),
+    }).min(1, 'A delivery timeline is required.'),
     customerDetails: z.object({
         name: z.string().min(1, 'Your name is required.'),
         mobile: z.string().min(10, 'A valid mobile number is required.'),
@@ -50,14 +50,6 @@ const b2bRequestSchema = z.object({
         companyName: z.string().optional(),
         gstNumber: z.string().optional(),
     }),
-}).refine(data => {
-    if (data.orderType === 'bulk') {
-        return data.materials.every(m => m.quantity >= MIN_BULK_QUANTITY);
-    }
-    return true;
-}, {
-    message: `For bulk orders, each material must have a minimum quantity of ${MIN_BULK_QUANTITY}.`,
-    path: ['materials'],
 });
 
 type B2BFormValues = z.infer<typeof b2bRequestSchema>;
@@ -82,7 +74,15 @@ export default function B2BPage() {
         resolver: zodResolver(b2bRequestSchema),
         defaultValues: {
             orderType: 'bulk',
-            materials: [{ materialId: '', materialName: '', quantity: MIN_BULK_QUANTITY, customizationDetails: '', referenceImage: '' }],
+            materials: [{ 
+                productName: '',
+                materialId: 'bulk-material', // schema requires it, but we don't use it for bulk
+                materialName: '', 
+                quantity: MIN_BULK_QUANTITY, 
+                customizationDetails: '', 
+                referenceImage: '',
+                budgetPerPiece: undefined,
+            }],
             customerDetails: {
                 name: '',
                 mobile: '',
@@ -212,136 +212,138 @@ export default function B2BPage() {
                         <Card>
                              <CardHeader>
                                 <CardTitle>Step 2: Enter Bulk Order Details</CardTitle>
-                                <CardDescription>Minimum order quantity for bulk orders is {MIN_BULK_QUANTITY} units per material.</CardDescription>
+                                <CardDescription>Minimum order quantity for bulk orders is {MIN_BULK_QUANTITY} units per product.</CardDescription>
                             </CardHeader>
-                            <CardContent className="bg-muted/50 p-6 rounded-lg space-y-4">
-                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                   <div className="space-y-2">
-                                        <Label>Product Name</Label>
-                                        <Input {...register(`materials.0.productName`)} placeholder="e.g., Round Jute Basket" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Material</Label>
-                                        <Input {...register(`materials.0.materialName`)} placeholder="e.g., Jute, Bamboo, Cane" />
-                                         {errors.materials?.[0]?.materialId && <p className="text-sm text-destructive">{errors.materials[0].materialId.message}</p>}
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Quantity</Label>
-                                        <Input type="number" {...register(`materials.0.quantity`, { valueAsNumber: true })} />
-                                        {errors.materials?.[0]?.quantity && <p className="text-sm text-destructive">{errors.materials[0].quantity.message}</p>}
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Budget per piece (Optional)</Label>
-                                        <Input type="number" {...register(`materials.0.budgetPerPiece`, { valueAsNumber: true })} placeholder="e.g., 500" />
-                                    </div>
-                                </div>
-                                 <div className="space-y-2">
-                                    <Label>Delivery Timeline</Label>
-                                    <Input {...register('requirementDate')} placeholder="e.g., 2 weeks, 1 month, ASAP" />
-                                    {errors.requirementDate && <p className="text-sm text-destructive mt-2">{errors.requirementDate.message}</p>}
-                                </div>
+                            <CardContent className="space-y-4">
+                                {fields.map((field, index) => (
+                                     <div key={field.id} className="p-4 border rounded-lg space-y-4 relative bg-muted/50">
+                                         {fields.length > 1 && (
+                                            <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-destructive" onClick={() => remove(index)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                    <Label>Product Name</Label>
+                                                    <Input {...register(`materials.${index}.productName`)} placeholder="e.g., Round Jute Basket" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Material</Label>
+                                                    <Input {...register(`materials.${index}.materialName`)} placeholder="e.g., Jute, Bamboo, Cane" />
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label>Quantity</Label>
+                                                    <Input type="number" {...register(`materials.${index}.quantity`, { valueAsNumber: true, min: MIN_BULK_QUANTITY })} />
+                                                    {errors.materials?.[index]?.quantity && <p className="text-sm text-destructive">{errors.materials[index].quantity.message}</p>}
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Budget per piece (Optional)</Label>
+                                                    <Input type="number" {...register(`materials.${index}.budgetPerPiece`, { valueAsNumber: true })} placeholder="e.g., 500" />
+                                                </div>
+                                            </div>
+                                     </div>
+                                ))}
+                                <Button type="button" variant="outline" onClick={() => append({ 
+                                    productName: '',
+                                    materialId: 'bulk-material',
+                                    materialName: '', 
+                                    quantity: MIN_BULK_QUANTITY, 
+                                    budgetPerPiece: undefined 
+                                })}>
+                                    <PlusCircle className="mr-2 h-4 w-4" /> Add Another Product
+                                </Button>
+                                {errors.materials?.root && <p className="text-sm text-destructive font-medium">{errors.materials.root.message}</p>}
                             </CardContent>
                         </Card>
                     ) : (
-                        <>
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Step 2: Select Materials & Quantity</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    
-                                        <>
-                                            {fields.map((field, index) => {
-                                                const selectedMaterialSetting = availableMaterials?.find(m => m.id === watchedMaterials[index]?.materialId);
-                                                return (
-                                                    <div key={field.id} className="p-4 border rounded-lg space-y-4 relative">
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                            <div className="space-y-2">
-                                                                <Label>Material</Label>
-                                                                <Controller
-                                                                    control={control}
-                                                                    name={`materials.${index}.materialId`}
-                                                                    render={({ field }) => (
-                                                                        <Combobox
-                                                                            options={materialOptions}
-                                                                            value={field.value}
-                                                                            onChange={(val) => {
-                                                                                const selectedMat = availableMaterials.find(m => m.id === val);
-                                                                                setValue(`materials.${index}.materialId`, val);
-                                                                                setValue(`materials.${index}.materialName`, selectedMat?.name || '');
-                                                                            }}
-                                                                            placeholder="Select a material"
-                                                                            searchPlaceholder="Search materials..."
-                                                                            notFoundMessage="No materials found."
-                                                                        />
-                                                                    )}
-                                                                />
-                                                                {errors.materials?.[index]?.materialId && <p className="text-sm text-destructive">{errors.materials[index].materialId.message}</p>}
-                                                            </div>
-                                                            <div className="space-y-2">
-                                                                <Label>Quantity {selectedMaterialSetting?.unit ? `(in ${selectedMaterialSetting.unit})` : ''}</Label>
-                                                                <Input type="number" {...register(`materials.${index}.quantity`, { valueAsNumber: true })} />
-                                                                {errors.materials?.[index]?.quantity && <p className="text-sm text-destructive">{errors.materials[index].quantity.message}</p>}
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="space-y-4">
-                                                            <div className="space-y-2">
-                                                                <Label>Customization Details</Label>
-                                                                <Textarea placeholder="Describe your customization (size, color, design, etc.)" {...register(`materials.${index}.customizationDetails`)} />
-                                                            </div>
-                                                            <div className="space-y-2">
-                                                                <Label>Reference Image (Optional)</Label>
-                                                                <div className="flex items-center gap-4">
-                                                                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-                                                                        {isUploading ? <PottersWheelSpinner /> : <><UploadCloud className="mr-2 h-4 w-4" /> Upload Image</>}
-                                                                    </Button>
-                                                                    {watchedMaterials[index]?.referenceImage && (
-                                                                        <a href={watchedMaterials[index].referenceImage} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-500 hover:underline truncate">
-                                                                            {watchedMaterials[index].referenceImage.split('/').pop()}
-                                                                        </a>
-                                                                    )}
-                                                                    <input type="file" ref={fileInputRef} onChange={(e) => handleFileUpload(e, index)} className="hidden" accept="image/*"/>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        {fields.length > 1 && (
-                                                            <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-destructive" onClick={() => remove(index)}>
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Step 2: Select Materials & Quantity</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {fields.map((field, index) => {
+                                    const selectedMaterialSetting = availableMaterials?.find(m => m.id === watchedMaterials[index]?.materialId);
+                                    return (
+                                        <div key={field.id} className="p-4 border rounded-lg space-y-4 relative">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label>Material</Label>
+                                                    <Controller
+                                                        control={control}
+                                                        name={`materials.${index}.materialId`}
+                                                        render={({ field }) => (
+                                                            <Combobox
+                                                                options={materialOptions}
+                                                                value={field.value}
+                                                                onChange={(val) => {
+                                                                    const selectedMat = availableMaterials.find(m => m.id === val);
+                                                                    setValue(`materials.${index}.materialId`, val);
+                                                                    setValue(`materials.${index}.materialName`, selectedMat?.name || '');
+                                                                }}
+                                                                placeholder="Select a material"
+                                                                searchPlaceholder="Search materials..."
+                                                                notFoundMessage="No materials found."
+                                                            />
                                                         )}
+                                                    />
+                                                    {errors.materials?.[index]?.materialId && <p className="text-sm text-destructive">{errors.materials[index].materialId.message}</p>}
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Quantity {selectedMaterialSetting?.unit ? `(in ${selectedMaterialSetting.unit})` : ''}</Label>
+                                                    <Input type="number" {...register(`materials.${index}.quantity`, { valueAsNumber: true })} />
+                                                    {errors.materials?.[index]?.quantity && <p className="text-sm text-destructive">{errors.materials[index].quantity.message}</p>}
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <div className="space-y-2">
+                                                    <Label>Customization Details</Label>
+                                                    <Textarea placeholder="Describe your customization (size, color, design, etc.)" {...register(`materials.${index}.customizationDetails`)} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Reference Image (Optional)</Label>
+                                                    <div className="flex items-center gap-4">
+                                                        <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                                                            {isUploading ? <PottersWheelSpinner /> : <><UploadCloud className="mr-2 h-4 w-4" /> Upload Image</>}
+                                                        </Button>
+                                                        {watchedMaterials[index]?.referenceImage && (
+                                                            <a href={watchedMaterials[index].referenceImage} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-500 hover:underline truncate">
+                                                                {watchedMaterials[index].referenceImage.split('/').pop()}
+                                                            </a>
+                                                        )}
+                                                        <input type="file" ref={fileInputRef} onChange={(e) => handleFileUpload(e, index)} className="hidden" accept="image/*"/>
                                                     </div>
-                                                )
-                                            })}
-                                            <Button type="button" variant="outline" onClick={() => append({ materialId: '', materialName: '', quantity: 0, customizationDetails: '', referenceImage: '' })}>
-                                                <PlusCircle className="mr-2 h-4 w-4" /> Add Another Material
-                                            </Button>
-                                            {errors.materials?.root && <p className="text-sm text-destructive font-medium">{errors.materials.root.message}</p>}
-                                        </>
-                                    
-                                </CardContent>
-                            </Card>
+                                                </div>
+                                            </div>
 
-                             <Card>
-                                <CardHeader>
-                                    <CardTitle>Step 3: Delivery Timeline</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <Input {...register('requirementDate')} placeholder="e.g., 2 weeks, 1 month, ASAP" />
-                                    {errors.requirementDate && <p className="text-sm text-destructive mt-2">{errors.requirementDate.message}</p>}
-                                </CardContent>
-                            </Card>
-                        </>
+                                            {fields.length > 1 && (
+                                                <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-destructive" onClick={() => remove(index)}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    )
+                                })}
+                                <Button type="button" variant="outline" onClick={() => append({ materialId: '', materialName: '', quantity: 0, customizationDetails: '', referenceImage: '' })}>
+                                    <PlusCircle className="mr-2 h-4 w-4" /> Add Another Material
+                                </Button>
+                                {errors.materials?.root && <p className="text-sm text-destructive font-medium">{errors.materials.root.message}</p>}
+                            </CardContent>
+                        </Card>
                     )}
-
+                    
                     <Card>
                         <CardHeader>
-                            <CardTitle>Step {orderType === 'bulk' ? '3' : '4'}: Your Details</CardTitle>
+                             <CardTitle>Step 3: Delivery Timeline & Contact Info</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
+                             <div className="space-y-2">
+                                <Label>Delivery Timeline</Label>
+                                <Input {...register('requirementDate')} placeholder="e.g., 2 weeks, 1 month, ASAP" />
+                                {errors.requirementDate && <p className="text-sm text-destructive mt-2">{errors.requirementDate.message}</p>}
+                            </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Full Name</Label>
