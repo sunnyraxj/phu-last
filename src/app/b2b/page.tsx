@@ -36,6 +36,10 @@ const materialRequestSchema = z.object({
   productName: z.string().optional(),
   budgetPerPiece: z.number().optional(),
   description: z.string().optional(),
+  height: z.string().optional(),
+  length: z.string().optional(),
+  width: z.string().optional(),
+  shape: z.string().optional(),
 });
 
 const b2bRequestSchema = z.object({
@@ -84,6 +88,10 @@ export default function B2BPage() {
                 referenceImage: '',
                 budgetPerPiece: undefined,
                 description: '',
+                height: '',
+                length: '',
+                width: '',
+                shape: '',
             }],
             customerDetails: {
                 name: '',
@@ -215,7 +223,7 @@ export default function B2BPage() {
                              <CardHeader>
                                 <CardTitle>Step 2: Enter Bulk Order Details</CardTitle>
                                 <CardDescription>
-                                    Specify the products you need in bulk by filling out the details for each. You can add multiple products to a single request. Minimum order quantity is 100 units per product.
+                                     Specify the products you need in bulk by filling out the details for each. You can add multiple products to a single request. Minimum order quantity is 100 units per product.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
@@ -227,11 +235,11 @@ export default function B2BPage() {
                                             </Button>
                                         )}
                                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                            <div className="space-y-2 md:col-span-1">
+                                            <div className="space-y-2">
                                                 <Label>Product Name</Label>
                                                 <Input {...register(`materials.${index}.productName`)} placeholder="e.g., Round Jute Basket" />
                                             </div>
-                                            <div className="space-y-2 md:col-span-1">
+                                            <div className="space-y-2">
                                                 <Label>Material</Label>
                                                 <Input {...register(`materials.${index}.materialName`)} placeholder="e.g., Jute, Bamboo, Cane" />
                                             </div>
@@ -241,13 +249,31 @@ export default function B2BPage() {
                                                 {errors.materials?.[index]?.quantity && <p className="text-sm text-destructive">{errors.materials[index].quantity.message}</p>}
                                             </div>
                                             <div className="space-y-2">
-                                                <Label>Budget per piece (Optional)</Label>
+                                                <Label>Budget/piece (Optional)</Label>
                                                 <Input type="number" {...register(`materials.${index}.budgetPerPiece`, { valueAsNumber: true })} placeholder="e.g., 500" />
                                             </div>
                                         </div>
                                         <div className="space-y-2">
                                             <Label>Description (Optional)</Label>
                                             <Textarea {...register(`materials.${index}.description`)} placeholder="Add any specific details about the product here." rows={2}/>
+                                        </div>
+                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            <div className="space-y-2">
+                                                <Label>Height (Optional)</Label>
+                                                <Input {...register(`materials.${index}.height`)} placeholder="e.g., 12cm" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Length (Optional)</Label>
+                                                <Input {...register(`materials.${index}.length`)} placeholder="e.g., 20cm" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Width (Optional)</Label>
+                                                <Input {...register(`materials.${index}.width`)} placeholder="e.g., 15cm" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Shape (Optional)</Label>
+                                                <Input {...register(`materials.${index}.shape`)} placeholder="e.g., Round, Square" />
+                                            </div>
                                         </div>
                                      </div>
                                 ))}
@@ -258,6 +284,10 @@ export default function B2BPage() {
                                     quantity: MIN_BULK_QUANTITY, 
                                     budgetPerPiece: undefined,
                                     description: '',
+                                    height: '',
+                                    length: '',
+                                    width: '',
+                                    shape: '',
                                 })}>
                                     <PlusCircle className="mr-2 h-4 w-4" /> Add Another Product
                                 </Button>
