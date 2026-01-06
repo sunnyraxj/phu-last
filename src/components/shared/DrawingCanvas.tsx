@@ -151,7 +151,7 @@ export function DrawingCanvas({ onSave, initialImage, width = 500, height = 400 
       />
       <div className="flex items-center justify-center flex-wrap gap-2">
         <Button
-          variant={isErasing ? 'outline' : 'secondary'}
+          variant={!isErasing ? 'secondary' : 'outline'}
           size="icon"
           onClick={() => setIsErasing(false)}
           title="Pen"
@@ -159,7 +159,7 @@ export function DrawingCanvas({ onSave, initialImage, width = 500, height = 400 
           <Pen className="h-4 w-4" />
         </Button>
         <Button
-          variant={!isErasing ? 'outline' : 'secondary'}
+          variant={isErasing ? 'secondary' : 'outline'}
           size="icon"
           onClick={() => setIsErasing(true)}
           title="Eraser"
@@ -173,7 +173,7 @@ export function DrawingCanvas({ onSave, initialImage, width = 500, height = 400 
                     key={c}
                     type="button"
                     onClick={() => setColor(c)}
-                    className={cn("h-6 w-6 rounded-full border-2", color === c ? 'border-primary' : 'border-transparent')}
+                    className={cn("h-6 w-6 rounded-full border-2", color === c && !isErasing ? 'border-primary' : 'border-transparent')}
                     style={{ backgroundColor: c }}
                     aria-label={`Set color to ${c}`}
                 />
