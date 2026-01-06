@@ -221,7 +221,7 @@ export function Header({ showAnnouncement = true, variant = 'transparent' }: Hea
   const autoplayPlugin = useRef(Autoplay({ delay: 3000, stopOnInteraction: false }));
 
   const SocialButtons = () => (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-4 text-white">
       <Link href="#" className="hover:opacity-80 transition-opacity">
         <Facebook size={16} />
       </Link>
@@ -272,7 +272,7 @@ export function Header({ showAnnouncement = true, variant = 'transparent' }: Hea
 
        <div className={cn(
            "relative z-10 py-2 md:py-0 px-4",
-            isSolid ? "text-foreground" : "text-white",
+            "text-foreground",
             isMobile && 'bg-white !text-foreground'
        )}>
         <div className="w-full flex flex-col items-center justify-center">
@@ -291,7 +291,7 @@ export function Header({ showAnnouncement = true, variant = 'transparent' }: Hea
                    <SheetHeader>
                         <SheetTitle>Menu</SheetTitle>
                     </SheetHeader>
-                    <div className="grid grid-cols-2 gap-2 py-4">
+                    <div className="flex flex-col gap-2 py-4">
                       {navItems.map((item) => (
                         <SheetClose asChild key={item.href}>
                           <Link href={item.href} >
@@ -382,7 +382,7 @@ export function Header({ showAnnouncement = true, variant = 'transparent' }: Hea
                 {!isUserLoading && user && !user.isAnonymous ? (
                   <Popover>
                       <PopoverTrigger asChild>
-                        <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isSolid ? "ring-foreground/50" : "ring-white/50")}>
+                        <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", "ring-foreground/50")}>
                             <User size={18} strokeWidth={1.5} />
                         </button>
                       </PopoverTrigger>
@@ -529,60 +529,30 @@ export function Header({ showAnnouncement = true, variant = 'transparent' }: Hea
                      <div className="w-1/3">
                         <Sheet>
                             <SheetTrigger asChild>
-                                <button className="hover:opacity-80 transition-colors">
-                                    <Search size={22} strokeWidth={1.5} />
-                                </button>
+                                 <Button variant="ghost" className="text-sm font-medium">
+                                    Menu
+                                </Button>
                             </SheetTrigger>
-                            <SheetContent side="left" className="flex flex-col w-full sm:max-w-md">
+                            <SheetContent side="left" className="w-full max-w-sm">
                                 <SheetHeader>
-                                    <SheetTitle>Search Products</SheetTitle>
+                                    <SheetTitle>Menu</SheetTitle>
                                 </SheetHeader>
-                                <div className="relative">
-                                    <Input 
-                                        placeholder="What are you looking for?"
-                                        className="pl-10 text-base h-12"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                    />
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                                </div>
-                                <div className="flex-1 overflow-y-auto -mx-6 px-6">
-                                    {(searchQuery ? searchResults : suggestedProducts).length > 0 ? (
-                                        <>
-                                            <h3 className="text-sm font-semibold text-muted-foreground my-4">
-                                                {searchQuery ? 'Search Results' : 'Suggestions for you'}
-                                            </h3>
-                                            <div className="flex flex-col gap-4">
-                                                {(searchQuery ? searchResults : suggestedProducts).map(product => (
-                                                <SheetClose asChild key={product.id}>
-                                                    <Link href={`/purchase#${product.id}`} className="flex items-center gap-4 group">
-                                                        <div className="relative h-16 w-16 rounded-md overflow-hidden bg-muted">
-                                                            <Image
-                                                                src={isValidImageDomain(product.images?.[0]) ? product.images[0] : placeholderImages.product.url}
-                                                                alt={product.name}
-                                                                fill
-                                                                className="object-cover"
-                                                            />
-                                                        </div>
-                                                        <div className="flex-1">
-                                                            <p className="font-semibold text-sm group-hover:underline">{product.name}</p>
-                                                            <p className="text-sm text-muted-foreground">
-                                                                {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(product.baseMrp || 0)}
-                                                            </p>
-                                                        </div>
-                                                    </Link>
-                                                </SheetClose>
-                                                ))}
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <div className="text-center py-10">
-                                            <p className="text-muted-foreground">
-                                                {searchQuery ? 'No products found.' : 'No suggestions available.'}
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
+                                <div className="flex flex-col gap-2 py-4">
+                                {navItems.map((item) => (
+                                    <SheetClose asChild key={item.href}>
+                                    <Link href={item.href} >
+                                        <Button variant="outline" className={cn("w-full justify-center text-base py-6", item.className)}>{item.label}</Button>
+                                    </Link>
+                                    </SheetClose>
+                                ))}
+                                {userData?.role === 'admin' && (
+                                    <SheetClose asChild>
+                                    <Link href="/admin/dashboard">
+                                        <Button variant="outline" className="w-full justify-center text-base py-6 col-span-2">Admin Dashboard</Button>
+                                    </Link>
+                                    </SheetClose>
+                                )}
+                            </div>
                             </SheetContent>
                         </Sheet>
                      </div>
@@ -591,7 +561,7 @@ export function Header({ showAnnouncement = true, variant = 'transparent' }: Hea
                         {!isUserLoading && user && !user.isAnonymous ? (
                         <Popover>
                             <PopoverTrigger asChild>
-                                <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isSolid ? "ring-foreground/50" : "ring-white")}>
+                                <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", "ring-foreground/50")}>
                                     <User size={18} strokeWidth={1.5} />
                                 </button>
                             </PopoverTrigger>
@@ -798,7 +768,7 @@ export function Header({ showAnnouncement = true, variant = 'transparent' }: Hea
                             {!isUserLoading && user && !user.isAnonymous ? (
                             <Popover>
                                 <PopoverTrigger asChild>
-                                    <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isSolid ? "ring-foreground/50" : "ring-white")}>
+                                    <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", "ring-white")}>
                                         <User size={18} strokeWidth={1.5} />
                                     </button>
                                 </PopoverTrigger>
