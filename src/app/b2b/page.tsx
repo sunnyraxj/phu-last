@@ -222,7 +222,7 @@ export default function B2BPage() {
                                     </div>
                                     <div className="space-y-2">
                                         <Label>Material</Label>
-                                        <Input {...register(`materials.0.materialName`)} placeholder="e.g., Jute, Bamboo" />
+                                        <Input {...register(`materials.0.materialName`)} placeholder="e.g., Jute, Bamboo, Cane" />
                                          {errors.materials?.[0]?.materialId && <p className="text-sm text-destructive">{errors.materials[0].materialId.message}</p>}
                                     </div>
                                 </div>
@@ -330,24 +330,7 @@ export default function B2BPage() {
                                     <CardTitle>Step 3: Delivery Timeline</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <Controller
-                                        control={control}
-                                        name="requirementDate"
-                                        render={({ field }) => (
-                                            <Select onValueChange={field.onChange} value={field.value}>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select a delivery timeline" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="1 Week">1 Week</SelectItem>
-                                                    <SelectItem value="2 Weeks">2 Weeks</SelectItem>
-                                                    <SelectItem value="1 Month">1 Month</SelectItem>
-                                                    <SelectItem value="2 Months">2 Months</SelectItem>
-                                                    <SelectItem value="3+ Months">3+ Months</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        )}
-                                    />
+                                    <Input {...register('requirementDate')} placeholder="e.g., 2 weeks, 1 month, ASAP" />
                                     {errors.requirementDate && <p className="text-sm text-destructive mt-2">{errors.requirementDate.message}</p>}
                                 </CardContent>
                             </Card>
@@ -398,7 +381,3 @@ export default function B2BPage() {
         </div>
     );
 }
-
-    
-
-    
