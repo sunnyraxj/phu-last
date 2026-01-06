@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useRef, useEffect } from 'react';
@@ -24,6 +25,7 @@ import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Combobox } from '@/components/ui/combobox';
+import Image from 'next/image';
 
 const MIN_BULK_QUANTITY = 100;
 
@@ -32,7 +34,7 @@ const materialRequestSchema = z.object({
   materialName: z.string().min(1),
   quantity: z.number().min(1, "Quantity must be at least 1"),
   customizationDetails: z.string().optional(),
-  referenceImage: z.string().url().optional().or(z.literal('')),
+  referenceImages: z.array(z.string().url()).optional(),
   productName: z.string().optional(),
   budgetPerPiece: z.number().optional(),
   description: z.string().optional(),
@@ -75,6 +77,7 @@ export default function B2BPage() {
         handleSubmit,
         setValue,
         watch,
+        getValues,
         formState: { errors },
     } = useForm<B2BFormValues>({
         resolver: zodResolver(b2bRequestSchema),
@@ -86,7 +89,7 @@ export default function B2BPage() {
                 materialName: '', 
                 quantity: MIN_BULK_QUANTITY, 
                 customizationDetails: '', 
-                referenceImage: '',
+                referenceImages: [],
                 budgetPerPiece: undefined,
                 description: '',
                 height: '',
@@ -131,6 +134,12 @@ export default function B2BPage() {
         const file = event.target.files?.[0];
         if (!file) return;
 
+        const currentImages = getValues(`materials.${uploadIndex}.referenceImages`) || [];
+        if (currentImages.length >= 4) {
+            toast({ variant: 'destructive', title: 'Upload Limit Reached', description: 'You can upload a maximum of 4 images per product.' });
+            return;
+        }
+
         setIsUploading(true);
         try {
             const response = await fetch(`/api/upload?filename=${file.name}`, {
@@ -139,8 +148,7 @@ export default function B2BPage() {
             });
             const newBlob = await response.json();
             if (newBlob.url) {
-                const currentMaterial = watchedMaterials[uploadIndex];
-                update(uploadIndex, { ...currentMaterial, referenceImage: newBlob.url });
+                setValue(`materials.${uploadIndex}.referenceImages`, [...currentImages, newBlob.url]);
                 toast({ title: 'Image uploaded successfully!' });
             } else {
                 throw new Error('Upload failed');
@@ -149,11 +157,16 @@ export default function B2BPage() {
             toast({ variant: 'destructive', title: 'Upload failed', description: 'Could not upload image.' });
         } finally {
             setIsUploading(false);
-            setUploadIndex(null);
             if (event.target) event.target.value = '';
         }
     };
     
+    const removeImage = (productIndex: number, imageIndex: number) => {
+        const currentImages = getValues(`materials.${productIndex}.referenceImages`) || [];
+        const newImages = currentImages.filter((_, idx) => idx !== imageIndex);
+        setValue(`materials.${productIndex}.referenceImages`, newImages);
+    };
+
     const onSubmit = async (data: B2BFormValues) => {
         setIsSubmitting(true);
         try {
@@ -238,8 +251,8 @@ export default function B2BPage() {
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         )}
-                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                            <div className="space-y-2 md:col-span-2">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                            <div className="space-y-2">
                                                 <Label>Product Name</Label>
                                                 <Input {...register(`materials.${index}.productName`)} placeholder="e.g., Round Jute Basket" />
                                             </div>
@@ -251,6 +264,10 @@ export default function B2BPage() {
                                                 <Label>Quantity</Label>
                                                 <Input type="number" {...register(`materials.${index}.quantity`, { valueAsNumber: true, min: MIN_BULK_QUANTITY })} />
                                                 {errors.materials?.[index]?.quantity && <p className="text-sm text-destructive">{errors.materials[index].quantity.message}</p>}
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Budget / piece (Optional)</Label>
+                                                <Input type="number" {...register(`materials.${index}.budgetPerPiece`, { valueAsNumber: true })} placeholder="e.g., 500" />
                                             </div>
                                         </div>
                                         <div className="space-y-2">
@@ -276,19 +293,30 @@ export default function B2BPage() {
                                             </div>
                                         </div>
                                         <div className="space-y-2">
-                                            <Label>Reference Image (Optional)</Label>
+                                            <Label>Reference Images (Optional)</Label>
                                             <div className="flex items-center gap-2">
-                                                <Button type="button" variant="outline" className="w-full justify-center" onClick={() => { setUploadIndex(index); fileInputRef.current?.click(); }} disabled={isUploading}>
-                                                    <UploadCloud className="mr-2 h-4 w-4" /> Upload
+                                                <Button type="button" variant="outline" className="w-full justify-center" onClick={() => { setUploadIndex(index); fileInputRef.current?.click(); }} disabled={isUploading || (watchedMaterials[index]?.referenceImages?.length ?? 0) >= 4}>
+                                                    <UploadCloud className="mr-2 h-4 w-4" /> Upload Image
                                                 </Button>
                                             </div>
-                                            {watchedMaterials[index]?.referenceImage && (
-                                                <div className="text-xs">
-                                                    <span className="font-semibold">Uploaded:</span>{' '}
-                                                    <a href={watchedMaterials[index].referenceImage} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline break-all">
-                                                        {watchedMaterials[index].referenceImage}
-                                                    </a>
-                                                </div>
+                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                {watchedMaterials[index]?.referenceImages?.map((url, imgIndex) => (
+                                                    <div key={imgIndex} className="relative h-16 w-16 rounded-md overflow-hidden">
+                                                        <Image src={url} alt={`Reference ${imgIndex + 1}`} fill className="object-cover" />
+                                                        <Button
+                                                            type="button"
+                                                            variant="destructive"
+                                                            size="icon"
+                                                            className="absolute top-1 right-1 h-5 w-5 opacity-80 hover:opacity-100"
+                                                            onClick={() => removeImage(index, imgIndex)}
+                                                        >
+                                                            <Trash2 className="h-3 w-3" />
+                                                        </Button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            {(watchedMaterials[index]?.referenceImages?.length ?? 0) >= 4 && (
+                                                <p className="text-xs text-destructive mt-1">Maximum of 4 images reached.</p>
                                             )}
                                         </div>
                                      </div>
@@ -304,7 +332,7 @@ export default function B2BPage() {
                                     length: '',
                                     width: '',
                                     shape: '',
-                                    referenceImage: ''
+                                    referenceImages: []
                                 })}>
                                     <PlusCircle className="mr-2 h-4 w-4" /> Add Another Product
                                 </Button>
@@ -357,16 +385,27 @@ export default function B2BPage() {
                                                     <Textarea placeholder="Describe your customization (size, color, design, etc.)" {...register(`materials.${index}.customizationDetails`)} />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label>Reference Image (Optional)</Label>
+                                                    <Label>Reference Images (Optional)</Label>
                                                     <div className="flex items-center gap-4">
-                                                        <Button type="button" variant="outline" onClick={() => { setUploadIndex(index); fileInputRef.current?.click(); }} disabled={isUploading}>
+                                                        <Button type="button" variant="outline" onClick={() => { setUploadIndex(index); fileInputRef.current?.click(); }} disabled={isUploading || (watchedMaterials[index]?.referenceImages?.length ?? 0) >= 4}>
                                                             {isUploading && uploadIndex === index ? <PottersWheelSpinner /> : <><UploadCloud className="mr-2 h-4 w-4" /> Upload Image</>}
                                                         </Button>
-                                                        {watchedMaterials[index]?.referenceImage && (
-                                                            <a href={watchedMaterials[index].referenceImage} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-500 hover:underline truncate">
-                                                                {watchedMaterials[index].referenceImage.split('/').pop()}
-                                                            </a>
-                                                        )}
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2 mt-2">
+                                                        {watchedMaterials[index]?.referenceImages?.map((url, imgIndex) => (
+                                                            <div key={imgIndex} className="relative h-16 w-16 rounded-md overflow-hidden">
+                                                                <Image src={url} alt={`Reference ${imgIndex + 1}`} fill className="object-cover" />
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="destructive"
+                                                                    size="icon"
+                                                                    className="absolute top-1 right-1 h-5 w-5 opacity-80 hover:opacity-100"
+                                                                    onClick={() => removeImage(index, imgIndex)}
+                                                                >
+                                                                    <Trash2 className="h-3 w-3" />
+                                                                </Button>
+                                                            </div>
+                                                        ))}
                                                     </div>
                                                 </div>
                                             </div>
@@ -379,7 +418,7 @@ export default function B2BPage() {
                                         </div>
                                     )
                                 })}
-                                <Button type="button" variant="outline" onClick={() => append({ materialId: '', materialName: '', quantity: 0, customizationDetails: '', referenceImage: '' })}>
+                                <Button type="button" variant="outline" onClick={() => append({ materialId: '', materialName: '', quantity: 0, customizationDetails: '', referenceImages: [] })}>
                                     <PlusCircle className="mr-2 h-4 w-4" /> Add Another Material
                                 </Button>
                                 {errors.materials?.root && <p className="text-sm text-destructive font-medium">{errors.materials.root.message}</p>}
@@ -392,7 +431,7 @@ export default function B2BPage() {
 
                     <Card>
                         <CardHeader>
-                             <CardTitle>Step 3: Delivery Timeline & Contact Info</CardTitle>
+                             <CardTitle>Step 3: Your Details</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                              <div className="space-y-2">
@@ -439,3 +478,4 @@ export default function B2BPage() {
         </div>
     );
 }
+
