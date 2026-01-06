@@ -77,9 +77,6 @@ export default function B2BPage() {
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const materialSettingsQuery = useMemoFirebase(() => collection(firestore, 'materialSettings'), [firestore]);
-    const { data: materialSettings, isLoading: materialsLoading } = useCollection<MaterialSetting>(materialSettingsQuery);
-
     const {
         control,
         register,
@@ -110,13 +107,13 @@ export default function B2BPage() {
     const watchedMaterials = watch('materials');
 
     const availableMaterials = useMemo(() => {
-        if (!materialSettings) return [];
-        
-        if (orderType === 'bulk') {
-            return materialSettings.filter(m => m.bulkAllowed);
-        }
-        return materialSettings.filter(m => m.customizeAllowed);
-    }, [materialSettings, orderType]);
+        const coreMaterials = [
+            { id: 'cane', name: 'Cane', unit: 'pcs' },
+            { id: 'bamboo', name: 'Bamboo', unit: 'pcs' },
+            { id: 'jute', name: 'Jute', unit: 'kg' },
+        ];
+        return coreMaterials;
+    }, []);
     
     useEffect(() => {
         setValue('orderType', orderType);
@@ -222,10 +219,10 @@ export default function B2BPage() {
                             {orderType === 'bulk' && <CardDescription>Minimum order quantity for bulk orders is {MIN_BULK_QUANTITY} units per material.</CardDescription>}
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {materialsLoading ? <PottersWheelSpinner /> : (
+                            
                                 <>
                                     {fields.map((field, index) => {
-                                        const selectedMaterialSetting = materialSettings?.find(m => m.id === watchedMaterials[index]?.materialId);
+                                        const selectedMaterialSetting = availableMaterials?.find(m => m.id === watchedMaterials[index]?.materialId);
                                         return (
                                             <div key={field.id} className="p-4 border rounded-lg space-y-4 relative">
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -294,7 +291,7 @@ export default function B2BPage() {
                                     </Button>
                                     {errors.materials?.root && <p className="text-sm text-destructive font-medium">{errors.materials.root.message}</p>}
                                 </>
-                            )}
+                            
                         </CardContent>
                     </Card>
 
