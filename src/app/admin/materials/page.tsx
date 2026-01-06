@@ -15,6 +15,7 @@ import Image from 'next/image';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Switch } from '@/components/ui/switch';
 
 type Product = {
     material: string;
@@ -24,6 +25,9 @@ type MaterialSetting = {
     id: string;
     name: string;
     imageUrl: string;
+    bulkAllowed?: boolean;
+    customizeAllowed?: boolean;
+    unit?: string;
 };
 
 type SiteSettings = {
@@ -48,7 +52,7 @@ export default function MaterialsPage() {
     const [isEditFormOpen, setIsEditFormOpen] = useState(false);
     const [isHeroEditFormOpen, setIsHeroEditFormOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    const [selectedMaterial, setSelectedMaterial] = useState<MaterialSetting | { name: string; imageUrl: string } | null>(null);
+    const [selectedMaterial, setSelectedMaterial] = useState<MaterialSetting | null>(null);
     const [heroImage, setHeroImage] = useState<{ url: string | undefined, urlMobile: string | undefined }>({ url: '', urlMobile: '' });
     
     const [isBrandLogoFormOpen, setIsBrandLogoFormOpen] = useState(false);
@@ -87,6 +91,9 @@ export default function MaterialsPage() {
                 id: setting?.id || name,
                 name: name,
                 imageUrl: setting?.imageUrl || '',
+                bulkAllowed: setting?.bulkAllowed || false,
+                customizeAllowed: setting?.customizeAllowed || false,
+                unit: setting?.unit || '',
             };
         });
     }, [uniqueMaterials, materialSettings]);
@@ -100,14 +107,14 @@ export default function MaterialsPage() {
         e.preventDefault();
         if (!selectedMaterial) return;
         
-        const { name, imageUrl } = selectedMaterial;
+        const { name, imageUrl, bulkAllowed, customizeAllowed, unit } = selectedMaterial;
         const materialRef = doc(firestore, 'materialSettings', name);
 
         try {
-            await setDocumentNonBlocking(materialRef, { name, imageUrl }, { merge: true });
+            await setDocumentNonBlocking(materialRef, { name, imageUrl, bulkAllowed, customizeAllowed, unit }, { merge: true });
             toast({
                 title: 'Material Updated',
-                description: `The image for ${name} has been updated.`,
+                description: `Settings for ${name} have been updated.`,
             });
             setIsEditFormOpen(false);
             setSelectedMaterial(null);
@@ -115,7 +122,7 @@ export default function MaterialsPage() {
             toast({
                 variant: 'destructive',
                 title: 'Update Failed',
-                description: 'Could not update the material image.',
+                description: 'Could not update the material settings.',
             });
         }
     };
@@ -257,9 +264,9 @@ export default function MaterialsPage() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Material Images</CardTitle>
+                    <CardTitle>Material Settings</CardTitle>
                     <CardDescription>
-                        Manage the images for each material on the homepage.
+                        Manage images and B2B settings for each material.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -269,13 +276,15 @@ export default function MaterialsPage() {
                                 <TableRow>
                                     <TableHead>Material Name</TableHead>
                                     <TableHead>Image Preview</TableHead>
+                                    <TableHead>Bulk Orders</TableHead>
+                                    <TableHead>Custom Orders</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {isLoading ? (
                                     <TableRow>
-                                        <TableCell colSpan={3} className="h-24 text-center">
+                                        <TableCell colSpan={5} className="h-24 text-center">
                                             <PottersWheelSpinner />
                                         </TableCell>
                                     </TableRow>
@@ -289,20 +298,30 @@ export default function MaterialsPage() {
                                                         <Image src={material.imageUrl} alt={material.name} fill className="object-cover" />
                                                     </div>
                                                 ) : (
-                                                    <span className="text-muted-foreground text-xs">No image set</span>
+                                                    <span className="text-muted-foreground text-xs">No image</span>
                                                 )}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant={material.bulkAllowed ? "default" : "secondary"}>
+                                                    {material.bulkAllowed ? 'Allowed' : 'Disallowed'}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant={material.customizeAllowed ? "default" : "secondary"}>
+                                                    {material.customizeAllowed ? 'Allowed' : 'Disallowed'}
+                                                </Badge>
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <Button variant="ghost" size="sm" onClick={() => handleEditClick(material)}>
                                                     <Edit className="mr-2 h-4 w-4" />
-                                                    Edit Image
+                                                    Edit
                                                 </Button>
                                             </TableCell>
                                         </TableRow>
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={3} className="h-24 text-center">
+                                        <TableCell colSpan={5} className="h-24 text-center">
                                             No materials found in products.
                                         </TableCell>
                                     </TableRow>
@@ -346,57 +365,71 @@ export default function MaterialsPage() {
             <Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Edit Image for: {selectedMaterial?.name}</DialogTitle>
+                        <DialogTitle>Edit Settings for: {selectedMaterial?.name}</DialogTitle>
                         <DialogDescription>
-                            Upload an image from your device or paste an image URL.
+                            Manage settings for this material.
                         </DialogDescription>
                     </DialogHeader>
-                    <form onSubmit={handleFormSubmit}>
-                        <div className="py-4 space-y-4">
-                            <div>
-                                <Input
-                                    type="file"
-                                    ref={inputFileRef}
-                                    onChange={(e) => handleFileUpload(e, 'material')}
-                                    className="hidden"
-                                    id="file-upload"
-                                    accept="image/*"
-                                />
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => inputFileRef.current?.click()}
-                                    disabled={isUploading}
-                                    className="w-full"
-                                >
-                                    {isUploading ? <PottersWheelSpinner /> : <><UploadCloud className="mr-2 h-4 w-4" /> Upload from Device</>}
-                                </Button>
-                            </div>
-                            <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                <span className="w-full border-t" />
+                    {selectedMaterial && (
+                        <form onSubmit={handleFormSubmit}>
+                            <div className="py-4 space-y-6">
+                                <div>
+                                    <Label>Image</Label>
+                                     <div className="flex items-center gap-2 mt-2">
+                                        <Input
+                                            value={selectedMaterial.imageUrl || ''}
+                                            onChange={(e) => setSelectedMaterial(prev => prev ? { ...prev, imageUrl: e.target.value } : null)}
+                                            placeholder="https://example.com/image.jpg"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() => inputFileRef.current?.click()}
+                                            disabled={isUploading}
+                                        >
+                                            {isUploading ? <PottersWheelSpinner /> : <UploadCloud className="h-4 w-4" />}
+                                        </Button>
+                                        <Input type="file" ref={inputFileRef} onChange={(e) => handleFileUpload(e, 'material')} className="hidden" accept="image/*"/>
+                                     </div>
                                 </div>
-                                <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-background px-2 text-muted-foreground">
-                                    Or
-                                </span>
+                                <div>
+                                    <Label>B2B Order Settings</Label>
+                                    <div className="space-y-3 mt-2">
+                                        <div className="flex items-center space-x-2">
+                                            <Switch
+                                                id="bulkAllowed"
+                                                checked={selectedMaterial.bulkAllowed}
+                                                onCheckedChange={(checked) => setSelectedMaterial(p => p ? {...p, bulkAllowed: checked} : null)}
+                                            />
+                                            <Label htmlFor="bulkAllowed">Available for Bulk Orders</Label>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <Switch
+                                                id="customizeAllowed"
+                                                checked={selectedMaterial.customizeAllowed}
+                                                onCheckedChange={(checked) => setSelectedMaterial(p => p ? {...p, customizeAllowed: checked} : null)}
+                                            />
+                                            <Label htmlFor="customizeAllowed">Available for Customization</Label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label htmlFor="unit">Unit of Measurement</Label>
+                                     <Input
+                                        id="unit"
+                                        value={selectedMaterial.unit || ''}
+                                        onChange={(e) => setSelectedMaterial(prev => prev ? { ...prev, unit: e.target.value } : null)}
+                                        placeholder="e.g., kg, pcs, meter"
+                                    />
                                 </div>
                             </div>
-                             <div>
-                                <Label htmlFor="imageUrl">Image URL</Label>
-                                <Input
-                                    id="imageUrl"
-                                    value={selectedMaterial?.imageUrl || ''}
-                                    onChange={(e) => setSelectedMaterial(prev => prev ? { ...prev, imageUrl: e.target.value } : null)}
-                                    placeholder="https://example.com/image.jpg"
-                                />
-                             </div>
-                        </div>
-                        <FormDialogFooter>
-                            <Button type="button" variant="outline" onClick={() => setIsEditFormOpen(false)}>Cancel</Button>
-                            <Button type="submit" disabled={isUploading}>Save</Button>
-                        </FormDialogFooter>
-                    </form>
+                            <FormDialogFooter>
+                                <Button type="button" variant="outline" onClick={() => setIsEditFormOpen(false)}>Cancel</Button>
+                                <Button type="submit" disabled={isUploading}>Save</Button>
+                            </FormDialogFooter>
+                        </form>
+                    )}
                 </DialogContent>
             </Dialog>
             
