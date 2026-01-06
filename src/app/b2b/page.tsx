@@ -23,6 +23,7 @@ import { collection, serverTimestamp } from 'firebase/firestore';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Combobox } from '@/components/ui/combobox';
 
 const MIN_BULK_QUANTITY = 100;
 
@@ -165,7 +166,7 @@ export default function B2BPage() {
     if (isSubmitted) {
         return (
             <div className="bg-background pt-24 md:pt-48">
-                <Header variant="transparent" />
+                <Header variant="solid" />
                 <main className="container mx-auto py-12 sm:py-16 px-4 flex items-center justify-center">
                     <Card className="max-w-xl text-center">
                         <CardHeader>
@@ -184,13 +185,15 @@ export default function B2BPage() {
         )
     }
 
+    const materialOptions = availableMaterials.map(m => ({ value: m.id, label: m.name }));
+
     return (
         <div className="bg-background pt-24 md:pt-48">
-            <Header variant="transparent" />
+            <Header variant="solid" />
 
             <main className="container mx-auto py-12 sm:py-16 px-4">
                  <div className="text-center mb-12">
-                    <h1 className="text-4xl md:text-6xl font-bold tracking-tight">Bulk & Customize Orders</h1>
+                    <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-yellow-500">Bulk & Customize Orders</h1>
                     <p className="mt-4 text-lg md:text-xl max-w-3xl mx-auto text-muted-foreground">
                         Place a request for bulk quantities or custom-designed products tailored to your needs.
                     </p>
@@ -220,7 +223,7 @@ export default function B2BPage() {
                             {materialsLoading ? <PottersWheelSpinner /> : (
                                 <>
                                     {fields.map((field, index) => {
-                                        const selectedMaterial = materialSettings?.find(m => m.id === watchedMaterials[index]?.materialId);
+                                        const selectedMaterialSetting = materialSettings?.find(m => m.id === watchedMaterials[index]?.materialId);
                                         return (
                                             <div key={field.id} className="p-4 border rounded-lg space-y-4 relative">
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -230,18 +233,20 @@ export default function B2BPage() {
                                                             control={control}
                                                             name={`materials.${index}.materialId`}
                                                             render={({ field }) => (
-                                                                <Select onValueChange={field.onChange} value={field.value}>
-                                                                    <SelectTrigger><SelectValue placeholder="Select a material" /></SelectTrigger>
-                                                                    <SelectContent>
-                                                                        {availableMaterials.map(mat => <SelectItem key={mat.id} value={mat.id}>{mat.name}</SelectItem>)}
-                                                                    </SelectContent>
-                                                                </Select>
+                                                                <Combobox
+                                                                    options={materialOptions}
+                                                                    value={field.value}
+                                                                    onChange={field.onChange}
+                                                                    placeholder="Select a material"
+                                                                    searchPlaceholder="Search materials..."
+                                                                    notFoundMessage="No materials found."
+                                                                />
                                                             )}
                                                         />
                                                          {errors.materials?.[index]?.materialId && <p className="text-sm text-destructive">{errors.materials[index].materialId.message}</p>}
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <Label>Quantity {selectedMaterial?.unit ? `(in ${selectedMaterial.unit})` : ''}</Label>
+                                                        <Label>Quantity {selectedMaterialSetting?.unit ? `(in ${selectedMaterialSetting.unit})` : ''}</Label>
                                                         <Input type="number" {...register(`materials.${index}.quantity`, { valueAsNumber: true })} />
                                                         {errors.materials?.[index]?.quantity && <p className="text-sm text-destructive">{errors.materials[index].quantity.message}</p>}
                                                     </div>
