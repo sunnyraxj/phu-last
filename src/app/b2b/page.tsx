@@ -239,24 +239,7 @@ export default function B2BPage() {
                                 </div>
                                  <div className="space-y-2">
                                     <Label>Delivery Timeline</Label>
-                                     <Controller
-                                        control={control}
-                                        name="requirementDate"
-                                        render={({ field }) => (
-                                            <Select onValueChange={field.onChange} value={field.value}>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select a delivery timeline" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="1 Week">1 Week</SelectItem>
-                                                    <SelectItem value="2 Weeks">2 Weeks</SelectItem>
-                                                    <SelectItem value="1 Month">1 Month</SelectItem>
-                                                    <SelectItem value="2 Months">2 Months</SelectItem>
-                                                    <SelectItem value="3+ Months">3+ Months</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        )}
-                                    />
+                                    <Input {...register('requirementDate')} placeholder="e.g., 2 weeks, 1 month, ASAP" />
                                     {errors.requirementDate && <p className="text-sm text-destructive mt-2">{errors.requirementDate.message}</p>}
                                 </div>
                             </CardContent>
@@ -415,5 +398,7 @@ export default function B2BPage() {
         </div>
     );
 }
+
+    
 
     
