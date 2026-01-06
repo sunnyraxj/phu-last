@@ -7,8 +7,8 @@ import { Header } from "@/components/shared/Header";
 
 export default function AboutPage() {
     return (
-        <div className="bg-background">
-            <Header variant="solid" />
+        <div className="bg-background pt-24 md:pt-48">
+            <Header variant="transparent" />
 
             <section className="bg-primary text-primary-foreground py-20">
                 <div className="container mx-auto text-center px-4">

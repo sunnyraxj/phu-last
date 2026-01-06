@@ -233,7 +233,7 @@ export function Header({ showAnnouncement = true, variant = 'transparent' }: Hea
 
   return (
     <header className={cn(
-      "fixed top-0 left-0 right-0 z-50 transition-colors duration-300 rounded-b-lg", 
+      "fixed top-0 left-0 right-0 z-50 transition-colors duration-300", 
       isSolid ? 'bg-white shadow-md' : 'bg-transparent',
     )}>
        {showAnnouncement && (

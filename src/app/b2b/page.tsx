@@ -33,8 +33,8 @@ export default function B2BPage() {
     const whatsappMessage = encodeURIComponent("Hello, I'm interested in a B2B partnership and would like to discuss custom or bulk orders.");
 
     return (
-        <div className="bg-background">
-            <Header variant="solid" />
+        <div className="bg-background pt-24 md:pt-48">
+            <Header variant="transparent" />
 
             <section className="bg-yellow-400 text-black py-20">
                 <div className="container mx-auto text-center px-4">
