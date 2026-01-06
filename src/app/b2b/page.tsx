@@ -56,6 +56,7 @@ const b2bRequestSchema = z.object({
         email: z.string().email().optional().or(z.literal('')),
         state: z.string().optional(),
         gstNumber: z.string().optional(),
+        totalBudget: z.number().optional(),
     }),
 });
 
@@ -103,6 +104,7 @@ export default function B2BPage() {
                 email: '',
                 state: '',
                 gstNumber: '',
+                totalBudget: undefined,
             }
         },
     });
@@ -461,9 +463,15 @@ export default function B2BPage() {
                                     <Input {...register('customerDetails.state')} />
                                 </div>
                             </div>
-                             <div className="space-y-2">
-                                <Label>GST Number (Optional)</Label>
-                                <Input {...register('customerDetails.gstNumber')} />
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>GST Number (Optional)</Label>
+                                    <Input {...register('customerDetails.gstNumber')} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Total Budget (Optional)</Label>
+                                    <Input type="number" {...register('customerDetails.totalBudget', { valueAsNumber: true })} placeholder="e.g., 50000" />
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
@@ -478,4 +486,3 @@ export default function B2BPage() {
         </div>
     );
 }
-
