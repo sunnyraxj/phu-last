@@ -159,9 +159,7 @@ function Filters({
   selectedCategories, 
   handleCategoryChange, 
   selectedMaterials, 
-  handleMaterialChange, 
-  availability, 
-  setAvailability 
+  handleMaterialChange
 }: any) {
   
   return (
@@ -170,7 +168,7 @@ function Filters({
         <h2 className="text-xl font-bold">Filter:</h2>
       </div>
 
-      <Accordion type="multiple" defaultValue={["category", "material", "availability"]} className="w-full">
+      <Accordion type="multiple" defaultValue={["category", "material"]} className="w-full">
         <AccordionItem value="category">
           <AccordionTrigger className="font-semibold py-3 text-base">Category</AccordionTrigger>
           <AccordionContent>
@@ -205,22 +203,6 @@ function Filters({
                   <span className="text-sm">{mat}</span>
                 </label>
               ))}
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="availability">
-          <AccordionTrigger className="font-semibold py-3 text-base">Availability</AccordionTrigger>
-          <AccordionContent>
-            <div className="space-y-2 pt-2">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <Checkbox id="in-stock" onCheckedChange={(checked) => setAvailability(checked ? 'in-stock' : 'all')} checked={availability === 'in-stock'} />
-                <span className="text-sm">In Stock</span>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer">
-                <Checkbox id="out-of-stock" onCheckedChange={(checked) => setAvailability(checked ? 'out-of-stock' : 'all')} checked={availability === 'out-of-stock'} />
-                <span className="text-sm">Out of Stock</span>
-              </label>
             </div>
           </AccordionContent>
         </AccordionItem>
@@ -692,8 +674,6 @@ export function HomePageClient() {
                 handleCategoryChange={handleCategoryChange}
                 selectedMaterials={selectedMaterials}
                 handleMaterialChange={handleMaterialChange}
-                availability={availability}
-                setAvailability={setAvailability}
               />
             </aside>
 
@@ -719,8 +699,6 @@ export function HomePageClient() {
                           handleCategoryChange={handleCategoryChange}
                           selectedMaterials={selectedMaterials}
                           handleMaterialChange={handleMaterialChange}
-                          availability={availability}
-                          setAvailability={setAvailability}
                         />
                       </div>
                     </SheetContent>
