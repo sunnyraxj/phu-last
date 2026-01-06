@@ -32,7 +32,7 @@ const materialRequestSchema = z.object({
   materialName: z.string().min(1),
   quantity: z.number().min(1, "Quantity must be at least 1"),
   customizationDetails: z.string().optional(),
-  referenceImage: z.string().url().optional(),
+  referenceImage: z.string().url().optional().or(z.literal('')),
   productName: z.string().optional(),
   budgetPerPiece: z.number().optional(),
   description: z.string().optional(),
@@ -67,6 +67,7 @@ export default function B2BPage() {
     const [orderType, setOrderType] = useState<'bulk' | 'customize'>('bulk');
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [uploadIndex, setUploadIndex] = useState<number | null>(null);
 
     const {
         control,
@@ -124,7 +125,9 @@ export default function B2BPage() {
         setValue('orderType', orderType);
     }, [orderType, setValue]);
 
-    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (uploadIndex === null) return;
+
         const file = event.target.files?.[0];
         if (!file) return;
 
@@ -136,8 +139,8 @@ export default function B2BPage() {
             });
             const newBlob = await response.json();
             if (newBlob.url) {
-                const currentMaterial = watchedMaterials[index];
-                update(index, { ...currentMaterial, referenceImage: newBlob.url });
+                const currentMaterial = watchedMaterials[uploadIndex];
+                update(uploadIndex, { ...currentMaterial, referenceImage: newBlob.url });
                 toast({ title: 'Image uploaded successfully!' });
             } else {
                 throw new Error('Upload failed');
@@ -146,6 +149,7 @@ export default function B2BPage() {
             toast({ variant: 'destructive', title: 'Upload failed', description: 'Could not upload image.' });
         } finally {
             setIsUploading(false);
+            setUploadIndex(null);
             if (event.target) event.target.value = '';
         }
     };
@@ -223,7 +227,7 @@ export default function B2BPage() {
                              <CardHeader>
                                 <CardTitle>Step 2: Enter Bulk Order Details</CardTitle>
                                 <CardDescription>
-                                     Specify the products you need in bulk by filling out the details for each. You can add multiple products to a single request. Minimum order quantity is 100 units per product.
+                                     Specify the products you need in bulk. You can add multiple products to a single request. Minimum order quantity is 100 units per product.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
@@ -235,13 +239,9 @@ export default function B2BPage() {
                                             </Button>
                                         )}
                                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                            <div className="space-y-2">
+                                            <div className="space-y-2 md:col-span-2">
                                                 <Label>Product Name</Label>
                                                 <Input {...register(`materials.${index}.productName`)} placeholder="e.g., Round Jute Basket" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>Material</Label>
-                                                <Input {...register(`materials.${index}.materialName`)} placeholder="e.g., Jute, Bamboo, Cane" />
                                             </div>
                                             <div className="space-y-2">
                                                 <Label>Quantity</Label>
@@ -251,6 +251,20 @@ export default function B2BPage() {
                                             <div className="space-y-2">
                                                 <Label>Budget/piece (Optional)</Label>
                                                 <Input type="number" {...register(`materials.${index}.budgetPerPiece`, { valueAsNumber: true })} placeholder="e.g., 500" />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label>Material</Label>
+                                                <Input {...register(`materials.${index}.materialName`)} placeholder="e.g., Jute, Bamboo, Cane" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Reference Image (Optional)</Label>
+                                                <div className="flex items-center gap-2">
+                                                    <Button type="button" variant="outline" className="w-full justify-center" onClick={() => { setUploadIndex(index); fileInputRef.current?.click(); }} disabled={isUploading}>
+                                                        <UploadCloud className="mr-2 h-4 w-4" /> Upload
+                                                    </Button>
+                                                </div>
                                             </div>
                                         </div>
                                         <div className="space-y-2">
@@ -275,6 +289,14 @@ export default function B2BPage() {
                                                 <Input {...register(`materials.${index}.shape`)} placeholder="e.g., Round, Square" />
                                             </div>
                                         </div>
+                                        {watchedMaterials[index]?.referenceImage && (
+                                            <div className="text-xs">
+                                                <span className="font-semibold">Uploaded:</span>{' '}
+                                                <a href={watchedMaterials[index].referenceImage} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline break-all">
+                                                    {watchedMaterials[index].referenceImage}
+                                                </a>
+                                            </div>
+                                        )}
                                      </div>
                                 ))}
                                 <Button type="button" variant="outline" onClick={() => append({ 
@@ -288,6 +310,7 @@ export default function B2BPage() {
                                     length: '',
                                     width: '',
                                     shape: '',
+                                    referenceImage: ''
                                 })}>
                                     <PlusCircle className="mr-2 h-4 w-4" /> Add Another Product
                                 </Button>
@@ -342,15 +365,14 @@ export default function B2BPage() {
                                                 <div className="space-y-2">
                                                     <Label>Reference Image (Optional)</Label>
                                                     <div className="flex items-center gap-4">
-                                                        <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-                                                            {isUploading ? <PottersWheelSpinner /> : <><UploadCloud className="mr-2 h-4 w-4" /> Upload Image</>}
+                                                        <Button type="button" variant="outline" onClick={() => { setUploadIndex(index); fileInputRef.current?.click(); }} disabled={isUploading}>
+                                                            {isUploading && uploadIndex === index ? <PottersWheelSpinner /> : <><UploadCloud className="mr-2 h-4 w-4" /> Upload Image</>}
                                                         </Button>
                                                         {watchedMaterials[index]?.referenceImage && (
                                                             <a href={watchedMaterials[index].referenceImage} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-500 hover:underline truncate">
                                                                 {watchedMaterials[index].referenceImage.split('/').pop()}
                                                             </a>
                                                         )}
-                                                        <input type="file" ref={fileInputRef} onChange={(e) => handleFileUpload(e, index)} className="hidden" accept="image/*"/>
                                                     </div>
                                                 </div>
                                             </div>
@@ -370,7 +392,10 @@ export default function B2BPage() {
                             </CardContent>
                         </Card>
                     )}
-                    
+
+                    {/* Shared file input */}
+                    <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*"/>
+
                     <Card>
                         <CardHeader>
                              <CardTitle>Step 3: Delivery Timeline & Contact Info</CardTitle>
