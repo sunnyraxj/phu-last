@@ -222,24 +222,7 @@ export default function B2BPage() {
                                     </div>
                                     <div className="space-y-2">
                                         <Label>Material</Label>
-                                        <Controller
-                                            control={control}
-                                            name={`materials.0.materialId`}
-                                            render={({ field }) => (
-                                                <Combobox
-                                                    options={materialOptions}
-                                                    value={field.value}
-                                                    onChange={(val) => {
-                                                        const selectedMat = availableMaterials.find(m => m.id === val);
-                                                        setValue(`materials.0.materialId`, val);
-                                                        setValue(`materials.0.materialName`, selectedMat?.name || '');
-                                                    }}
-                                                    placeholder="Select a material"
-                                                    searchPlaceholder="Search materials..."
-                                                    notFoundMessage="No materials found."
-                                                />
-                                            )}
-                                        />
+                                        <Input {...register(`materials.0.materialName`)} placeholder="e.g., Jute, Bamboo" />
                                          {errors.materials?.[0]?.materialId && <p className="text-sm text-destructive">{errors.materials[0].materialId.message}</p>}
                                     </div>
                                 </div>
@@ -432,3 +415,5 @@ export default function B2BPage() {
         </div>
     );
 }
+
+    
