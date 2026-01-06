@@ -225,20 +225,20 @@ export default function B2BPage() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <Label>Product Name</Label>
-                                                <Input {...register(`materials.${index}.productName`)} placeholder="e.g., Round Jute Basket" />
+                                                <Input {...register(`materials.${index}.productName`)} placeholder="e.g., Round Jute Basket" className="bg-yellow-100" />
                                             </div>
                                             <div className="space-y-2">
                                                 <Label>Material</Label>
-                                                <Input {...register(`materials.${index}.materialName`)} placeholder="e.g., Jute, Bamboo, Cane" />
+                                                <Input {...register(`materials.${index}.materialName`)} placeholder="e.g., Jute, Bamboo, Cane" className="bg-yellow-100" />
                                             </div>
                                             <div className="space-y-2">
                                                 <Label>Quantity</Label>
-                                                <Input type="number" {...register(`materials.${index}.quantity`, { valueAsNumber: true, min: MIN_BULK_QUANTITY })} />
+                                                <Input type="number" {...register(`materials.${index}.quantity`, { valueAsNumber: true, min: MIN_BULK_QUANTITY })} className="bg-yellow-100" />
                                                 {errors.materials?.[index]?.quantity && <p className="text-sm text-destructive">{errors.materials[index].quantity.message}</p>}
                                             </div>
                                             <div className="space-y-2">
                                                 <Label>Budget per piece (Optional)</Label>
-                                                <Input type="number" {...register(`materials.${index}.budgetPerPiece`, { valueAsNumber: true })} placeholder="e.g., 500" />
+                                                <Input type="number" {...register(`materials.${index}.budgetPerPiece`, { valueAsNumber: true })} placeholder="e.g., 500" className="bg-yellow-100" />
                                             </div>
                                         </div>
                                      </div>
@@ -290,7 +290,7 @@ export default function B2BPage() {
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label>Quantity {selectedMaterialSetting?.unit ? `(in ${selectedMaterialSetting.unit})` : ''}</Label>
-                                                    <Input type="number" {...register(`materials.${index}.quantity`, { valueAsNumber: true })} />
+                                                    <Input type="number" {...register(`materials.${index}.quantity`, { valueAsNumber: true })} className="bg-yellow-100" />
                                                     {errors.materials?.[index]?.quantity && <p className="text-sm text-destructive">{errors.materials[index].quantity.message}</p>}
                                                 </div>
                                             </div>
@@ -298,7 +298,7 @@ export default function B2BPage() {
                                             <div className="space-y-4">
                                                 <div className="space-y-2">
                                                     <Label>Customization Details</Label>
-                                                    <Textarea placeholder="Describe your customization (size, color, design, etc.)" {...register(`materials.${index}.customizationDetails`)} />
+                                                    <Textarea placeholder="Describe your customization (size, color, design, etc.)" {...register(`materials.${index}.customizationDetails`)} className="bg-yellow-100" />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label>Reference Image (Optional)</Label>
@@ -339,33 +339,33 @@ export default function B2BPage() {
                         <CardContent className="space-y-4">
                              <div className="space-y-2">
                                 <Label>Delivery Timeline</Label>
-                                <Input {...register('requirementDate')} placeholder="e.g., 2 weeks, 1 month, ASAP" />
+                                <Input {...register('requirementDate')} placeholder="e.g., 2 weeks, 1 month, ASAP" className="bg-yellow-100" />
                                 {errors.requirementDate && <p className="text-sm text-destructive mt-2">{errors.requirementDate.message}</p>}
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Full Name</Label>
-                                    <Input {...register('customerDetails.name')} />
+                                    <Input {...register('customerDetails.name')} className="bg-yellow-100" />
                                     {errors.customerDetails?.name && <p className="text-sm text-destructive">{errors.customerDetails.name.message}</p>}
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Mobile Number</Label>
-                                    <Input {...register('customerDetails.mobile')} />
+                                    <Input {...register('customerDetails.mobile')} className="bg-yellow-100" />
                                     {errors.customerDetails?.mobile && <p className="text-sm text-destructive">{errors.customerDetails.mobile.message}</p>}
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <Label>Email (Optional)</Label>
-                                <Input {...register('customerDetails.email')} />
+                                <Input {...register('customerDetails.email')} className="bg-yellow-100" />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Company / Shop Name (Optional)</Label>
-                                    <Input {...register('customerDetails.companyName')} />
+                                    <Input {...register('customerDetails.companyName')} className="bg-yellow-100" />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>GST Number (Optional)</Label>
-                                    <Input {...register('customerDetails.gstNumber')} />
+                                    <Input {...register('customerDetails.gstNumber')} className="bg-yellow-100" />
                                 </div>
                             </div>
                         </CardContent>
@@ -381,3 +381,4 @@ export default function B2BPage() {
         </div>
     );
 }
+
