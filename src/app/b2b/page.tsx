@@ -224,25 +224,23 @@ export default function B2BPage() {
                                         )}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div className="space-y-2">
-                                                    <Label>Product Name</Label>
-                                                    <Input {...register(`materials.${index}.productName`)} placeholder="e.g., Round Jute Basket" />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>Material</Label>
-                                                    <Input {...register(`materials.${index}.materialName`)} placeholder="e.g., Jute, Bamboo, Cane" />
-                                                </div>
+                                                <Label>Product Name</Label>
+                                                <Input {...register(`materials.${index}.productName`)} placeholder="e.g., Round Jute Basket" />
                                             </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div className="space-y-2">
-                                                    <Label>Quantity</Label>
-                                                    <Input type="number" {...register(`materials.${index}.quantity`, { valueAsNumber: true, min: MIN_BULK_QUANTITY })} />
-                                                    {errors.materials?.[index]?.quantity && <p className="text-sm text-destructive">{errors.materials[index].quantity.message}</p>}
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>Budget per piece (Optional)</Label>
-                                                    <Input type="number" {...register(`materials.${index}.budgetPerPiece`, { valueAsNumber: true })} placeholder="e.g., 500" />
-                                                </div>
+                                            <div className="space-y-2">
+                                                <Label>Material</Label>
+                                                <Input {...register(`materials.${index}.materialName`)} placeholder="e.g., Jute, Bamboo, Cane" />
                                             </div>
+                                            <div className="space-y-2">
+                                                <Label>Quantity</Label>
+                                                <Input type="number" {...register(`materials.${index}.quantity`, { valueAsNumber: true, min: MIN_BULK_QUANTITY })} />
+                                                {errors.materials?.[index]?.quantity && <p className="text-sm text-destructive">{errors.materials[index].quantity.message}</p>}
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Budget per piece (Optional)</Label>
+                                                <Input type="number" {...register(`materials.${index}.budgetPerPiece`, { valueAsNumber: true })} placeholder="e.g., 500" />
+                                            </div>
+                                        </div>
                                      </div>
                                 ))}
                                 <Button type="button" variant="outline" onClick={() => append({ 
