@@ -52,7 +52,7 @@ const b2bRequestSchema = z.object({
         name: z.string().min(1, 'Your name is required.'),
         mobile: z.string().min(10, 'A valid mobile number is required.'),
         email: z.string().email().optional().or(z.literal('')),
-        companyName: z.string().optional(),
+        state: z.string().optional(),
         gstNumber: z.string().optional(),
     }),
 });
@@ -98,7 +98,7 @@ export default function B2BPage() {
                 name: '',
                 mobile: '',
                 email: '',
-                companyName: '',
+                state: '',
                 gstNumber: '',
             }
         },
@@ -227,7 +227,7 @@ export default function B2BPage() {
                              <CardHeader>
                                 <CardTitle>Step 2: Enter Bulk Order Details</CardTitle>
                                 <CardDescription>
-                                     Specify the products you need in bulk. You can add multiple products to a single request. Minimum order quantity is 100 units per product.
+                                     Specify the products you need in bulk by filling out the details below. You can add multiple products to a single request. Minimum order quantity is 100 units per product.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
@@ -243,28 +243,14 @@ export default function B2BPage() {
                                                 <Label>Product Name</Label>
                                                 <Input {...register(`materials.${index}.productName`)} placeholder="e.g., Round Jute Basket" />
                                             </div>
-                                            <div className="space-y-2">
-                                                <Label>Quantity</Label>
-                                                <Input type="number" {...register(`materials.${index}.quantity`, { valueAsNumber: true, min: MIN_BULK_QUANTITY })} />
-                                                {errors.materials?.[index]?.quantity && <p className="text-sm text-destructive">{errors.materials[index].quantity.message}</p>}
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>Budget/piece (Optional)</Label>
-                                                <Input type="number" {...register(`materials.${index}.budgetPerPiece`, { valueAsNumber: true })} placeholder="e.g., 500" />
-                                            </div>
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div className="space-y-2">
+                                             <div className="space-y-2">
                                                 <Label>Material</Label>
                                                 <Input {...register(`materials.${index}.materialName`)} placeholder="e.g., Jute, Bamboo, Cane" />
                                             </div>
                                             <div className="space-y-2">
-                                                <Label>Reference Image (Optional)</Label>
-                                                <div className="flex items-center gap-2">
-                                                    <Button type="button" variant="outline" className="w-full justify-center" onClick={() => { setUploadIndex(index); fileInputRef.current?.click(); }} disabled={isUploading}>
-                                                        <UploadCloud className="mr-2 h-4 w-4" /> Upload
-                                                    </Button>
-                                                </div>
+                                                <Label>Quantity</Label>
+                                                <Input type="number" {...register(`materials.${index}.quantity`, { valueAsNumber: true, min: MIN_BULK_QUANTITY })} />
+                                                {errors.materials?.[index]?.quantity && <p className="text-sm text-destructive">{errors.materials[index].quantity.message}</p>}
                                             </div>
                                         </div>
                                         <div className="space-y-2">
@@ -289,14 +275,22 @@ export default function B2BPage() {
                                                 <Input {...register(`materials.${index}.shape`)} placeholder="e.g., Round, Square" />
                                             </div>
                                         </div>
-                                        {watchedMaterials[index]?.referenceImage && (
-                                            <div className="text-xs">
-                                                <span className="font-semibold">Uploaded:</span>{' '}
-                                                <a href={watchedMaterials[index].referenceImage} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline break-all">
-                                                    {watchedMaterials[index].referenceImage}
-                                                </a>
+                                        <div className="space-y-2">
+                                            <Label>Reference Image (Optional)</Label>
+                                            <div className="flex items-center gap-2">
+                                                <Button type="button" variant="outline" className="w-full justify-center" onClick={() => { setUploadIndex(index); fileInputRef.current?.click(); }} disabled={isUploading}>
+                                                    <UploadCloud className="mr-2 h-4 w-4" /> Upload
+                                                </Button>
                                             </div>
-                                        )}
+                                            {watchedMaterials[index]?.referenceImage && (
+                                                <div className="text-xs">
+                                                    <span className="font-semibold">Uploaded:</span>{' '}
+                                                    <a href={watchedMaterials[index].referenceImage} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline break-all">
+                                                        {watchedMaterials[index].referenceImage}
+                                                    </a>
+                                                </div>
+                                            )}
+                                        </div>
                                      </div>
                                 ))}
                                 <Button type="button" variant="outline" onClick={() => append({ 
@@ -418,19 +412,19 @@ export default function B2BPage() {
                                     {errors.customerDetails?.mobile && <p className="text-sm text-destructive">{errors.customerDetails.mobile.message}</p>}
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <Label>Email (Optional)</Label>
-                                <Input {...register('customerDetails.email')} />
-                            </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label>Company / Shop Name (Optional)</Label>
-                                    <Input {...register('customerDetails.companyName')} />
+                                    <Label>Email (Optional)</Label>
+                                    <Input {...register('customerDetails.email')} />
                                 </div>
-                                <div className="space-y-2">
-                                    <Label>GST Number (Optional)</Label>
-                                    <Input {...register('customerDetails.gstNumber')} />
+                                 <div className="space-y-2">
+                                    <Label>State (Optional)</Label>
+                                    <Input {...register('customerDetails.state')} />
                                 </div>
+                            </div>
+                             <div className="space-y-2">
+                                <Label>GST Number (Optional)</Label>
+                                <Input {...register('customerDetails.gstNumber')} />
                             </div>
                         </CardContent>
                     </Card>
