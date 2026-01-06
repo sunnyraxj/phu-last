@@ -110,22 +110,12 @@ export default function B2BPage() {
     const watchedMaterials = watch('materials');
 
     const availableMaterials = useMemo(() => {
-        const coreMaterials = ["Cane", "Bamboo", "Jute"];
-        if (!materialSettings) return coreMaterials.map(m => ({id: m.toLowerCase(), name: m}));
-
-        const settingsMap = new Map(materialSettings.map(m => [m.name, m]));
-        coreMaterials.forEach(m => {
-            if (!settingsMap.has(m)) {
-                settingsMap.set(m, { id: m.toLowerCase(), name: m, bulkAllowed: true, customizeAllowed: true });
-            }
-        });
+        if (!materialSettings) return [];
         
-        const allConfiguredMaterials = Array.from(settingsMap.values());
-
         if (orderType === 'bulk') {
-            return allConfiguredMaterials.filter(m => m.bulkAllowed && coreMaterials.includes(m.name));
+            return materialSettings.filter(m => m.bulkAllowed);
         }
-        return allConfiguredMaterials.filter(m => m.customizeAllowed && coreMaterials.includes(m.name));
+        return materialSettings.filter(m => m.customizeAllowed);
     }, [materialSettings, orderType]);
     
     useEffect(() => {
