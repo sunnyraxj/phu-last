@@ -272,8 +272,7 @@ export function Header({ showAnnouncement = true, variant = 'transparent' }: Hea
 
        <div className={cn(
            "relative z-10 py-2 md:py-0 px-4",
-            "text-foreground",
-            isMobile && 'bg-white !text-foreground'
+           "text-foreground",
        )}>
         <div className="w-full flex flex-col items-center justify-center">
           
@@ -313,7 +312,7 @@ export function Header({ showAnnouncement = true, variant = 'transparent' }: Hea
             
             <div className="w-1/3 flex justify-center">
                 <Link href="/" className="flex flex-col items-center">
-                    <span className={cn("text-xl font-serif tracking-tighter leading-none whitespace-nowrap", (isSolid || isMobile) ? 'text-[--brand-brown]' : 'text-white')}>
+                    <span className={cn("text-xl font-serif tracking-tighter leading-none whitespace-nowrap text-[--brand-brown]")}>
                         Purbanchal
                     </span>
                 </Link>
@@ -537,7 +536,7 @@ export function Header({ showAnnouncement = true, variant = 'transparent' }: Hea
                                 <SheetHeader>
                                     <SheetTitle>Menu</SheetTitle>
                                 </SheetHeader>
-                                <div className="flex flex-col gap-2 py-4">
+                                <div className="grid grid-cols-2 gap-2 py-4">
                                 {navItems.map((item) => (
                                     <SheetClose asChild key={item.href}>
                                     <Link href={item.href} >
@@ -700,7 +699,7 @@ export function Header({ showAnnouncement = true, variant = 'transparent' }: Hea
             
             {isScrolled ? null : (
                 <div className="w-full">
-                    <Separator className="bg-white/20" />
+                    <Separator className="bg-foreground/20" />
                     <nav className="flex items-center justify-center gap-8 text-sm font-medium py-4">
                         {navItems.map((item) => (
                             <Link href={item.href} key={item.href} className={cn("hover:opacity-80 transition-opacity", item.className)}>{item.label}</Link>
@@ -768,7 +767,7 @@ export function Header({ showAnnouncement = true, variant = 'transparent' }: Hea
                             {!isUserLoading && user && !user.isAnonymous ? (
                             <Popover>
                                 <PopoverTrigger asChild>
-                                    <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", "ring-white")}>
+                                    <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", "ring-foreground/50")}>
                                         <User size={18} strokeWidth={1.5} />
                                     </button>
                                 </PopoverTrigger>
