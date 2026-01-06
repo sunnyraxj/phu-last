@@ -214,13 +214,13 @@ export default function B2BPage() {
                                 <CardTitle>Step 2: Enter Bulk Order Details</CardTitle>
                                 <CardDescription>Minimum order quantity for bulk orders is {MIN_BULK_QUANTITY} units per material.</CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label>Product Name</Label>
-                                    <Input {...register(`materials.0.productName`)} placeholder="e.g., Round Jute Basket" />
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                     <div className="space-y-2">
+                            <CardContent className="bg-muted/50 p-6 rounded-lg space-y-4">
+                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                   <div className="space-y-2">
+                                        <Label>Product Name</Label>
+                                        <Input {...register(`materials.0.productName`)} placeholder="e.g., Round Jute Basket" />
+                                    </div>
+                                    <div className="space-y-2">
                                         <Label>Material</Label>
                                         <Controller
                                             control={control}
@@ -242,17 +242,19 @@ export default function B2BPage() {
                                         />
                                          {errors.materials?.[0]?.materialId && <p className="text-sm text-destructive">{errors.materials[0].materialId.message}</p>}
                                     </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label>Quantity</Label>
                                         <Input type="number" {...register(`materials.0.quantity`, { valueAsNumber: true })} />
                                         {errors.materials?.[0]?.quantity && <p className="text-sm text-destructive">{errors.materials[0].quantity.message}</p>}
                                     </div>
+                                    <div className="space-y-2">
+                                        <Label>Budget per piece (Optional)</Label>
+                                        <Input type="number" {...register(`materials.0.budgetPerPiece`, { valueAsNumber: true })} placeholder="e.g., 500" />
+                                    </div>
                                 </div>
                                  <div className="space-y-2">
-                                    <Label>Budget per piece (Optional)</Label>
-                                    <Input type="number" {...register(`materials.0.budgetPerPiece`, { valueAsNumber: true })} placeholder="e.g., 500" />
-                                </div>
-                                <div className="space-y-2">
                                     <Label>Delivery Timeline</Label>
                                      <Controller
                                         control={control}
