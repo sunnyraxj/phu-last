@@ -93,9 +93,10 @@ type CartItem = Product & { quantity: number; cartItemId: string; selectedSize?:
 
 interface HeaderProps {
     showAnnouncement?: boolean;
+    variant?: 'transparent' | 'solid';
 }
 
-export function Header({ showAnnouncement = true }: HeaderProps) {
+export function Header({ showAnnouncement = true, variant = 'transparent' }: HeaderProps) {
   const { firestore, user, isUserLoading, auth, updateCartItemSize } = useFirebase();
   const router = useRouter();
   const { toast } = useToast();
@@ -106,13 +107,13 @@ export function Header({ showAnnouncement = true }: HeaderProps) {
   const [newSize, setNewSize] = useState<string | null>(null);
 
   const productsQuery = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
-  const { data: allProducts } = useCollection<Product>(productsQuery);
+  const { data: allProducts } = useCollection(productsQuery);
 
   const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
   const { data: userData } = useDoc<{ role: string }>(userDocRef);
 
   const cartItemsQuery = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'cart') : null, [firestore, user]);
-  const { data: cartData } = useCollection<{ productId: string; quantity: number, selectedSize?: string }>(cartItemsQuery);
+  const { data: cartData } = useCollection(cartItemsQuery);
 
   const cartItems = useMemo(() => {
     if (!cartData || !allProducts) return [];
@@ -145,6 +146,8 @@ export function Header({ showAnnouncement = true }: HeaderProps) {
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+  
+  const isSolid = variant === 'solid' || isScrolled;
 
   const handleSignOut = async () => {
     await signOut(auth);
@@ -231,7 +234,7 @@ export function Header({ showAnnouncement = true }: HeaderProps) {
   return (
     <header className={cn(
       "fixed top-0 left-0 right-0 z-50 transition-colors duration-300 rounded-b-lg", 
-      isScrolled ? 'bg-white shadow-md' : 'bg-transparent',
+      isSolid ? 'bg-white shadow-md' : 'bg-transparent',
     )}>
        {showAnnouncement && (
          <div className={cn("bg-[--brand-green] text-white py-2 px-4 flex items-center justify-between text-xs font-medium transition-all duration-300", isScrolled ? "h-0 py-0 opacity-0 overflow-hidden" : "h-auto")}>
@@ -269,7 +272,7 @@ export function Header({ showAnnouncement = true }: HeaderProps) {
 
        <div className={cn(
            "relative z-10 py-2 md:py-0 px-4",
-            isScrolled ? "text-foreground" : "text-white",
+            isSolid ? "text-foreground" : "text-white",
             isMobile && 'bg-white !text-foreground'
        )}>
         <div className="w-full flex flex-col items-center justify-center">
@@ -310,7 +313,7 @@ export function Header({ showAnnouncement = true }: HeaderProps) {
             
             <div className="w-1/3 flex justify-center">
                 <Link href="/" className="flex flex-col items-center">
-                    <span className={cn("text-xl font-serif tracking-tighter leading-none whitespace-nowrap", (isScrolled || isMobile) ? 'text-[--brand-brown]' : 'text-white')}>
+                    <span className={cn("text-xl font-serif tracking-tighter leading-none whitespace-nowrap", (isSolid || isMobile) ? 'text-[--brand-brown]' : 'text-white')}>
                         Purbanchal
                     </span>
                 </Link>
@@ -379,7 +382,7 @@ export function Header({ showAnnouncement = true }: HeaderProps) {
                 {!isUserLoading && user && !user.isAnonymous ? (
                   <Popover>
                       <PopoverTrigger asChild>
-                        <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isScrolled ? "ring-foreground/50" : "ring-white/50")}>
+                        <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isSolid ? "ring-foreground/50" : "ring-white/50")}>
                             <User size={18} strokeWidth={1.5} />
                         </button>
                       </PopoverTrigger>
@@ -588,7 +591,7 @@ export function Header({ showAnnouncement = true }: HeaderProps) {
                         {!isUserLoading && user && !user.isAnonymous ? (
                         <Popover>
                             <PopoverTrigger asChild>
-                                <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isScrolled ? "ring-foreground/50" : "ring-white")}>
+                                <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isSolid ? "ring-foreground/50" : "ring-white")}>
                                     <User size={18} strokeWidth={1.5} />
                                 </button>
                             </PopoverTrigger>
@@ -795,7 +798,7 @@ export function Header({ showAnnouncement = true }: HeaderProps) {
                             {!isUserLoading && user && !user.isAnonymous ? (
                             <Popover>
                                 <PopoverTrigger asChild>
-                                    <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isScrolled ? "ring-foreground/50" : "ring-white")}>
+                                    <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isSolid ? "ring-foreground/50" : "ring-white")}>
                                         <User size={18} strokeWidth={1.5} />
                                     </button>
                                 </PopoverTrigger>

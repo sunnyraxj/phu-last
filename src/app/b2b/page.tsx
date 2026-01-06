@@ -34,7 +34,7 @@ export default function B2BPage() {
 
     return (
         <div className="bg-background">
-            <Header />
+            <Header variant="solid" />
 
             <section className="bg-yellow-400 text-black py-20">
                 <div className="container mx-auto text-center px-4">

@@ -3,12 +3,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from '@/components/ui/card';
-import { ServerHeaderWrapper } from "@/components/shared/ServerHeaderWrapper";
+import { Header } from "@/components/shared/Header";
 
 export default function AboutPage() {
     return (
         <div className="bg-background">
-            <ServerHeaderWrapper />
+            <Header variant="solid" />
 
             <section className="bg-primary text-primary-foreground py-20">
                 <div className="container mx-auto text-center px-4">

@@ -4,5 +4,5 @@
 import { Header } from './Header';
 
 export function ServerHeaderWrapper() {
-    return <Header />;
+    return <Header variant="solid" />;
 }
