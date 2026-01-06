@@ -24,6 +24,7 @@ export function Footer() {
                         <li><Link href="/purchase" className="text-gray-400 hover:text-white">Shop</Link></li>
                         <li><Link href="/our-team" className="text-gray-400 hover:text-white">Our Team</Link></li>
                         <li><Link href="/our-stores" className="text-gray-400 hover:text-white">Our Stores</Link></li>
+                        <li><Link href="/b2b" className="text-gray-400 hover:text-white">B2B</Link></li>
                     </ul>
                 </div>
                 <div>

@@ -207,6 +207,7 @@ export function Header({ showAnnouncement = true }: HeaderProps) {
     { href: "/our-stores", label: "Our Stores" },
     { href: "/about", label: "About Us" },
     { href: "/our-team", label: "Our Team" },
+    { href: "/b2b", label: "B2B" },
   ];
 
   const announcements = [
