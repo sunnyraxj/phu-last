@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, Fragment, useMemo, useEffect } from 'react';
@@ -21,6 +22,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
+import { sendOrderConfirmation, sendOrderCancellation } from '@/lib/email';
+import { addDays, format } from 'date-fns';
 
 type OrderStatus = 'pending-payment-approval' | 'pending' | 'shipped' | 'delivered' | 'cancelled'|'order-confirmed';
 
@@ -155,11 +158,23 @@ export default function OrdersPage() {
         }
     }
 
-    const handleApprovePayment = () => {
-        if (!orderToApprove) return;
+    const handleApprovePayment = async () => {
+        if (!orderToApprove || !orderToApprove.shippingDetails.email) return;
+        
         const orderRef = doc(firestore, 'orders', orderToApprove.id);
         const newStatus = 'order-confirmed';
         setDocumentNonBlocking(orderRef, { status: newStatus }, { merge: true });
+
+        const itemsInOrder = itemsByOrder[orderToApprove.id] || [];
+
+        await sendOrderConfirmation({
+            orderId: orderToApprove.id,
+            customerName: orderToApprove.shippingDetails.name,
+            customerEmail: orderToApprove.shippingDetails.email,
+            products: itemsInOrder.map(i => ({ name: i.productName, quantity: i.quantity })),
+            totalAmount: orderToApprove.totalAmount,
+            expectedDeliveryDate: format(addDays(new Date(), 7), 'PPP')
+        });
         
         toast({
             title: 'Payment Approved',
@@ -168,7 +183,7 @@ export default function OrdersPage() {
         setOrderToApprove(null);
     }
     
-    const updateOrderStatus = () => {
+    const updateOrderStatus = async () => {
         if (!orderToUpdateStatus) return;
 
         const { order, newStatus } = orderToUpdateStatus;
@@ -180,6 +195,27 @@ export default function OrdersPage() {
         }
 
         setDocumentNonBlocking(orderRef, updateData, { merge: true });
+        
+        if(order.shippingDetails.email) {
+            if (newStatus === 'order-confirmed') {
+                const itemsInOrder = itemsByOrder[order.id] || [];
+                await sendOrderConfirmation({
+                    orderId: order.id,
+                    customerName: order.shippingDetails.name,
+                    customerEmail: order.shippingDetails.email,
+                    products: itemsInOrder.map(i => ({ name: i.productName, quantity: i.quantity })),
+                    totalAmount: order.totalAmount,
+                    expectedDeliveryDate: format(addDays(new Date(), 7), 'PPP')
+                });
+            } else if (newStatus === 'cancelled') {
+                 await sendOrderCancellation({
+                    orderId: order.id,
+                    customerEmail: order.shippingDetails.email,
+                    cancellationReason: 'Order was cancelled by the administrator.',
+                    refundStatus: 'Your refund will be processed within 5-7 business days if payment was made.'
+                 });
+            }
+        }
         
         toast({
             title: 'Order Status Updated',
@@ -498,7 +534,7 @@ export default function OrdersPage() {
                         <AlertDialogTitle>Confirm Status Change</AlertDialogTitle>
                         <AlertDialogDescription>
                             Are you sure you want to change the status of this order to "{orderToUpdateStatus?.newStatus.replace(/-/g, ' ')}"?
-                            {(orderToUpdateStatus?.newStatus === 'shipped' || orderToUpdateStatus?.newStatus === 'delivered' || orderToUpdateStatus?.newStatus === 'order-confirmed') && ' An email notification will be sent to the customer.'}
+                            {(orderToUpdateStatus?.newStatus === 'shipped' || orderToUpdateStatus?.newStatus === 'delivered' || orderToUpdateStatus?.newStatus === 'order-confirmed' || orderToUpdateStatus?.newStatus === 'cancelled') && ' An email notification will be sent to the customer.'}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

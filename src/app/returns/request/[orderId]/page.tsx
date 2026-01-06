@@ -18,6 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { sendReturnRequestConfirmation } from '@/lib/email';
 
 type OrderStatus = 'pending-payment-approval' | 'pending' | 'shipped' | 'delivered' | 'cancelled';
 
@@ -78,7 +79,7 @@ export default function ReturnRequestPage() {
     };
     
     const handleSubmit = async () => {
-        if (!user || !order) return;
+        if (!user || !order || !user.email) return;
         if (selectedItems.length === 0) {
             toast({ variant: 'destructive', title: 'Error', description: 'Please select at least one item to return.' });
             return;
@@ -108,6 +109,12 @@ export default function ReturnRequestPage() {
             
             // Also update the order to reflect the return request
             await addDocumentNonBlocking(doc(firestore, 'orders', order.id), { returnStatus: 'requested' }, { merge: true });
+
+            await sendReturnRequestConfirmation({
+                orderId: order.id,
+                customerEmail: user.email,
+                returnedItems: selectedItems.map(i => ({ name: i.productName, quantity: i.quantity })),
+            });
 
             toast({ title: 'Return Request Submitted', description: "We've received your request and will review it shortly." });
             router.push('/orders');

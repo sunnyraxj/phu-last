@@ -272,7 +272,7 @@ export function Header({ showAnnouncement = true, variant = 'transparent' }: Hea
 
        <div className={cn(
            "relative z-10 py-2 md:py-0 px-4",
-           "text-foreground",
+           isSolid ? "text-foreground" : "text-white",
        )}>
         <div className="w-full flex flex-col items-center justify-center">
           
@@ -312,7 +312,7 @@ export function Header({ showAnnouncement = true, variant = 'transparent' }: Hea
             
             <div className="w-1/3 flex justify-center">
                 <Link href="/" className="flex flex-col items-center">
-                    <span className={cn("text-xl font-serif tracking-tighter leading-none whitespace-nowrap text-[--brand-brown]")}>
+                    <span className={cn("text-xl font-serif tracking-tighter leading-none whitespace-nowrap", isSolid ? "text-[--brand-brown]" : "text-white")}>
                         Purbanchal
                     </span>
                 </Link>
@@ -381,7 +381,7 @@ export function Header({ showAnnouncement = true, variant = 'transparent' }: Hea
                 {!isUserLoading && user && !user.isAnonymous ? (
                   <Popover>
                       <PopoverTrigger asChild>
-                        <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", "ring-foreground/50")}>
+                        <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isSolid ? "ring-foreground/50" : "ring-white/50")}>
                             <User size={18} strokeWidth={1.5} />
                         </button>
                       </PopoverTrigger>
@@ -514,7 +514,7 @@ export function Header({ showAnnouncement = true, variant = 'transparent' }: Hea
             )}>
               <div className={cn("flex justify-center transition-all duration-300", isScrolled ? 'absolute left-1/2 -translate-x-1/2' : 'w-full')}>
                 <Link href="/" className="flex flex-col items-center">
-                   <span className={cn("font-serif tracking-tighter leading-none flex items-center gap-1 whitespace-nowrap transition-all duration-300", isScrolled ? 'text-2xl text-[--brand-brown]' : 'text-3xl')}>
+                   <span className={cn("font-serif tracking-tighter leading-none flex items-center gap-1 whitespace-nowrap transition-all duration-300", isScrolled ? 'text-2xl' : 'text-3xl', isSolid ? 'text-[--brand-brown]' : 'text-white')}>
                     {isScrolled ? 'Purbanchal Hasta Udyog' : 'Purbanchal'}
                   </span>
                   <span className={cn("text-[10px] uppercase tracking-[0.2em] mt-1 font-medium transition-opacity duration-300", isScrolled ? 'opacity-0 h-0' : 'opacity-100')}>
@@ -560,7 +560,7 @@ export function Header({ showAnnouncement = true, variant = 'transparent' }: Hea
                         {!isUserLoading && user && !user.isAnonymous ? (
                         <Popover>
                             <PopoverTrigger asChild>
-                                <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", "ring-foreground/50")}>
+                                <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isSolid ? "ring-foreground/50" : "ring-white/50")}>
                                     <User size={18} strokeWidth={1.5} />
                                 </button>
                             </PopoverTrigger>
@@ -767,7 +767,7 @@ export function Header({ showAnnouncement = true, variant = 'transparent' }: Hea
                             {!isUserLoading && user && !user.isAnonymous ? (
                             <Popover>
                                 <PopoverTrigger asChild>
-                                    <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", "ring-foreground/50")}>
+                                    <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isSolid ? "ring-foreground/50" : "ring-white/50")}>
                                         <User size={18} strokeWidth={1.5} />
                                     </button>
                                 </PopoverTrigger>

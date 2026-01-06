@@ -1,0 +1,12 @@
+diff --git a/node_modules/@react-email/components/package.json b/node_modules/@react-email/components/package.json
+index 5422830..5382343 100644
+--- a/node_modules/@react-email/components/package.json
++++ b/node_modules/@react-email/components/package.json
+@@ -35,6 +35,6 @@
+   },
+   "peerDependencies": {
+     "react": "^18.2.0",
+-    "react-dom": "^18.2.0"
++    "react-dom": "18.2.0 || ^19.0.0"
+   }
+ }
