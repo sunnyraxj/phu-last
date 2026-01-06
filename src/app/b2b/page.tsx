@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Calendar as CalendarIcon, UploadCloud, Trash2, PlusCircle, CheckCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, UploadCloud, Trash2, PlusCircle, CheckCircle, Wand2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
@@ -26,6 +26,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Combobox } from '@/components/ui/combobox';
 import Image from 'next/image';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DrawingCanvas } from '@/components/shared/DrawingCanvas';
 
 const MIN_BULK_QUANTITY = 100;
 
@@ -71,6 +73,8 @@ export default function B2BPage() {
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploadIndex, setUploadIndex] = useState<number | null>(null);
+    const [isDrawingOpen, setIsDrawingOpen] = useState(false);
+    const [drawingIndex, setDrawingIndex] = useState<number | null>(null);
 
     const {
         control,
@@ -130,11 +134,8 @@ export default function B2BPage() {
         setValue('orderType', orderType);
     }, [orderType, setValue]);
 
-    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileUpload = async (file: File | Blob) => {
         if (uploadIndex === null) return;
-
-        const file = event.target.files?.[0];
-        if (!file) return;
 
         const currentImages = getValues(`materials.${uploadIndex}.referenceImages`) || [];
         if (currentImages.length >= 4) {
@@ -144,7 +145,7 @@ export default function B2BPage() {
 
         setIsUploading(true);
         try {
-            const response = await fetch(`/api/upload?filename=${file.name}`, {
+            const response = await fetch(`/api/upload?filename=${file instanceof File ? file.name : 'drawing.png'}`, {
                 method: 'POST',
                 body: file,
             });
@@ -159,10 +160,29 @@ export default function B2BPage() {
             toast({ variant: 'destructive', title: 'Upload failed', description: 'Could not upload image.' });
         } finally {
             setIsUploading(false);
-            if (event.target) event.target.value = '';
+            if (fileInputRef.current) fileInputRef.current.value = '';
         }
     };
     
+    const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            handleFileUpload(file);
+        }
+    };
+
+    const handleSaveDrawing = (dataUrl: string) => {
+        fetch(dataUrl)
+            .then(res => res.blob())
+            .then(blob => {
+                if (drawingIndex !== null) {
+                    setUploadIndex(drawingIndex); // Set context for upload
+                    handleFileUpload(blob);
+                }
+            });
+        setIsDrawingOpen(false);
+    };
+
     const removeImage = (productIndex: number, imageIndex: number) => {
         const currentImages = getValues(`materials.${productIndex}.referenceImages`) || [];
         const newImages = currentImages.filter((_, idx) => idx !== imageIndex);
@@ -296,9 +316,12 @@ export default function B2BPage() {
                                         </div>
                                         <div className="space-y-2">
                                             <Label>Reference Images (Optional)</Label>
-                                            <div className="flex items-center gap-2">
+                                             <div className="flex flex-col sm:flex-row items-center gap-2">
                                                 <Button type="button" variant="outline" className="w-full justify-center" onClick={() => { setUploadIndex(index); fileInputRef.current?.click(); }} disabled={isUploading || (watchedMaterials[index]?.referenceImages?.length ?? 0) >= 4}>
                                                     <UploadCloud className="mr-2 h-4 w-4" /> Upload Image
+                                                </Button>
+                                                 <Button type="button" variant="outline" className="w-full justify-center" onClick={() => { setDrawingIndex(index); setIsDrawingOpen(true); }} disabled={(watchedMaterials[index]?.referenceImages?.length ?? 0) >= 4}>
+                                                    <Wand2 className="mr-2 h-4 w-4" /> Draw & Add
                                                 </Button>
                                             </div>
                                             <div className="flex flex-wrap gap-2 mt-2">
@@ -429,7 +452,7 @@ export default function B2BPage() {
                     )}
 
                     {/* Shared file input */}
-                    <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*"/>
+                    <input type="file" ref={fileInputRef} onChange={handleFileInputChange} className="hidden" accept="image/*"/>
 
                     <Card>
                         <CardHeader>
@@ -483,6 +506,14 @@ export default function B2BPage() {
                     </div>
                 </form>
             </main>
+            <Dialog open={isDrawingOpen} onOpenChange={setIsDrawingOpen}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Sketch Your Design</DialogTitle>
+                    </DialogHeader>
+                    <DrawingCanvas onSave={handleSaveDrawing} />
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
