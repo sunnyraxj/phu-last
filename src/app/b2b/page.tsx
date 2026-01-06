@@ -60,14 +60,6 @@ const b2bRequestSchema = z.object({
 
 type B2BFormValues = z.infer<typeof b2bRequestSchema>;
 
-type MaterialSetting = {
-    id: string;
-    name: string;
-    bulkAllowed?: boolean;
-    customizeAllowed?: boolean;
-    unit?: string;
-};
-
 export default function B2BPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
@@ -105,7 +97,7 @@ export default function B2BPage() {
     });
 
     const watchedMaterials = watch('materials');
-
+    
     const availableMaterials = useMemo(() => {
         const coreMaterials = [
             { id: 'cane', name: 'Cane', unit: 'pcs' },
@@ -114,6 +106,7 @@ export default function B2BPage() {
         ];
         return coreMaterials;
     }, []);
+
     
     useEffect(() => {
         setValue('orderType', orderType);
