@@ -104,7 +104,7 @@ export default function B2BPage() {
         const coreMaterials = [
             { id: 'cane', name: 'Cane', unit: 'pcs' },
             { id: 'bamboo', name: 'Bamboo', unit: 'pcs' },
-            { id: 'jute', name: 'Jute', unit: 'kg' },
+            { id: 'jute', name: 'Jute', unit: 'pcs' },
         ];
         return coreMaterials;
     }, []);
@@ -187,7 +187,7 @@ export default function B2BPage() {
 
             <main className="container mx-auto py-12 sm:py-16 px-4">
                  <div className="text-center mb-12">
-                    <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-yellow-500">Bulk & Customize Orders</h1>
+                    <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-primary">Bulk & Customize Orders</h1>
                     <p className="mt-4 text-lg md:text-xl max-w-3xl mx-auto text-muted-foreground">
                         Place a request for bulk quantities or custom-designed products tailored to your needs.
                     </p>
@@ -225,20 +225,20 @@ export default function B2BPage() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <Label>Product Name</Label>
-                                                <Input {...register(`materials.${index}.productName`)} placeholder="e.g., Round Jute Basket" className="bg-yellow-100" />
+                                                <Input {...register(`materials.${index}.productName`)} placeholder="e.g., Round Jute Basket" />
                                             </div>
                                             <div className="space-y-2">
                                                 <Label>Material</Label>
-                                                <Input {...register(`materials.${index}.materialName`)} placeholder="e.g., Jute, Bamboo, Cane" className="bg-yellow-100" />
+                                                <Input {...register(`materials.${index}.materialName`)} placeholder="e.g., Jute, Bamboo, Cane" />
                                             </div>
                                             <div className="space-y-2">
                                                 <Label>Quantity</Label>
-                                                <Input type="number" {...register(`materials.${index}.quantity`, { valueAsNumber: true, min: MIN_BULK_QUANTITY })} className="bg-yellow-100" />
+                                                <Input type="number" {...register(`materials.${index}.quantity`, { valueAsNumber: true, min: MIN_BULK_QUANTITY })} />
                                                 {errors.materials?.[index]?.quantity && <p className="text-sm text-destructive">{errors.materials[index].quantity.message}</p>}
                                             </div>
                                             <div className="space-y-2">
                                                 <Label>Budget per piece (Optional)</Label>
-                                                <Input type="number" {...register(`materials.${index}.budgetPerPiece`, { valueAsNumber: true })} placeholder="e.g., 500" className="bg-yellow-100" />
+                                                <Input type="number" {...register(`materials.${index}.budgetPerPiece`, { valueAsNumber: true })} placeholder="e.g., 500" />
                                             </div>
                                         </div>
                                      </div>
@@ -290,7 +290,7 @@ export default function B2BPage() {
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label>Quantity {selectedMaterialSetting?.unit ? `(in ${selectedMaterialSetting.unit})` : ''}</Label>
-                                                    <Input type="number" {...register(`materials.${index}.quantity`, { valueAsNumber: true })} className="bg-yellow-100" />
+                                                    <Input type="number" {...register(`materials.${index}.quantity`, { valueAsNumber: true })} />
                                                     {errors.materials?.[index]?.quantity && <p className="text-sm text-destructive">{errors.materials[index].quantity.message}</p>}
                                                 </div>
                                             </div>
@@ -298,7 +298,7 @@ export default function B2BPage() {
                                             <div className="space-y-4">
                                                 <div className="space-y-2">
                                                     <Label>Customization Details</Label>
-                                                    <Textarea placeholder="Describe your customization (size, color, design, etc.)" {...register(`materials.${index}.customizationDetails`)} className="bg-yellow-100" />
+                                                    <Textarea placeholder="Describe your customization (size, color, design, etc.)" {...register(`materials.${index}.customizationDetails`)} />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label>Reference Image (Optional)</Label>
@@ -339,40 +339,40 @@ export default function B2BPage() {
                         <CardContent className="space-y-4">
                              <div className="space-y-2">
                                 <Label>Delivery Timeline</Label>
-                                <Input {...register('requirementDate')} placeholder="e.g., 2 weeks, 1 month, ASAP" className="bg-yellow-100" />
+                                <Input {...register('requirementDate')} placeholder="e.g., 2 weeks, 1 month, ASAP" />
                                 {errors.requirementDate && <p className="text-sm text-destructive mt-2">{errors.requirementDate.message}</p>}
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Full Name</Label>
-                                    <Input {...register('customerDetails.name')} className="bg-yellow-100" />
+                                    <Input {...register('customerDetails.name')} />
                                     {errors.customerDetails?.name && <p className="text-sm text-destructive">{errors.customerDetails.name.message}</p>}
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Mobile Number</Label>
-                                    <Input {...register('customerDetails.mobile')} className="bg-yellow-100" />
+                                    <Input {...register('customerDetails.mobile')} />
                                     {errors.customerDetails?.mobile && <p className="text-sm text-destructive">{errors.customerDetails.mobile.message}</p>}
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <Label>Email (Optional)</Label>
-                                <Input {...register('customerDetails.email')} className="bg-yellow-100" />
+                                <Input {...register('customerDetails.email')} />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Company / Shop Name (Optional)</Label>
-                                    <Input {...register('customerDetails.companyName')} className="bg-yellow-100" />
+                                    <Input {...register('customerDetails.companyName')} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>GST Number (Optional)</Label>
-                                    <Input {...register('customerDetails.gstNumber')} className="bg-yellow-100" />
+                                    <Input {...register('customerDetails.gstNumber')} />
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
                     <div className="flex justify-end">
-                        <Button type="submit" size="lg" disabled={isSubmitting} className="bg-yellow-400 text-black hover:bg-yellow-500">
+                        <Button type="submit" size="lg" disabled={isSubmitting}>
                             {isSubmitting ? <PottersWheelSpinner /> : 'Submit Request'}
                         </Button>
                     </div>
@@ -381,4 +381,3 @@ export default function B2BPage() {
         </div>
     );
 }
-
