@@ -11,7 +11,6 @@ import { Home, Package, ShoppingCart, Users, Store, Menu, Settings, Undo2, Layou
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Header } from '@/components/shared/Header';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 
 type Order = {
@@ -162,7 +161,7 @@ export default function AdminLayout({
         <div className="grid min-h-screen w-full md:grid-cols-[320px_1fr] bg-muted/40">
              <aside className="hidden border-r bg-background md:block">
                 <div className="flex h-full max-h-screen flex-col gap-2">
-                    <div className="flex h-24 items-center border-b px-6">
+                    <div className="flex h-16 items-center border-b px-6">
                          <Link href="/" className="flex items-center gap-3">
                             <span className="text-lg font-semibold whitespace-nowrap">Purbanchal Hasta Udyog</span>
                         </Link>
@@ -181,10 +180,25 @@ export default function AdminLayout({
                 </div>
             </aside>
             <div className="flex flex-col">
-                 <Header
-                    showAnnouncement={false}
-                />
-                <main className="flex-1 overflow-auto bg-background">
+                <header className="flex h-16 items-center justify-between gap-4 border-b bg-background px-4 md:px-6 md:justify-end">
+                    <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                        <SheetTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className="shrink-0 md:hidden"
+                            >
+                                <Menu className="h-5 w-5" />
+                                <span className="sr-only">Toggle navigation menu</span>
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="left" className="flex flex-col">
+                            {navContent}
+                        </SheetContent>
+                    </Sheet>
+                    {/* Header can have other elements like user profile dropdown here if needed */}
+                </header>
+                <main className="flex-1 overflow-auto">
                     <div className="container mx-auto px-4 sm:px-8 py-4">
                         {children}
                     </div>
