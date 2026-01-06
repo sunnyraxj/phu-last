@@ -212,22 +212,24 @@ export default function B2BPage() {
                         <Card>
                              <CardHeader>
                                 <CardTitle>Step 2: Enter Bulk Order Details</CardTitle>
-                                <CardDescription>Minimum order quantity for bulk orders is {MIN_BULK_QUANTITY} units per product.</CardDescription>
+                                <CardDescription>
+                                    Specify the products you need in bulk. You can add multiple products to a single request.
+                                </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 {fields.map((field, index) => (
-                                     <div key={field.id} className="p-4 border rounded-lg space-y-4 relative bg-muted/50">
+                                     <div key={field.id} className="p-4 border rounded-lg space-y-4 relative bg-card">
                                          {fields.length > 1 && (
                                             <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-destructive" onClick={() => remove(index)}>
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         )}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div className="space-y-2">
+                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                            <div className="space-y-2 md:col-span-1">
                                                 <Label>Product Name</Label>
                                                 <Input {...register(`materials.${index}.productName`)} placeholder="e.g., Round Jute Basket" />
                                             </div>
-                                            <div className="space-y-2">
+                                            <div className="space-y-2 md:col-span-1">
                                                 <Label>Material</Label>
                                                 <Input {...register(`materials.${index}.materialName`)} placeholder="e.g., Jute, Bamboo, Cane" />
                                             </div>
@@ -264,7 +266,7 @@ export default function B2BPage() {
                                 {fields.map((field, index) => {
                                     const selectedMaterialSetting = availableMaterials?.find(m => m.id === watchedMaterials[index]?.materialId);
                                     return (
-                                        <div key={field.id} className="p-4 border rounded-lg space-y-4 relative">
+                                        <div key={field.id} className="p-4 border rounded-lg space-y-4 relative bg-card">
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div className="space-y-2">
                                                     <Label>Material</Label>
