@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Calendar as CalendarIcon, UploadCloud, Trash2, PlusCircle, CheckCircle, Wand2 } from 'lucide-react';
+import { Calendar as CalendarIcon, UploadCloud, Trash2, PlusCircle, CheckCircle, Wand2, Edit } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
@@ -74,7 +74,8 @@ export default function B2BPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploadIndex, setUploadIndex] = useState<number | null>(null);
     const [isDrawingOpen, setIsDrawingOpen] = useState(false);
-    const [drawingIndex, setDrawingIndex] = useState<number | null>(null);
+    const [drawingContext, setDrawingContext] = useState<{productIndex: number; imageIndex?: number; imageUrl?: string} | null>(null);
+
 
     const {
         control,
@@ -134,11 +135,11 @@ export default function B2BPage() {
         setValue('orderType', orderType);
     }, [orderType, setValue]);
 
-    const handleFileUpload = async (file: File | Blob) => {
-        if (uploadIndex === null) return;
-
-        const currentImages = getValues(`materials.${uploadIndex}.referenceImages`) || [];
-        if (currentImages.length >= 4) {
+    const handleFileUpload = async (file: File | Blob, productIndex: number, imageIndex?: number) => {
+        const currentImages = getValues(`materials.${productIndex}.referenceImages`) || [];
+        
+        // Don't check limit if we are editing an existing image
+        if (imageIndex === undefined && currentImages.length >= 4) {
             toast({ variant: 'destructive', title: 'Upload Limit Reached', description: 'You can upload a maximum of 4 images per product.' });
             return;
         }
@@ -151,8 +152,16 @@ export default function B2BPage() {
             });
             const newBlob = await response.json();
             if (newBlob.url) {
-                setValue(`materials.${uploadIndex}.referenceImages`, [...currentImages, newBlob.url]);
-                toast({ title: 'Image uploaded successfully!' });
+                if(imageIndex !== undefined) {
+                    // Replace existing image
+                    const updatedImages = [...currentImages];
+                    updatedImages[imageIndex] = newBlob.url;
+                    setValue(`materials.${productIndex}.referenceImages`, updatedImages);
+                } else {
+                    // Add new image
+                    setValue(`materials.${productIndex}.referenceImages`, [...currentImages, newBlob.url]);
+                }
+                toast({ title: 'Image saved successfully!' });
             } else {
                 throw new Error('Upload failed');
             }
@@ -166,20 +175,19 @@ export default function B2BPage() {
     
     const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (file) {
-            handleFileUpload(file);
+        if (file && uploadIndex !== null) {
+            handleFileUpload(file, uploadIndex);
         }
     };
 
     const handleSaveDrawing = (dataUrl: string) => {
-        fetch(dataUrl)
-            .then(res => res.blob())
-            .then(blob => {
-                if (drawingIndex !== null) {
-                    setUploadIndex(drawingIndex); // Set context for upload
-                    handleFileUpload(blob);
-                }
-            });
+        if (drawingContext) {
+            fetch(dataUrl)
+                .then(res => res.blob())
+                .then(blob => {
+                    handleFileUpload(blob, drawingContext.productIndex, drawingContext.imageIndex);
+                });
+        }
         setIsDrawingOpen(false);
     };
 
@@ -320,23 +328,34 @@ export default function B2BPage() {
                                                 <Button type="button" variant="outline" className="w-full justify-center" onClick={() => { setUploadIndex(index); fileInputRef.current?.click(); }} disabled={isUploading || (watchedMaterials[index]?.referenceImages?.length ?? 0) >= 4}>
                                                     <UploadCloud className="mr-2 h-4 w-4" /> Upload Image
                                                 </Button>
-                                                 <Button type="button" variant="outline" className="w-full justify-center" onClick={() => { setDrawingIndex(index); setIsDrawingOpen(true); }} disabled={(watchedMaterials[index]?.referenceImages?.length ?? 0) >= 4}>
+                                                 <Button type="button" variant="outline" className="w-full justify-center" onClick={() => { setDrawingContext({productIndex: index}); setIsDrawingOpen(true); }} disabled={(watchedMaterials[index]?.referenceImages?.length ?? 0) >= 4}>
                                                     <Wand2 className="mr-2 h-4 w-4" /> Draw & Add
                                                 </Button>
                                             </div>
                                             <div className="flex flex-wrap gap-2 mt-2">
                                                 {watchedMaterials[index]?.referenceImages?.map((url, imgIndex) => (
-                                                    <div key={imgIndex} className="relative h-16 w-16 rounded-md overflow-hidden">
+                                                    <div key={imgIndex} className="relative group h-16 w-16 rounded-md overflow-hidden border">
                                                         <Image src={url} alt={`Reference ${imgIndex + 1}`} fill className="object-cover" />
-                                                        <Button
-                                                            type="button"
-                                                            variant="destructive"
-                                                            size="icon"
-                                                            className="absolute top-1 right-1 h-5 w-5 opacity-80 hover:opacity-100"
-                                                            onClick={() => removeImage(index, imgIndex)}
-                                                        >
-                                                            <Trash2 className="h-3 w-3" />
-                                                        </Button>
+                                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-6 w-6 text-white hover:bg-white/20"
+                                                                onClick={() => { setDrawingContext({productIndex: index, imageIndex: imgIndex, imageUrl: url }); setIsDrawingOpen(true); }}
+                                                            >
+                                                                <Edit className="h-3 w-3" />
+                                                            </Button>
+                                                            <Button
+                                                                type="button"
+                                                                variant="destructive"
+                                                                size="icon"
+                                                                className="h-6 w-6"
+                                                                onClick={() => removeImage(index, imgIndex)}
+                                                            >
+                                                                <Trash2 className="h-3 w-3" />
+                                                            </Button>
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>
@@ -418,17 +437,28 @@ export default function B2BPage() {
                                                     </div>
                                                     <div className="flex flex-wrap gap-2 mt-2">
                                                         {watchedMaterials[index]?.referenceImages?.map((url, imgIndex) => (
-                                                            <div key={imgIndex} className="relative h-16 w-16 rounded-md overflow-hidden">
+                                                            <div key={imgIndex} className="relative group h-16 w-16 rounded-md overflow-hidden border">
                                                                 <Image src={url} alt={`Reference ${imgIndex + 1}`} fill className="object-cover" />
-                                                                <Button
-                                                                    type="button"
-                                                                    variant="destructive"
-                                                                    size="icon"
-                                                                    className="absolute top-1 right-1 h-5 w-5 opacity-80 hover:opacity-100"
-                                                                    onClick={() => removeImage(index, imgIndex)}
-                                                                >
-                                                                    <Trash2 className="h-3 w-3" />
-                                                                </Button>
+                                                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-6 w-6 text-white hover:bg-white/20"
+                                                                        onClick={() => { setDrawingContext({productIndex: index, imageIndex: imgIndex, imageUrl: url }); setIsDrawingOpen(true); }}
+                                                                    >
+                                                                        <Edit className="h-3 w-3" />
+                                                                    </Button>
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="destructive"
+                                                                        size="icon"
+                                                                        className="h-6 w-6"
+                                                                        onClick={() => removeImage(index, imgIndex)}
+                                                                    >
+                                                                        <Trash2 className="h-3 w-3" />
+                                                                    </Button>
+                                                                </div>
                                                             </div>
                                                         ))}
                                                     </div>
@@ -511,7 +541,7 @@ export default function B2BPage() {
                     <DialogHeader>
                         <DialogTitle>Sketch Your Design</DialogTitle>
                     </DialogHeader>
-                    <DrawingCanvas onSave={handleSaveDrawing} />
+                    <DrawingCanvas onSave={handleSaveDrawing} initialImage={drawingContext?.imageUrl} />
                 </DialogContent>
             </Dialog>
         </div>

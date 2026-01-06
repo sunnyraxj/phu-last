@@ -3,18 +3,19 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Eraser, Pen, Undo, Redo } from 'lucide-react';
+import { Eraser, Pen, Undo, Redo, Edit } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface DrawingCanvasProps {
   onSave: (dataUrl: string) => void;
+  initialImage?: string;
   width?: number;
   height?: number;
 }
 
 const COLORS = ['#000000', '#FF0000', '#0000FF', '#008000']; // Black, Red, Blue, Green
 
-export function DrawingCanvas({ onSave, width = 500, height = 400 }: DrawingCanvasProps) {
+export function DrawingCanvas({ onSave, initialImage, width = 500, height = 400 }: DrawingCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isErasing, setIsErasing] = useState(false);
@@ -25,31 +26,6 @@ export function DrawingCanvas({ onSave, width = 500, height = 400 }: DrawingCanv
 
   const context = canvasRef.current?.getContext('2d');
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const scale = window.devicePixelRatio;
-    canvas.width = width * scale;
-    canvas.height = height * scale;
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
-
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.scale(scale, scale);
-      ctx.lineCap = 'round';
-      ctx.lineWidth = 2;
-      saveState();
-    }
-  }, [width, height]);
-  
-  useEffect(() => {
-    if(context) {
-        context.strokeStyle = color;
-    }
-  }, [color, context]);
-
   const saveState = () => {
     if(context && canvasRef.current) {
         const newHistory = history.slice(0, historyIndex + 1);
@@ -58,6 +34,42 @@ export function DrawingCanvas({ onSave, width = 500, height = 400 }: DrawingCanv
         setHistoryIndex(newHistory.length);
     }
   }
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if(!ctx) return;
+
+    const scale = window.devicePixelRatio;
+    canvas.width = width * scale;
+    canvas.height = height * scale;
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    
+    ctx.scale(scale, scale);
+    ctx.lineCap = 'round';
+    ctx.lineWidth = 2;
+    
+    if (initialImage) {
+        const img = new Image();
+        img.crossOrigin = "anonymous"; // Important for loading images from other domains
+        img.src = initialImage;
+        img.onload = () => {
+            ctx.drawImage(img, 0, 0, width, height);
+            saveState();
+        }
+    } else {
+        saveState();
+    }
+  }, [width, height, initialImage]);
+  
+  useEffect(() => {
+    if(context) {
+        context.strokeStyle = color;
+    }
+  }, [color, context]);
+
 
   const restoreState = (index: number) => {
     if(context && canvasRef.current && history[index]) {
