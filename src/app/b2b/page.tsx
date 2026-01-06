@@ -1,103 +1,367 @@
 
 'use client';
 
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { Header } from "@/components/shared/Header";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Users, Palette, MessageSquare } from "lucide-react";
-import Link from "next/link";
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { Calendar as CalendarIcon, UploadCloud, Trash2, PlusCircle, CheckCircle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
+import { collection, serverTimestamp } from 'firebase/firestore';
+import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
+import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-const B2B_WHATSAPP_NUMBER = '918638098776'; 
-const B2B_SUPPORT_EMAIL = 'purbanchalhastaudyog@gmail.com'; 
+const MIN_BULK_QUANTITY = 100;
+
+const materialRequestSchema = z.object({
+  materialId: z.string().min(1, "Material must be selected"),
+  quantity: z.number().min(1, "Quantity must be at least 1"),
+  customizationDetails: z.string().optional(),
+  referenceImage: z.string().url().optional(),
+});
+
+const b2bRequestSchema = z.object({
+    orderType: z.enum(['bulk', 'customize']),
+    materials: z.array(materialRequestSchema).min(1, 'At least one material must be added.'),
+    requirementDate: z.date({
+        required_error: 'A requirement date is required.',
+    }),
+    customerDetails: z.object({
+        name: z.string().min(1, 'Your name is required.'),
+        mobile: z.string().min(10, 'A valid mobile number is required.'),
+        email: z.string().email().optional().or(z.literal('')),
+        companyName: z.string().optional(),
+        gstNumber: z.string().optional(),
+    }),
+}).refine(data => {
+    if (data.orderType === 'bulk') {
+        return data.materials.every(m => m.quantity >= MIN_BULK_QUANTITY);
+    }
+    return true;
+}, {
+    message: `For bulk orders, each material must have a minimum quantity of ${MIN_BULK_QUANTITY}.`,
+    path: ['materials'],
+});
+
+type B2BFormValues = z.infer<typeof b2bRequestSchema>;
+
+type MaterialSetting = {
+    id: string;
+    name: string;
+    bulkAllowed?: boolean;
+    customizeAllowed?: boolean;
+    unit?: string;
+};
 
 export default function B2BPage() {
+    const firestore = useFirestore();
+    const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [orderType, setOrderType] = useState<'bulk' | 'customize'>('bulk');
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const features = [
-        {
-            icon: Palette,
-            title: "Custom Designs & White Labeling",
-            description: "Collaborate with our artisans to create unique products tailored to your brand's vision. We offer white labeling to make our crafts truly yours."
+    const materialSettingsQuery = useMemoFirebase(() => collection(firestore, 'materialSettings'), [firestore]);
+    const { data: materialSettings, isLoading: materialsLoading } = useCollection<MaterialSetting>(materialSettingsQuery);
+
+    const {
+        control,
+        register,
+        handleSubmit,
+        setValue,
+        watch,
+        formState: { errors },
+    } = useForm<B2BFormValues>({
+        resolver: zodResolver(b2bRequestSchema),
+        defaultValues: {
+            orderType: 'bulk',
+            materials: [{ materialId: '', quantity: 0, customizationDetails: '', referenceImage: '' }],
+            customerDetails: {
+                name: '',
+                mobile: '',
+                email: '',
+                companyName: '',
+                gstNumber: '',
+            }
         },
-        {
-            icon: Users,
-            title: "Corporate Gifting",
-            description: "Make a lasting impression with authentic, handcrafted gifts that tell a story of tradition and sustainability."
-        },
-        {
-            icon: CheckCircle,
-            title: "Bulk & Wholesale Pricing",
-            description: "Get competitive pricing on bulk orders for your retail store, events, or corporate needs. We scale with you."
+    });
+
+    const { fields, append, remove, update } = useFieldArray({
+        control,
+        name: 'materials',
+    });
+
+    const watchedMaterials = watch('materials');
+
+    const availableMaterials = useMemo(() => {
+        if (!materialSettings) return [];
+        if (orderType === 'bulk') {
+            return materialSettings.filter(m => m.bulkAllowed);
         }
-    ];
+        return materialSettings.filter(m => m.customizeAllowed);
+    }, [materialSettings, orderType]);
+    
+    useEffect(() => {
+        setValue('orderType', orderType);
+    }, [orderType, setValue]);
 
-    const whatsappMessage = encodeURIComponent("Hello, I'm interested in a B2B partnership and would like to discuss custom or bulk orders.");
+    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        try {
+            const response = await fetch(`/api/upload?filename=${file.name}`, {
+                method: 'POST',
+                body: file,
+            });
+            const newBlob = await response.json();
+            if (newBlob.url) {
+                const currentMaterial = watchedMaterials[index];
+                update(index, { ...currentMaterial, referenceImage: newBlob.url });
+                toast({ title: 'Image uploaded successfully!' });
+            } else {
+                throw new Error('Upload failed');
+            }
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Upload failed', description: 'Could not upload image.' });
+        } finally {
+            setIsUploading(false);
+            if (event.target) event.target.value = '';
+        }
+    };
+    
+    const onSubmit = async (data: B2BFormValues) => {
+        setIsSubmitting(true);
+        try {
+            await addDocumentNonBlocking(collection(firestore, 'orderRequests'), {
+                ...data,
+                status: 'pending',
+                createdAt: serverTimestamp(),
+            });
+            setIsSubmitted(true);
+        } catch (error) {
+            console.error("Error submitting request:", error);
+            toast({ variant: 'destructive', title: 'Submission Failed', description: 'Could not submit your request.' });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    if (isSubmitted) {
+        return (
+            <div className="bg-background pt-24 md:pt-48">
+                <Header variant="transparent" />
+                <main className="container mx-auto py-12 sm:py-16 px-4 flex items-center justify-center">
+                    <Card className="max-w-xl text-center">
+                        <CardHeader>
+                            <CheckCircle className="mx-auto h-12 w-12 text-green-500" />
+                            <CardTitle className="text-2xl sm:text-3xl mt-4">Request Submitted!</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-muted-foreground">Thank you for your inquiry. Our team will review your request and get back to you shortly. You can expect a response within 1-2 business days.</p>
+                        </CardContent>
+                        <CardFooter>
+                            <Button className="w-full" onClick={() => window.location.reload()}>Submit Another Request</Button>
+                        </CardFooter>
+                    </Card>
+                </main>
+            </div>
+        )
+    }
 
     return (
         <div className="bg-background pt-24 md:pt-48">
             <Header variant="transparent" />
 
-            <section className="bg-yellow-400 text-black py-20">
-                <div className="container mx-auto text-center px-4">
-                    <h1 className="text-4xl md:text-6xl font-bold tracking-tight">Partner with Us</h1>
-                    <p className="mt-4 text-lg md:text-xl max-w-3xl mx-auto">
-                        Elevate your business with authentic, handcrafted products from the heart of Northeast India.
-                    </p>
-                </div>
-            </section>
-            
             <main className="container mx-auto py-12 sm:py-16 px-4">
-                <div className="text-center mb-12">
-                    <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Why Purbanchal Hasta Udyog?</h2>
-                    <p className="mt-4 text-base text-muted-foreground max-w-2xl mx-auto sm:text-lg">
-                        We offer more than just products; we offer a partnership rooted in authenticity, craftsmanship, and social responsibility.
+                 <div className="text-center mb-12">
+                    <h1 className="text-4xl md:text-6xl font-bold tracking-tight">Bulk & Customize Orders</h1>
+                    <p className="mt-4 text-lg md:text-xl max-w-3xl mx-auto text-muted-foreground">
+                        Place a request for bulk quantities or custom-designed products tailored to your needs.
                     </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
-                    {features.map((feature, index) => (
-                        <Card key={index} className="text-center">
-                             <CardHeader>
-                                <div className="mx-auto bg-yellow-400 text-black rounded-full h-16 w-16 flex items-center justify-center mb-4">
-                                    <feature.icon className="h-8 w-8" />
-                                </div>
-                                <CardTitle>{feature.title}</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-muted-foreground">{feature.description}</p>
-                            </CardContent>
-                        </Card>
-                    ))}
                 </div>
                 
-                 <Card className="max-w-4xl mx-auto bg-card shadow-lg border-none">
-                    <CardHeader className="text-center">
-                        <CardTitle className="text-2xl sm:text-3xl">Let's Create Together</CardTitle>
-                        <CardDescription>
-                            We're excited to learn about your needs. Reach out to us to start the conversation.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <Link href={`https://wa.me/${B2B_WHATSAPP_NUMBER}?text=${whatsappMessage}`} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
-                            <Button size="lg" className="w-full bg-yellow-400 text-black hover:bg-yellow-500">
-                                <MessageSquare className="mr-2 h-5 w-5" />
-                                Chat on WhatsApp
-                            </Button>
-                        </Link>
-                         <div className="relative flex items-center sm:w-auto w-full">
-                            <div className="absolute inset-0 flex items-center">
-                                <span className="w-full border-t" />
-                            </div>
-                            <div className="relative flex justify-center text-xs uppercase sm:w-auto w-full">
-                                <span className="bg-card px-2 text-muted-foreground">OR</span>
-                            </div>
-                        </div>
-                        <a href={`mailto:${B2B_SUPPORT_EMAIL}`} className="w-full sm:w-auto">
-                           <Button variant="outline" size="lg" className="w-full">
-                                Email Us
-                            </Button>
-                        </a>
-                    </CardContent>
-                </Card>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 max-w-4xl mx-auto">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Step 1: Choose Your Order Type</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Tabs value={orderType} onValueChange={(value) => setOrderType(value as 'bulk' | 'customize')} className="w-full">
+                                <TabsList className="grid w-full grid-cols-2">
+                                    <TabsTrigger value="bulk">Bulk Order</TabsTrigger>
+                                    <TabsTrigger value="customize">Customize Order</TabsTrigger>
+                                </TabsList>
+                            </Tabs>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Step 2: Select Materials & Quantity</CardTitle>
+                            {orderType === 'bulk' && <CardDescription>Minimum order quantity for bulk orders is {MIN_BULK_QUANTITY} units per material.</CardDescription>}
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {materialsLoading ? <PottersWheelSpinner /> : (
+                                <>
+                                    {fields.map((field, index) => {
+                                        const selectedMaterial = materialSettings?.find(m => m.id === watchedMaterials[index]?.materialId);
+                                        return (
+                                            <div key={field.id} className="p-4 border rounded-lg space-y-4 relative">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div className="space-y-2">
+                                                        <Label>Material</Label>
+                                                        <Controller
+                                                            control={control}
+                                                            name={`materials.${index}.materialId`}
+                                                            render={({ field }) => (
+                                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                                    <SelectTrigger><SelectValue placeholder="Select a material" /></SelectTrigger>
+                                                                    <SelectContent>
+                                                                        {availableMaterials.map(mat => <SelectItem key={mat.id} value={mat.id}>{mat.name}</SelectItem>)}
+                                                                    </SelectContent>
+                                                                </Select>
+                                                            )}
+                                                        />
+                                                         {errors.materials?.[index]?.materialId && <p className="text-sm text-destructive">{errors.materials[index].materialId.message}</p>}
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label>Quantity {selectedMaterial?.unit ? `(in ${selectedMaterial.unit})` : ''}</Label>
+                                                        <Input type="number" {...register(`materials.${index}.quantity`, { valueAsNumber: true })} />
+                                                        {errors.materials?.[index]?.quantity && <p className="text-sm text-destructive">{errors.materials[index].quantity.message}</p>}
+                                                    </div>
+                                                </div>
+
+                                                {orderType === 'customize' && (
+                                                    <div className="space-y-4">
+                                                         <div className="space-y-2">
+                                                            <Label>Customization Details</Label>
+                                                            <Textarea placeholder="Describe your customization (size, color, design, etc.)" {...register(`materials.${index}.customizationDetails`)} />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <Label>Reference Image (Optional)</Label>
+                                                            <div className="flex items-center gap-4">
+                                                                <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                                                                    {isUploading ? <PottersWheelSpinner /> : <><UploadCloud className="mr-2 h-4 w-4" /> Upload Image</>}
+                                                                </Button>
+                                                                {watchedMaterials[index]?.referenceImage && (
+                                                                    <a href={watchedMaterials[index].referenceImage} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-500 hover:underline truncate">
+                                                                        {watchedMaterials[index].referenceImage.split('/').pop()}
+                                                                    </a>
+                                                                )}
+                                                                <input type="file" ref={fileInputRef} onChange={(e) => handleFileUpload(e, index)} className="hidden" accept="image/*"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                 {fields.length > 1 && (
+                                                    <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-destructive" onClick={() => remove(index)}>
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                 )}
+                                            </div>
+                                        )
+                                    })}
+                                    <Button type="button" variant="outline" onClick={() => append({ materialId: '', quantity: 0, customizationDetails: '', referenceImage: '' })}>
+                                        <PlusCircle className="mr-2 h-4 w-4" /> Add Another Material
+                                    </Button>
+                                    {errors.materials?.root && <p className="text-sm text-destructive font-medium">{errors.materials.root.message}</p>}
+                                </>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <Card>
+                             <CardHeader>
+                                <CardTitle>Step 3: Requirement Date</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <Controller
+                                    control={control}
+                                    name="requirementDate"
+                                    render={({ field }) => (
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant={"outline"}
+                                                    className={cn(
+                                                        "w-full justify-start text-left font-normal",
+                                                        !field.value && "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={field.value}
+                                                    onSelect={field.onChange}
+                                                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                    )}
+                                />
+                                {errors.requirementDate && <p className="text-sm text-destructive mt-2">{errors.requirementDate.message}</p>}
+                            </CardContent>
+                        </Card>
+                         <Card>
+                             <CardHeader>
+                                <CardTitle>Step 4: Your Details</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label>Full Name</Label>
+                                    <Input {...register('customerDetails.name')} />
+                                    {errors.customerDetails?.name && <p className="text-sm text-destructive">{errors.customerDetails.name.message}</p>}
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Mobile Number</Label>
+                                    <Input {...register('customerDetails.mobile')} />
+                                    {errors.customerDetails?.mobile && <p className="text-sm text-destructive">{errors.customerDetails.mobile.message}</p>}
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Email (Optional)</Label>
+                                    <Input {...register('customerDetails.email')} />
+                                </div>
+                                 <div className="space-y-2">
+                                    <Label>Company / Shop Name (Optional)</Label>
+                                    <Input {...register('customerDetails.companyName')} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>GST Number (Optional)</Label>
+                                    <Input {...register('customerDetails.gstNumber')} />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <div className="flex justify-end">
+                        <Button type="submit" size="lg" disabled={isSubmitting} className="bg-yellow-400 text-black hover:bg-yellow-500">
+                            {isSubmitting ? <PottersWheelSpinner /> : 'Submit Request'}
+                        </Button>
+                    </div>
+                </form>
             </main>
         </div>
     );

@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { collection, doc, query, where } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
-import { Home, Package, ShoppingCart, Users, Store, Menu, Settings, Undo2, LayoutDashboard, FileText, ShieldAlert, Brush } from 'lucide-react';
+import { Home, Package, ShoppingCart, Users, Store, Menu, Settings, Undo2, LayoutDashboard, FileText, ShieldAlert, Brush, Paperclip } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -19,6 +19,10 @@ type Order = {
 
 type ReturnRequest = {
     status: 'pending-review';
+}
+
+type OrderRequest = {
+    status: 'pending';
 }
 
 export default function AdminLayout({
@@ -40,12 +44,16 @@ export default function AdminLayout({
     
     const returnsQuery = useMemoFirebase(() => (user ? query(collection(firestore, 'returnRequests'), where('status', '==', 'pending-review')) : null), [firestore, user]);
     const { data: returnRequests } = useCollection<ReturnRequest>(returnsQuery);
+
+    const orderRequestsQuery = useMemoFirebase(() => (user ? query(collection(firestore, 'orderRequests'), where('status', '==', 'pending')) : null), [firestore, user]);
+    const { data: orderRequests } = useCollection<OrderRequest>(orderRequestsQuery);
     
     const storesQuery = useMemoFirebase(() => collection(firestore, 'stores'), [firestore]);
     const { data: stores } = useCollection<Store>(storesQuery);
 
     const pendingOrdersCount = useMemo(() => orders?.length || 0, [orders]);
     const pendingReturnsCount = useMemo(() => returnRequests?.length || 0, [returnRequests]);
+    const pendingRequestsCount = useMemo(() => orderRequests?.length || 0, [orderRequests]);
 
     const adminActionCounts = useMemo(() => {
         return {
@@ -76,6 +84,7 @@ export default function AdminLayout({
                 { href: '/admin/items', label: 'Items', icon: Package },
                 { href: '/admin/orders', label: 'Orders', icon: ShoppingCart, badge: pendingOrdersCount > 0 ? pendingOrdersCount : null, badgeVariant: 'default' as const },
                 { href: '/admin/returns', label: 'Returns', icon: Undo2, badge: pendingReturnsCount > 0 ? pendingReturnsCount : null, badgeVariant: 'destructive' as const },
+                { href: '/admin/requests', label: 'Requests', icon: Paperclip, badge: pendingRequestsCount > 0 ? pendingRequestsCount : null, badgeVariant: 'default' as const },
             ]
         },
         {
