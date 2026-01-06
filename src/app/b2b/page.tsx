@@ -29,6 +29,7 @@ const MIN_BULK_QUANTITY = 100;
 
 const materialRequestSchema = z.object({
   materialId: z.string().min(1, "Material must be selected"),
+  materialName: z.string().min(1),
   quantity: z.number().min(1, "Quantity must be at least 1"),
   customizationDetails: z.string().optional(),
   referenceImage: z.string().url().optional(),
@@ -90,7 +91,7 @@ export default function B2BPage() {
         resolver: zodResolver(b2bRequestSchema),
         defaultValues: {
             orderType: 'bulk',
-            materials: [{ materialId: '', quantity: 0, customizationDetails: '', referenceImage: '' }],
+            materials: [{ materialId: '', materialName: '', quantity: 0, customizationDetails: '', referenceImage: '' }],
             customerDetails: {
                 name: '',
                 mobile: '',
@@ -109,11 +110,22 @@ export default function B2BPage() {
     const watchedMaterials = watch('materials');
 
     const availableMaterials = useMemo(() => {
-        if (!materialSettings) return [];
+        const coreMaterials = ["Cane", "Bamboo", "Jute"];
+        if (!materialSettings) return coreMaterials.map(m => ({id: m.toLowerCase(), name: m}));
+
+        const settingsMap = new Map(materialSettings.map(m => [m.name, m]));
+        coreMaterials.forEach(m => {
+            if (!settingsMap.has(m)) {
+                settingsMap.set(m, { id: m.toLowerCase(), name: m, bulkAllowed: true, customizeAllowed: true });
+            }
+        });
+        
+        const allConfiguredMaterials = Array.from(settingsMap.values());
+
         if (orderType === 'bulk') {
-            return materialSettings.filter(m => m.bulkAllowed);
+            return allConfiguredMaterials.filter(m => m.bulkAllowed && coreMaterials.includes(m.name));
         }
-        return materialSettings.filter(m => m.customizeAllowed);
+        return allConfiguredMaterials.filter(m => m.customizeAllowed && coreMaterials.includes(m.name));
     }, [materialSettings, orderType]);
     
     useEffect(() => {
@@ -236,7 +248,11 @@ export default function B2BPage() {
                                                                 <Combobox
                                                                     options={materialOptions}
                                                                     value={field.value}
-                                                                    onChange={field.onChange}
+                                                                    onChange={(val) => {
+                                                                        const selectedMat = availableMaterials.find(m => m.id === val);
+                                                                        setValue(`materials.${index}.materialId`, val);
+                                                                        setValue(`materials.${index}.materialName`, selectedMat?.name || '');
+                                                                    }}
                                                                     placeholder="Select a material"
                                                                     searchPlaceholder="Search materials..."
                                                                     notFoundMessage="No materials found."
@@ -283,7 +299,7 @@ export default function B2BPage() {
                                             </div>
                                         )
                                     })}
-                                    <Button type="button" variant="outline" onClick={() => append({ materialId: '', quantity: 0, customizationDetails: '', referenceImage: '' })}>
+                                    <Button type="button" variant="outline" onClick={() => append({ materialId: '', materialName: '', quantity: 0, customizationDetails: '', referenceImage: '' })}>
                                         <PlusCircle className="mr-2 h-4 w-4" /> Add Another Material
                                     </Button>
                                     {errors.materials?.root && <p className="text-sm text-destructive font-medium">{errors.materials.root.message}</p>}
