@@ -8,6 +8,7 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { ScrollProgress } from '@/components/shared/ScrollProgress';
 import { Footer } from '@/components/shared/Footer';
 import { FloatingWhatsAppButton } from '@/components/shared/FloatingWhatsAppButton';
+import { BackToTopButton } from '@/components/shared/BackToTopButton';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-body' });
 
@@ -57,6 +58,7 @@ export default function RootLayout({
           <main className="flex-grow">{children}</main>
           <Footer />
           <FloatingWhatsAppButton />
+          <BackToTopButton />
           <Toaster />
         </FirebaseClientProvider>
       </body>
