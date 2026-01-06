@@ -4,6 +4,7 @@
 import Link from 'next/link';
 import { Facebook, Instagram, Twitter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export function Footer() {
   return (
@@ -24,7 +25,7 @@ export function Footer() {
                         <li><Link href="/purchase" className="text-gray-400 hover:text-white">Shop</Link></li>
                         <li><Link href="/our-team" className="text-gray-400 hover:text-white">Our Team</Link></li>
                         <li><Link href="/our-stores" className="text-gray-400 hover:text-white">Our Stores</Link></li>
-                        <li><Link href="/b2b" className="text-gray-400 hover:text-white">B2B</Link></li>
+                        <li><Link href="/b2b" className="text-yellow-500 font-bold hover:text-yellow-400">B2B</Link></li>
                     </ul>
                 </div>
                 <div>

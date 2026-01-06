@@ -207,7 +207,7 @@ export function Header({ showAnnouncement = true }: HeaderProps) {
     { href: "/our-stores", label: "Our Stores" },
     { href: "/about", label: "About Us" },
     { href: "/our-team", label: "Our Team" },
-    { href: "/b2b", label: "B2B" },
+    { href: "/b2b", label: "B2B", className: "text-yellow-500 font-bold" },
   ];
 
   const announcements = [
@@ -292,7 +292,7 @@ export function Header({ showAnnouncement = true }: HeaderProps) {
                       {navItems.map((item) => (
                         <SheetClose asChild key={item.href}>
                           <Link href={item.href} >
-                            <Button variant="outline" className="w-full justify-center text-base py-6">{item.label}</Button>
+                            <Button variant="outline" className={cn("w-full justify-center text-base py-6", item.className)}>{item.label}</Button>
                           </Link>
                         </SheetClose>
                       ))}
@@ -730,7 +730,7 @@ export function Header({ showAnnouncement = true }: HeaderProps) {
                     <Separator className="bg-white/20" />
                     <nav className="flex items-center justify-center gap-8 text-sm font-medium py-4">
                         {navItems.map((item) => (
-                            <Link href={item.href} key={item.href} className="hover:opacity-80 transition-opacity">{item.label}</Link>
+                            <Link href={item.href} key={item.href} className={cn("hover:opacity-80 transition-opacity", item.className)}>{item.label}</Link>
                         ))}
                         <div className="flex items-center gap-5">
                         <Sheet>
