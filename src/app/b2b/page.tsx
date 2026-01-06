@@ -35,6 +35,7 @@ const materialRequestSchema = z.object({
   referenceImage: z.string().url().optional(),
   productName: z.string().optional(),
   budgetPerPiece: z.number().optional(),
+  description: z.string().optional(),
 });
 
 const b2bRequestSchema = z.object({
@@ -82,6 +83,7 @@ export default function B2BPage() {
                 customizationDetails: '', 
                 referenceImage: '',
                 budgetPerPiece: undefined,
+                description: '',
             }],
             customerDetails: {
                 name: '',
@@ -213,7 +215,7 @@ export default function B2BPage() {
                              <CardHeader>
                                 <CardTitle>Step 2: Enter Bulk Order Details</CardTitle>
                                 <CardDescription>
-                                    Specify the products you need in bulk. You can add multiple products to a single request.
+                                    Specify the products you need in bulk by filling out the details for each. You can add multiple products to a single request. Minimum order quantity is 100 units per product.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
@@ -243,6 +245,10 @@ export default function B2BPage() {
                                                 <Input type="number" {...register(`materials.${index}.budgetPerPiece`, { valueAsNumber: true })} placeholder="e.g., 500" />
                                             </div>
                                         </div>
+                                        <div className="space-y-2">
+                                            <Label>Description (Optional)</Label>
+                                            <Textarea {...register(`materials.${index}.description`)} placeholder="Add any specific details about the product here." rows={2}/>
+                                        </div>
                                      </div>
                                 ))}
                                 <Button type="button" variant="outline" onClick={() => append({ 
@@ -250,7 +256,8 @@ export default function B2BPage() {
                                     materialId: 'bulk-material',
                                     materialName: '', 
                                     quantity: MIN_BULK_QUANTITY, 
-                                    budgetPerPiece: undefined 
+                                    budgetPerPiece: undefined,
+                                    description: '',
                                 })}>
                                     <PlusCircle className="mr-2 h-4 w-4" /> Add Another Product
                                 </Button>
