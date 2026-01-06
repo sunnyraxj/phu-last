@@ -33,6 +33,8 @@ const materialRequestSchema = z.object({
   quantity: z.number().min(1, "Quantity must be at least 1"),
   customizationDetails: z.string().optional(),
   referenceImage: z.string().url().optional(),
+  productName: z.string().optional(),
+  budgetPerPiece: z.number().optional(),
 });
 
 const b2bRequestSchema = z.object({
@@ -213,6 +215,10 @@ export default function B2BPage() {
                                 <CardDescription>Minimum order quantity for bulk orders is {MIN_BULK_QUANTITY} units per material.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label>Product Name</Label>
+                                    <Input {...register(`materials.0.productName`)} placeholder="e.g., Round Jute Basket" />
+                                </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                      <div className="space-y-2">
                                         <Label>Material</Label>
@@ -241,6 +247,10 @@ export default function B2BPage() {
                                         <Input type="number" {...register(`materials.0.quantity`, { valueAsNumber: true })} />
                                         {errors.materials?.[0]?.quantity && <p className="text-sm text-destructive">{errors.materials[0].quantity.message}</p>}
                                     </div>
+                                </div>
+                                 <div className="space-y-2">
+                                    <Label>Budget per piece (Optional)</Label>
+                                    <Input type="number" {...register(`materials.0.budgetPerPiece`, { valueAsNumber: true })} placeholder="e.g., 500" />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Delivery Timeline</Label>
