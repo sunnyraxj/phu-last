@@ -96,7 +96,7 @@ export async function sendOrderConfirmation(payload: CustomerConfirmationPayload
   }
   
   const subject = `Order Confirmation – ${order.id}`;
-  const emailHtml = render(OrderConfirmationEmail({
+  const html = render(OrderConfirmationEmail({
     order,
     products,
     companySettings,
@@ -104,24 +104,24 @@ export async function sendOrderConfirmation(payload: CustomerConfirmationPayload
   
   const bccEmail = 'sunnyraxj@gmail.com';
 
-  await sendEmail(order.shippingDetails.email, subject, emailHtml, bccEmail);
+  await sendEmail(order.shippingDetails.email, subject, html, bccEmail);
 }
 
 export async function sendOrderCancellation(payload: OrderCancelledPayload) {
     const subject = `Your Purbanchal Hasta Udyog Order has been Cancelled (#${payload.orderId.substring(0,8)})`;
-    const emailHtml = render(OrderCancelledEmail({
+    const html = render(OrderCancelledEmail({
         orderId: payload.orderId,
         cancellationReason: payload.cancellationReason,
         refundStatus: payload.refundStatus,
     }));
-    await sendEmail(payload.customerEmail, subject, emailHtml);
+    await sendEmail(payload.customerEmail, subject, html);
 }
 
 export async function sendReturnRequestConfirmation(payload: ReturnRequestPayload) {
     const subject = `We've Received Your Return Request for Order #${payload.orderId.substring(0,8)}`;
-    const emailHtml = render(ReturnRequestEmail({
+    const html = render(ReturnRequestEmail({
         orderId: payload.orderId,
         returnedItems: payload.returnedItems,
     }));
-    await sendEmail(payload.customerEmail, subject, emailHtml);
+    await sendEmail(payload.customerEmail, subject, html);
 }

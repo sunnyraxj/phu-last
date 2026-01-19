@@ -272,7 +272,7 @@ export default function CheckoutPage() {
 
       const emailOrderData = {
         ...orderData,
-        orderDate: { seconds: Math.floor(clientOrderDate.getTime() / 1000) },
+        orderDate: { seconds: Math.floor(clientOrderDate.getTime() / 1000), nanoseconds: 0 },
       };
 
       await sendOrderConfirmation({
