@@ -6,6 +6,7 @@ import OrderConfirmationEmail from '@/emails/OrderConfirmationEmail';
 import OrderCancelledEmail from '@/emails/OrderCancelledEmail';
 import ReturnRequestEmail from '@/emails/ReturnRequestEmail';
 import { ReactElement } from 'react';
+import { render } from '@react-email/components';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const fromEmail = process.env.FROM_EMAIL || 'onboarding@resend.dev';
@@ -21,7 +22,7 @@ type ShippingDetails = {
     email?: string;
 }
 
-type Order = {
+export type Order = {
   id: string;
   customerId: string;
   orderDate: { seconds: number; nanoseconds: number; };
@@ -75,12 +76,12 @@ type ReturnRequestPayload = {
     returnedItems: { name: string; quantity: number }[];
 };
 
-async function sendEmail(to: string | string[], subject: string, react: ReactElement) {
+async function sendEmail(to: string | string[], subject: string, html: string, bcc?: string | string[]) {
     const companyName = 'Purbanchal Hasta Udyog';
     const from = `${companyName} <${fromEmail}>`;
 
     try {
-        await resend.emails.send({ from, to, subject, react });
+        await resend.emails.send({ from, to, subject, html, bcc });
     } catch (error) {
         console.error(`Email sending failed for subject "${subject}" to "${to}":`, error);
         // Do not re-throw, as email failure should not block application flow.
@@ -95,27 +96,30 @@ export async function sendOrderConfirmation(payload: CustomerConfirmationPayload
   }
   
   const subject = `Order Confirmation – ${order.id}`;
-
-  await sendEmail(order.shippingDetails.email, subject, OrderConfirmationEmail({
+  const emailHtml = render(OrderConfirmationEmail({
     order,
     products,
     companySettings,
   }));
+
+  await sendEmail(order.shippingDetails.email, subject, emailHtml);
 }
 
 export async function sendOrderCancellation(payload: OrderCancelledPayload) {
     const subject = `Your Purbanchal Hasta Udyog Order has been Cancelled (#${payload.orderId.substring(0,8)})`;
-    await sendEmail(payload.customerEmail, subject, OrderCancelledEmail({
+    const emailHtml = render(OrderCancelledEmail({
         orderId: payload.orderId,
         cancellationReason: payload.cancellationReason,
         refundStatus: payload.refundStatus,
     }));
+    await sendEmail(payload.customerEmail, subject, emailHtml);
 }
 
 export async function sendReturnRequestConfirmation(payload: ReturnRequestPayload) {
     const subject = `We've Received Your Return Request for Order #${payload.orderId.substring(0,8)}`;
-    await sendEmail(payload.customerEmail, subject, ReturnRequestEmail({
+    const emailHtml = render(ReturnRequestEmail({
         orderId: payload.orderId,
         returnedItems: payload.returnedItems,
     }));
+    await sendEmail(payload.customerEmail, subject, emailHtml);
 }
