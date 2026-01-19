@@ -76,7 +76,14 @@ type ReturnRequestPayload = {
     returnedItems: { name: string; quantity: number }[];
 };
 
-async function sendEmail(to: string | string[], subject: string, html: string, bcc?: string | string[]) {
+type SendEmailPayload = {
+    to: string | string[];
+    subject: string;
+    html: string;
+    bcc?: string | string[];
+}
+
+async function sendEmail({ to, subject, html, bcc }: SendEmailPayload) {
     const companyName = 'Purbanchal Hasta Udyog';
     const from = `${companyName} <${fromEmail}>`;
 
@@ -102,9 +109,12 @@ export async function sendOrderConfirmation(payload: CustomerConfirmationPayload
     companySettings,
   }));
   
-  const bccEmail = 'sunnyraxj@gmail.com';
-
-  await sendEmail(order.shippingDetails.email, subject, html, bccEmail);
+  await sendEmail({
+      to: order.shippingDetails.email,
+      subject,
+      html,
+      bcc: 'sunnyraxj@gmail.com'
+  });
 }
 
 export async function sendOrderCancellation(payload: OrderCancelledPayload) {
@@ -114,7 +124,11 @@ export async function sendOrderCancellation(payload: OrderCancelledPayload) {
         cancellationReason: payload.cancellationReason,
         refundStatus: payload.refundStatus,
     }));
-    await sendEmail(payload.customerEmail, subject, html);
+    await sendEmail({
+        to: payload.customerEmail, 
+        subject, 
+        html
+    });
 }
 
 export async function sendReturnRequestConfirmation(payload: ReturnRequestPayload) {
@@ -123,5 +137,9 @@ export async function sendReturnRequestConfirmation(payload: ReturnRequestPayloa
         orderId: payload.orderId,
         returnedItems: payload.returnedItems,
     }));
-    await sendEmail(payload.customerEmail, subject, html);
+    await sendEmail({
+        to: payload.customerEmail, 
+        subject, 
+        html
+    });
 }
