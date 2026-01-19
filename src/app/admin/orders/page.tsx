@@ -51,7 +51,7 @@ type Order = {
     igstAmount?: number;
     status: OrderStatus;
     shippingDetails: ShippingDetails;
-    paymentMethod?: 'UPI_PARTIAL';
+    paymentMethod?: 'UPI_PARTIAL' | 'UPI_FULL';
     paymentDetails?: {
         advanceAmount: number;
         remainingAmount: number;
@@ -375,14 +375,20 @@ export default function OrdersPage() {
                                                         </div>
                                                         <div>
                                                             <h4 className="font-semibold mb-2">Payment Details</h4>
-                                                            {order.paymentMethod === 'UPI_PARTIAL' && order.paymentDetails ? (
+                                                            {(order.paymentMethod === 'UPI_PARTIAL' || order.paymentMethod === 'UPI_FULL') && order.paymentDetails ? (
                                                                 <div className="text-xs space-y-1">
-                                                                    <p>Method: <span className="font-semibold">Partial UPI</span></p>
+                                                                    <p>Method: <span className="font-semibold">{order.paymentMethod === 'UPI_PARTIAL' ? 'Partial UPI' : 'Full UPI'}</span></p>
                                                                     <p>UTR: <span className="font-mono">{order.paymentDetails.utr}</span></p>
-                                                                    <p>Paid: <span className="font-semibold text-green-600">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.paymentDetails.advanceAmount)}</span></p>
-                                                                    <p>Due: <span className="font-semibold text-destructive">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.paymentDetails.remainingAmount)}</span></p>
+                                                                    {order.paymentMethod === 'UPI_PARTIAL' ? (
+                                                                        <>
+                                                                            <p>Paid: <span className="font-semibold text-green-600">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.paymentDetails.advanceAmount)}</span></p>
+                                                                            <p>Due: <span className="font-semibold text-destructive">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.paymentDetails.remainingAmount)}</span></p>
+                                                                        </>
+                                                                    ) : (
+                                                                        <p>Paid: <span className="font-semibold text-green-600">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(order.totalAmount)}</span></p>
+                                                                    )}
                                                                 </div>
-                                                            ) : <p className="text-xs">Full Payment</p>}
+                                                            ) : <p className="text-xs">Payment details not available.</p>}
                                                         </div>
                                                          <div>
                                                             <h4 className="font-semibold mb-2">Delivery Date</h4>
