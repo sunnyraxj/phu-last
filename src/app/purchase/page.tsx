@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect, useRef } from "react"
 import { collection, doc, query, where, writeBatch, setDoc, deleteDoc } from "firebase/firestore";
-import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon, ChevronRight } from "lucide-react"
+import { Search, Eye, Filter, ShoppingBag as ShoppingBagIcon, ChevronRight, Home } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
@@ -16,7 +16,6 @@ import { cn, isValidImageDomain } from "@/lib/utils"
 import { useAuth, useCollection, useDoc, useFirestore, useMemoFirebase, useUser, useFirebase } from "@/firebase";
 import { PottersWheelSpinner } from "@/components/shared/PottersWheelSpinner";
 import { useRouter } from "next/navigation";
-import { Header } from "@/components/shared/Header";
 import { ShoppingBag } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
@@ -413,10 +412,16 @@ export default function PurchasePage() {
 
   return (
     <div className="min-h-screen bg-background font-sans">
-      <Header />
+        <div className="container mx-auto px-4 pt-8">
+            <Link href="/">
+                <Button variant="outline">
+                    <Home className="mr-2 h-4 w-4" /> Home
+                </Button>
+            </Link>
+        </div>
       
       <div className="container mx-auto flex items-start px-0 sm:px-4 mt-8">
-        <aside className="w-72 bg-background p-6 border-r border-border h-screen sticky top-[88px] overflow-y-auto hidden lg:block">
+        <aside className="w-72 bg-background p-6 border-r border-border h-screen sticky top-8 overflow-y-auto hidden lg:block">
           <Filters 
             categories={categories}
             materials={materials}
