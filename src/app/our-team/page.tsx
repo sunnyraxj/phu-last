@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { PottersWheelSpinner } from "@/components/shared/PottersWheelSpinner";
-import { useCollection, useFirebase } from "@/firebase";
+import { useCollection, useFirebase, useMemoFirebase } from "@/firebase";
 import { collection } from "firebase/firestore";
 import { Header } from "@/components/shared/Header";
+import { useMemo } from "react";
 
 type TeamMember = {
     id: string;
@@ -22,11 +23,16 @@ type TeamMember = {
 
 export default function OurTeamPage() {
     const { firestore } = useFirebase();
-    const { data: teamMembers, isLoading } = useCollection<TeamMember>(collection(firestore, 'teamMembers'));
+    const teamMembersQuery = useMemoFirebase(() => collection(firestore, 'teamMembers'), [firestore]);
+    const { data: teamMembers, isLoading } = useCollection<TeamMember>(teamMembersQuery);
 
-    const founder = teamMembers?.find(member => member.role === 'Founder');
-    const managementMembers = teamMembers?.filter(member => member.role === 'Management') || [];
-    const otherTeamMembers = teamMembers?.filter(member => member.role === 'Team Member') || [];
+    const { founder, managementMembers, otherTeamMembers } = useMemo(() => {
+        if (!teamMembers) return { founder: null, managementMembers: [], otherTeamMembers: [] };
+        const founderMember = teamMembers.find(member => member.role === 'Founder');
+        const mgmtMembers = teamMembers.filter(member => member.role === 'Management');
+        const otherMembers = teamMembers.filter(member => member.role === 'Team Member');
+        return { founder: founderMember, managementMembers: mgmtMembers, otherTeamMembers: otherMembers };
+    }, [teamMembers]);
 
   return (
     <div className="bg-background">
