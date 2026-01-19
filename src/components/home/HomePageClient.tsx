@@ -46,10 +46,6 @@ type Product = {
   createdAt: { seconds: number; nanoseconds: number; };
 };
 
-type Order = {
-    status: 'pending' | 'shipped' | 'delivered' | 'pending-payment-approval';
-};
-
 type CartItem = Product & { quantity: number; cartItemId: string; selectedSize?: string };
 
 type TeamMember = {
@@ -281,18 +277,6 @@ export function HomePageClient() {
   const brandLogosQuery = useMemoFirebase(() => collection(firestore, 'brandLogos'), [firestore]);
   const { data: brandLogos } = useCollection<BrandLogo>(brandLogosQuery);
 
-
-  const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
-  const { data: userData, isLoading: isUserDocLoading } = useDoc<{ role: string }>(userDocRef);
-
-  const isAuthorizedAdmin = userData?.role === 'admin';
-
-  const ordersQuery = useMemoFirebase(() =>
-    (isAuthorizedAdmin && user && !user.isAnonymous) ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval'])) : null,
-    [firestore, isAuthorizedAdmin, user]
-  );
-  const { data: orders } = useCollection<Order>(ordersQuery);
-
   const cartItemsQuery = useMemoFirebase(() =>
     user ? collection(firestore, 'users', user.uid, 'cart') : null,
     [firestore, user]
@@ -307,36 +291,12 @@ export function HomePageClient() {
     }).filter((item): item is CartItem => item !== null);
   }, [cartData, allProducts]);
 
-  const outOfStockQuery = useMemoFirebase(() => 
-    (isAuthorizedAdmin) ? query(collection(firestore, 'products'), where('inStock', '==', false)) : null,
-    [firestore, isAuthorizedAdmin]
-  );
-  const { data: outOfStockProducts } = useCollection<Product>(outOfStockQuery);
-
-  const returnsQuery = useMemoFirebase(() => 
-      (isAuthorizedAdmin) ? query(collection(firestore, 'returnRequests'), where('status', '==', 'pending-review')) : null,
-      [firestore, isAuthorizedAdmin]
-  );
-  const { data: returnRequests } = useCollection<any>(returnsQuery);
-
   const { founder, allOtherMembers } = useMemo(() => {
     if (!teamMembers) return { founder: null, allOtherMembers: [] };
     const founderMember = teamMembers.find(member => member.role === 'Founder');
     const otherMembers = teamMembers.filter(member => member.role === 'Management' || 'Team Member');
     return { founder: founderMember, allOtherMembers: otherMembers };
 }, [teamMembers]);
-
-
-  const adminActionCounts = useMemo(() => {
-    if (userData?.role !== 'admin') {
-      return { pendingOrders: 0, outOfStockProducts: 0, pendingReturns: 0 };
-    }
-    return { 
-        pendingOrders: orders?.length || 0,
-        outOfStockProducts: outOfStockProducts?.length || 0,
-        pendingReturns: returnRequests?.length || 0
-    };
-  }, [orders, outOfStockProducts, returnRequests, userData]);
 
   const { categories, materials } = useMemo(() => {
     if (!allProducts) return { categories: [], materials: [] };

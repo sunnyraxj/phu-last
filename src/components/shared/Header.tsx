@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -58,7 +59,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
-import { collection, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, deleteDoc, query, where } from 'firebase/firestore';
 
 
 // Simple X icon replacement
@@ -94,6 +95,10 @@ interface HeaderProps {
     showAnnouncement?: boolean;
 }
 
+type Order = {
+    status: 'pending' | 'shipped' | 'delivered' | 'pending-payment-approval' | 'order-confirmed';
+};
+
 export function Header({ showAnnouncement = true }: HeaderProps) {
   const { firestore, user, isUserLoading, auth, updateCartItemSize } = useFirebase();
   const router = useRouter();
@@ -110,6 +115,14 @@ export function Header({ showAnnouncement = true }: HeaderProps) {
 
   const userDocRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
   const { data: userData } = useDoc<{ role: string }>(userDocRef);
+  const isAuthorizedAdmin = userData?.role === 'admin';
+
+  const ordersQuery = useMemoFirebase(() =>
+    (isAuthorizedAdmin && user && !user.isAnonymous) ? query(collection(firestore, 'orders'), where('status', 'in', ['pending', 'pending-payment-approval', 'order-confirmed'])) : null,
+    [firestore, isAuthorizedAdmin, user]
+  );
+  const { data: orders } = useCollection<Order>(ordersQuery);
+  const pendingOrdersCount = useMemo(() => orders?.length || 0, [orders]);
 
   const cartItemsQuery = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'cart') : null, [firestore, user]);
   const { data: cartData } = useCollection(cartItemsQuery);
@@ -394,8 +407,13 @@ export function Header({ showAnnouncement = true }: HeaderProps) {
                 {!isUserLoading && user && !user.isAnonymous ? (
                   <Popover>
                       <PopoverTrigger asChild>
-                        <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isSolid ? "ring-foreground/50" : "ring-white/50")}>
+                        <button className={cn("relative hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isSolid ? "ring-foreground/50" : "ring-white/50")}>
                             <User size={18} strokeWidth={1.5} />
+                            {isAuthorizedAdmin && pendingOrdersCount > 0 && (
+                                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                                    {pendingOrdersCount}
+                                </span>
+                            )}
                         </button>
                       </PopoverTrigger>
                       <PopoverContent className="w-48">
@@ -573,8 +591,13 @@ export function Header({ showAnnouncement = true }: HeaderProps) {
                         {!isUserLoading && user && !user.isAnonymous ? (
                         <Popover>
                             <PopoverTrigger asChild>
-                                <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isSolid ? "ring-foreground/50" : "ring-white/50")}>
+                                <button className={cn("relative hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isSolid ? "ring-foreground/50" : "ring-white/50")}>
                                     <User size={18} strokeWidth={1.5} />
+                                    {isAuthorizedAdmin && pendingOrdersCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                                            {pendingOrdersCount}
+                                        </span>
+                                    )}
                                 </button>
                             </PopoverTrigger>
                             <PopoverContent className="w-48">
@@ -780,8 +803,13 @@ export function Header({ showAnnouncement = true }: HeaderProps) {
                             {!isUserLoading && user && !user.isAnonymous ? (
                             <Popover>
                                 <PopoverTrigger asChild>
-                                    <button className={cn("hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isSolid ? "ring-foreground/50" : "ring-white/50")}>
+                                    <button className={cn("relative hover:opacity-80 transition-colors rounded-full h-8 w-8 flex items-center justify-center bg-transparent ring-1 ring-inset", isSolid ? "ring-foreground/50" : "ring-white/50")}>
                                         <User size={18} strokeWidth={1.5} />
+                                        {isAuthorizedAdmin && pendingOrdersCount > 0 && (
+                                            <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                                                {pendingOrdersCount}
+                                            </span>
+                                        )}
                                     </button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-48">
