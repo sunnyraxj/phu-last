@@ -5,10 +5,12 @@ import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebas
 import { collection, doc, writeBatch } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AddressForm, AddressFormValues } from '@/components/account/AddressForm';
-import { Header } from '@/components/shared/Header';
 import { useToast } from '@/hooks/use-toast';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Home } from 'lucide-react';
 
 type ShippingAddress = AddressFormValues & { id: string };
 
@@ -76,8 +78,14 @@ export default function AddAddressPage() {
 
     return (
         <div className="bg-background">
-            <Header />
-            <main className="container mx-auto py-4 sm:py-12 px-0 sm:px-4">
+            <div className="container mx-auto px-4 pt-8">
+                <Link href="/">
+                    <Button variant="outline">
+                        <Home className="mr-2 h-4 w-4" /> Home
+                    </Button>
+                </Link>
+            </div>
+            <main className="container mx-auto pb-4 sm:pb-12 px-0 sm:px-4">
                 <Card className="max-w-2xl mx-auto sm:shadow-sm sm:border rounded-none sm:rounded-lg">
                     <CardHeader>
                         <CardTitle>Add New Address</CardTitle>

@@ -6,14 +6,13 @@ import { useFirestore, useCollection, useUser, useMemoFirebase } from '@/firebas
 import { collection, query, where } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
-import { Header } from '@/components/shared/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, Undo2, Info } from 'lucide-react';
+import { ChevronDown, Undo2, Info, Home } from 'lucide-react';
 import Link from 'next/link';
 import { addDays, format, isBefore } from 'date-fns';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -118,9 +117,15 @@ export default function OrdersPage() {
 
     return (
         <div className="bg-background">
-            <Header />
+            <div className="container mx-auto px-4 pt-8">
+                <Link href="/">
+                    <Button variant="outline">
+                        <Home className="mr-2 h-4 w-4" /> Home
+                    </Button>
+                </Link>
+            </div>
 
-            <main className="container mx-auto py-8 sm:py-12 px-4">
+            <main className="container mx-auto pb-8 sm:pb-12 px-4">
                 <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-8">My Orders</h1>
 
                 {orders && orders.length > 0 ? (

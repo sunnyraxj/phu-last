@@ -4,10 +4,9 @@
 import { useMemo } from "react";
 import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
-import { Header } from "@/components/shared/Header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, MessageSquare, Copy } from "lucide-react";
+import { Mail, MessageSquare, Copy, Home } from "lucide-react";
 import Link from "next/link";
 import { PottersWheelSpinner } from "@/components/shared/PottersWheelSpinner";
 import { useToast } from "@/hooks/use-toast";
@@ -65,9 +64,15 @@ export default function HelpCenterPage() {
 
     return (
         <div className="bg-background">
-            <Header />
+            <div className="container mx-auto px-4 pt-8">
+                <Link href="/">
+                    <Button variant="outline">
+                        <Home className="mr-2 h-4 w-4" /> Home
+                    </Button>
+                </Link>
+            </div>
 
-            <main className="container mx-auto py-8 sm:py-12 px-4">
+            <main className="container mx-auto pb-8 sm:pb-12 px-4">
                 <div className="text-center mb-12">
                     <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">Help Center</h1>
                     <p className="mt-4 text-base text-muted-foreground max-w-2xl mx-auto sm:text-xl">

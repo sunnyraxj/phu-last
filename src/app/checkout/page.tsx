@@ -16,7 +16,6 @@ import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
-import { Header } from '@/components/shared/Header';
 import { AddressForm, AddressFormValues } from '@/components/account/AddressForm';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { PlusCircle, ShoppingBag, Home, Building, Briefcase, ArrowLeft } from 'lucide-react';
@@ -312,7 +311,13 @@ export default function CheckoutPage() {
   if (cartItems.length === 0 && !cartLoading) {
     return (
         <div className="bg-background">
-            <Header />
+            <div className="container mx-auto px-4 pt-8">
+                <Link href="/">
+                    <Button variant="outline">
+                        <Home className="mr-2 h-4 w-4" /> Home
+                    </Button>
+                </Link>
+            </div>
             <div className="flex h-[calc(100vh-80px)] items-center justify-center flex-col gap-4">
                 <ShoppingBag className="h-16 w-16 text-muted-foreground" />
                 <h2 className="text-2xl font-semibold">Your cart is empty</h2>
@@ -418,8 +423,14 @@ export default function CheckoutPage() {
 
   return (
     <div className="bg-background">
-        <Header />
-        <main className="container mx-auto py-8 px-4 pb-28 md:pb-12">
+        <div className="container mx-auto px-4 pt-8">
+            <Link href="/">
+                <Button variant="outline">
+                    <Home className="mr-2 h-4 w-4" /> Home
+                </Button>
+            </Link>
+        </div>
+        <main className="container mx-auto pb-28 md:pb-12 px-4">
             <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl mb-6">Checkout</h1>
             <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-12">
                 <div className="space-y-6">

@@ -6,7 +6,6 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Header } from "@/components/shared/Header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from '@/components/ui/input';
@@ -14,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Calendar as CalendarIcon, UploadCloud, Trash2, PlusCircle, CheckCircle, Wand2, Edit } from 'lucide-react';
+import { Calendar as CalendarIcon, UploadCloud, Trash2, PlusCircle, CheckCircle, Wand2, Edit, Home } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
@@ -28,6 +27,7 @@ import { Combobox } from '@/components/ui/combobox';
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DrawingCanvas } from '@/components/shared/DrawingCanvas';
+import Link from 'next/link';
 
 const MIN_BULK_QUANTITY = 100;
 
@@ -216,8 +216,14 @@ export default function B2BPage() {
 
     if (isSubmitted) {
         return (
-            <div className="bg-background pt-24 md:pt-48">
-                <Header variant="solid" />
+            <div className="bg-background">
+                <div className="container mx-auto px-4 pt-8">
+                    <Link href="/">
+                        <Button variant="outline">
+                            <Home className="mr-2 h-4 w-4" /> Home
+                        </Button>
+                    </Link>
+                </div>
                 <main className="container mx-auto py-12 sm:py-16 px-4 flex items-center justify-center">
                     <Card className="max-w-xl text-center">
                         <CardHeader>
@@ -239,8 +245,14 @@ export default function B2BPage() {
     const materialOptions = availableMaterials.map(m => ({ value: m.id, label: m.name }));
 
     return (
-        <div className="bg-background pt-24 md:pt-48">
-            <Header variant="solid" />
+        <div className="bg-background">
+            <div className="container mx-auto px-4 pt-8">
+                <Link href="/">
+                    <Button variant="outline">
+                        <Home className="mr-2 h-4 w-4" /> Home
+                    </Button>
+                </Link>
+            </div>
 
             <main className="container mx-auto py-12 sm:py-16 px-4">
                  <div className="text-center mb-12">

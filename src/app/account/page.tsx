@@ -8,7 +8,6 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
-import { Header } from '@/components/shared/Header';
 import { PlusCircle, Edit, Trash2, Home, Building, Briefcase, Star, LifeBuoy } from 'lucide-react';
 import { AddressForm, AddressFormValues } from '@/components/account/AddressForm';
 import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -110,9 +109,14 @@ export default function AccountPage() {
 
   return (
     <div className="bg-background">
-      <Header />
-
-      <main className="container mx-auto py-8 sm:py-12 px-4 space-y-8">
+      <div className="container mx-auto px-4 pt-8">
+          <Link href="/">
+              <Button variant="outline">
+                  <Home className="mr-2 h-4 w-4" /> Home
+              </Button>
+          </Link>
+      </div>
+      <main className="container mx-auto pb-8 sm:pb-12 px-4 space-y-8">
         <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">My Account</h1>
 
         <Card>

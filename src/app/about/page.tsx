@@ -3,14 +3,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from '@/components/ui/card';
-import { Header } from "@/components/shared/Header";
+import { Home } from "lucide-react";
 
 export default function AboutPage() {
     return (
-        <div className="bg-background pt-24 md:pt-48">
-            <Header />
-
-            <section className="bg-primary text-primary-foreground py-20">
+        <div className="bg-background">
+            <div className="container mx-auto px-4 pt-8">
+                <Link href="/">
+                    <Button variant="outline">
+                        <Home className="mr-2 h-4 w-4" /> Home
+                    </Button>
+                </Link>
+            </div>
+            <section className="bg-primary text-primary-foreground py-20 mt-8">
                 <div className="container mx-auto text-center px-4">
                     <h1 className="text-4xl md:text-6xl font-bold tracking-tight">Our Story</h1>
                 </div>

@@ -13,9 +13,8 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Header } from '@/components/shared/Header';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle2, AlertCircle, Printer } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Printer, Home } from 'lucide-react';
 
 
 type CompanySettings = {
@@ -116,8 +115,14 @@ export default function FinalInvoicePage() {
 
   return (
     <div className="bg-background min-h-screen">
-      <Header />
-      <main className="container mx-auto py-8 sm:py-12 px-4">
+        <div className="container mx-auto px-4 pt-8 print:hidden">
+            <Link href="/">
+                <Button variant="outline">
+                    <Home className="mr-2 h-4 w-4" /> Home
+                </Button>
+            </Link>
+        </div>
+      <main className="container mx-auto pb-8 sm:pb-12 px-4">
         {isLoading ? (
             <div className="flex justify-center items-center h-96">
                 <PottersWheelSpinner />

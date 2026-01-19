@@ -5,9 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PottersWheelSpinner } from '@/components/shared/PottersWheelSpinner';
-import { Header } from "@/components/shared/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Phone, ExternalLink } from "lucide-react";
+import { MapPin, Phone, ExternalLink, Home } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { useCollection, useFirebase, useMemoFirebase } from "@/firebase";
 import { collection } from "firebase/firestore";
@@ -29,9 +28,15 @@ export default function OurStoresPage() {
 
   return (
     <div className="bg-background">
-      <Header />
+      <div className="container mx-auto px-4 pt-8">
+          <Link href="/">
+              <Button variant="outline">
+                  <Home className="mr-2 h-4 w-4" /> Home
+              </Button>
+          </Link>
+      </div>
 
-      <main className="container mx-auto py-8 sm:py-16 px-4">
+      <main className="container mx-auto pb-8 sm:pb-16 px-4">
         <div className="text-center mb-12">
           <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">Our Store Locations</h1>
           <p className="mt-4 text-base text-muted-foreground max-w-2xl mx-auto sm:text-xl">
