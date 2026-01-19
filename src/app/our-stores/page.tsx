@@ -9,7 +9,7 @@ import { Header } from "@/components/shared/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Phone, ExternalLink } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
-import { useCollection, useFirebase } from "@/firebase";
+import { useCollection, useFirebase, useMemoFirebase } from "@/firebase";
 import { collection } from "firebase/firestore";
 
 type Store = {
@@ -24,7 +24,8 @@ type Store = {
 
 export default function OurStoresPage() {
     const { firestore } = useFirebase();
-    const { data: stores, isLoading } = useCollection<Store>(collection(firestore, 'stores'));
+    const storesQuery = useMemoFirebase(() => collection(firestore, 'stores'), [firestore]);
+    const { data: stores, isLoading } = useCollection<Store>(storesQuery);
 
   return (
     <div className="bg-background">
