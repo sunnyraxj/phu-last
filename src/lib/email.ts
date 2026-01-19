@@ -1,4 +1,3 @@
-
 'use server';
 
 import { Resend } from 'resend';
@@ -98,7 +97,7 @@ async function sendEmail(to: string | string[], subject: string, react: ReactEle
 
 
 export async function sendNewOrderAdminNotification(payload: AdminEmailPayload) {
-  const toEmail = 'purubanchalhastaudyog@gmail.com';
+  const toEmail = 'purbanchalhastaudyog@gmail.com';
   const adminOrderUrl = `${siteUrl}/admin/orders`;
 
   const subject = `New Order Received | Order #${payload.orderId.substring(0,8)} | ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(payload.totalAmount)}`;
