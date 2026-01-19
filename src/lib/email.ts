@@ -18,7 +18,7 @@ type OrderPayload = {
   totalAmount: number;
 };
 
-type OrderConfirmationPayload = OrderPayload & {
+type OrderConfirmationPayload = Omit<OrderPayload, 'orderDate'> & {
   products: { name: string; quantity: number }[];
   expectedDeliveryDate: string;
 };
@@ -37,17 +37,18 @@ type ReturnRequestPayload = {
 }
 
 export async function sendNewOrderAdminNotification(payload: OrderPayload) {
-  const adminEmail = process.env.ADMIN_EMAIL;
-  if (!adminEmail) {
+  const adminEmails = process.env.ADMIN_EMAIL;
+  if (!adminEmails) {
     console.error('ADMIN_EMAIL environment variable is not set.');
     return;
   }
+  const toEmails = adminEmails.split(',').map(e => e.trim());
 
   try {
     await resend.emails.send({
       from: fromEmail,
-      to: adminEmail,
-      subject: 'New Order Received',
+      to: toEmails,
+      subject: `New Order Received - ${payload.orderId.substring(0, 8)}`,
       react: NewOrderAdminEmail({
           orderId: payload.orderId,
           customerName: payload.customerName,
@@ -65,7 +66,7 @@ export async function sendOrderConfirmation(payload: OrderConfirmationPayload) {
     await resend.emails.send({
       from: fromEmail,
       to: payload.customerEmail,
-      subject: 'Your Order is Confirmed!',
+      subject: `Your Purbanchal Hasta Udyog Order is Confirmed! (#${payload.orderId.substring(0,8)})`,
       react: OrderConfirmationEmail({
           orderId: payload.orderId,
           customerName: payload.customerName,
@@ -84,7 +85,7 @@ export async function sendOrderCancellation(payload: OrderCancelledPayload) {
         await resend.emails.send({
             from: fromEmail,
             to: payload.customerEmail,
-            subject: 'Your Order Has Been Cancelled',
+            subject: `Your Purbanchal Hasta Udyog Order has been Cancelled (#${payload.orderId.substring(0,8)})`,
             react: OrderCancelledEmail({
                 orderId: payload.orderId,
                 cancellationReason: payload.cancellationReason,
@@ -101,7 +102,7 @@ export async function sendReturnRequestConfirmation(payload: ReturnRequestPayloa
         await resend.emails.send({
             from: fromEmail,
             to: payload.customerEmail,
-            subject: 'We Received Your Return Request',
+            subject: `We've Received Your Return Request for Order #${payload.orderId.substring(0,8)}`,
             react: ReturnRequestEmail({
                 orderId: payload.orderId,
                 returnedItems: payload.returnedItems,
