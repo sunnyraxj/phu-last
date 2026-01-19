@@ -98,17 +98,12 @@ async function sendEmail(to: string | string[], subject: string, react: ReactEle
 
 
 export async function sendNewOrderAdminNotification(payload: AdminEmailPayload) {
-  const adminEmails = process.env.ADMIN_EMAIL;
-  if (!adminEmails) {
-    console.error('ADMIN_EMAIL environment variable is not set.');
-    return;
-  }
-  const toEmails = adminEmails.split(',').map(e => e.trim());
+  const toEmail = 'purubanchalhastaudyog@gmail.com';
   const adminOrderUrl = `${siteUrl}/admin/orders`;
 
   const subject = `New Order Received | Order #${payload.orderId.substring(0,8)} | ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(payload.totalAmount)}`;
 
-  await sendEmail(toEmails, subject, NewOrderAdminEmail({
+  await sendEmail(toEmail, subject, NewOrderAdminEmail({
     orderId: payload.orderId,
     customerDetails: payload.customerDetails,
     products: payload.products,
