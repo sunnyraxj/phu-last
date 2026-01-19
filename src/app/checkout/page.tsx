@@ -258,11 +258,17 @@ export default function CheckoutPage() {
 
       await batch.commit();
 
+      const productsForEmail = cartItems.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: getCartItemPrice(item)
+      }));
+
       // Send admin notification email
       await sendNewOrderAdminNotification({
           orderId: orderRef.id,
-          customerName: finalShippingDetails.name,
-          customerEmail: finalShippingDetails.email,
+          customerDetails: finalShippingDetails,
+          products: productsForEmail,
           orderDate: format(now, 'PPP'),
           totalAmount: totalAmount,
       });

@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, Fragment, useMemo, useEffect } from 'react';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
 import { collection, doc, query, where } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -43,6 +43,12 @@ type Order = {
     orderDate: { seconds: number; nanoseconds: number; };
     deliveryDate?: { seconds: number; nanoseconds: number; };
     totalAmount: number;
+    subtotal: number;
+    shippingFee: number;
+    gstAmount: number;
+    cgstAmount?: number;
+    sgstAmount?: number;
+    igstAmount?: number;
     status: OrderStatus;
     shippingDetails: ShippingDetails;
     paymentMethod?: 'UPI_PARTIAL';
@@ -64,6 +70,13 @@ type OrderItem = {
     productImage: string;
 };
 
+type CompanySettings = {
+    companyName?: string;
+    companyAddress?: string;
+    gstin?: string;
+    invoiceLogoUrl?: string;
+};
+
 
 export default function OrdersPage() {
     const firestore = useFirestore();
@@ -77,6 +90,9 @@ export default function OrdersPage() {
     
     const ordersQuery = useMemoFirebase(() => query(collection(firestore, 'orders')), [firestore]);
     const { data: allOrders, isLoading: ordersLoading } = useCollection<Order>(ordersQuery);
+
+    const settingsRef = useMemoFirebase(() => doc(firestore, 'companySettings', 'main'), [firestore]);
+    const { data: settings } = useDoc<CompanySettings>(settingsRef);
 
     const orderIdsToFetch = useMemo(() => {
         if (!allOrders) return [];
@@ -168,12 +184,9 @@ export default function OrdersPage() {
         const itemsInOrder = itemsByOrder[orderToApprove.id] || [];
 
         await sendOrderConfirmation({
-            orderId: orderToApprove.id,
-            customerName: orderToApprove.shippingDetails.name,
-            customerEmail: orderToApprove.shippingDetails.email,
-            products: itemsInOrder.map(i => ({ name: i.productName, quantity: i.quantity })),
-            totalAmount: orderToApprove.totalAmount,
-            expectedDeliveryDate: format(addDays(new Date(), 7), 'PPP')
+            order: orderToApprove,
+            products: itemsInOrder.map(i => ({ name: i.productName, quantity: i.quantity, price: i.price })),
+            companySettings: settings || null,
         });
         
         toast({
@@ -200,12 +213,9 @@ export default function OrdersPage() {
             if (newStatus === 'order-confirmed') {
                 const itemsInOrder = itemsByOrder[order.id] || [];
                 await sendOrderConfirmation({
-                    orderId: order.id,
-                    customerName: order.shippingDetails.name,
-                    customerEmail: order.shippingDetails.email,
-                    products: itemsInOrder.map(i => ({ name: i.productName, quantity: i.quantity })),
-                    totalAmount: order.totalAmount,
-                    expectedDeliveryDate: format(addDays(new Date(), 7), 'PPP')
+                    order: order,
+                    products: itemsInOrder.map(i => ({ name: i.productName, quantity: i.quantity, price: i.price })),
+                    companySettings: settings || null,
                 });
             } else if (newStatus === 'cancelled') {
                  await sendOrderCancellation({
@@ -546,4 +556,3 @@ export default function OrdersPage() {
         </div>
     );
 }
-

@@ -6,21 +6,69 @@ import NewOrderAdminEmail from '@/emails/NewOrderAdminEmail';
 import OrderConfirmationEmail from '@/emails/OrderConfirmationEmail';
 import OrderCancelledEmail from '@/emails/OrderCancelledEmail';
 import ReturnRequestEmail from '@/emails/ReturnRequestEmail';
+import { ReactElement } from 'react';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const fromEmail = 'onboarding@resend.dev';
+const fromEmail = process.env.FROM_EMAIL || 'onboarding@resend.dev';
+const siteUrl = process.env.SITE_URL || 'http://localhost:9002';
 
-type OrderPayload = {
+type ShippingDetails = {
+    name: string;
+    address: string;
+    city: string;
+    state: string;
+    pincode: string;
+    phone: string;
+    email?: string;
+}
+
+type Order = {
+  id: string;
+  customerId: string;
+  orderDate: { seconds: number; nanoseconds: number; };
+  totalAmount: number;
+  subtotal: number;
+  shippingFee: number;
+  gstAmount: number;
+  cgstAmount?: number;
+  sgstAmount?: number;
+  igstAmount?: number;
+  status: 'pending-payment-approval' | 'pending' | 'shipped' | 'delivered' | 'cancelled' | 'order-confirmed';
+  shippingDetails: ShippingDetails;
+  paymentMethod?: 'UPI_PARTIAL' | 'UPI_FULL';
+  paymentDetails?: {
+      advanceAmount: number;
+      remainingAmount: number;
+      utr: string;
+      paymentPercentage: number;
+  };
+};
+
+type ProductInfo = {
+  name: string;
+  quantity: number;
+  price: number;
+};
+
+type CompanySettings = {
+    companyName?: string;
+    companyAddress?: string;
+    gstin?: string;
+    invoiceLogoUrl?: string;
+} | null;
+
+type AdminEmailPayload = {
   orderId: string;
-  customerName: string;
-  customerEmail: string;
+  customerDetails: ShippingDetails;
+  products: ProductInfo[];
   orderDate: string;
   totalAmount: number;
 };
 
-type OrderConfirmationPayload = Omit<OrderPayload, 'orderDate'> & {
-  products: { name: string; quantity: number }[];
-  expectedDeliveryDate: string;
+type CustomerConfirmationPayload = {
+    order: Order;
+    products: ProductInfo[];
+    companySettings: CompanySettings;
 };
 
 type OrderCancelledPayload = {
@@ -28,87 +76,77 @@ type OrderCancelledPayload = {
     customerEmail: string;
     cancellationReason: string;
     refundStatus: string;
-}
+};
 
 type ReturnRequestPayload = {
     orderId: string;
     customerEmail: string;
     returnedItems: { name: string; quantity: number }[];
+};
+
+async function sendEmail(to: string | string[], subject: string, react: ReactElement) {
+    const companyName = 'Purbanchal Hasta Udyog';
+    const from = `${companyName} <${fromEmail}>`;
+
+    try {
+        await resend.emails.send({ from, to, subject, react });
+    } catch (error) {
+        console.error(`Email sending failed for subject "${subject}" to "${to}":`, error);
+        // Do not re-throw, as email failure should not block application flow.
+    }
 }
 
-export async function sendNewOrderAdminNotification(payload: OrderPayload) {
+
+export async function sendNewOrderAdminNotification(payload: AdminEmailPayload) {
   const adminEmails = process.env.ADMIN_EMAIL;
   if (!adminEmails) {
     console.error('ADMIN_EMAIL environment variable is not set.');
     return;
   }
   const toEmails = adminEmails.split(',').map(e => e.trim());
+  const adminOrderUrl = `${siteUrl}/admin/orders`;
 
-  try {
-    await resend.emails.send({
-      from: fromEmail,
-      to: toEmails,
-      subject: `New Order Received - ${payload.orderId.substring(0, 8)}`,
-      react: NewOrderAdminEmail({
-          orderId: payload.orderId,
-          customerName: payload.customerName,
-          orderDate: payload.orderDate,
-          totalAmount: payload.totalAmount,
-      })
-    });
-  } catch (error) {
-    console.error('Failed to send admin new order notification:', error);
-  }
+  const subject = `New Order Received | Order #${payload.orderId.substring(0,8)} | ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(payload.totalAmount)}`;
+
+  await sendEmail(toEmails, subject, NewOrderAdminEmail({
+    orderId: payload.orderId,
+    customerDetails: payload.customerDetails,
+    products: payload.products,
+    orderDate: payload.orderDate,
+    totalAmount: payload.totalAmount,
+    adminOrderUrl,
+  }));
 }
 
-export async function sendOrderConfirmation(payload: OrderConfirmationPayload) {
-  try {
-    await resend.emails.send({
-      from: fromEmail,
-      to: payload.customerEmail,
-      subject: `Your Purbanchal Hasta Udyog Order is Confirmed! (#${payload.orderId.substring(0,8)})`,
-      react: OrderConfirmationEmail({
-          orderId: payload.orderId,
-          customerName: payload.customerName,
-          products: payload.products,
-          totalAmount: payload.totalAmount,
-          expectedDeliveryDate: payload.expectedDeliveryDate,
-      })
-    });
-  } catch (error) {
-    console.error('Failed to send order confirmation email:', error);
+export async function sendOrderConfirmation(payload: CustomerConfirmationPayload) {
+  const { order, products, companySettings } = payload;
+  if (!order.shippingDetails.email) {
+      console.error(`Order confirmation for order ${order.id} failed: No customer email.`);
+      return;
   }
+  
+  const subject = `Order Confirmation – ${order.id}`;
+
+  await sendEmail(order.shippingDetails.email, subject, OrderConfirmationEmail({
+    order,
+    products,
+    companySettings,
+  }));
 }
 
 export async function sendOrderCancellation(payload: OrderCancelledPayload) {
-    try {
-        await resend.emails.send({
-            from: fromEmail,
-            to: payload.customerEmail,
-            subject: `Your Purbanchal Hasta Udyog Order has been Cancelled (#${payload.orderId.substring(0,8)})`,
-            react: OrderCancelledEmail({
-                orderId: payload.orderId,
-                cancellationReason: payload.cancellationReason,
-                refundStatus: payload.refundStatus,
-            })
-        });
-    } catch (error) {
-        console.error('Failed to send order cancellation email:', error);
-    }
+    const subject = `Your Purbanchal Hasta Udyog Order has been Cancelled (#${payload.orderId.substring(0,8)})`;
+    await sendEmail(payload.customerEmail, subject, OrderCancelledEmail({
+        orderId: payload.orderId,
+        cancellationReason: payload.cancellationReason,
+        refundStatus: payload.refundStatus,
+    }));
 }
 
 export async function sendReturnRequestConfirmation(payload: ReturnRequestPayload) {
-    try {
-        await resend.emails.send({
-            from: fromEmail,
-            to: payload.customerEmail,
-            subject: `We've Received Your Return Request for Order #${payload.orderId.substring(0,8)}`,
-            react: ReturnRequestEmail({
-                orderId: payload.orderId,
-                returnedItems: payload.returnedItems,
-            })
-        });
-    } catch (error) {
-        console.error('Failed to send return request confirmation email:', error);
-    }
+    const subject = `We've Received Your Return Request for Order #${payload.orderId.substring(0,8)}`;
+    await sendEmail(payload.customerEmail, subject, ReturnRequestEmail({
+        orderId: payload.orderId,
+        returnedItems: payload.returnedItems,
+    }));
 }
