@@ -516,7 +516,7 @@ export function HomePageClient() {
 
   return (
     <div className="min-h-screen bg-background font-sans">
-      <Header variant="transparent" />
+      <Header />
       
       <main>
         {isMobile ? (

@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from "next/link";
@@ -42,7 +41,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { cn, isValidImageDomain } from "@/lib/utils";
 import placeholderImages from '@/lib/placeholder-images.json';
 import { useToast } from "@/hooks/use-toast";
@@ -93,12 +92,12 @@ type CartItem = Product & { quantity: number; cartItemId: string; selectedSize?:
 
 interface HeaderProps {
     showAnnouncement?: boolean;
-    variant?: 'transparent' | 'solid';
 }
 
-export function Header({ showAnnouncement = true, variant = 'solid' }: HeaderProps) {
+export function Header({ showAnnouncement = true }: HeaderProps) {
   const { firestore, user, isUserLoading, auth, updateCartItemSize } = useFirebase();
   const router = useRouter();
+  const pathname = usePathname();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -137,17 +136,31 @@ export function Header({ showAnnouncement = true, variant = 'solid' }: HeaderPro
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+        const isHomepage = pathname === '/';
+        
+        if (isHomepage) {
+            setIsScrolled(window.scrollY > 50);
+        } else {
+            const scrollHeight = document.documentElement.scrollHeight;
+            const clientHeight = document.documentElement.clientHeight;
+            const scrollableHeight = scrollHeight - clientHeight;
+            
+            if (scrollableHeight > 0) {
+                 const scrollThreshold = scrollableHeight * 0.3;
+                 setIsScrolled(window.scrollY > scrollThreshold);
+            } else {
+                setIsScrolled(false);
+            }
+        }
     };
-    window.addEventListener('scroll', handleScroll);
-    
-    // Initial check
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
 
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [pathname]);
   
-  const isSolid = variant === 'solid' || isScrolled;
+  const isSolid = isScrolled;
 
   const handleSignOut = async () => {
     await signOut(auth);
