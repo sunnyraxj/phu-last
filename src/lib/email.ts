@@ -1,7 +1,7 @@
+
 'use server';
 
 import { Resend } from 'resend';
-import NewOrderAdminEmail from '@/emails/NewOrderAdminEmail';
 import OrderConfirmationEmail from '@/emails/OrderConfirmationEmail';
 import OrderCancelledEmail from '@/emails/OrderCancelledEmail';
 import ReturnRequestEmail from '@/emails/ReturnRequestEmail';
@@ -56,14 +56,6 @@ type CompanySettings = {
     invoiceLogoUrl?: string;
 } | null;
 
-type AdminEmailPayload = {
-  orderId: string;
-  customerDetails: ShippingDetails;
-  products: ProductInfo[];
-  orderDate: string;
-  totalAmount: number;
-};
-
 type CustomerConfirmationPayload = {
     order: Order;
     products: ProductInfo[];
@@ -93,23 +85,6 @@ async function sendEmail(to: string | string[], subject: string, react: ReactEle
         console.error(`Email sending failed for subject "${subject}" to "${to}":`, error);
         // Do not re-throw, as email failure should not block application flow.
     }
-}
-
-
-export async function sendNewOrderAdminNotification(payload: AdminEmailPayload) {
-  const toEmail = 'purbanchalhastaudyog@gmail.com';
-  const adminOrderUrl = `${siteUrl}/admin/orders`;
-
-  const subject = `New Order Received | Order #${payload.orderId.substring(0,8)} | ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(payload.totalAmount)}`;
-
-  await sendEmail(toEmail, subject, NewOrderAdminEmail({
-    orderId: payload.orderId,
-    customerDetails: payload.customerDetails,
-    products: payload.products,
-    orderDate: payload.orderDate,
-    totalAmount: payload.totalAmount,
-    adminOrderUrl,
-  }));
 }
 
 export async function sendOrderConfirmation(payload: CustomerConfirmationPayload) {

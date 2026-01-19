@@ -26,8 +26,6 @@ import { isValidImageDomain } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { sendNewOrderAdminNotification } from '@/lib/email';
-import { format } from 'date-fns';
 
 type ShippingAddress = AddressFormValues & { id: string, email?: string };
 
@@ -213,7 +211,6 @@ export default function CheckoutPage() {
     try {
       const batch = writeBatch(firestore);
       const orderRef = doc(collection(firestore, 'orders'));
-      const now = new Date();
 
       const orderData = {
         id: orderRef.id,
@@ -257,21 +254,6 @@ export default function CheckoutPage() {
       }
 
       await batch.commit();
-
-      const productsForEmail = cartItems.map(item => ({
-          name: item.name,
-          quantity: item.quantity,
-          price: getCartItemPrice(item)
-      }));
-
-      // Send admin notification email
-      await sendNewOrderAdminNotification({
-          orderId: orderRef.id,
-          customerDetails: finalShippingDetails,
-          products: productsForEmail,
-          orderDate: format(now, 'PPP'),
-          totalAmount: totalAmount,
-      });
 
       toast({ title: 'Order Placed!', description: 'Your order has been placed and is pending payment approval.' });
       router.push(`/receipt/${orderRef.id}`);
