@@ -96,7 +96,7 @@ interface HeaderProps {
     variant?: 'transparent' | 'solid';
 }
 
-export function Header({ showAnnouncement = true, variant = 'transparent' }: HeaderProps) {
+export function Header({ showAnnouncement = true, variant = 'solid' }: HeaderProps) {
   const { firestore, user, isUserLoading, auth, updateCartItemSize } = useFirebase();
   const router = useRouter();
   const { toast } = useToast();

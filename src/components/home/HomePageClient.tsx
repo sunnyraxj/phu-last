@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useState, useMemo, useEffect, useRef } from "react"
@@ -517,7 +516,7 @@ export function HomePageClient() {
 
   return (
     <div className="min-h-screen bg-background font-sans">
-      <Header />
+      <Header variant="transparent" />
       
       <main>
         {isMobile ? (
