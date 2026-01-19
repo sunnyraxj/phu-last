@@ -22,7 +22,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
-import { sendOrderConfirmation, sendOrderCancellation } from '@/lib/email';
+import { sendOrderCancellation } from '@/lib/email';
 import { addDays, format } from 'date-fns';
 
 type OrderStatus = 'pending-payment-approval' | 'pending' | 'shipped' | 'delivered' | 'cancelled'|'order-confirmed';
@@ -175,19 +175,11 @@ export default function OrdersPage() {
     }
 
     const handleApprovePayment = async () => {
-        if (!orderToApprove || !orderToApprove.shippingDetails.email) return;
+        if (!orderToApprove) return;
         
         const orderRef = doc(firestore, 'orders', orderToApprove.id);
         const newStatus = 'order-confirmed';
         setDocumentNonBlocking(orderRef, { status: newStatus }, { merge: true });
-
-        const itemsInOrder = itemsByOrder[orderToApprove.id] || [];
-
-        await sendOrderConfirmation({
-            order: orderToApprove,
-            products: itemsInOrder.map(i => ({ name: i.productName, quantity: i.quantity, price: i.price })),
-            companySettings: settings || null,
-        });
         
         toast({
             title: 'Payment Approved',
@@ -210,14 +202,7 @@ export default function OrdersPage() {
         setDocumentNonBlocking(orderRef, updateData, { merge: true });
         
         if(order.shippingDetails.email) {
-            if (newStatus === 'order-confirmed') {
-                const itemsInOrder = itemsByOrder[order.id] || [];
-                await sendOrderConfirmation({
-                    order: order,
-                    products: itemsInOrder.map(i => ({ name: i.productName, quantity: i.quantity, price: i.price })),
-                    companySettings: settings || null,
-                });
-            } else if (newStatus === 'cancelled') {
+            if (newStatus === 'cancelled') {
                  await sendOrderCancellation({
                     orderId: order.id,
                     customerEmail: order.shippingDetails.email,
@@ -527,7 +512,7 @@ export default function OrdersPage() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Approve Payment?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will confirm the advance payment and move the order to "Confirmed" status for processing. An email will be sent to the customer. This action cannot be undone.
+                            This will confirm the advance payment and move the order to "Confirmed" status for processing. This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -544,7 +529,7 @@ export default function OrdersPage() {
                         <AlertDialogTitle>Confirm Status Change</AlertDialogTitle>
                         <AlertDialogDescription>
                             Are you sure you want to change the status of this order to "{orderToUpdateStatus?.newStatus.replace(/-/g, ' ')}"?
-                            {(orderToUpdateStatus?.newStatus === 'shipped' || orderToUpdateStatus?.newStatus === 'delivered' || orderToUpdateStatus?.newStatus === 'order-confirmed' || orderToUpdateStatus?.newStatus === 'cancelled') && ' An email notification will be sent to the customer.'}
+                            {(orderToUpdateStatus?.newStatus === 'cancelled') && ' An email notification will be sent to the customer.'}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

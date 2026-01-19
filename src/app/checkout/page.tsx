@@ -5,7 +5,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useFirestore, useUser, useCollection, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
+import { useFirestore, useUser, useCollection, useMemoFirebase, addDocumentNonBlocking, useDoc } from '@/firebase';
 import { collection, doc, writeBatch, serverTimestamp, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,8 @@ import { isValidImageDomain } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
+import { sendOrderConfirmation } from '@/lib/email';
+import { type Order } from '@/lib/email';
 
 type ShippingAddress = AddressFormValues & { id: string, email?: string };
 
@@ -40,6 +42,13 @@ type Product = {
 };
 
 type CartItem = Product & { quantity: number; cartItemId: string; selectedSize?: string; };
+
+type CompanySettings = {
+    companyName?: string;
+    companyAddress?: string;
+    gstin?: string;
+    invoiceLogoUrl?: string;
+};
 
 const UPI_ID = 'gpay-12190144290@okbizaxis';
 const PAYEE_NAME = 'Purbanchal Hasta Udyog';
@@ -72,6 +81,10 @@ export default function CheckoutPage() {
     [firestore, user]
   );
   const { data: addresses, isLoading: addressesLoading } = useCollection<ShippingAddress>(addressesQuery);
+  
+  const settingsRef = useMemoFirebase(() => doc(firestore, 'companySettings', 'main'), [firestore]);
+  const { data: settings } = useDoc<CompanySettings>(settingsRef);
+
 
   useEffect(() => {
     // Generate a unique transaction ID when the component mounts
@@ -211,6 +224,8 @@ export default function CheckoutPage() {
     try {
       const batch = writeBatch(firestore);
       const orderRef = doc(collection(firestore, 'orders'));
+      
+      const clientOrderDate = new Date();
 
       const orderData = {
         id: orderRef.id,
@@ -255,7 +270,22 @@ export default function CheckoutPage() {
 
       await batch.commit();
 
-      toast({ title: 'Order Placed!', description: 'Your order has been placed and is pending payment approval.' });
+      const emailOrderData = {
+        ...orderData,
+        orderDate: { seconds: Math.floor(clientOrderDate.getTime() / 1000) },
+      };
+
+      await sendOrderConfirmation({
+          order: emailOrderData as unknown as Order,
+          products: cartItems.map(item => ({
+              name: item.name,
+              quantity: item.quantity,
+              price: getCartItemPrice(item),
+          })),
+          companySettings: settings,
+      });
+
+      toast({ title: 'Order Placed!', description: 'Your order has been placed and is pending payment approval. A confirmation email has been sent.' });
       router.push(`/receipt/${orderRef.id}`);
 
     } catch (error) {
